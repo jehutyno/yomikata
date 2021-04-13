@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+            xmlns:tools="http://schemas.android.com/tools"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+    <RelativeLayout
+        android:id="@+id/whole_sentence_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_margin="15dp"
+        android:background="@color/colorPrimary"
+        android:foreground="?attr/selectableItemBackground"
+        android:orientation="vertical"
+        android:paddingTop="8dp">
+
+        <TextView
+            android:id="@+id/session_count"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
+            android:layout_marginEnd="8dp"
+            android:layout_marginRight="8dp"
+            android:textColor="@color/light_gray"
+            tools:text="1 / 10"/>
+
+        <com.jehutyno.yomikata.furigana.FuriganaView
+            android:id="@+id/furi_sentence"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="16dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="8dp"
+            android:textColor="@color/lighter_gray"
+            android:textSize="18sp"
+            tools:text="あり"/>
+
+        <TextView
+            android:id="@+id/trad_sentence"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/furi_sentence"
+            android:layout_marginEnd="16dp"
+            android:layout_marginStart="16dp"
+            android:maxLines="5"
+            android:scrollbars="vertical"
+            android:textColor="@color/lighter_gray"
+            android:textSize="16sp"
+            tools:text="Thanks a lot"/>
+
+        <FrameLayout
+            android:layout_width="43dp"
+            android:layout_height="43dp"
+            android:layout_below="@+id/trad_sentence"
+            android:layout_toLeftOf="@+id/btn_trad"
+            android:layout_toStartOf="@+id/btn_trad">
+
+
+            <ImageButton
+                android:id="@+id/btn_furi"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:padding="10dp"
+                android:src="@drawable/ic_hiragana_selector"/>
+
+        </FrameLayout>
+
+        <FrameLayout
+            android:id="@+id/container_selection"
+            android:layout_width="43dp"
+            android:layout_height="43dp"
+            android:layout_below="@+id/trad_sentence"
+            android:layout_toLeftOf="@+id/btn_report"
+            android:layout_toStartOf="@+id/btn_report">
+
+
+            <ImageButton
+                android:id="@+id/btn_selection"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:padding="10dp"
+                android:src="@drawable/ic_star_black_24dp"/>
+
+        </FrameLayout>
+
+
+        <ImageButton
+            android:id="@+id/btn_report"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignWithParentIfMissing="true"
+            android:layout_below="@+id/trad_sentence"
+            android:layout_toLeftOf="@+id/btn_tts"
+            android:layout_toStartOf="@+id/btn_tts"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:padding="10dp"
+            android:src="@drawable/ic_report_black_24dp"
+            android:tint="@color/lighter_gray"/>
+
+        <ImageButton
+            android:id="@+id/btn_tts"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_toLeftOf="@+id/btn_copy"
+            android:layout_toStartOf="@+id/btn_copy"
+            android:layout_below="@+id/trad_sentence"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:padding="10dp"
+            android:src="@drawable/ic_volume_up_black_24dp"
+            android:tint="@color/lighter_gray"/>
+
+        <ImageButton
+            android:id="@+id/sound"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:paddingEnd="50dp"
+            android:paddingStart="50dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_volume_up_black_48dp"
+            android:tint="@color/lighter_gray"/>
+
+        <ImageButton
+            android:id="@+id/btn_trad"
+            android:layout_width="43dp"
+            android:layout_height="43dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:padding="10dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_trad_selector"
+            android:layout_below="@+id/trad_sentence"
+            android:layout_toLeftOf="@+id/container_selection"
+            android:layout_toStartOf="@+id/container_selection"/>
+
+        <ImageButton
+            android:id="@+id/btn_copy"
+            android:layout_width="43dp"
+            android:layout_height="43dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:padding="10dp"
+            android:tint="@color/lighter_gray"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_copy"
+            android:layout_below="@+id/trad_sentence"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"/>
+
+    </RelativeLayout>
+
+</ScrollView>

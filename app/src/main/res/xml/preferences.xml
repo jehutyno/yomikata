@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <PreferenceCategory android:title="Quiz Settings">
+        <ListPreference
+            android:defaultValue="23"
+            android:entries="@array/fontSizeArray"
+            android:entryValues="@array/fontSizeValues"
+            android:icon="@drawable/font_size"
+            android:key="font_size"
+            android:summary="@string/prefs_font_size_message"
+            android:title="@string/prefs_font_size"/>
+
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:icon="@drawable/ic_keyboard"
+            android:key="input_change"
+            android:summary="Use if you have issues with Japanese keyboard"
+            android:title="Kana Input fix"/>
+
+
+        <ListPreference
+            android:defaultValue="2"
+            android:entries="@array/speedArray"
+            android:entryValues="@array/speedValues"
+            android:icon="@drawable/ic_clock_fast"
+            android:key="speed"
+            android:summary="@string/prefs_speed_message"
+            android:title="@string/prefs_speed_title"/>
+
+        <ListPreference
+            android:defaultValue="10"
+            android:entries="@array/lengthArray"
+            android:entryValues="@array/lengthValues"
+            android:icon="@drawable/ic_animation"
+            android:key="length"
+            android:summary="@string/prefs_length_message"
+            android:title="@string/prefs_length_title"/>
+
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:icon="@drawable/ic_ray_start"
+            android:key="play_start"
+            android:summary="@string/settings_play_start_summary"
+            android:title="@string/settings_play_start_title"/>
+
+        <CheckBoxPreference
+            android:defaultValue="true"
+            android:icon="@drawable/ic_ray_end"
+            android:key="play_end"
+            android:summary="@string/settings_play_end_summary"
+            android:title="@string/settings_play_end_title"/>
+
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="@string/prefs_tutorials">
+        <Preference
+            android:icon="@drawable/ic_database"
+            android:key="reset_tuto"
+            android:title="@string/prefs_reset_tutorials"/>
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="@string/prefs_backup_restore">
+        <Preference
+            android:icon="@drawable/ic_file_export"
+            android:key="backup"
+            android:title="@string/prefs_backup_progress"/>
+        <Preference
+            android:icon="@drawable/ic_file_import"
+            android:key="restore"
+            android:title="@string/prefs_restore_progress"/>
+        <Preference
+            android:icon="@drawable/ic_backup_restore"
+            android:key="reset"
+            android:title="@string/prefs_reinit"/>
+        <Preference
+            android:icon="@drawable/ic_delete"
+            android:key="delete_voices"
+            android:title="@string/delete_voices_files"/>
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="@string/prefs_others">
+        <Preference
+            android:icon="@drawable/ic_info"
+            android:key="privacy"
+            android:title="@string/prefs_privacy_policy"/>
+    </PreferenceCategory>
+
+</PreferenceScreen>

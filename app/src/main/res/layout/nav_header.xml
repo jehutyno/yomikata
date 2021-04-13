@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<developer.shivam.crescento.CrescentoContainer xmlns:android="http://schemas.android.com/apk/res/android"
+                                             xmlns:app="http://schemas.android.com/apk/res-auto"
+                                             android:id="@+id/crescentoContainer"
+                                             android:layout_width="match_parent"
+                                             android:layout_height="200dp"
+                                             android:elevation="4dp"
+                                             app:curvature="40dp">
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/darkGray"/>
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="200dp"
+        android:layout_marginBottom="-20dp"
+        android:layout_marginLeft="-20dp"
+        android:adjustViewBounds="false"
+        android:scaleType="fitStart"
+        android:src="@drawable/yomi_logo"/>
+
+    <ImageView
+        android:id="@+id/discord"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="40dp"
+        android:layout_toLeftOf="@+id/facebook"
+        android:layout_toStartOf="@+id/facebook"
+        android:clickable="true"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:padding="8dp"
+        android:src="@drawable/ic_discord"/>
+
+    <ImageView
+        android:id="@+id/facebook"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="40dp"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentRight="true"
+        android:clickable="true"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:padding="8dp"
+        android:src="@drawable/ic_facebook"/>
+
+    <ImageView
+        android:id="@+id/play_store"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/facebook"
+        android:layout_toLeftOf="@+id/share"
+        android:layout_toStartOf="@+id/share"
+        android:clickable="true"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:padding="8dp"
+        android:src="@drawable/ic_google_play"/>
+
+    <ImageView
+        android:id="@+id/share"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentRight="true"
+        android:layout_below="@+id/facebook"
+        android:clickable="true"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:padding="8dp"
+        android:src="@drawable/ic_share"/>
+
+
+    <TextView
+        android:id="@+id/version"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentRight="true"
+        android:layout_marginBottom="40dp"
+        android:padding="10dp"
+        android:text="@string/yomiakataz_drawer"
+        android:textColor="@color/gray"/>
+
+</developer.shivam.crescento.CrescentoContainer>

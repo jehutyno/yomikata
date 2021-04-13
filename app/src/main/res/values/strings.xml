@@ -1,0 +1,229 @@
+<!DOCTYPE resources [
+    <!ELEMENT resources (string)*>
+    <!ELEMENT string (#PCDATA)>
+    <!ATTLIST string
+        name CDATA #REQUIRED
+        translatable CDATA #IMPLIED>
+    ]>
+<resources>
+    <string name="api_license_key" translatable="false">MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAx6V9v+GgzlL/lVrxGouhD41qClKjjc5DZGYtG+s993SzJqmPD7CgO0HfRYXUdCSy9XDOzgO8FfbZ12cylYlgcR03Uh41snoxViu/ViuzXuoR1IMMpvyUVPL1Rd1gdX37vYX0To7r+5Qy+yNj8nYN4b8YFJlkhXPRX8GNzA8oBW6hvV5aGnNmaWCyRlYQ1WZ2zrdDAh8/o3NPvhTFvRc1jsbR8tkeAwHr51TCQZ2hG3FEvkDlJkIL6w9aMOKZgalRoyJ/4s0YUWlGhgrhoZRWPAvDt6HWk8G/UUCzZ/FGtif0vLDR0mXseFo9ilFhZlqqC3Mtzv+62m0/dTQ6mHX7LQIDAQAB</string>
+    <string name="url_download" translatable="false">http://sd-97857.dedibox.fr/owncloud/index.php/s/</string>
+    <string name="app_name" translatable="false">Yomikata Z</string>
+    <string name="db_path" translatable="false">/data/data/com.jehutyno.yomikata/databases/</string>
+    <string name="db_name_yomi" translatable="false">Japanese.db</string>
+    <string name="google_tts_uri" translatable="false">market://details?id=com.google.android.tts</string>
+    <string name="yomiakataz_drawer" translatable="false">読み方 Z %1$s</string>
+    <string name="home_title" translatable="false">Yomikata Z</string>
+    <string name="drawer_your_selections">Your selections</string>
+    <string name="drawer_dictionary">Dictionary</string>
+    <string name="drawer_hiragana" translatable="false">Hiragana</string>
+    <string name="drawer_katakana" translatable="false">Katakana</string>
+    <string name="drawer_kanji_beginner">Kanji Beginner</string>
+    <string name="drawer_counters">Counters</string>
+    <string name="drawer_jlpt5" translatable="false">JLPT 5</string>
+    <string name="drawer_jlpt4" translatable="false">JLPT 4</string>
+    <string name="drawer_jlpt3" translatable="false">JLPT 3</string>
+    <string name="drawer_jlpt2" translatable="false">JLPT 2</string>
+    <string name="drawer_jlpt1" translatable="false">JLPT 1</string>
+    <string name="action_delete">Delete</string>
+    <string name="no_selections">No selections</string>
+    <string name="new_selection">New selection</string>
+    <string name="selection_name">Selection\'s name</string>
+    <string name="selection_edit">Edit the selection</string>
+    <string name="selection_delete_sure">Are you sure you want to delete this selection?</string>
+    <string name="selection_not_empty_name">The name can\'t be empty</string>
+    <string name="action_search">Search</string>
+    <string name="action_errors">Errors</string>
+    <string name="quiz_input_hint">Enter colored sign pronunciation</string>
+    <string name="practice_random">Practice all randomly</string>
+    <string name="practice_normal">Practice all</string>
+    <string name="practice_progressive">Practice progressively</string>
+    <string name="quit_quiz">Do you want to quit this quiz session ?</string>
+    <string name="search_title">Search Results</string>
+    <string name="email_contact" translatable="false">yomikata.contact@gmail.com</string>
+    <string name="mail_chooser">Contact me by email</string>
+    <string name="error_mail_chooser">Send error report email</string>
+    <string name="error_mail_subject">Yomikata Z database error</string>
+    <string name="error_mail_body_1">Potential database error\n </string>
+    <string name="error_mail_comments">\nAdditional comments:\n</string>
+    <string name="mail_error">There are no email clients installed.</string>
+    <string name="answer_title">Review of answers</string>
+    <string name="adjust_volume_tts">Don\'t forget to adjust the volume for this type of quiz</string>
+    <string name="go_settings">Settings</string>
+    <string name="action_not_possible">Sorry this action is not possible on your device</string>
+    <string name="tts_init_failed">TTS Initilization Failed</string>
+    <string name="set_up_tts_title">Speech Setup</string>
+    <string name="set_up_tts">To enable speech you need to either:\n</string>
+    <string name="download_voices_action">Download the voices (%dMB)</string>
+    <string name="get_google_tts_action">Install Google Text to speech</string>
+    <string name="tuto_yomikataz" translatable="false">Yomikata Z</string>
+    <string name="tuto_welcome">Be ready to learn Japanese</string>
+    <string name="tuto_categories">Categories</string>
+    <string name="tuto_categories_message">Choose Hiragana, Katakana, or any level of Kanji from the menu</string>
+    <string name="tuto_chat">Assistance</string>
+    <string name="tuto_chat_message">Don\'t hesitate to browse the help or to chat with me if you need any assistance or have any question</string>
+    <string name="tuto_quiz_type">Quiz Type</string>
+    <string name="tuto_quiz_type_message">Choose one or several type of quizzes</string>
+    <string name="tuto_quiz_type_details_message">Choose between Pronunciation MCQ, Translation MCQ, vocal MCQ, Pronunciation Quiz or Automated selection of all those Quiz</string>
+    <string name="tuto_progress">Progress</string>
+    <string name="tuto_progress_message">Every words has a level from red to green depending of your success rate</string>
+    <string name="tuto_part_selection">Part Selection</string>
+    <string name="tuto_part_selection_message">Select which part you want to practice. You\'ll practice everything if you don\'t select any part</string>
+    <string name="tuto_start">Go !</string>
+    <string name="tuto_start_message">Start to practice all the words one by one or progressively</string>
+    <string name="tuto_furigana">Furigana</string>
+    <string name="tuto_furigana_message">Display or not the pronunciation of other words in the sentence</string>
+    <string name="tuto_translation">Translation</string>
+    <string name="tuto_translation_message">Display or not the translation of the current sentence</string>
+    <string name="tuto_selection">Selections</string>
+    <string name="tuto_selection_message">Add this updateWord to a custom selection of words</string>
+    <string name="tuto_report">Report</string>
+    <string name="tuto_report_message">Report an issue with this updateWord to the developer</string>
+    <string name="tuto_audio">Audio</string>
+    <string name="tuto_audio_message">Play the sentence with the vocal synthesizer</string>
+    <string name="tuto_answer">Answer</string>
+    <string name="tuto_answer_message">Choose one of the answer</string>
+    <string name="tuto_errors">Errors</string>
+    <string name="tuto_answers_message">Check the answers you gave during the session</string>
+    <string name="error_no_quiz_no_word">At least one quiz with one updateWord must exist</string>
+    <string name="menu_night_mode">Night mode</string>
+    <string name="alert_quiz_finished">You have seen all the words. What do you want to do ?</string>
+    <string name="alert_session_finished">You finished a session of %1$d words. What do you want to do ?</string>
+    <string name="alert_restart">restart</string>
+    <string name="alert_continue">continue</string>
+    <string name="alert_quit">quit</string>
+    <string name="alert_review_session_errors">review session errors</string>
+    <string name="alert_review_quiz_errors">review all quiz errors</string>
+    <string name="quit_app">Do you want to quit Yomikata?</string>
+
+    <string name="prefs_others">Others</string>
+    <string name="prefs_privacy_policy">Privacy Policy</string>
+    <string name="prefs_backup_restore">Backup and Restore</string>
+    <string name="prefs_backup_progress">Backup progress</string>
+    <string name="prefs_restore_progress">Restore progress</string>
+    <string name="prefs_restore_progress_short">Restore progress</string>
+    <string name="prefs_restore_sure">Are you sure you want to restore those data ? It will erase your current progress</string>
+    <string name="backup_success">Backup success</string>
+    <string name="backup_saved_here">Your data have been saved at this location: \n%1$s\n\nYou can restore the data at any time or send it to another device</string>
+    <string name="backup_error">Backup error</string>
+    <string name="backup_error_message">Check that you have storage permission and enough space</string>
+    <string name="restore_success">Restore data success</string>
+    <string name="restore_success_message">Your data have been restored !</string>
+    <string name="restore_error">Restore data error</string>
+    <string name="restore_error_message">Something occurred during the restoration of tha data</string>
+    <string name="settings">Settings</string>
+    <string name="settings_restore_header">Save your progress or restore it from a file coming from this application or from Yomikata</string>
+    <string name="select_dir">Select</string>
+    <string name="choose_file">Choose Yomikata or Yomikata Z file</string>
+    <string name="ok">OK</string>
+    <string name="progress_import_title">Import Progress</string>
+    <string name="progress_import_message_y">You progression from Yomikata is being imported</string>
+    <string name="progress_import_message_yz">You progression from Yomikata Z is being imported</string>
+    <string name="backup">Backup</string>
+    <string name="backup_sure">If you do this backup it will erase any previous backup. Are you sure you want to do it?</string>
+    <string name="use_yomikata_file">Please use a file from Yomikata (.yomikata) or from Yomikata Z (.yomikataz)</string>
+    <string name="prefs_tutorials">Tutorials</string>
+    <string name="prefs_reset_tutorials">Reset tutorials</string>
+    <string name="tutos_pronunciation_mcq">Pronunciation MCQ</string>
+    <string name="tutos_pronunciation_mcq_message">Multiple choice questioner on the pronunciation</string>
+    <string name="tutos_pronunciation_quiz">Pronunciation Quiz</string>
+    <string name="tutos_pronunciation_quiz_message">Quiz where you type the pronunciation of the display updateWord</string>
+    <string name="tutos_audio_quiz">Audio Quiz</string>
+    <string name="tutos_audio_quiz_message">You hear a updateWord and have to choose the good writing</string>
+    <string name="tutos_en_jp">English to Japanese</string>
+    <string name="tutos_en_jp_message">Choose the correct translation</string>
+    <string name="tutos_jp_en">Japanese to English</string>
+    <string name="tutos_jp_en_message">Choose the correct translation</string>
+    <string name="tutos_auto_quiz">Auto Quiz</string>
+    <string name="tutos_auto_quiz_message">Choose randomly between the different type of quizzes depending on your level</string>
+    <string name="prefs_speed_title">Progression speed</string>
+    <string name="prefs_speed_message">How many correct answers to level up</string>
+    <string name="prefs_font_size">Font size</string>
+    <string name="prefs_font_size_message">Size of example sentences</string>
+    <string name="prefs_length_title">Sessions length</string>
+    <string name="prefs_length_message">Number of words in a session</string>
+    <string name="app_quit">Are you sure you want to quit Yomikata Z?</string>
+    <string name="tts_settings_title">Speech settings</string>
+    <string name="tts_volume">Speech Volume</string>
+    <string name="tts_rate">Speech rate</string>
+    <string name="email_subject" translatable="false">Yomikata Z Contact</string>
+    <string name="tutos_mark_known">Mark as known</string>
+    <string name="tutos_mark_known_message">Use up and down buttons to adjust level of word to your knowledge</string>
+    <string name="tutos_tts_settings">Vocal settings</string>
+    <string name="tutos_tts_settings_message">Open vocal panel settings to adjust volume and speech rate</string>
+    <string name="prefs_reinit">Reset database</string>
+    <string name="prefs_reinit_sure">It will erase all your progress. Are you sure you want to reset the database?</string>
+    <string name="prefs_reinit_done">Database has been reset</string>
+    <string name="prefs_delete_voices_sure">Are you sure you want to delete the voices files?</string>
+    <string name="prefs_delete_voices_done">Voices has been deleted</string>
+    <string name="add_to_selections">Add to my selections</string>
+    <string name="unselect_all">Unselect all</string>
+    <string name="select_all">Select All</string>
+    <string name="remove_from_selection">Remove from selections</string>
+    <string name="settings_play_start_title">Play at start</string>
+    <string name="settings_play_start_summary">Play word when it appears</string>
+    <string name="settings_play_end_title">Play at end</string>
+    <string name="settings_play_end_summary">Play word before going to next</string>
+    <string name="drawer_home">Home</string>
+    <string name="quiz_launched">%1$d quizzes launched</string>
+    <string name="words_seen">%1$d words seen</string>
+    <string name="good_answers">%1$d good answers</string>
+    <string name="wrong_answers">%1$d wrong answers</string>
+    <string name="news">News</string>
+    <string name="last_categories">Latest categories</string>
+    <string name="today">Today</string>
+    <string name="this_week">This week</string>
+    <string name="this_month">This month</string>
+    <string name="total">TOTAL</string>
+    <string name="no_categories_yet">You didin\'t launch any quiz yet! Use the menu or swipe to browse the different categories</string>
+    <string name="news_default">
+        Welcome to Yomikata Z!\n\n
+        Please contact me to give me your feedback or report any issues you meet.\n\nThanks a lot!</string>
+    <string name="news_loading">News Loading…</string>
+    <string name="quiz_empty">This Quiz is empty </string>
+    <string name="red_review">Red review</string>
+    <string name="orange_review">Orange review</string>
+    <string name="yellow_review">Yellow review</string>
+    <string name="green_review">Green review</string>
+    <string name="action_unlock">Unlock full version</string>
+    <string name="selection_unlock_full_version">To create your own selections, please unlock the full version from the Home screen</string>
+    <string name="purchase_unlock">Unlock</string>
+    <string name="unlock_caps">UNLOCK</string>
+    <string name="cancel_caps">CANCEL</string>
+    <string name="error_billing">Oops !  Please check that you are online or that your device support the Google Play Services </string>
+    <string name="search_no_results">No results found</string>
+    <string name="copy_word">Copy word</string>
+    <string name="copy_sentence">Copy sentence</string>
+    <string name="word_copied">Word copied</string>
+    <string name="sentence_copied">Sentence copied</string>
+    <string name="progress_bdd_update_title">Database Update</string>
+    <string name="progress_bdd_update_message">The database is being updated</string>
+    <string name="update_success_title">Update success</string>
+    <string name="update_success_message">The database is now up to date!</string>
+    <string name="share_subject">Try out Yomikata Z !</string>
+    <string name="share_message">Let me recommend you this application to study Japanese\n\nhttps://play.google.com/apps/testing/com.jehutyno.yomikata \n\n</string>
+    <string name="share_choose">Share the app</string>
+    <string name="alert_error_review_finished">Error review finished</string>
+    <string name="alert_error_review_session_message">You reviewed all the errors of the session</string>
+    <string name="alert_error_review_quiz_message">You reviewed all the errors of the quiz</string>
+    <string name="alert_continue_quiz">Continue the quiz</string>
+    <string name="composition">Composition</string>
+    <string name="example">Example</string>
+    <string name="radical">Rad.</string>
+    <string name="voice_download_progress">Voices Download progress</string>
+    <string name="voices_download_progress_message">Voices are being downloaded</string>
+    <string name="download_success">Download Success</string>
+    <string name="download_success_message">The voices for this category have been downloaded successfully</string>
+    <string name="download_failed">Download Failed</string>
+    <string name="download_failed_message">An error occurred during the download</string>
+    <string name="download_voices">Download voices (%1$dMB)</string>
+    <string name="download_voices_alert">Voices Download</string>
+    <string name="download_voices_alert_message">For a better quality, you can download %dMo of voices for this category. Otherwise, the vocal synthesizer will be used.</string>
+    <string name="update_voices">Update voices (%1$dMB)</string>
+    <string name="update_voices_alert">Voices update</string>
+    <string name="update_voices_alert_message">The voices have been updated on the server. To get the latest voice fixes you can download %dMo of voices for this category.</string>
+    <string name="message_adjuste_volume">The sound of the phone is too low, please adjust it</string>
+    <string name="delete_voices_files">Delete voices files</string>
+    <string name="dont_ask_voices">Don\'t ask again</string>
+    <string name="voices_reinit_done">Voice files have been deleted</string>
+</resources>

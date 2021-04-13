@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                xmlns:app="http://schemas.android.com/apk/res-auto"
+                android:background="@color/colorPrimaryDark"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:padding="50dp">
+
+    <com.eftimoff.androipathview.PathView
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/pathView"
+        android:layout_width="255dp"
+        android:layout_height="255dp"
+        android:layout_centerInParent="true"
+        app:pathColor="@color/colorAccent"
+        app:svg="@raw/yomi_logo"
+        app:pathWidth="2dp"/>
+
+    <ImageView
+        android:id="@+id/logo"
+        android:layout_width="255dp"
+        android:layout_height="255dp"
+        android:visibility="invisible"
+        android:layout_centerInParent="true"
+        android:src="@drawable/yomi_logo_splash"/>
+
+</RelativeLayout>

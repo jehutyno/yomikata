@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+      xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/add_selection"
+        android:icon="@drawable/ic_selections_selected"
+        android:title="@string/add_to_selections"
+        app:showAsAction="always"/>
+    <item
+        android:id="@+id/remove_selection"
+        android:icon="@drawable/ic_unselect"
+        android:title="@string/remove_from_selection"
+        app:showAsAction="always"/>
+    <item
+        android:id="@+id/select_all"
+        android:icon="@drawable/ic_select_multiple"
+        android:title="@string/select_all"
+        app:showAsAction="always"/>
+    <item
+        android:id="@+id/unselect_all"
+        android:icon="@drawable/ic_unselect_multiple"
+        android:title="@string/unselect_all"
+        app:showAsAction="always"/>
+
+</menu>

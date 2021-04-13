@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#263238</color>
+    <color name="colorPrimaryDark">#212121</color>
+    <color name="colorPrimaryTransparent">#ee263238</color>
+    <color name="colorPrimaryLight">#37474f</color>
+    <color name="colorAccentLight">#ffad46</color>
+    <color name="darkGray">#424242</color>
+    <color name="gray">#848484</color>
+    <color name="light_gray">#8a8b8d</color>
+    <color name="lighter_gray">#dcdcdc</color>
+    <color name="white_80_pourcent">#ccffffff</color>
+    <color name="white_50_pourcent">#99ffffff</color>
+    <color name="colorMenu">#212121</color>
+    <color name="toolbarColor">#212a2f</color>
+    <color name="fab_menu_bg_color">#dcdcdc</color>
+    <color name="fab_menu_text_color">#212121</color>
+    <color name="content_icon_color">#c6c6c6</color>
+    <color name="answer_icon_color">#424242</color>
+    <color name="dl_button_color">#88000000</color>
+
+    <color name="transparent">#00000000</color>
+    <color name="blackTransparent">#44000000</color>
+    <color name="blackTransparentLight">#22000000</color>
+    <color name="blackTransparentDark">#88000000</color>
+    <color name="blackTransparentDarker">#dd000000</color>
+    <color name="blackTransparentDarkerer">#ff000000</color>
+</resources>

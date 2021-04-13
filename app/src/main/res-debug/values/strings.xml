@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Yomikata Z Debug</string>
+    <string name="db_path" translatable="false">/data/data/com.jehutyno.yomikata.debug/databases/</string>
+</resources>

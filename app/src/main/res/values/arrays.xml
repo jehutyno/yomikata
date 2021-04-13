@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="speedArray">
+        <item>Quick</item>
+        <item>Normal</item>
+        <item>Slow</item>
+    </string-array>
+    <string-array name="speedValues" translatable="false">
+        <item>4</item>
+        <item>2</item>
+        <item>1</item>
+    </string-array>
+    <string-array name="lengthArray">
+        <item>5 words</item>
+        <item>10 words</item>
+        <item>20 words</item>
+        <item>30 words</item>
+        <item>40 words</item>
+        <item>50 words</item>
+        <item>100 words</item>
+        <item>Infinite</item>
+    </string-array>
+    <string-array name="lengthValues" translatable="false">
+        <item>5</item>
+        <item>10</item>
+        <item>20</item>
+        <item>30</item>
+        <item>40</item>
+        <item>50</item>
+        <item>100</item>
+        <item>-1</item>r
+    </string-array>
+    <string-array name="fontSizeArray">
+        <item>Small</item>
+        <item>Normal</item>
+        <item>Big</item>
+    </string-array>
+    <string-array name="fontSizeValues" translatable="false">
+        <item>18</item>
+        <item>23</item>
+        <item>28</item>
+    </string-array>
+</resources>

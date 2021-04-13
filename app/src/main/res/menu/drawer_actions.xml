@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+      xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <group
+        android:id="@+id/grp1"
+        android:checkableBehavior="none">
+        <item
+            android:id="@+id/day_night_item"
+            android:checkable="false"
+            android:icon="@drawable/ic_night"
+            android:title="@string/menu_night_mode"
+            app:actionLayout="@layout/menu_switch"/>
+        <item
+            android:id="@+id/settings"
+            android:checkable="false"
+            android:icon="@drawable/ic_settings"
+            android:title="@string/settings"/>
+    </group>
+
+    <group
+        android:id="@+id/grp2"
+        android:checkableBehavior="single">
+        <item
+            android:id="@+id/home"
+            android:icon="@drawable/ic_home"
+            android:title="@string/drawer_home"/>
+        <item
+            android:id="@+id/your_selections_item"
+            android:icon="@drawable/ic_selections"
+            android:title="@string/drawer_your_selections"/>
+        <item
+            android:id="@+id/hiragana_item"
+            android:icon="@drawable/ic_hiragana"
+            android:title="@string/drawer_hiragana"/>
+        <item
+            android:id="@+id/katakana_item"
+            android:icon="@drawable/ic_katakana"
+            android:title="@string/drawer_katakana"/>
+        <item
+            android:id="@+id/kanji_item"
+            android:icon="@drawable/ic_kanji"
+            android:title="@string/drawer_kanji_beginner"/>
+        <item
+            android:id="@+id/counters_item"
+            android:icon="@drawable/ic_counters"
+            android:title="@string/drawer_counters" />
+        <item
+            android:id="@+id/jlpt5_item"
+            android:icon="@drawable/ic_jlpt5"
+            android:title="@string/drawer_jlpt5"/>
+        <item
+            android:id="@+id/jlpt4_item"
+            android:icon="@drawable/ic_jlpt4"
+            android:title="@string/drawer_jlpt4"/>
+        <item
+            android:id="@+id/jlpt3_item"
+            android:icon="@drawable/ic_jlpt3"
+            android:title="@string/drawer_jlpt3"/>
+        <item
+            android:id="@+id/jlpt2_item"
+            android:icon="@drawable/ic_jlpt2"
+            android:title="@string/drawer_jlpt2"/>
+        <item
+            android:id="@+id/jlpt1_item"
+            android:icon="@drawable/ic_jlpt1"
+            android:title="@string/drawer_jlpt1"/>
+    </group>
+
+</menu>

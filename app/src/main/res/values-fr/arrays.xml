@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="speedArray">
+        <item>Rapide</item>
+        <item>Normale</item>
+        <item>Lente</item>
+    </string-array>
+    <string-array name="lengthArray">
+        <item>5 mots</item>
+        <item>10 mots</item>
+        <item>20 mots</item>
+        <item>30 mots</item>
+        <item>40 mots</item>
+        <item>50 mots</item>
+        <item>100 mots</item>
+        <item>Infinie</item>
+    </string-array>
+    <string-array name="fontSizeArray">
+        <item>Petite</item>
+        <item>Normale</item>
+        <item>Grande</item>
+    </string-array>
+</resources>

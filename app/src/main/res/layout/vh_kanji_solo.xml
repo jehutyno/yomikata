@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    tools:ignore="MissingPrefix">
+
+    <View
+        android:id="@+id/separator"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:alpha="0.2"
+        android:background="@color/lighter_gray" />
+
+    <LinearLayout
+        android:id="@+id/kanji_solo_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingTop="2dp">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/kanji_solo"
+                android:layout_width="32dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:textColor="@color/lighter_gray"
+                android:textSize="18sp"
+                tools:text="漢" />
+
+            <TextView
+                android:id="@+id/ks_strokes"
+                android:layout_width="32dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:drawableLeft="@drawable/ic_stroke"
+                android:drawablePadding="2dp"
+                android:drawableStart="@drawable/ic_stroke"
+                android:textColor="@color/lighter_gray"
+                tools:text="12" />
+
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/ks_trad"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginLeft="12dp"
+            android:layout_marginStart="12dp"
+            android:textColor="@color/lighter_gray"
+            tools:text="signe" />
+
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/kunyomi_title"
+        android:layout_width="32dp"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/kanji_solo_container"
+        android:layout_marginTop="2dp"
+        android:gravity="end"
+        android:lines="1"
+        android:text="Kun."
+        android:textColor="@color/lighter_gray"
+        android:textSize="12sp"
+        android:textStyle="bold" />
+
+
+    <TextView
+        android:id="@+id/ks_kunyomi"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/kanji_solo_container"
+        android:layout_marginLeft="12dp"
+        android:layout_toRightOf="@+id/kunyomi_title"
+        android:textColor="@color/lighter_gray"
+        android:textSize="12sp"
+        tools:text="かん" />
+
+    <TextView
+        android:id="@+id/onyomi_title"
+        android:layout_width="32dp"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/ks_kunyomi"
+        android:layout_marginTop="2dp"
+        android:gravity="end"
+        android:lines="1"
+        android:text="On."
+        android:textColor="@color/lighter_gray"
+        android:textSize="12sp"
+        android:textStyle="bold" />
+
+
+    <TextView
+        android:id="@+id/ks_onyomi"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/ks_kunyomi"
+        android:layout_marginLeft="12dp"
+        android:layout_marginStart="12dp"
+        android:layout_toEndOf="@+id/onyomi_title"
+        android:layout_toRightOf="@+id/onyomi_title"
+        android:layout_marginTop="2dp"
+        android:textColor="@color/lighter_gray"
+        android:textSize="12sp"
+        tools:text="カン" />
+
+    <TextView
+        android:id="@+id/radical_title"
+        android:layout_width="32dp"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/ks_onyomi"
+        android:gravity="end"
+        android:lines="1"
+        android:text="@string/radical"
+        android:textColor="@color/lighter_gray"
+        android:layout_marginTop="2dp"
+        android:textSize="12sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/radical"
+        fontPath="fonts/radicals_font.ttf"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/ks_onyomi"
+        android:layout_marginBottom="4dp"
+        android:layout_marginLeft="12dp"
+        android:layout_marginStart="12dp"
+        android:layout_toEndOf="@+id/radical_title"
+        android:layout_toRightOf="@+id/radical_title"
+        android:layout_marginTop="2dp"
+        android:textColor="@color/lighter_gray"
+        android:textSize="14sp"
+        tools:text="い" />
+
+    <TextView
+        android:id="@+id/radical_stroke"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/ks_onyomi"
+        android:layout_marginLeft="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="2dp"
+        android:layout_toEndOf="@+id/radical"
+        android:layout_toRightOf="@+id/radical"
+        android:drawableLeft="@drawable/ic_stroke"
+        android:drawableStart="@drawable/ic_stroke"
+        android:textColor="@color/lighter_gray"
+        android:textSize="12sp"
+        tools:text="12" />
+
+    <TextView
+        android:id="@+id/radical_trad"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:layout_below="@+id/ks_onyomi"
+        android:layout_marginLeft="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_toEndOf="@+id/radical_stroke"
+        android:layout_toRightOf="@+id/radical_stroke"
+        android:textColor="@color/lighter_gray"
+        android:textSize="12sp"
+        tools:text="traduction" />
+</RelativeLayout>
