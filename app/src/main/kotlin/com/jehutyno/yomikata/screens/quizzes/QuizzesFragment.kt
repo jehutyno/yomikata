@@ -81,16 +81,12 @@ class QuizzesFragment : Fragment(), QuizzesContract.View, QuizzesAdapter.Callbac
         mpresenter!!.initQuizTypes()
 
         btn_pronunciation_qcm_switch.setOnClickListener {
-            if (isCategoryNotLocked()) {
-                mpresenter!!.pronunciationQcmSwitch()
-                spotlightTuto(activity!!, btn_pronunciation_qcm_switch, getString(R.string.tutos_pronunciation_mcq), getString(R.string.tutos_pronunciation_mcq_message), SpotlightListener { })
-            }
+            mpresenter!!.pronunciationQcmSwitch()
+            spotlightTuto(activity!!, btn_pronunciation_qcm_switch, getString(R.string.tutos_pronunciation_mcq), getString(R.string.tutos_pronunciation_mcq_message), SpotlightListener { })
         }
         btn_pronunciation_switch.setOnClickListener {
-            if (isCategoryNotLocked()) {
-                mpresenter!!.pronunciationSwitch()
-                spotlightTuto(activity!!, btn_pronunciation_switch, getString(R.string.tutos_pronunciation_quiz), getString(R.string.tutos_pronunciation_quiz_message), SpotlightListener { })
-            }
+            mpresenter!!.pronunciationSwitch()
+            spotlightTuto(activity!!, btn_pronunciation_switch, getString(R.string.tutos_pronunciation_quiz), getString(R.string.tutos_pronunciation_quiz_message), SpotlightListener { })
         }
         btn_audio_switch.setOnClickListener {
             spotlightTuto(activity!!, btn_audio_switch, getString(R.string.tutos_audio_quiz), getString(R.string.tutos_audio_quiz_message), SpotlightListener { })
@@ -109,10 +105,8 @@ class QuizzesFragment : Fragment(), QuizzesContract.View, QuizzesAdapter.Callbac
             spotlightTuto(activity!!, btn_jap_en_switch, getString(R.string.tutos_jp_en), getString(R.string.tutos_jp_en_message), SpotlightListener { })
         }
         btn_auto_switch.setOnClickListener {
-            if (isCategoryNotLocked()) {
-                mpresenter!!.autoSwitch()
-                spotlightTuto(activity!!, btn_auto_switch, getString(R.string.tutos_auto_quiz), getString(R.string.tutos_auto_quiz_message), SpotlightListener { })
-            }
+            mpresenter!!.autoSwitch()
+            spotlightTuto(activity!!, btn_auto_switch, getString(R.string.tutos_auto_quiz), getString(R.string.tutos_auto_quiz_message), SpotlightListener { })
         }
 
         play_low.setOnClickListener {
@@ -401,9 +395,5 @@ class QuizzesFragment : Fragment(), QuizzesContract.View, QuizzesAdapter.Callbac
                 }
             }
         }
-    }
-
-    fun isCategoryNotLocked(): Boolean {
-        return selectedCategory != Categories.CATEGORY_SELECTIONS
     }
 }
