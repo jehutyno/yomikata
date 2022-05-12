@@ -16,11 +16,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.security.SecureRandom;
 
 import javax.crypto.Cipher;
-import javax.crypto.KeyGenerator;
-import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
 
@@ -57,7 +54,7 @@ public class CopyUtils {
         String db_path = activity.getString(R.string.db_path);
         File input = new File(db_path + db_name);
         try {
-            byte[] yourKey = generateKey("jaimemangerdesgrossespatat&s!!!!!!!!!trololo");
+            SecretKeySpec yourKey = generateKey("jaimemangerdesgrossespatat&s!!!!!!!!!trololo");
             byte[] filesBytes = encodeFile(yourKey, fileToByteArray(input));
             File sdCard = Environment.getExternalStorageDirectory();
             File dir = new File(sdCard.getAbsolutePath() + "/Yomikata/");
@@ -85,8 +82,7 @@ public class CopyUtils {
 
     static public void restoreEncryptedBdd(File file, String toPath) throws Exception {
         byte[] filesBytes = fileToByteArray(file);
-        byte[] yourKey = generateKey("jaimemangerdesgrossespatat&s!!!!!!!!!trololo");
-        byte[] decodedData = decodeFile(yourKey, filesBytes);
+        byte[] decodedData = decodeFile(generateKey("jaimemangerdesgrossespatat&s!!!!!!!!!trololo"), filesBytes);
         OutputStream myOutput = new FileOutputStream(toPath);
         // transfer bytes from the inputfile to the outputfile
         myOutput.write(decodedData);
@@ -147,21 +143,12 @@ public class CopyUtils {
         }
     }
 
-    public static byte[] generateKey(String password) throws Exception {
+    public static SecretKeySpec generateKey(String password) throws Exception {
         byte[] keyStart = password.getBytes("UTF-8");
-
-        KeyGenerator kgen = KeyGenerator.getInstance("AES");
-        SecureRandom sr = SecureRandom.getInstance("SHA1PRNG", new CryptoProvider());
-
-        sr.setSeed(keyStart);
-        kgen.init(128, sr);
-        SecretKey skey = kgen.generateKey();
-        return skey.getEncoded();
+        return new SecretKeySpec(InsecureSHA1PRNGKeyDerivator.deriveInsecureKey(keyStart, 16), "AES");
     }
 
-    public static byte[] encodeFile(byte[] key, byte[] fileData) throws Exception {
-
-        SecretKeySpec skeySpec = new SecretKeySpec(key, "AES");
+    public static byte[] encodeFile(SecretKeySpec skeySpec, byte[] fileData) throws Exception {
         Cipher cipher = Cipher.getInstance("AES");
         cipher.init(Cipher.ENCRYPT_MODE, skeySpec);
 
@@ -170,8 +157,7 @@ public class CopyUtils {
         return encrypted;
     }
 
-    public static byte[] decodeFile(byte[] key, byte[] fileData) throws Exception {
-        SecretKeySpec skeySpec = new SecretKeySpec(key, "AES");
+    public static byte[] decodeFile(SecretKeySpec skeySpec, byte[] fileData) throws Exception {
         Cipher cipher = Cipher.getInstance("AES");
         cipher.init(Cipher.DECRYPT_MODE, skeySpec);
 
