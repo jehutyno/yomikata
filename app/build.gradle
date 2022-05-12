@@ -3,7 +3,7 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 
 android {
-    compileSdkVersion 29
+    compileSdkVersion 30
     buildToolsVersion '29.0.3'
 
     dexOptions {
@@ -13,7 +13,7 @@ android {
     defaultConfig {
         applicationId "com.jehutyno.yomikata"
         minSdkVersion 16
-        targetSdkVersion 29
+        targetSdkVersion 30
         versionCode 58
         versionName "1.20"
         archivesBaseName = "Yomikata-Z-$versionName"
