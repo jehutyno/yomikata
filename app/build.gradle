@@ -14,8 +14,8 @@ android {
         applicationId "com.jehutyno.yomikata"
         minSdkVersion 16
         targetSdkVersion 30
-        versionCode 58
-        versionName "1.20"
+        versionCode 60
+        versionName "1.22"
         archivesBaseName = "Yomikata-Z-$versionName"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         multiDexEnabled true
