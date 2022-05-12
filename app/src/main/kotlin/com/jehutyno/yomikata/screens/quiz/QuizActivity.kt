@@ -66,9 +66,9 @@ class QuizActivity : AppCompatActivity() {
             quizStrategy = savedInstanceState.getSerializable("quiz_strategy") as QuizStrategy
             quiztypes = savedInstanceState.getIntArray("quiz_types")?: intArrayOf()
         } else {
-            quizIds = intent.getLongArrayExtra(Extras.EXTRA_QUIZ_IDS)
+            quizIds = intent.getLongArrayExtra(Extras.EXTRA_QUIZ_IDS) ?: longArrayOf()
             quizStrategy = intent.getSerializableExtra(Extras.EXTRA_QUIZ_STRATEGY) as QuizStrategy
-            quiztypes = intent.getIntArrayExtra(Extras.EXTRA_QUIZ_TYPES)
+            quiztypes = intent.getIntArrayExtra(Extras.EXTRA_QUIZ_TYPES) ?: intArrayOf()
 
             quizFragment = QuizFragment().withArguments(
                 Extras.EXTRA_QUIZ_IDS to quizIds,

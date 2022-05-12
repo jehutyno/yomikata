@@ -70,7 +70,7 @@ class ContentActivity : AppCompatActivity() {
         category = intent.getIntExtra(Extras.EXTRA_CATEGORY, -1)
         level = intent.getIntExtra(Extras.EXTRA_LEVEL, -1)
         var quizPosition = intent.getIntExtra(Extras.EXTRA_QUIZ_POSITION, -1)
-        selectedTypes = intent.getIntArrayExtra(Extras.EXTRA_QUIZ_TYPES)
+        selectedTypes = intent.getIntArrayExtra(Extras.EXTRA_QUIZ_TYPES) ?: intArrayOf()
 
         findViewById<Toolbar>(R.id.toolbar).let {
             setSupportActionBar(it)
