@@ -16,11 +16,11 @@ import com.github.salomonbrys.kodein.android.appKodein
 import com.github.salomonbrys.kodein.instance
 import com.github.salomonbrys.kodein.singleton
 import com.jehutyno.yomikata.R
+import com.jehutyno.yomikata.databinding.FragmentContentBinding
 import com.jehutyno.yomikata.managers.VoicesManager
 import com.jehutyno.yomikata.model.Answer
 import com.jehutyno.yomikata.model.Quiz
 import com.jehutyno.yomikata.util.*
-import kotlinx.android.synthetic.main.fragment_content.*
 import org.jetbrains.anko.cancelButton
 import org.jetbrains.anko.okButton
 import org.jetbrains.anko.support.v4.alert
@@ -42,6 +42,11 @@ class AnswersFragment : Fragment(), AnswersContract.View, AnswersAdapter.Callbac
     private var tts: TextToSpeech? = null
     private var ttsSupported: Int = TextToSpeech.LANG_NOT_SUPPORTED
 
+    // View Binding
+    private var _binding: FragmentContentBinding? = null
+    private val binding get() = _binding!!
+
+
     override fun onInit(status: Int) {
         ttsSupported = onTTSinit(activity, status, tts)
     }
@@ -59,19 +64,20 @@ class AnswersFragment : Fragment(), AnswersContract.View, AnswersAdapter.Callbac
         adapter.replaceData(presenter.getAnswersWordsSentences(answers))
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        return inflater.inflate(R.layout.fragment_content, container, false)
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+        _binding = FragmentContentBinding.inflate(inflater, container, false)
+        return binding.root
     }
-
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
         injector.inject(Kodein {
             extend(appKodein())
             bind<VoicesManager>() with singleton { VoicesManager(activity!!) }
         })
 
-        recyclerview_content.let {
+        binding.recyclerviewContent.let {
             it.adapter = adapter
             it.layoutManager = layoutManager
         }
@@ -162,6 +168,11 @@ class AnswersFragment : Fragment(), AnswersContract.View, AnswersAdapter.Callbac
         tts?.stop()
         tts?.shutdown()
         super.onDestroy()
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 
     fun unlockFullVersion() {

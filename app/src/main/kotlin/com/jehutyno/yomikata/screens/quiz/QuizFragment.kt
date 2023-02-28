@@ -28,6 +28,7 @@ import com.github.salomonbrys.kodein.android.appKodein
 import com.github.salomonbrys.kodein.instance
 import com.github.salomonbrys.kodein.singleton
 import com.jehutyno.yomikata.R
+import com.jehutyno.yomikata.databinding.FragmentQuizBinding
 import com.jehutyno.yomikata.furigana.FuriganaView
 import com.jehutyno.yomikata.managers.VoicesManager
 import com.jehutyno.yomikata.model.*
@@ -35,7 +36,6 @@ import com.jehutyno.yomikata.screens.answers.AnswersActivity
 import com.jehutyno.yomikata.screens.content.word.WordDetailDialogFragment
 import com.jehutyno.yomikata.util.*
 import com.jehutyno.yomikata.view.SwipeDirection
-import kotlinx.android.synthetic.main.fragment_quiz.*
 import org.jetbrains.anko.cancelButton
 import org.jetbrains.anko.okButton
 import org.jetbrains.anko.padding
@@ -63,13 +63,18 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
     private var holdOn = false
     private var isSettingsOpen = false
 
+    // View Binding
+    private var _binding: FragmentQuizBinding? = null
+    private val binding get() = _binding!!
+
+
     override fun onInit(status: Int) {
         if (adapter != null && !adapter!!.words.isEmpty()) {
             ttsSupported = onTTSinit(activity, status, tts)
             presenter.setTTSSupported(ttsSupported)
-            if (adapter!!.words[pager.currentItem].second == QuizType.TYPE_AUDIO ||
+            if (adapter!!.words[binding.pager.currentItem].second == QuizType.TYPE_AUDIO ||
                 defaultSharedPreferences.getBoolean("play_start", false)) {
-                voicesManager.speakWord(adapter!!.words[pager.currentItem].first, ttsSupported, tts)
+                voicesManager.speakWord(adapter!!.words[binding.pager.currentItem].first, ttsSupported, tts)
             }
         }
     }
@@ -98,7 +103,7 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
 
     override fun onResume() {
         super.onResume()
-        hiragana_edit.inputType = if (defaultSharedPreferences.getBoolean("input_change", false))
+        binding.hiraganaEdit.inputType = if (defaultSharedPreferences.getBoolean("input_change", false))
             InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
         else
             InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
@@ -108,13 +113,14 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-        outState.putString("edit", hiragana_edit.text.toString())
+        outState.putString("edit", binding.hiraganaEdit.text.toString())
         outState.putInt("edit_color", currentEditColor)
         presenter.onSaveInstanceState(outState)
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        return inflater.inflate(R.layout.fragment_quiz, container, false)
+        _binding = FragmentQuizBinding.inflate(inflater, container, false)
+        return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -128,9 +134,9 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
         initUI()
 
         if (savedInstanceState != null) {
-            hiragana_edit.setText(savedInstanceState.getString("edit"))
-            savedInstanceState.getString("edit")?.let { hiragana_edit.setSelection(it.length) }
-            hiragana_edit.setTextColor(ContextCompat.getColor(activity!!, currentEditColor))
+            binding.hiraganaEdit.setText(savedInstanceState.getString("edit"))
+            savedInstanceState.getString("edit")?.let { binding.hiraganaEdit.setSelection(it.length) }
+            binding.hiraganaEdit.setTextColor(ContextCompat.getColor(activity!!, currentEditColor))
             presenter.onRestoreInstanceState(savedInstanceState)
         } else
             presenter.initQuiz()
@@ -141,6 +147,11 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
         tts?.shutdown()
         voicesManager.releasePlayer()
         super.onDestroy()
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 
     override fun onPause() {
@@ -168,7 +179,7 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
             ttsErrorsImage.setImageResource(R.drawable.ic_tts_settings)
             ttsErrorsImage.padding = DimensionHelper.getPixelFromDip(activity, 12)
             ttsErrorsImage.setOnClickListener {
-                val category = adapter!!.words[pager.currentItem].first.baseCategory
+                val category = adapter!!.words[binding.pager.currentItem].first.baseCategory
                 val speechAvailability = checkSpeechAvailability(activity!!, ttsSupported, getCateogryLevel(category))
                 when (speechAvailability) {
                     SpeechAvailability.NOT_AVAILABLE -> {
@@ -179,14 +190,14 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
                             closeTTSSettings()
                         } else {
                             if (speechAvailability == SpeechAvailability.VOICES_AVAILABLE) {
-                                settings_speed.visibility = GONE
-                                seek_speed.visibility = GONE
+                                binding.settingsSpeed.visibility = GONE
+                                binding.seekSpeed.visibility = GONE
                             } else {
-                                settings_speed.visibility = VISIBLE
-                                seek_speed.visibility = VISIBLE
+                                binding.settingsSpeed.visibility = VISIBLE
+                                binding.seekSpeed.visibility = VISIBLE
                             }
-                            settings_container.animate().setDuration(300).translationY(0f).withStartAction {
-                                settings_container.visibility = VISIBLE
+                            binding.settingsContainer.animate().setDuration(300).translationY(0f).withStartAction {
+                                binding.settingsContainer.visibility = VISIBLE
                                 isSettingsOpen = true
                             }.start()
                         }
@@ -210,10 +221,10 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
 
     fun initPager() {
         adapter = QuizItemPagerAdapter(context!!, this)
-        pager.adapter = adapter
-        pager.setAllowedSwipeDirection(SwipeDirection.none)
-        pager.offscreenPageLimit = 0
-        pager.addOnPageChangeListener(object : ViewPager.OnPageChangeListener {
+        binding.pager.adapter = adapter
+        binding.pager.setAllowedSwipeDirection(SwipeDirection.none)
+        binding.pager.offscreenPageLimit = 0
+        binding.pager.addOnPageChangeListener(object : ViewPager.OnPageChangeListener {
             override fun onPageScrollStateChanged(state: Int) {
             }
 
@@ -221,26 +232,26 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
             }
 
             override fun onPageSelected(position: Int) {
-                hiragana_edit.isEnableConversion = adapter!!.words[position].first.isKana == 0
+                binding.hiraganaEdit.isEnableConversion = adapter!!.words[position].first.isKana == 0
                 holdOn = false
             }
         })
     }
 
     fun initEditText() {
-        hiragana_edit.setOnEditorActionListener { _, i, keyEvent ->
+        binding.hiraganaEdit.setOnEditorActionListener { _, i, keyEvent ->
             if (isSettingsOpen) closeTTSSettings()
-            if (adapter!!.words[pager.currentItem].second == QuizType.TYPE_PRONUNCIATION
+            if (adapter!!.words[binding.pager.currentItem].second == QuizType.TYPE_PRONUNCIATION
                 && (i == EditorInfo.IME_ACTION_DONE || keyEvent?.keyCode == KeyEvent.KEYCODE_ENTER) && !holdOn) {
                 // Validate Action
                 holdOn = true
-                hiragana_edit.setText(hiragana_edit.text.toString().replace("n", if (adapter!!.words[pager.currentItem].first.isKana >= 1) "n" else "ん"))
-                presenter.onAnswerGiven(hiragana_edit.text.toString().trim().replace(" ", "").replace("　", "").replace("\n", "")) // TODO add function clean utils
+                binding.hiraganaEdit.setText(binding.hiraganaEdit.text.toString().replace("n", if (adapter!!.words[binding.pager.currentItem].first.isKana >= 1) "n" else "ん"))
+                presenter.onAnswerGiven(binding.hiraganaEdit.text.toString().trim().replace(" ", "").replace("　", "").replace("\n", "")) // TODO add function clean utils
             }
             true
         }
 
-        hiragana_edit.addTextChangedListener(object : TextWatcher {
+        binding.hiraganaEdit.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(s: Editable?) {
             }
 
@@ -249,7 +260,7 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
                 // Return to nuraml color when typing again (because it becomes Red or Green when
                 // you validate
                 currentEditColor = R.color.lighter_gray
-                hiragana_edit.setTextColor(ContextCompat.getColor(activity!!, currentEditColor))
+                binding.hiraganaEdit.setTextColor(ContextCompat.getColor(activity!!, currentEditColor))
             }
 
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
@@ -257,7 +268,7 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
 
         })
 
-        edit_action.setOnClickListener {
+        binding.editAction.setOnClickListener {
             if (isSettingsOpen) closeTTSSettings()
             // hold is used to wait so only one answer is validated even with multiple press
             if (!holdOn) {
@@ -269,21 +280,21 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
     }
 
     override fun clearEdit() {
-        hiragana_edit.setText("")
+        binding.hiraganaEdit.setText("")
     }
 
     override fun displayEditAnswer(answer: String) {
-        hiragana_edit.setText(answer)
+        binding.hiraganaEdit.setText(answer)
         currentEditColor = R.color.level_master_4
-        hiragana_edit.setTextColor(ContextCompat.getColor(activity!!, R.color.level_master_4))
-        hiragana_edit.setSelection(hiragana_edit.text.length)
+        binding.hiraganaEdit.setTextColor(ContextCompat.getColor(activity!!, R.color.level_master_4))
+        binding.hiraganaEdit.setSelection(binding.hiraganaEdit.text.length)
     }
 
     fun setUpAudioManager() {
         val audioManager = activity!!.getSystemService(Context.AUDIO_SERVICE) as AudioManager
-        seek_volume.max = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
-        seek_volume.progress = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
-        seek_volume.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+        binding.seekVolume.max = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+        binding.seekVolume.progress = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
+        binding.seekVolume.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(p0: SeekBar?, p1: Int, p2: Boolean) {
                 audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, p1, 0)
                 presenter.onSpeakSentence()
@@ -297,11 +308,11 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
 
         })
 
-        seek_speed.max = 250
+        binding.seekSpeed.max = 250
         val rate = defaultSharedPreferences.getInt(Prefs.TTS_RATE.pref, 50)
-        seek_speed.progress = rate
+        binding.seekSpeed.progress = rate
         tts?.setSpeechRate((rate + 50).toFloat() / 100)
-        seek_speed.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+        binding.seekSpeed.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(p0: SeekBar?, p1: Int, p2: Boolean) {
                 defaultSharedPreferences.edit().putInt(Prefs.TTS_RATE.pref, p1).apply()
                 tts?.setSpeechRate((p1 + 50).toFloat() / 100)
@@ -315,16 +326,16 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
             }
 
         })
-        settings_container.translationY = -400f
-        settings_close.setOnClickListener {
+        binding.settingsContainer.translationY = -400f
+        binding.settingsClose.setOnClickListener {
             closeTTSSettings()
         }
     }
 
     fun initAnswersButtons() {
-        quiz_container.setOnClickListener { if (isSettingsOpen) closeTTSSettings() }
-        answer_container.setOnClickListener { if (isSettingsOpen) closeTTSSettings() }
-        option_1_container.setOnClickListener {
+        binding.quizContainer.setOnClickListener { if (isSettingsOpen) closeTTSSettings() }
+        binding.answerContainer.setOnClickListener { if (isSettingsOpen) closeTTSSettings() }
+        binding.option1Container.setOnClickListener {
             if (isSettingsOpen) closeTTSSettings()
             if (!holdOn) {
                 holdOn = true
@@ -332,7 +343,7 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
 
             }
         }
-        option_2_container.setOnClickListener {
+        binding.option2Container.setOnClickListener {
             if (isSettingsOpen) closeTTSSettings()
             if (!holdOn) {
                 holdOn = true
@@ -340,7 +351,7 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
 
             }
         }
-        option_3_container.setOnClickListener {
+        binding.option3Container.setOnClickListener {
             if (isSettingsOpen) closeTTSSettings()
             if (!holdOn) {
                 holdOn = true
@@ -348,7 +359,7 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
 
             }
         }
-        option_4_container.setOnClickListener {
+        binding.option4Container.setOnClickListener {
             if (isSettingsOpen) closeTTSSettings()
             if (!holdOn) {
                 holdOn = true
@@ -356,7 +367,7 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
 
             }
         }
-        option_1_tv.setOnClickListener {
+        binding.option1Tv.setOnClickListener {
             if (isSettingsOpen) closeTTSSettings()
             if (!holdOn) {
                 holdOn = true
@@ -364,7 +375,7 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
 
             }
         }
-        option_2_tv.setOnClickListener {
+        binding.option2Tv.setOnClickListener {
             if (isSettingsOpen) closeTTSSettings()
             if (!holdOn) {
                 holdOn = true
@@ -372,7 +383,7 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
 
             }
         }
-        option_3_tv.setOnClickListener {
+        binding.option3Tv.setOnClickListener {
             if (isSettingsOpen) closeTTSSettings()
             if (!holdOn) {
                 holdOn = true
@@ -380,7 +391,7 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
 
             }
         }
-        option_4_tv.setOnClickListener {
+        binding.option4Tv.setOnClickListener {
             if (isSettingsOpen) closeTTSSettings()
             if (!holdOn) {
                 holdOn = true
@@ -388,24 +399,24 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
 
             }
         }
-        option_1_tv.movementMethod = ScrollingMovementMethod()
-        option_2_tv.movementMethod = ScrollingMovementMethod()
-        option_3_tv.movementMethod = ScrollingMovementMethod()
-        option_4_tv.movementMethod = ScrollingMovementMethod()
+        binding.option1Tv.movementMethod = ScrollingMovementMethod()
+        binding.option2Tv.movementMethod = ScrollingMovementMethod()
+        binding.option3Tv.movementMethod = ScrollingMovementMethod()
+        binding.option4Tv.movementMethod = ScrollingMovementMethod()
     }
 
     override fun reInitUI() {
-        hiragana_edit.setText("")
-        edit_action.setImageResource(R.drawable.ic_cancel_black_24dp)
-        edit_action.setColorFilter(ContextCompat.getColor(activity!!, R.color.lighter_gray))
-        option_1_tv.setTextColor(ContextCompat.getColor(activity!!, android.R.color.white))
-        option_2_tv.setTextColor(ContextCompat.getColor(activity!!, android.R.color.white))
-        option_3_tv.setTextColor(ContextCompat.getColor(activity!!, android.R.color.white))
-        option_4_tv.setTextColor(ContextCompat.getColor(activity!!, android.R.color.white))
-        option_1_furi.setTextColor(ContextCompat.getColor(activity!!, android.R.color.white))
-        option_2_furi.setTextColor(ContextCompat.getColor(activity!!, android.R.color.white))
-        option_3_furi.setTextColor(ContextCompat.getColor(activity!!, android.R.color.white))
-        option_4_furi.setTextColor(ContextCompat.getColor(activity!!, android.R.color.white))
+        binding.hiraganaEdit.setText("")
+        binding.editAction.setImageResource(R.drawable.ic_cancel_black_24dp)
+        binding.editAction.setColorFilter(ContextCompat.getColor(activity!!, R.color.lighter_gray))
+        binding.option1Tv.setTextColor(ContextCompat.getColor(activity!!, android.R.color.white))
+        binding.option2Tv.setTextColor(ContextCompat.getColor(activity!!, android.R.color.white))
+        binding.option3Tv.setTextColor(ContextCompat.getColor(activity!!, android.R.color.white))
+        binding.option4Tv.setTextColor(ContextCompat.getColor(activity!!, android.R.color.white))
+        binding.option1Furi.setTextColor(ContextCompat.getColor(activity!!, android.R.color.white))
+        binding.option2Furi.setTextColor(ContextCompat.getColor(activity!!, android.R.color.white))
+        binding.option3Furi.setTextColor(ContextCompat.getColor(activity!!, android.R.color.white))
+        binding.option4Furi.setTextColor(ContextCompat.getColor(activity!!, android.R.color.white))
     }
 
     /**
@@ -420,8 +431,8 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
     }
 
     override fun noWords() {
-        qcm_container.visibility = GONE
-        answer_container.visibility = GONE
+        binding.qcmContainer.visibility = GONE
+        binding.answerContainer.visibility = GONE
         alert {
             message = getString(R.string.quiz_empty)
             okButton { activity!!.finish() }
@@ -430,7 +441,7 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
     }
 
     override fun setPagerPosition(position: Int) {
-        pager.currentItem = position
+        binding.pager.currentItem = position
     }
 
     override fun setSentence(sentence: Sentence) {
@@ -439,30 +450,29 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
     }
 
     override fun setEditTextColor(color: Int) {
-        hiragana_edit.setTextColor(ContextCompat.getColor(activity!!, color))
-        hiragana_edit.setSelection(hiragana_edit.text.length)
+        binding.hiraganaEdit.setTextColor(ContextCompat.getColor(activity!!, color))
+        binding.hiraganaEdit.setSelection(binding.hiraganaEdit.text.length)
     }
 
     override fun animateCheck(result: Boolean) {
         if (result) {
-            check.setImageResource(R.drawable.ic_check_black_48dp)
-            check.setColorFilter(ContextCompat.getColor(activity!!, R.color.level_master_4))
+            binding.check.setImageResource(R.drawable.ic_check_black_48dp)
+            binding.check.setColorFilter(ContextCompat.getColor(activity!!, R.color.level_master_4))
         } else {
-            check.setImageResource(R.drawable.ic_clear_black_48dp)
-            check.setColorFilter(ContextCompat.getColor(activity!!, R.color.level_low_1))
+            binding.check.setImageResource(R.drawable.ic_clear_black_48dp)
+            binding.check.setColorFilter(ContextCompat.getColor(activity!!, R.color.level_low_1))
         }
-        check.animate().alpha(1f).setDuration(200).setStartDelay(0).setListener(object : Animator.AnimatorListener {
+        binding.check.animate().alpha(1f).setDuration(200).setStartDelay(0).setListener(object : Animator.AnimatorListener {
             override fun onAnimationRepeat(animation: Animator?) {
             }
 
             override fun onAnimationEnd(animation: Animator?) {
-                check.animate().alpha(0f).setDuration(300).setStartDelay(300).setListener(object : Animator.AnimatorListener {
+                binding.check.animate().alpha(0f).setDuration(300).setStartDelay(300).setListener(object : Animator.AnimatorListener {
                     override fun onAnimationRepeat(animation: Animator?) {
                     }
 
                     override fun onAnimationEnd(animation: Animator?) {
-                        if (check != null)
-                            check.visibility = View.GONE
+                        binding.check.visibility = View.GONE
                         if (result) {
                             presenter.onNextWord()
                         } else {
@@ -484,7 +494,7 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
             }
 
             override fun onAnimationStart(animation: Animator?) {
-                check.visibility = View.VISIBLE
+                binding.check.visibility = View.VISIBLE
             }
 
         }).start()
@@ -492,109 +502,109 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
     }
 
     override fun displayEditDisplayAnswerButton() {
-        edit_action.setImageResource(R.drawable.ic_visibility_black_24dp)
-        edit_action.setColorFilter(ContextCompat.getColor(activity!!, R.color.level_master_4))
+        binding.editAction.setImageResource(R.drawable.ic_visibility_black_24dp)
+        binding.editAction.setColorFilter(ContextCompat.getColor(activity!!, R.color.level_master_4))
     }
 
     override fun displayQCMMode() {
-        qcm_container.visibility = View.VISIBLE
-        edit_container.visibility = View.GONE
+        binding.qcmContainer.visibility = View.VISIBLE
+        binding.editContainer.visibility = View.GONE
     }
 
     override fun displayEditMode() {
-        qcm_container.visibility = View.GONE
-        edit_container.visibility = View.VISIBLE
+        binding.qcmContainer.visibility = View.GONE
+        binding.editContainer.visibility = View.VISIBLE
     }
 
     override fun displayQCMNormalTextViews() {
-        option_1_tv.textSize = defaultSharedPreferences.getString("font_size", "18")!!.toFloat()
-        option_2_tv.textSize = defaultSharedPreferences.getString("font_size", "18")!!.toFloat()
-        option_3_tv.textSize = defaultSharedPreferences.getString("font_size", "18")!!.toFloat()
-        option_4_tv.textSize = defaultSharedPreferences.getString("font_size", "18")!!.toFloat()
-        option_1_tv.visibility = View.VISIBLE
-        option_2_tv.visibility = View.VISIBLE
-        option_3_tv.visibility = View.VISIBLE
-        option_4_tv.visibility = View.VISIBLE
-        option_1_furi.visibility = View.GONE
-        option_2_furi.visibility = View.GONE
-        option_3_furi.visibility = View.GONE
-        option_4_furi.visibility = View.GONE
+        binding.option1Tv.textSize = defaultSharedPreferences.getString("font_size", "18")!!.toFloat()
+        binding.option2Tv.textSize = defaultSharedPreferences.getString("font_size", "18")!!.toFloat()
+        binding.option3Tv.textSize = defaultSharedPreferences.getString("font_size", "18")!!.toFloat()
+        binding.option4Tv.textSize = defaultSharedPreferences.getString("font_size", "18")!!.toFloat()
+        binding.option1Tv.visibility = View.VISIBLE
+        binding.option2Tv.visibility = View.VISIBLE
+        binding.option3Tv.visibility = View.VISIBLE
+        binding.option4Tv.visibility = View.VISIBLE
+        binding.option1Furi.visibility = View.GONE
+        binding.option2Furi.visibility = View.GONE
+        binding.option3Furi.visibility = View.GONE
+        binding.option4Furi.visibility = View.GONE
     }
 
     override fun displayQCMFuriTextViews() {
-        option_1_tv.visibility = View.GONE
-        option_2_tv.visibility = View.GONE
-        option_3_tv.visibility = View.GONE
-        option_4_tv.visibility = View.GONE
-        option_1_furi.visibility = View.VISIBLE
-        option_2_furi.visibility = View.VISIBLE
-        option_3_furi.visibility = View.VISIBLE
-        option_4_furi.visibility = View.VISIBLE
+        binding.option1Tv.visibility = View.GONE
+        binding.option2Tv.visibility = View.GONE
+        binding.option3Tv.visibility = View.GONE
+        binding.option4Tv.visibility = View.GONE
+        binding.option1Furi.visibility = View.VISIBLE
+        binding.option2Furi.visibility = View.VISIBLE
+        binding.option3Furi.visibility = View.VISIBLE
+        binding.option4Furi.visibility = View.VISIBLE
     }
 
     override fun displayQCMTv1(option: String, color: Int) {
-        option_1_tv.text = option
-        option_1_tv.textColor = ContextCompat.getColor(context!!, color)
+        binding.option1Tv.text = option
+        binding.option1Tv.textColor = ContextCompat.getColor(context!!, color)
     }
 
     override fun displayQCMTv2(option: String, color: Int) {
-        option_2_tv.text = option
-        option_2_tv.textColor = ContextCompat.getColor(context!!, color)
+        binding.option2Tv.text = option
+        binding.option2Tv.textColor = ContextCompat.getColor(context!!, color)
     }
 
     override fun displayQCMTv3(option: String, color: Int) {
-        option_3_tv.text = option
-        option_3_tv.textColor = ContextCompat.getColor(context!!, color)
+        binding.option3Tv.text = option
+        binding.option3Tv.textColor = ContextCompat.getColor(context!!, color)
     }
 
     override fun displayQCMTv4(option: String, color: Int) {
-        option_4_tv.text = option
-        option_4_tv.textColor = ContextCompat.getColor(context!!, color)
+        binding.option4Tv.text = option
+        binding.option4Tv.textColor = ContextCompat.getColor(context!!, color)
     }
 
     override fun displayQCMFuri1(optionFuri: String, start: Int, end: Int, color: Int) {
-        option_1_furi.text_set(optionFuri, start, end, color)
+        binding.option1Furi.text_set(optionFuri, start, end, color)
     }
 
     override fun displayQCMFuri2(optionFuri: String, start: Int, end: Int, color: Int) {
-        option_2_furi.text_set(optionFuri, start, end, color)
+        binding.option2Furi.text_set(optionFuri, start, end, color)
     }
 
     override fun displayQCMFuri3(optionFuri: String, start: Int, end: Int, color: Int) {
-        option_3_furi.text_set(optionFuri, start, end, color)
+        binding.option3Furi.text_set(optionFuri, start, end, color)
     }
 
     override fun displayQCMFuri4(optionFuri: String, start: Int, end: Int, color: Int) {
-        option_4_furi.text_set(optionFuri, start, end, color)
+        binding.option4Furi.text_set(optionFuri, start, end, color)
     }
 
     fun setOptionsFontSize(fontSize: Float) {
-        option_1_tv.textSize = fontSize
-        option_2_tv.textSize = fontSize
-        option_3_tv.textSize = fontSize
-        option_4_tv.textSize = fontSize
+        binding.option1Tv.textSize = fontSize
+        binding.option2Tv.textSize = fontSize
+        binding.option3Tv.textSize = fontSize
+        binding.option4Tv.textSize = fontSize
     }
 
     fun closeTTSSettings() {
-        settings_container.animate().setDuration(300).translationY(-400f).withEndAction {
+        binding.settingsContainer.animate().setDuration(300).translationY(-400f).withEndAction {
             isSettingsOpen = false
-            settings_container.visibility = GONE
+            binding.settingsContainer.visibility = GONE
         }.start()
     }
 
     override fun showKeyboard() {
         val inputMethodManager = context!!.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-        inputMethodManager.showSoftInput(hiragana_edit, InputMethodManager.SHOW_FORCED)
-        hiragana_edit.requestFocus()
+        inputMethodManager.showSoftInput(binding.hiraganaEdit, InputMethodManager.SHOW_FORCED)
+        binding.hiraganaEdit.requestFocus()
     }
 
     override fun hideKeyboard() {
         val inputMethodManager = context!!.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-        inputMethodManager.hideSoftInputFromWindow(hiragana_edit.windowToken, 0)
+        inputMethodManager.hideSoftInputFromWindow(binding.hiraganaEdit.windowToken, 0)
     }
 
     override fun animateColor(position: Int, word: Word, sentence: Sentence, quizType: QuizType, fromLevel: Int, toLevel: Int, fromPoints: Int, toPoints: Int) {
-        val view = pager.findViewWithTag<View>("pos_" + position)
+        val view = binding.pager.findViewWithTag<View>("pos_" + position)
         val btn_furi = view.findViewById<View>(R.id.btn_furi)
         val furi_sentence = view.findViewById<FuriganaView>(R.id.furi_sentence)
         val trad_sentence = view.findViewById<TextView>(R.id.trad_sentence)
@@ -609,20 +619,20 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
                 when (quizType) {
                     QuizType.TYPE_PRONUNCIATION, QuizType.TYPE_PRONUNCIATION_QCM, QuizType.TYPE_JAP_EN -> {
                         val colorEntireWord = word.isKana == 2 && quizType == QuizType.TYPE_JAP_EN
-                        val wordTruePosition = if (colorEntireWord) 0 else sentence.jap?.let { getWordPositionInFuriSentence(it, word) }
+                        val wordTruePosition = if (colorEntireWord) 0 else getWordPositionInFuriSentence(sentence.jap, word)
                         if (btn_furi.isSelected) {
-                            if (colorEntireWord) 0 else wordTruePosition?.let {
+                            if (colorEntireWord) 0 else wordTruePosition.let {
                                 furi_sentence.text_set(
                                     if (colorEntireWord) sentence.jap else sentenceNoAnswerFuri(sentence, word),
                                     it,
-                                    if (colorEntireWord) sentence.jap!!.length else wordTruePosition + word.japanese!!.length,
+                                    if (colorEntireWord) sentence.jap.length else wordTruePosition + word.japanese.length,
                                     animator.animatedValue as Int)
                             }
                         } else {
                             furi_sentence.text_set(
-                                if (colorEntireWord) sentence.jap else sentenceNoFuri.replace("%", word.japanese!!),
-                                (if (colorEntireWord) 0 else wordTruePosition)!!,
-                                if (colorEntireWord) sentence.jap!!.length else wordTruePosition!! + word.japanese!!.length,
+                                if (colorEntireWord) sentence.jap else sentenceNoFuri.replace("%", word.japanese),
+                                (if (colorEntireWord) 0 else wordTruePosition),
+                                if (colorEntireWord) sentence.jap.length else wordTruePosition + word.japanese.length,
                                 animator.animatedValue as Int)
                         }
                     }
@@ -728,7 +738,7 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
      */
 
     override fun setHiraganaConversion(enabled: Boolean) {
-        hiragana_edit.isEnableConversion = enabled
+        binding.hiraganaEdit.isEnableConversion = enabled
     }
 
     override fun finishQuiz() {
@@ -747,7 +757,7 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
                 presenter.onDisplayAnswersClick()
             }
             R.id.tts_settings -> {
-                val category = adapter!!.words[pager.currentItem].first.baseCategory
+                val category = adapter!!.words[binding.pager.currentItem].first.baseCategory
                 val speechAvailability = checkSpeechAvailability(activity!!, ttsSupported, getCateogryLevel(category))
                 when (speechAvailability) {
                     SpeechAvailability.NOT_AVAILABLE -> {
@@ -758,14 +768,14 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
                             closeTTSSettings()
                         } else {
                             if (speechAvailability == SpeechAvailability.VOICES_AVAILABLE) {
-                                settings_speed.visibility = GONE
-                                seek_speed.visibility = GONE
+                                binding.settingsSpeed.visibility = GONE
+                                binding.seekSpeed.visibility = GONE
                             } else {
-                                settings_speed.visibility = VISIBLE
-                                seek_speed.visibility = VISIBLE
+                                binding.settingsSpeed.visibility = VISIBLE
+                                binding.seekSpeed.visibility = VISIBLE
                             }
-                            settings_container.animate().setDuration(300).translationY(0f).withStartAction {
-                                settings_container.visibility = VISIBLE
+                            binding.settingsContainer.animate().setDuration(300).translationY(0f).withStartAction {
+                                binding.settingsContainer.visibility = VISIBLE
                                 isSettingsOpen = true
                             }.start()
                         }

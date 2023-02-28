@@ -6,18 +6,25 @@ import android.os.Handler
 import androidx.appcompat.app.AppCompatActivity
 import android.view.View
 import com.jehutyno.yomikata.R
+import com.jehutyno.yomikata.databinding.ActivitySplashBinding
 import com.jehutyno.yomikata.screens.quizzes.QuizzesActivity
 import com.jehutyno.yomikata.util.Prefs
 import com.jehutyno.yomikata.util.migrateFromYomikata
 import com.jehutyno.yomikata.util.updateBDD
-import kotlinx.android.synthetic.main.activity_splash.*
 import org.jetbrains.anko.defaultSharedPreferences
 
 class SplashActivity : AppCompatActivity() {
 
+    // View Binding
+    private lateinit var binding: ActivitySplashBinding
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_splash)
+
+        binding = ActivitySplashBinding.inflate(layoutInflater)
+        val view = binding.root
+        setContentView(view)
 
         if (defaultSharedPreferences.getBoolean(Prefs.DB_UPDATE_ONGOING.pref, false))
             defaultSharedPreferences.getString(Prefs.DB_UPDATE_FILE.pref, "")?.let {
@@ -25,12 +32,12 @@ class SplashActivity : AppCompatActivity() {
                     defaultSharedPreferences.getInt(Prefs.DB_UPDATE_OLD_VERSION.pref, -1))
             }
 
-        pathView.useNaturalColors()
-        pathView.pathAnimator
+        binding.pathView.useNaturalColors()
+        binding.pathView.pathAnimator
             .delay(100)
             .duration(500)
             .listenerEnd {
-                logo.visibility = View.VISIBLE
+                binding.logo.visibility = View.VISIBLE
             }
             .start()
 

@@ -9,11 +9,10 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.jehutyno.yomikata.R
+import com.jehutyno.yomikata.databinding.VhAnswerBinding
 import com.jehutyno.yomikata.model.*
 import com.jehutyno.yomikata.util.Prefs
 import com.jehutyno.yomikata.util.sentenceNoFuri
-import kotlinx.android.synthetic.main.vh_answer.view.*
-import org.jetbrains.anko.defaultSharedPreferences
 
 /**
  * Created by valentin on 25/10/2016.
@@ -24,7 +23,8 @@ class AnswersAdapter(private val context: Context, private val callback: Callbac
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val layoutInflater = LayoutInflater.from(parent.context)
-        return ViewHolder(layoutInflater.inflate(R.layout.vh_answer, parent, false))
+        val binding = VhAnswerBinding.inflate(layoutInflater, parent, false)
+        return ViewHolder(binding)
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
@@ -62,17 +62,17 @@ class AnswersAdapter(private val context: Context, private val callback: Callbac
     }
 
 
-    class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        val answer_image = view.answer_image!!
-        val japanese = view.japanese!!
-        val translation = view.translation!!
-        val answer = view.answer!!
-        val sentence_jap = view.sentence_jap!!
-        val sentence_translation = view.sentence_translation!!
-        val btn_selection = view.btn_selection!!
-        val btn_report = view.btn_report!!
-        val btn_tts = view.btn_tts!!
-        val sentence_tts = view.sentence_tts!!
+    class ViewHolder(binding: VhAnswerBinding) : RecyclerView.ViewHolder(binding.root) {
+        val answer_image = binding.answerImage
+        val japanese = binding.japanese
+        val translation = binding.translation
+        val answer = binding.answer
+        val sentence_jap = binding.sentenceJap
+        val sentence_translation = binding.sentenceTranslation
+        val btn_selection = binding.btnSelection
+        val btn_report = binding.btnReport
+        val btn_tts = binding.btnTts
+        val sentence_tts = binding.sentenceTts
     }
 
     interface Callback {

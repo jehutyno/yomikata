@@ -11,13 +11,13 @@ import android.view.*
 import android.widget.EditText
 import android.widget.FrameLayout
 import com.jehutyno.yomikata.R
+import com.jehutyno.yomikata.databinding.FragmentContentBinding
 import com.jehutyno.yomikata.model.Quiz
 import com.jehutyno.yomikata.model.Word
 import com.jehutyno.yomikata.screens.content.WordsAdapter
 import com.jehutyno.yomikata.screens.content.word.WordDetailDialogFragment
 import com.jehutyno.yomikata.util.DimensionHelper
 import com.jehutyno.yomikata.util.Extras
-import kotlinx.android.synthetic.main.fragment_content.*
 import org.jetbrains.anko.cancelButton
 import org.jetbrains.anko.find
 import org.jetbrains.anko.okButton
@@ -35,6 +35,11 @@ class SearchResultFragment : Fragment(), SearchResultContract.View, WordsAdapter
     private lateinit var layoutManager: LinearLayoutManager
     private var searchString = ""
     lateinit private var selections: List<Quiz>
+
+    // View Binding
+    private var _binding: FragmentContentBinding? = null
+    private val binding get() = _binding!!
+
 
     override fun setPresenter(presenter: SearchResultContract.Presenter) {
         searchResultPresenter = presenter
@@ -57,13 +62,14 @@ class SearchResultFragment : Fragment(), SearchResultContract.View, WordsAdapter
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        return inflater.inflate(R.layout.fragment_content, container, false)
+        _binding = FragmentContentBinding.inflate(inflater, container, false)
+        return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        recyclerview_content.let {
+        binding.recyclerviewContent.let {
             it.adapter = adapter
             it.layoutManager = layoutManager
         }
@@ -259,6 +265,11 @@ class SearchResultFragment : Fragment(), SearchResultContract.View, WordsAdapter
 
     override fun noSelections() {
         selections = emptyList()
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 
 }

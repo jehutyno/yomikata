@@ -15,12 +15,13 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.jehutyno.yomikata.R
+import com.jehutyno.yomikata.databinding.FragmentHomeBinding
 import com.jehutyno.yomikata.model.StatAction
 import com.jehutyno.yomikata.model.StatEntry
 import com.jehutyno.yomikata.model.StatResult
 import com.jehutyno.yomikata.screens.quizzes.QuizzesActivity
 import com.jehutyno.yomikata.util.*
-import kotlinx.android.synthetic.main.fragment_home.*
+
 import org.jetbrains.anko.support.v4.defaultSharedPreferences
 import java.util.*
 
@@ -31,6 +32,11 @@ import java.util.*
 class HomeFragment : Fragment(), HomeContract.View {
 
     private var mpresenter: HomeContract.Presenter? = null
+
+    // View Binding
+    private var _binding: FragmentHomeBinding? = null
+    private val binding get() = _binding!!
+
 
     override fun onMenuItemClick(category: Int) {
 
@@ -51,8 +57,9 @@ class HomeFragment : Fragment(), HomeContract.View {
         displayLatestCategories()
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        return inflater.inflate(R.layout.fragment_home, container, false)
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+        _binding = FragmentHomeBinding.inflate(inflater, container, false)
+        return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -68,40 +75,40 @@ class HomeFragment : Fragment(), HomeContract.View {
         else
             database.getReference("news_en")
 
-        expand_text_view.text = getString(R.string.news_loading)
+        binding.expandTextView.text = getString(R.string.news_loading)
 
         newsRef.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(dataSnapshot: DataSnapshot) {
                 val value = dataSnapshot.getValue(String::class.java)
-                expand_text_view?.text = value
+                binding.expandTextView.text = value
             }
 
             override fun onCancelled(error: DatabaseError) {
-                expand_text_view?.text = getString(R.string.news_default)
+                binding.expandTextView.text = getString(R.string.news_default)
             }
         })
 
-        share.setOnClickListener { shareApp(activity!!) }
-        facebook.setOnClickListener { contactFacebook(activity) }
-        play_store.setOnClickListener { contactPlayStore(activity!!) }
-        discord.setOnClickListener { contactDiscord(activity!!) }
+        binding.share.setOnClickListener { shareApp(activity!!) }
+        binding.facebook.setOnClickListener { contactFacebook(activity) }
+        binding.playStore.setOnClickListener { contactPlayStore(activity!!) }
+        binding.discord.setOnClickListener { contactDiscord(activity!!) }
 
     }
 
     override fun displayTodayStats(stats: List<StatEntry>) {
-        displayStat(stats, today_quiz_launch, today_words_seen, today_good_answer, today_wrong_answer)
+        displayStat(stats, binding.todayQuizLaunch, binding.todayWordsSeen, binding.todayGoodAnswer, binding.todayWrongAnswer)
     }
 
     override fun displayThisWeekStats(stats: List<StatEntry>) {
-        displayStat(stats, week_quiz_launch, week_words_seen, week_good_answer, week_wrong_answer)
+        displayStat(stats, binding.weekQuizLaunch, binding.weekWordsSeen, binding.weekGoodAnswer, binding.weekWrongAnswer)
     }
 
     override fun displayThisMonthStats(stats: List<StatEntry>) {
-        displayStat(stats, month_quiz_launch, month_words_seen, month_good_answer, month_wrong_answer)
+        displayStat(stats, binding.monthQuizLaunch, binding.monthWordsSeen, binding.monthGoodAnswer, binding.monthWrongAnswer)
     }
 
     override fun displayTotalStats(stats: List<StatEntry>) {
-        displayStat(stats, total_quiz_launch, total_words_seen, total_good_answer, total_wrong_answer)
+        displayStat(stats, binding.totalQuizLaunch, binding.totalWordsSeen, binding.totalGoodAnswer, binding.totalWrongAnswer)
     }
 
     fun displayStat(stats: List<StatEntry>, vararg textViews: TextView) {
@@ -121,25 +128,25 @@ class HomeFragment : Fragment(), HomeContract.View {
         val cat2 = defaultSharedPreferences.getInt(Prefs.LATEST_CATEGORY_2.pref, -1)
 
         if (cat1 != -1) {
-            last_category_1.visibility = VISIBLE
-            last_category_1.setImageResource(getCategoryResId(cat1))
-            last_category_1.setOnClickListener {
+            binding.lastCategory1.visibility = VISIBLE
+            binding.lastCategory1.setImageResource(getCategoryResId(cat1))
+            binding.lastCategory1.setOnClickListener {
                 (activity as QuizzesActivity).gotoCategory(cat1)
             }
         } else {
-            last_category_1.visibility = GONE
+            binding.lastCategory1.visibility = GONE
         }
 
         if (cat2 != -1) {
-            last_category_2.visibility = VISIBLE
-            last_category_2.setImageResource(getCategoryResId(cat2))
-            last_category_2.setOnClickListener {
+            binding.lastCategory2.visibility = VISIBLE
+            binding.lastCategory2.setImageResource(getCategoryResId(cat2))
+            binding.lastCategory2.setOnClickListener {
                 (activity as QuizzesActivity).gotoCategory(cat2)
             }
         } else {
-            last_category_2.visibility = GONE
+            binding.lastCategory2.visibility = GONE
         }
-        no_categories.visibility = if (cat1 == -1 && cat2 == -1) VISIBLE else GONE
+        binding.noCategories.visibility = if (cat1 == -1 && cat2 == -1) VISIBLE else GONE
     }
 
     fun getCategoryResId(category: Int): Int {
@@ -176,4 +183,10 @@ class HomeFragment : Fragment(), HomeContract.View {
             }
         }
     }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
+
 }
