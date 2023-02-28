@@ -5,11 +5,13 @@ import androidx.recyclerview.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.viewbinding.ViewBinding
 import com.jehutyno.yomikata.R
+import com.jehutyno.yomikata.databinding.VhNewSelectionBinding
+import com.jehutyno.yomikata.databinding.VhQuizBinding
 import com.jehutyno.yomikata.model.Quiz
 import com.jehutyno.yomikata.util.Categories
 import com.jehutyno.yomikata.util.Prefs
-import kotlinx.android.synthetic.main.vh_quiz.view.*
 import org.jetbrains.anko.defaultSharedPreferences
 
 /**
@@ -31,23 +33,31 @@ class QuizzesAdapter(val context: Context, val category: Int, private val callba
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         val layoutInflater = LayoutInflater.from(parent.context)
+
         when (viewType) {
-            TYPE_NEW_SELECTION -> return ViewHolderNewSelection(layoutInflater.inflate(R.layout.vh_new_selection, parent, false))
-            else -> return ViewHolder(layoutInflater.inflate(R.layout.vh_quiz, parent, false))
+            TYPE_NEW_SELECTION -> {
+                val binding = VhNewSelectionBinding.inflate(layoutInflater, parent, false)
+                return ViewHolder.ViewHolderNewSelection(binding)
+            }
+            TYPE_QUIZ -> {
+                val binding = VhQuizBinding.inflate(layoutInflater, parent, false)
+                return ViewHolder.ViewHolderQuiz(binding)
+            }
+            else -> throw IllegalArgumentException("Invalid ViewType Provided")
         }
     }
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-        when (getItemViewType(position)) {
-            TYPE_NEW_SELECTION -> {
+        when (holder) {
+            is ViewHolder.ViewHolderNewSelection -> {
                 holder.itemView.setOnClickListener {
                     callback.addSelection()
                 }
             }
-            else -> {
+            is ViewHolder.ViewHolderQuiz -> {
                 val quiz = items[position]
                 val quizNames = quiz.getName().split("%")
-                (holder as ViewHolder?)?.quizName?.text = quizNames[0]
+                holder.quizName.text = quizNames[0]
                 if (quizNames.size > 1)
                     holder.quizSubtitle.text = quiz.getName().split("%")[1]
                 else {
@@ -115,13 +125,17 @@ class QuizzesAdapter(val context: Context, val category: Int, private val callba
         notifyDataSetChanged()
     }
 
-    class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        val quizName = view.quiz_name!!
-        val quizSubtitle = view.quiz_subtitle!!
-        val quizCheck = view.quiz_check!!
-    }
+    sealed class ViewHolder(binding: ViewBinding) : RecyclerView.ViewHolder(binding.root) {
 
-    class ViewHolderNewSelection(view: View) : RecyclerView.ViewHolder(view) {
+        class ViewHolderQuiz(binding: VhQuizBinding) : ViewHolder(binding) {
+            val quizName = binding.quizName
+            val quizSubtitle = binding.quizSubtitle
+            val quizCheck = binding.quizCheck
+        }
+
+        class ViewHolderNewSelection(binding: VhNewSelectionBinding) : ViewHolder(binding) {
+            val quizName = binding.quizName
+        }
 
     }
 

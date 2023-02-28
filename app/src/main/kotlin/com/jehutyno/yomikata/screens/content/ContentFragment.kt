@@ -14,6 +14,7 @@ import android.widget.FrameLayout
 import com.github.salomonbrys.kodein.android.appKodein
 import com.github.salomonbrys.kodein.instance
 import com.jehutyno.yomikata.R
+import com.jehutyno.yomikata.databinding.FragmentContentGraphBinding
 import com.jehutyno.yomikata.model.Quiz
 import com.jehutyno.yomikata.model.Word
 import com.jehutyno.yomikata.screens.content.word.WordDetailDialogFragment
@@ -21,7 +22,6 @@ import com.jehutyno.yomikata.util.DimensionHelper
 import com.jehutyno.yomikata.util.Extras
 import com.jehutyno.yomikata.util.Prefs
 import com.jehutyno.yomikata.util.animateSeekBar
-import kotlinx.android.synthetic.main.fragment_content_graph.*
 import org.jetbrains.anko.cancelButton
 import org.jetbrains.anko.find
 import org.jetbrains.anko.okButton
@@ -43,13 +43,18 @@ class ContentFragment : Fragment(), ContentContract.View, WordsAdapter.Callback,
     private var lastPosition = -1
     lateinit private var selections: List<Quiz>
 
+    // View Binding
+    private var _binding: FragmentContentGraphBinding? = null
+    private val binding get() = _binding!!
+
+
     override fun setPresenter(presenter: ContentContract.Presenter) {
         mpresenter = presenter
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-        outState.putInt("position", (recyclerview_content.layoutManager as LinearLayoutManager).findFirstVisibleItemPosition())
+        outState.putInt("position", (binding.recyclerviewContent.layoutManager as LinearLayoutManager).findFirstVisibleItemPosition())
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -73,50 +78,41 @@ class ContentFragment : Fragment(), ContentContract.View, WordsAdapter.Callback,
         super.onResume()
         val position =
             if (lastPosition != -1) lastPosition
-            else (recyclerview_content.layoutManager as GridLayoutManager).findFirstVisibleItemPosition()
+            else (binding.recyclerviewContent.layoutManager as GridLayoutManager).findFirstVisibleItemPosition()
         lastPosition = -1
         mpresenter?.start()
         mpresenter?.loadWords(quizIds, level)
-        recyclerview_content.scrollToPosition(position)
+        binding.recyclerviewContent.scrollToPosition(position)
         mpresenter?.loadSelections()
 
         displayStats()
     }
 
     override fun displayStats() {
-        if (seek_low_container != null && seek_medium_container != null && seek_high_container != null && seek_master_container != null) {
-            val count = mpresenter!!.countQuiz(quizIds)
-            val low = mpresenter!!.countLow(quizIds)
-            val medium = mpresenter!!.countMedium(quizIds)
-            val high = mpresenter!!.countHigh(quizIds)
-            val master = mpresenter!!.countMaster(quizIds)
-            if (level > -1) {
-                seek_low_container.visibility = if (level == 0) VISIBLE else GONE
-                seek_medium_container.visibility = if (level == 1) VISIBLE else GONE
-                seek_high_container.visibility = if (level == 2) VISIBLE else GONE
-                seek_master_container.visibility = if (level == 3) VISIBLE else GONE
-            }
-            if (seek_low != null)
-                animateSeekBar(seek_low, 0, low, count)
-            if (text_low != null)
-                text_low.text = low.toString()
-            if (seek_medium != null)
-                animateSeekBar(seek_medium, 0, medium, count)
-            if (text_medium != null)
-                text_medium.text = medium.toString()
-            if (seek_high != null)
-                animateSeekBar(seek_high, 0, high, count)
-            if (text_high != null)
-                text_high.text = high.toString()
-            if (seek_master != null)
-                animateSeekBar(seek_master, 0, master, count)
-            if (text_master != null)
-                text_master.text = master.toString()
+        val count = mpresenter!!.countQuiz(quizIds)
+        val low = mpresenter!!.countLow(quizIds)
+        val medium = mpresenter!!.countMedium(quizIds)
+        val high = mpresenter!!.countHigh(quizIds)
+        val master = mpresenter!!.countMaster(quizIds)
+        if (level > -1) {
+            binding.seekLowContainer.visibility = if (level == 0) VISIBLE else GONE
+            binding.seekMediumContainer.visibility = if (level == 1) VISIBLE else GONE
+            binding.seekHighContainer.visibility = if (level == 2) VISIBLE else GONE
+            binding.seekMasterContainer.visibility = if (level == 3) VISIBLE else GONE
         }
+        animateSeekBar(binding.seekLow, 0, low, count)
+        binding.textLow.text = low.toString()
+        animateSeekBar(binding.seekMedium, 0, medium, count)
+        binding.textMedium.text = medium.toString()
+        animateSeekBar(binding.seekHigh, 0, high, count)
+        binding.textHigh.text = high.toString()
+        animateSeekBar(binding.seekMaster, 0, master, count)
+        binding.textMaster.text = master.toString()
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        return inflater.inflate(R.layout.fragment_content_graph, container, false)
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+        _binding = FragmentContentGraphBinding.inflate(inflater, container, false)
+        return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -125,7 +121,7 @@ class ContentFragment : Fragment(), ContentContract.View, WordsAdapter.Callback,
         if (mpresenter == null)
             mpresenter = ContentPresenter(context!!.appKodein.invoke().instance(), context!!.appKodein.invoke().instance(), this)
 
-        recyclerview_content.let {
+        binding.recyclerviewContent.let {
             it.adapter = adapter
             it.layoutManager = GridLayoutManager(context, 2)
         }
@@ -296,6 +292,11 @@ class ContentFragment : Fragment(), ContentContract.View, WordsAdapter.Callback,
 
     override fun noSelections() {
         selections = emptyList()
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 
     fun unlockFullVersion() {

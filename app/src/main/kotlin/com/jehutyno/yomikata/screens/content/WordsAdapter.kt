@@ -10,11 +10,11 @@ import android.view.View.GONE
 import android.view.View.VISIBLE
 import android.view.ViewGroup
 import com.jehutyno.yomikata.R
+import com.jehutyno.yomikata.databinding.VhWordShortBinding
 import com.jehutyno.yomikata.model.Word
 import com.jehutyno.yomikata.model.getCategoryIcon
 import com.jehutyno.yomikata.model.getWordColor
 import com.jehutyno.yomikata.util.Prefs
-import kotlinx.android.synthetic.main.vh_word_short.view.*
 import org.jetbrains.anko.defaultSharedPreferences
 
 /**
@@ -32,30 +32,33 @@ class WordsAdapter(private val context: Context, private val callback: Callback)
     var checkMode = false
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val layoutInflater = LayoutInflater.from(parent?.context)
-        return ViewHolder(layoutInflater.inflate(R.layout.vh_word_short, parent, false))
+        val layoutInflater = LayoutInflater.from(parent.context)
+        val binding = VhWordShortBinding.inflate(layoutInflater, parent, false)
+        return ViewHolder(binding)
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val word = items[position]
-        holder?.wordName?.text = word.japanese
-        holder?.wordName?.setTextColor(getWordColor(context, word.level, word.points))
-        holder?.categoryIcon?.setImageResource(getCategoryIcon(word.baseCategory))
-        holder?.categoryIcon?.drawable?.setColorFilter(ContextCompat.getColor(context, R.color.content_icon_color), PorterDuff.Mode.SRC_ATOP)
+        holder.wordName.text = word.japanese
+        holder.wordName.setTextColor(getWordColor(context, word.level, word.points))
+        holder.categoryIcon.setImageResource(getCategoryIcon(word.baseCategory))
+//        holder.categoryIcon.drawable?.setColorFilter(ContextCompat.getColor(context, R.color.content_icon_color), PorterDuff.Mode.SRC_ATOP)
+        val color = ContextCompat.getColor(context, R.color.content_icon_color)
+        holder.categoryIcon.drawable?.colorFilter = BlendModeColorFilterCompat.createBlendModeColorFilterCompat(color, BlendModeCompat.SRC_ATOP)
         flag = true
-        holder?.checkBox?.isChecked = word.isSelected == 1
+        holder.checkBox.isChecked = word.isSelected == 1
         flag = false
 
         if (checkMode) {
-            holder?.categoryIcon?.visibility = GONE
-            holder?.checkBox?.visibility = VISIBLE
+            holder.categoryIcon.visibility = GONE
+            holder.checkBox.visibility = VISIBLE
         } else {
-            holder?.categoryIcon?.visibility = VISIBLE
-            holder?.checkBox?.visibility = GONE
+            holder.categoryIcon.visibility = VISIBLE
+            holder.checkBox.visibility = GONE
         }
 
-        with(holder!!.itemView) {
-            setOnClickListener({ v -> callback.onItemClick(position) })
+        with(holder.itemView) {
+            setOnClickListener { callback.onItemClick(position) }
         }
 
         with(holder.categoryIcon) {
@@ -90,10 +93,10 @@ class WordsAdapter(private val context: Context, private val callback: Callback)
         notifyDataSetChanged()
     }
 
-    class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        val wordName = view.kanji_word!!
-        val categoryIcon = view.category_icon!!
-        val checkBox = view.word_check!!
+    class ViewHolder(binding: VhWordShortBinding) : RecyclerView.ViewHolder(binding.root) {
+        val wordName = binding.kanjiWord
+        val categoryIcon = binding.categoryIcon
+        val checkBox = binding.wordCheck
     }
 
     interface Callback {
