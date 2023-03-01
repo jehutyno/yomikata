@@ -13,22 +13,26 @@ import org.jetbrains.anko.db.*
  */
 class KanjiSoloSource(var context: Context) : KanjiSoloRepository {
 
+    /**
+     * Inputs:
+     *         db: Either a SQLiteDatabase, or null if the context.database should be used
+     *         func: function to be applied to the database
+     * Returns the return of db.func()
+     */
+    private fun <T> applyToDataBase(db: SQLiteDatabase?, func: SQLiteDatabase.() -> T) : T {
+        return if (db == null) {
+            context.database.use{ func() }
+        } else {
+            db.func()
+        }
+    }
+
     override fun createKanjiSoloTable(db: SQLiteDatabase?) {
-        if (db == null) {
-            context.database.use{
-                createTable(SQLiteTables.KANJI_SOLO.tableName, true,
-                    SQLiteKanjiSolo.ID.column to INTEGER.plus(PRIMARY_KEY),
-                    SQLiteKanjiSolo.KANJI.column to TEXT,
-                    SQLiteKanjiSolo.STROKES.column to INTEGER,
-                    SQLiteKanjiSolo.EN.column to TEXT,
-                    SQLiteKanjiSolo.FR.column to TEXT,
-                    SQLiteKanjiSolo.KUNYOMI.column to TEXT,
-                    SQLiteKanjiSolo.ONYOMI.column to TEXT,
-                    SQLiteKanjiSolo.RADICAL.column to TEXT
-                )
-            }
-        } else db
-            .createTable(SQLiteTables.KANJI_SOLO.tableName, true,
+        // Write an extension of SQLiteDatabase that can be applied to either
+        // SQLiteDatabase instances and also as input to SQLiteHelper .use method
+        fun SQLiteDatabase.createTableFn() {
+            this.createTable(
+                SQLiteTables.KANJI_SOLO.tableName, true,
                 SQLiteKanjiSolo.ID.column to INTEGER.plus(PRIMARY_KEY),
                 SQLiteKanjiSolo.KANJI.column to TEXT,
                 SQLiteKanjiSolo.STROKES.column to INTEGER,
@@ -38,22 +42,14 @@ class KanjiSoloSource(var context: Context) : KanjiSoloRepository {
                 SQLiteKanjiSolo.ONYOMI.column to TEXT,
                 SQLiteKanjiSolo.RADICAL.column to TEXT
             )
+        }
+        applyToDataBase(db, SQLiteDatabase::createTableFn)
     }
 
     override fun createRadicalsTable(db: SQLiteDatabase?) {
-        if (db == null) {
-            context.database.use {
-                createTable(SQLiteTables.RADICALS.tableName, true,
-                    SQLiteRadicals.ID.column to INTEGER.plus(PRIMARY_KEY),
-                    SQLiteRadicals.STROKES.column to INTEGER,
-                    SQLiteRadicals.RADICAL.column to TEXT,
-                    SQLiteRadicals.READING.column to TEXT,
-                    SQLiteRadicals.EN.column to TEXT,
-                    SQLiteRadicals.FR.column to TEXT
-                )
-            }
-        }else db
-            .createTable(SQLiteTables.RADICALS.tableName, true,
+
+        fun SQLiteDatabase.createTableFn() {
+            this.createTable(SQLiteTables.RADICALS.tableName, true,
                 SQLiteRadicals.ID.column to INTEGER.plus(PRIMARY_KEY),
                 SQLiteRadicals.STROKES.column to INTEGER,
                 SQLiteRadicals.RADICAL.column to TEXT,
@@ -61,40 +57,36 @@ class KanjiSoloSource(var context: Context) : KanjiSoloRepository {
                 SQLiteRadicals.EN.column to TEXT,
                 SQLiteRadicals.FR.column to TEXT
             )
+        }
+        applyToDataBase(db, SQLiteDatabase::createTableFn)
     }
 
     override fun kanjiSoloCount(db: SQLiteDatabase?): Int {
         var radCount = 0
-        if (db == null) {
-            context.database.use {
-                select(SQLiteTables.KANJI_SOLO.tableName, *SQLiteTable.allColumns(SQLiteKanjiSolo.values()))
-                    .exec {
-                        radCount = count
-                    }
-            }
-        } else db
-            .select(SQLiteTables.KANJI_SOLO.tableName, *SQLiteTable.allColumns(SQLiteKanjiSolo.values()))
-            .exec {
-                radCount = count
-            }
+
+        fun SQLiteDatabase.getRadCount() : SelectQueryBuilder{
+            return this.select(SQLiteTables.KANJI_SOLO.tableName, *SQLiteTable.allColumns(SQLiteKanjiSolo.values()))
+        }
+
+        val queryBuilder = applyToDataBase(db, SQLiteDatabase::getRadCount)
+        queryBuilder.exec {
+            radCount = count
+        }
 
         return radCount
     }
 
     override fun radicalsCount(db: SQLiteDatabase?): Int {
         var radCount = 0
-        if (db == null) {
-            context.database.use {
-                select(SQLiteTables.RADICALS.tableName, *SQLiteTable.allColumns(SQLiteRadicals.values()))
-                    .exec {
-                        radCount = count
-                    }
-            }
-        } else db
-            .select(SQLiteTables.RADICALS.tableName, *SQLiteTable.allColumns(SQLiteRadicals.values()))
-            .exec {
-                radCount = count
-            }
+
+        fun SQLiteDatabase.getRadCount() : SelectQueryBuilder{
+            return this.select(SQLiteTables.RADICALS.tableName, *SQLiteTable.allColumns(SQLiteRadicals.values()))
+        }
+
+        val queryBuilder = applyToDataBase(db, SQLiteDatabase::getRadCount)
+        queryBuilder.exec {
+            radCount = count
+        }
 
         return radCount
     }
