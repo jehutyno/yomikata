@@ -115,8 +115,9 @@ class WordPagerAdapter(val activity: Activity, var quizType: QuizType?, var call
             }
         }
 
-        container.addView(binding.root)
-        return binding
+        val view = binding.root
+        container.addView(view)
+        return view
     }
 
     fun replaceData(list: List<Triple<Word, List<KanjiSoloRadical?>, Sentence>>) {
