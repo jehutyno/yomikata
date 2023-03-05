@@ -17,6 +17,7 @@ import com.github.salomonbrys.kodein.android.appKodein
 import com.github.salomonbrys.kodein.instance
 import com.github.salomonbrys.kodein.provider
 import com.jehutyno.yomikata.R
+import com.jehutyno.yomikata.databinding.ActivityContentBinding
 import com.jehutyno.yomikata.model.Quiz
 import com.jehutyno.yomikata.model.StatAction
 import com.jehutyno.yomikata.model.StatResult
@@ -28,7 +29,6 @@ import com.jehutyno.yomikata.util.Extras.EXTRA_LEVEL
 import com.jehutyno.yomikata.util.Extras.EXTRA_QUIZ_IDS
 import com.jehutyno.yomikata.util.Extras.EXTRA_QUIZ_TITLE
 import io.github.inflationx.viewpump.ViewPumpContextWrapper
-import kotlinx.android.synthetic.main.activity_content.*
 import mu.KLogging
 import org.jetbrains.anko.defaultSharedPreferences
 import org.jetbrains.anko.support.v4.withArguments
@@ -52,6 +52,10 @@ class ContentActivity : AppCompatActivity() {
 
     private var contentPagerAdapter: ContentPagerAdapter? = null
 
+    // View Binding
+    private lateinit var binding: ActivityContentBinding
+
+
     override fun attachBaseContext(newBase: Context) {
         super.attachBaseContext(ViewPumpContextWrapper.wrap(newBase))
     }
@@ -59,7 +63,11 @@ class ContentActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         AppCompatDelegate.setDefaultNightMode(defaultSharedPreferences.getInt(Prefs.DAY_NIGHT_MODE.pref, AppCompatDelegate.MODE_NIGHT_YES))
-        setContentView(R.layout.activity_content)
+
+        binding = ActivityContentBinding.inflate(layoutInflater)
+        val view = binding.root
+        setContentView(view)
+
 
         statsRepository = StatsSource(appKodein.invoke().instance())
 
@@ -93,7 +101,7 @@ class ContentActivity : AppCompatActivity() {
                        2 -> getString(R.string.yellow_review)
                        else -> getString(R.string.green_review)
                     }
-                    pager_content.visibility = GONE
+                    binding.pagerContent.visibility = GONE
                     if (savedInstanceState != null) {
                         //Restore the fragment's instance
                         contentLevelFragment = supportFragmentManager.getFragment(savedInstanceState, "contentLevelFragment") as ContentFragment
@@ -113,12 +121,12 @@ class ContentActivity : AppCompatActivity() {
                     })
                 } else {
                     contentPagerAdapter = ContentPagerAdapter(this@ContentActivity, supportFragmentManager, quizzes)
-                    pager_content.adapter = contentPagerAdapter
+                    binding.pagerContent.adapter = contentPagerAdapter
                     val quizTitle = quizzes[quizPosition].getName().split("%")[0]
                     quizIds = longArrayOf(quizzes[quizPosition].id)
                     title = quizTitle
-                    pager_content.currentItem = quizPosition
-                    pager_content.addOnPageChangeListener(object : ViewPager.OnPageChangeListener {
+                    binding.pagerContent.currentItem = quizPosition
+                    binding.pagerContent.addOnPageChangeListener(object : ViewPager.OnPageChangeListener {
                         override fun onPageScrollStateChanged(state: Int) {
 
                         }
@@ -143,12 +151,12 @@ class ContentActivity : AppCompatActivity() {
 
         })
 
-        progressive_play.visibility = if (level > -1) GONE else VISIBLE
+        binding.progressivePlay.visibility = if (level > -1) GONE else VISIBLE
 
-        progressive_play.setOnClickListener {
+        binding.progressivePlay.setOnClickListener {
             launchQuiz(QuizStrategy.PROGRESSIVE)
         }
-        normal_play.setOnClickListener {
+        binding.normalPlay.setOnClickListener {
             when (level) {
                 0 -> launchQuiz(QuizStrategy.LOW_STRAIGHT)
                 1 -> launchQuiz(QuizStrategy.MEDIUM_STRAIGHT)
@@ -157,7 +165,7 @@ class ContentActivity : AppCompatActivity() {
                 else -> launchQuiz(QuizStrategy.STRAIGHT)
             }
         }
-        shuffle_play.setOnClickListener {
+        binding.shufflePlay.setOnClickListener {
             when (level) {
                 0 -> launchQuiz(QuizStrategy.LOW_SHUFFLE)
                 1 -> launchQuiz(QuizStrategy.MEDIUM_SHUFFLE)
@@ -205,8 +213,8 @@ class ContentActivity : AppCompatActivity() {
     }
 
     override fun onBackPressed() {
-        if (multiple_actions.isExpanded)
-            multiple_actions.collapse()
+        if (binding.multipleActions.isExpanded)
+            binding.multipleActions.collapse()
         else
             super.onBackPressed()
     }
