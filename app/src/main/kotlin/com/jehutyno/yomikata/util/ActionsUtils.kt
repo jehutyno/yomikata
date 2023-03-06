@@ -101,12 +101,12 @@ fun contactDiscord(context: Context) {
 }
 
 fun onTTSinit(context: Context?, status: Int, tts: TextToSpeech?): Int {
-    var suported: Int = TextToSpeech.LANG_NOT_SUPPORTED
+    var supported: Int = TextToSpeech.LANG_NOT_SUPPORTED
     try {
         // Initialize the TTS in Japanese if available
         if (status == TextToSpeech.SUCCESS) {
-            suported = tts!!.isLanguageAvailable(Locale.JAPANESE)
-            if (suported == TextToSpeech.LANG_MISSING_DATA || suported == TextToSpeech.LANG_NOT_SUPPORTED) {
+            supported = tts!!.isLanguageAvailable(Locale.JAPANESE)
+            if (supported == TextToSpeech.LANG_MISSING_DATA || supported == TextToSpeech.LANG_NOT_SUPPORTED) {
             } else {
                 tts.language = Locale.JAPANESE
             }
@@ -115,10 +115,10 @@ fun onTTSinit(context: Context?, status: Int, tts: TextToSpeech?): Int {
         }
     } catch (e: Exception) {
         e.printStackTrace()
-        suported = TextToSpeech.LANG_NOT_SUPPORTED
+        supported = TextToSpeech.LANG_NOT_SUPPORTED
     }
 
-    return suported
+    return supported
 }
 
 fun checkSpeechAvailability(context: Context, ttsSupported: Int, level: Int): SpeechAvailability {
