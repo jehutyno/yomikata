@@ -426,7 +426,7 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
     override fun displayWords(quizWordsPair: List<Pair<Word, QuizType>>) {
         holdOn = false
         adapter!!.replaceData(quizWordsPair)
-        // TODO do somthing with that
+        // TODO do something with that
 //        pager.post { tutos() }
     }
 

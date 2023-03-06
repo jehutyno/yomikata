@@ -19,7 +19,7 @@ class SearchResultActivity : AppCompatActivity() {
 
     private val injector = KodeinInjector()
     private val searchResultPresenter: SearchResultContract.Presenter by injector.instance()
-    private lateinit var searchResultFramgent : SearchResultFragment
+    private lateinit var searchResultFragment : SearchResultFragment
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -40,15 +40,15 @@ class SearchResultActivity : AppCompatActivity() {
 
         if (savedInstanceState != null) {
             //Restore the fragment's instance
-            searchResultFramgent = supportFragmentManager.getFragment(savedInstanceState, "searchResultFramgent") as SearchResultFragment
+            searchResultFragment = supportFragmentManager.getFragment(savedInstanceState, "searchResultFragment") as SearchResultFragment
         } else {
-            searchResultFramgent = SearchResultFragment()
+            searchResultFragment = SearchResultFragment()
         }
-        addOrReplaceFragment(R.id.container_content, searchResultFramgent)
+        addOrReplaceFragment(R.id.container_content, searchResultFragment)
 
         injector.inject(Kodein {
             extend(appKodein())
-            import(searchResultPresenterModule(searchResultFramgent))
+            import(searchResultPresenterModule(searchResultFragment))
             bind<SearchResultContract.Presenter>() with provider { SearchResultPresenter(instance(),
                 instance(), instance())}
         })
@@ -59,7 +59,7 @@ class SearchResultActivity : AppCompatActivity() {
         super.onSaveInstanceState(outState)
 
         //Save the fragment's instance
-        supportFragmentManager.putFragment(outState, "searchResultFramgent", searchResultFramgent)
+        supportFragmentManager.putFragment(outState, "searchResultFragment", searchResultFragment)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
