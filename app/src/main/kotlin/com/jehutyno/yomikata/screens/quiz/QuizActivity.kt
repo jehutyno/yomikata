@@ -5,7 +5,6 @@ import android.content.pm.ActivityInfo
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
-import androidx.appcompat.widget.Toolbar
 import android.view.KeyEvent
 import android.view.MenuItem
 import com.github.salomonbrys.kodein.Kodein
@@ -50,9 +49,7 @@ class QuizActivity : AppCompatActivity() {
             requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         }
 
-        findViewById<Toolbar>(R.id.toolbar).let {
-            setSupportActionBar(it)
-        }
+        setSupportActionBar(findViewById(R.id.toolbar))
         supportActionBar?.apply {
             setHomeAsUpIndicator(R.drawable.ic_clear_orange_24dp)
             setDisplayHomeAsUpEnabled(true)
@@ -114,7 +111,7 @@ class QuizActivity : AppCompatActivity() {
         alert(R.string.quit_quiz) {
             yesButton { finish() }
             noButton { }
-            onKeyPressed { _, keyCode, e ->
+            onKeyPressed { _, keyCode, _ ->
                 if (keyCode == KeyEvent.KEYCODE_BACK)
                     finish()
                 true

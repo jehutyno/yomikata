@@ -7,7 +7,6 @@ import android.os.Bundle
 import androidx.viewpager.widget.ViewPager
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
-import androidx.appcompat.widget.Toolbar
 import android.view.MenuItem
 import android.view.View.GONE
 import android.view.View.VISIBLE
@@ -80,9 +79,7 @@ class ContentActivity : AppCompatActivity() {
         var quizPosition = intent.getIntExtra(Extras.EXTRA_QUIZ_POSITION, -1)
         selectedTypes = intent.getIntArrayExtra(Extras.EXTRA_QUIZ_TYPES) ?: intArrayOf()
 
-        findViewById<Toolbar>(R.id.toolbar).let {
-            setSupportActionBar(it)
-        }
+        setSupportActionBar(findViewById(R.id.toolbar))
 
         supportActionBar?.apply {
             setHomeAsUpIndicator(R.drawable.ic_arrow_back_orange_24dp)

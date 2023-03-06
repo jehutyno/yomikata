@@ -148,8 +148,8 @@ class QuizzesActivity : AppCompatActivity() {
             requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         }
 
-        toolbar = findViewById<Toolbar>(R.id.toolbar)
-        toolbar.let { setSupportActionBar(it) }
+        toolbar = findViewById(R.id.toolbar)
+        setSupportActionBar(toolbar)
         supportActionBar?.apply {
             setHomeAsUpIndicator(R.drawable.ic_menu)
             setDisplayHomeAsUpEnabled(true)
