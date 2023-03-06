@@ -104,11 +104,9 @@ class AnswersFragment : Fragment(), AnswersContract.View, AnswersAdapter.Callbac
     override fun onSelectionClick(position: Int, view: View) {
         val popup = PopupMenu(activity!!, view)
         popup.menuInflater.inflate(R.menu.popup_selections, popup.menu)
-        var i = 0
-        for (selection in selections) {
+        for ((i, selection) in selections.withIndex()) {
             popup.menu.add(1, i, i, selection.getName()).isChecked = presenter.isWordInQuiz(adapter.items[position].second.id, selection.id)
             popup.menu.setGroupCheckable(1, true, false)
-            i++
         }
         popup.setOnMenuItemClickListener {
             when (it.itemId) {

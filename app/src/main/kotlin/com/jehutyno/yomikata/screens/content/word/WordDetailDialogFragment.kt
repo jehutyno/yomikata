@@ -155,11 +155,9 @@ class WordDetailDialogFragment : DialogFragment(), WordContract.View, WordPagerA
     override fun onSelectionClick(view: View, position: Int) {
         val popup = PopupMenu(activity!!, view)
         popup.menuInflater.inflate(R.menu.popup_selections, popup.menu)
-        var i = 0
-        for (selection in selections) {
+        for ((i, selection) in selections.withIndex()) {
             popup.menu.add(1, i, i, selection.getName()).isChecked = wordPresenter.isWordInQuiz(adapter.words[position].first.id, selection.id)
             popup.menu.setGroupCheckable(1, true, false)
-            i++
         }
         popup.setOnMenuItemClickListener {
             when (it.itemId) {

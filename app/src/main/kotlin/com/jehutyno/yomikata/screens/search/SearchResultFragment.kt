@@ -87,7 +87,7 @@ class SearchResultFragment : Fragment(), SearchResultContract.View, WordsAdapter
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.menu_search, menu)
         val searchMenuItem = menu.findItem(R.id.search)
-        var searchView = searchMenuItem.actionView as SearchView
+        val searchView = searchMenuItem.actionView as SearchView
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String): Boolean {
                 searchString = query.replace("'", " ").replace("\"", " ")
@@ -106,6 +106,7 @@ class SearchResultFragment : Fragment(), SearchResultContract.View, WordsAdapter
                 return false
             }
         })
+
         searchMenuItem.setIcon(R.drawable.ic_arrow_back_orange_24dp)
         MenuItemCompat.setOnActionExpandListener(searchMenuItem, object : MenuItemCompat.OnActionExpandListener{
             override fun onMenuItemActionExpand(item: MenuItem?): Boolean {
@@ -116,7 +117,6 @@ class SearchResultFragment : Fragment(), SearchResultContract.View, WordsAdapter
                 activity!!.finish()
                 return true
             }
-
         })
 
         searchMenuItem.expandActionView()
@@ -162,14 +162,12 @@ class SearchResultFragment : Fragment(), SearchResultContract.View, WordsAdapter
                 1 -> {
                     val popup = PopupMenu(activity!!, activity!!.find(1))
                     popup.menuInflater.inflate(R.menu.popup_selections, popup.menu)
-                    var i = 0
-                    for (selection in selections) {
+                    for ((i, selection) in selections.withIndex()) {
                         popup.menu.add(1, i, i, selection.getName()).isChecked = false
-                        i++
                     }
-                    popup.setOnMenuItemClickListener {
+                    popup.setOnMenuItemClickListener {it ->
                         val selectedWords: ArrayList<Word> = arrayListOf()
-                        adapter.items.forEach { if (it.isSelected == 1) selectedWords.add(it) }
+                        adapter.items.forEach { item -> if (item.isSelected == 1) selectedWords.add(item) }
                         val selectionItemId = it.itemId
                         when (it.itemId) {
                             R.id.add_selection -> addSelection(selectedWords)
@@ -188,14 +186,12 @@ class SearchResultFragment : Fragment(), SearchResultContract.View, WordsAdapter
                 }
                 2 -> {
                     val popup = PopupMenu(activity!!, activity!!.find(2))
-                    var i = 0
-                    for (selection in selections) {
+                    for ((i, selection) in selections.withIndex()) {
                         popup.menu.add(1, i, i, selection.getName()).isChecked = false
-                        i++
                     }
-                    popup.setOnMenuItemClickListener {
+                    popup.setOnMenuItemClickListener {it ->
                         val selectedWords: ArrayList<Word> = arrayListOf()
-                        adapter.items.forEach { if (it.isSelected == 1) selectedWords.add(it) }
+                        adapter.items.forEach { item -> if (item.isSelected == 1) selectedWords.add(item) }
                         val selectionItemId = it.itemId
                         when (it.itemId) {
                             else -> {

@@ -192,9 +192,9 @@ class ContentFragment : Fragment(), ContentContract.View, WordsAdapter.Callback,
                     for ((i, selection) in selections.withIndex()) {
                         popup.menu.add(1, i, i, selection.getName()).isChecked = false
                     }
-                    popup.setOnMenuItemClickListener {
+                    popup.setOnMenuItemClickListener { it ->
                         val selectedWords: ArrayList<Word> = arrayListOf()
-                        adapter.items.forEach { if (it.isSelected == 1) selectedWords.add(it) }
+                        adapter.items.forEach { item -> if (item.isSelected == 1) selectedWords.add(item) }
                         val selectionItemId = it.itemId
                         when (it.itemId) {
                             R.id.add_selection -> addSelection(selectedWords)
@@ -213,14 +213,12 @@ class ContentFragment : Fragment(), ContentContract.View, WordsAdapter.Callback,
                 2 -> {
 
                     val popup = PopupMenu(activity!!, activity!!.find(2))
-                    var i = 0
-                    for (selection in selections) {
+                    for ((i, selection) in selections.withIndex()) {
                         popup.menu.add(1, i, i, selection.getName()).isChecked = false
-                        i++
                     }
-                    popup.setOnMenuItemClickListener {
+                    popup.setOnMenuItemClickListener {it ->
                         val selectedWords: ArrayList<Word> = arrayListOf()
-                        adapter.items.forEach { if (it.isSelected == 1) selectedWords.add(it) }
+                        adapter.items.forEach { item -> if (item.isSelected == 1) selectedWords.add(item) }
                         val selectionItemId = it.itemId
                         when (it.itemId) {
                             else -> {

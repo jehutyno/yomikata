@@ -804,11 +804,9 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
         val popup = PopupMenu(activity, view)
         val word = adapter!!.words[position].first
         popup.menuInflater.inflate(R.menu.popup_selections, popup.menu)
-        var i = 0
-        for (selection in selections) {
+        for ((i, selection) in selections.withIndex()) {
             popup.menu.add(1, i, i, selection.getName()).isChecked = presenter.isWordInQuiz(word.id, selection.id)
             popup.menu.setGroupCheckable(1, true, false)
-            i++
         }
         popup.setOnMenuItemClickListener {
             when (it.itemId) {
