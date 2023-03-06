@@ -621,7 +621,7 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
                         val colorEntireWord = word.isKana == 2 && quizType == QuizType.TYPE_JAP_EN
                         val wordTruePosition = if (colorEntireWord) 0 else getWordPositionInFuriSentence(sentence.jap, word)
                         if (btn_furi.isSelected) {
-                            if (colorEntireWord) 0 else wordTruePosition.let {
+                            if (!colorEntireWord) wordTruePosition.let {
                                 furi_sentence.text_set(
                                     if (colorEntireWord) sentence.jap else sentenceNoAnswerFuri(sentence, word),
                                     it,
