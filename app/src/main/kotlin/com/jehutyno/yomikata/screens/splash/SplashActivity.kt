@@ -3,6 +3,7 @@ package com.jehutyno.yomikata.screens.splash
 import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
+import android.os.Looper
 import androidx.appcompat.app.AppCompatActivity
 import android.view.View
 import com.jehutyno.yomikata.databinding.ActivitySplashBinding
@@ -40,7 +41,7 @@ class SplashActivity : AppCompatActivity() {
             }
             .start()
 
-        val handler = Handler()
+        val handler = Handler(Looper.getMainLooper())
         handler.postDelayed(
             {
                 if (!defaultSharedPreferences.getBoolean("migrationYomiDone", false)) {
