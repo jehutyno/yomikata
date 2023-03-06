@@ -604,7 +604,7 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
     }
 
     override fun animateColor(position: Int, word: Word, sentence: Sentence, quizType: QuizType, fromLevel: Int, toLevel: Int, fromPoints: Int, toPoints: Int) {
-        val view = binding.pager.findViewWithTag<View>("pos_" + position)
+        val view = binding.pager.findViewWithTag<View>("pos_$position")
         val btn_furi = view.findViewById<View>(R.id.btn_furi)
         val furi_sentence = view.findViewById<FuriganaView>(R.id.furi_sentence)
         val trad_sentence = view.findViewById<TextView>(R.id.trad_sentence)
