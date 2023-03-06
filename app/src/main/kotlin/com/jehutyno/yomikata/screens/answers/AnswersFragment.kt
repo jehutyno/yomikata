@@ -1,5 +1,6 @@
 package com.jehutyno.yomikata.screens.answers
 
+import android.app.AlertDialog
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
 import androidx.fragment.app.Fragment
@@ -59,7 +60,7 @@ class AnswersFragment : Fragment(), AnswersContract.View, AnswersAdapter.Callbac
         super.onCreate(savedInstanceState)
         tts = TextToSpeech(activity, this)
         val answers = LocalPersistence.readObjectFromFile(context, "answers") as ArrayList<Answer>
-        adapter = AnswersAdapter(activity!!, this)
+        adapter = AnswersAdapter(requireActivity(), this)
         layoutManager = LinearLayoutManager(activity)
         adapter.replaceData(presenter.getAnswersWordsSentences(answers))
     }
@@ -74,7 +75,7 @@ class AnswersFragment : Fragment(), AnswersContract.View, AnswersAdapter.Callbac
 
         injector.inject(Kodein {
             extend(appKodein())
-            bind<VoicesManager>() with singleton { VoicesManager(activity!!) }
+            bind<VoicesManager>() with singleton { VoicesManager(requireActivity()) }
         })
 
         binding.recyclerviewContent.let {
@@ -102,7 +103,7 @@ class AnswersFragment : Fragment(), AnswersContract.View, AnswersAdapter.Callbac
     }
 
     override fun onSelectionClick(position: Int, view: View) {
-        val popup = PopupMenu(activity!!, view)
+        val popup = PopupMenu(requireActivity(), view)
         popup.menuInflater.inflate(R.menu.popup_selections, popup.menu)
         for ((i, selection) in selections.withIndex()) {
             popup.menu.add(1, i, i, selection.getName()).isChecked = presenter.isWordInQuiz(adapter.items[position].second.id, selection.id)
@@ -149,7 +150,7 @@ class AnswersFragment : Fragment(), AnswersContract.View, AnswersAdapter.Callbac
 
 
     override fun onReportClick(position: Int) {
-        reportError(activity!!, adapter.items[position].second, adapter.items[position].third)
+        reportError(requireActivity(), adapter.items[position].second, adapter.items[position].third)
     }
 
     override fun onTTSClick(position: Int) {
