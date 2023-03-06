@@ -3,16 +3,12 @@ package com.jehutyno.yomikata.screens.quizzes
 import android.content.Context
 import androidx.recyclerview.widget.RecyclerView
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
 import androidx.viewbinding.ViewBinding
-import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.databinding.VhNewSelectionBinding
 import com.jehutyno.yomikata.databinding.VhQuizBinding
 import com.jehutyno.yomikata.model.Quiz
 import com.jehutyno.yomikata.util.Categories
-import com.jehutyno.yomikata.util.Prefs
-import org.jetbrains.anko.defaultSharedPreferences
 
 /**
  * Created by valentin on 04/10/2016.

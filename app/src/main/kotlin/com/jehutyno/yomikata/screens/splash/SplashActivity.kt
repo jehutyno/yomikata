@@ -5,7 +5,6 @@ import android.os.Bundle
 import android.os.Handler
 import androidx.appcompat.app.AppCompatActivity
 import android.view.View
-import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.databinding.ActivitySplashBinding
 import com.jehutyno.yomikata.screens.quizzes.QuizzesActivity
 import com.jehutyno.yomikata.util.Prefs

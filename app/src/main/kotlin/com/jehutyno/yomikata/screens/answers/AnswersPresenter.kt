@@ -1,6 +1,5 @@
 package com.jehutyno.yomikata.screens.answers
 
-import com.jehutyno.yomikata.managers.VoicesManager
 import com.jehutyno.yomikata.model.Answer
 import com.jehutyno.yomikata.model.Quiz
 import com.jehutyno.yomikata.model.Sentence
