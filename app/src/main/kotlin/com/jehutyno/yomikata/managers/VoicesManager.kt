@@ -48,7 +48,7 @@ class VoicesManager(val context: Activity) {
         if (audio.getStreamVolume(AudioManager.STREAM_MUSIC) == 0) {
             context.toast(context.getString(R.string.message_adjuste_volume))
         }
-        val level = getCateogryLevel(word.baseCategory)
+        val level = getCategoryLevel(word.baseCategory)
         val speechAvailability = checkSpeechAvailability(context, ttsSupported, level)
 
         when (speechAvailability) {

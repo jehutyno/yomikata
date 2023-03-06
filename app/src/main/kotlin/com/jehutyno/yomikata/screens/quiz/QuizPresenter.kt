@@ -692,7 +692,7 @@ class QuizPresenter(
     }
 
     override fun getRandomSentence(word: Word): Sentence {
-        val sentence = sentenceRepository.getRandomSentence(word, getCateogryLevel(word.baseCategory))
+        val sentence = sentenceRepository.getRandomSentence(word, getCategoryLevel(word.baseCategory))
         return if (word.isKana == 2 || sentence == null)
             sentenceRepository.getSentenceById(word.sentenceId)
         else

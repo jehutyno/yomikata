@@ -201,12 +201,12 @@ fun speechNotSupportedAlert(activity: Activity, level: Int, finishedListener: ()
             } catch (e: Exception) {
                 e.printStackTrace()
             }
-            dlButton.text = activity.getString(R.string.download_voices_action, getLevelDonwloadSize(level))
+            dlButton.text = activity.getString(R.string.download_voices_action, getLevelDownloadSize(level))
             dlButton.compoundDrawablePadding = 20
             dlButton.setOnClickListener {
                 activity.alert {
                     titleResource = R.string.download_voices_alert
-                    message = activity.getString(R.string.download_voices_alert_message, getLevelDonwloadSize(level))
+                    message = activity.getString(R.string.download_voices_alert_message, getLevelDownloadSize(level))
                     okButton {
                         it.dismiss()
                         launchVoicesDownload(activity, level, { finishedListener() })

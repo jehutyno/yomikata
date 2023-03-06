@@ -180,10 +180,10 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
             ttsErrorsImage.padding = DimensionHelper.getPixelFromDip(activity, 12)
             ttsErrorsImage.setOnClickListener {
                 val category = adapter!!.words[binding.pager.currentItem].first.baseCategory
-                val speechAvailability = checkSpeechAvailability(activity!!, ttsSupported, getCateogryLevel(category))
+                val speechAvailability = checkSpeechAvailability(activity!!, ttsSupported, getCategoryLevel(category))
                 when (speechAvailability) {
                     SpeechAvailability.NOT_AVAILABLE -> {
-                        speechNotSupportedAlert(activity!!, getCateogryLevel(category), {})
+                        speechNotSupportedAlert(activity!!, getCategoryLevel(category), {})
                     }
                     else -> {
                         if (isSettingsOpen) {
@@ -758,10 +758,10 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
             }
             R.id.tts_settings -> {
                 val category = adapter!!.words[binding.pager.currentItem].first.baseCategory
-                val speechAvailability = checkSpeechAvailability(activity!!, ttsSupported, getCateogryLevel(category))
+                val speechAvailability = checkSpeechAvailability(activity!!, ttsSupported, getCategoryLevel(category))
                 when (speechAvailability) {
                     SpeechAvailability.NOT_AVAILABLE -> {
-                        speechNotSupportedAlert(activity!!, getCateogryLevel(category), {})
+                        speechNotSupportedAlert(activity!!, getCategoryLevel(category), {})
                     }
                     else -> {
                         if (isSettingsOpen) {
