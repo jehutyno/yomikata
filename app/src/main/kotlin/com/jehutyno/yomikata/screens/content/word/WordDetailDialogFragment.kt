@@ -133,9 +133,9 @@ class WordDetailDialogFragment : DialogFragment(), WordContract.View, WordPagerA
     override fun onResume() {
         super.onResume()
         wordPresenter.start()
-        if (quizIds != null && !quizIds!!.isEmpty())
+        if (quizIds != null && quizIds!!.isNotEmpty())
             wordPresenter.loadWords(quizIds!!, level)
-        else if (!searchString.isEmpty())
+        else if (searchString.isNotEmpty())
             (wordPresenter.searchWords(searchString))
         else if (wordId != -1L)
             wordPresenter.loadWord(wordId)

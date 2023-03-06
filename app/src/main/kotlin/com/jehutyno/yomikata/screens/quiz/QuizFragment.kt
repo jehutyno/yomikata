@@ -69,7 +69,7 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
 
 
     override fun onInit(status: Int) {
-        if (adapter != null && !adapter!!.words.isEmpty()) {
+        if (adapter != null && adapter!!.words.isNotEmpty()) {
             ttsSupported = onTTSinit(activity, status, tts)
             presenter.setTTSSupported(ttsSupported)
             if (adapter!!.words[binding.pager.currentItem].second == QuizType.TYPE_AUDIO ||
