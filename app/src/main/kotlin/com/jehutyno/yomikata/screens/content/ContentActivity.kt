@@ -173,7 +173,7 @@ class ContentActivity : AppCompatActivity() {
         }
     }
 
-    fun launchQuiz(strategy: QuizStrategy) {
+    private fun launchQuiz(strategy: QuizStrategy) {
         statsRepository.addStatEntry(StatAction.LAUNCH_QUIZ_FROM_CATEGORY, category.toLong(), Calendar.getInstance().timeInMillis, StatResult.OTHER)
         val cat1 = defaultSharedPreferences.getInt(Prefs.LATEST_CATEGORY_1.pref, -1)
 

@@ -212,14 +212,14 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
      *  UI Initialization
      */
 
-    fun initUI() {
+    private fun initUI() {
         initPager()
         initEditText()
         setUpAudioManager()
         initAnswersButtons()
     }
 
-    fun initPager() {
+    private fun initPager() {
         adapter = QuizItemPagerAdapter(context!!, this)
         binding.pager.adapter = adapter
         binding.pager.setAllowedSwipeDirection(SwipeDirection.none)
@@ -238,7 +238,7 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
         })
     }
 
-    fun initEditText() {
+    private fun initEditText() {
         binding.hiraganaEdit.setOnEditorActionListener { _, i, keyEvent ->
             if (isSettingsOpen) closeTTSSettings()
             if (adapter!!.words[binding.pager.currentItem].second == QuizType.TYPE_PRONUNCIATION
@@ -290,7 +290,7 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
         binding.hiraganaEdit.setSelection(binding.hiraganaEdit.text.length)
     }
 
-    fun setUpAudioManager() {
+    private fun setUpAudioManager() {
         val audioManager = activity!!.getSystemService(Context.AUDIO_SERVICE) as AudioManager
         binding.seekVolume.max = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
         binding.seekVolume.progress = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
@@ -332,7 +332,7 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
         }
     }
 
-    fun initAnswersButtons() {
+    private fun initAnswersButtons() {
         binding.quizContainer.setOnClickListener { if (isSettingsOpen) closeTTSSettings() }
         binding.answerContainer.setOnClickListener { if (isSettingsOpen) closeTTSSettings() }
         binding.option1Container.setOnClickListener {

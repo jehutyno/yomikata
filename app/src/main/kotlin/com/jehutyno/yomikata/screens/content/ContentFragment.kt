@@ -39,7 +39,7 @@ class ContentFragment : Fragment(), ContentContract.View, WordsAdapter.Callback,
     private var quizTitle: String = ""
     private var level = -1
     private var lastPosition = -1
-    lateinit private var selections: List<Quiz>
+    private lateinit var selections: List<Quiz>
 
     // View Binding
     private var _binding: FragmentContentGraphBinding? = null

@@ -227,7 +227,7 @@ class WordDetailDialogFragment : DialogFragment(), WordContract.View, WordPagerA
         dialog?.dismiss()
     }
 
-    fun waitAndUpdateLevel(position: Int, newLevel: Int, points: Int) {
+    private fun waitAndUpdateLevel(position: Int, newLevel: Int, points: Int) {
         if (newLevel != adapter.words[position].first.level) {
             adapter.words[position].first.level = newLevel
         }
