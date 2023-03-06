@@ -39,7 +39,7 @@ class QuizItemPagerAdapter(var context: Context, var callback: Callback) : Pager
     }
 
     override fun instantiateItem(container: ViewGroup, position: Int): Any {
-        val view = LayoutInflater.from(container?.context).inflate(R.layout.vh_quiz_item, container, false)
+        val view = LayoutInflater.from(container.context).inflate(R.layout.vh_quiz_item, container, false)
         val word = words[position].first
         val whole_sentence_layout = view.findViewById<View>(R.id.whole_sentence_layout)
         val btn_furi = view.findViewById<View>(R.id.btn_furi)
@@ -64,7 +64,7 @@ class QuizItemPagerAdapter(var context: Context, var callback: Callback) : Pager
                 trad_sentence.visibility = View.VISIBLE
                 trad_sentence.textSize = 16f
                 trad_sentence.textColor = ContextCompat.getColor(context, R.color.lighter_gray)
-                var sentenceNoFuri = sentenceNoFuri(sentence)
+                val sentenceNoFuri = sentenceNoFuri(sentence)
                 val colorEntireWord = word.isKana == 2 && words[position].second == QuizType.TYPE_JAP_EN
                 val wordTruePosition = if (colorEntireWord) 0 else getWordPositionInFuriSentence(sentence.jap, word)
                 if (btn_furi.isSelected) {
@@ -170,9 +170,9 @@ class QuizItemPagerAdapter(var context: Context, var callback: Callback) : Pager
             popup.show()
         }
 
-        view.tag = "pos_" + position
+        view.tag = "pos_$position"
 
-        container?.addView(view)
+        container.addView(view)
         return view
     }
 

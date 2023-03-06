@@ -39,7 +39,7 @@ class WordPagerAdapter(val activity: Activity, var quizType: QuizType?, var call
         val binding = VhWordDetailBinding.inflate(layoutInflater, container, false)
 
         val word = words[position]
-        var wordDisplay =
+        val wordDisplay =
                 if (quizType != null) word.first.japanese else "    {${word.first.japanese};${word.first.reading}}    "
         binding.levelDown.visibility = if (quizType != null) GONE else VISIBLE
         binding.levelUp.visibility = if (quizType != null) GONE else VISIBLE

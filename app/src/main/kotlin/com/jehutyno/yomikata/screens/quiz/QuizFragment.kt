@@ -609,7 +609,7 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
         val furi_sentence = view.findViewById<FuriganaView>(R.id.furi_sentence)
         val trad_sentence = view.findViewById<TextView>(R.id.trad_sentence)
         val sound = view.findViewById<ImageButton>(R.id.sound)
-        var sentenceNoFuri = sentenceNoFuri(sentence)
+        val sentenceNoFuri = sentenceNoFuri(sentence)
         val colorAnimation = ValueAnimator.ofObject(ArgbEvaluator(),
             getWordColor(context!!, fromLevel, fromPoints),
             getWordColor(context!!, toLevel, toPoints))

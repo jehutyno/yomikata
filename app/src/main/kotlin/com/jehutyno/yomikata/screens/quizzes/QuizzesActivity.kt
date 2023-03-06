@@ -273,7 +273,7 @@ class QuizzesActivity : AppCompatActivity() {
     }
 
     private fun getNavButtonView(toolbar: Toolbar): View? {
-        return (0..toolbar.childCount - 1)
+        return (0 until toolbar.childCount)
             .firstOrNull { toolbar.getChildAt(it) is ImageButton }
             ?.let { toolbar.getChildAt(it) as ImageButton }
     }
@@ -367,7 +367,7 @@ class QuizzesActivity : AppCompatActivity() {
     private fun setImageRandom() {
         // change images randomly
         val ran = Random()
-        var i = ran.nextInt(homeImages.size)
+        val i = ran.nextInt(homeImages.size)
         binding.imageSectionIcon.setImageResource(homeImages[i])
     }
 

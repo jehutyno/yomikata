@@ -187,7 +187,7 @@ class QuizzesFragment : Fragment(), QuizzesContract.View, QuizzesAdapter.Callbac
     }
 
     override fun launchQuiz(strategy: QuizStrategy, selectedTypes: IntArray, title: String) {
-        var ids = mutableListOf<Long>()
+        val ids = mutableListOf<Long>()
         adapter.items.forEach {
             if (it.isSelected == 1)
                 ids.add(it.id)
@@ -226,7 +226,7 @@ class QuizzesFragment : Fragment(), QuizzesContract.View, QuizzesAdapter.Callbac
         adapter.replaceData(quizzes, selectedCategory == Categories.CATEGORY_SELECTIONS)
         binding.recyclerview.scrollToPosition(0)
 
-        var ids = arrayListOf<Long>()
+        val ids = arrayListOf<Long>()
         quizzes.forEach {
             ids.add(it.id)
         }
@@ -398,7 +398,7 @@ class QuizzesFragment : Fragment(), QuizzesContract.View, QuizzesAdapter.Callbac
                                 spotlightTuto(activity!!, binding.textLow, getString(R.string.tuto_progress), getString(R.string.tuto_progress_message),
                                     SpotlightListener {
                                         if (activity != null) {
-                                            spotlightTuto(activity!!, binding.recyclerview.findViewHolderForAdapterPosition(0)?.itemView?.find<View>(R.id.quiz_check), getString(R.string.tuto_part_selection), getString(R.string.tuto_part_selection_message),
+                                            spotlightTuto(activity!!, binding.recyclerview.findViewHolderForAdapterPosition(0)?.itemView?.find(R.id.quiz_check), getString(R.string.tuto_part_selection), getString(R.string.tuto_part_selection_message),
                                                 SpotlightListener {})
                                         }
                                     })

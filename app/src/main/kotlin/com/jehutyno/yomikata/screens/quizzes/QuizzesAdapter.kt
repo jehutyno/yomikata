@@ -16,11 +16,7 @@ import com.jehutyno.yomikata.util.Categories
 class QuizzesAdapter(val context: Context, val category: Int, private val callback: Callback, private var isSelections: Boolean) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     var flag = false
-    var items: MutableList<Quiz>
-
-    init {
-        items = arrayListOf<Quiz>()
-    }
+    var items: MutableList<Quiz> = arrayListOf()
 
     companion object {
         val TYPE_NEW_SELECTION = 0

@@ -92,7 +92,7 @@ class QuizPresenter(
         val words = LocalPersistence.readObjectFromFile(context, "words") as ArrayList<Word>
         val types = LocalPersistence.readObjectFromFile(context, "types") as ArrayList<QuizType>
 
-        quizWords = (0..words.size - 1).map { Pair(words[it], types[it]) }
+        quizWords = (0 until words.size).map { Pair(words[it], types[it]) }
         quizView.displayWords(quizWords)
         currentItem = savedInstanceState.getInt("position") - 1 // -1 because setUpQuiz will do the +1
         quizView.setPagerPosition(currentItem)

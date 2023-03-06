@@ -34,7 +34,7 @@ class SearchResultFragment : Fragment(), SearchResultContract.View, WordsAdapter
     private lateinit var adapter: WordsAdapter
     private lateinit var layoutManager: LinearLayoutManager
     private var searchString = ""
-    lateinit private var selections: List<Quiz>
+    private lateinit var selections: List<Quiz>
 
     // View Binding
     private var _binding: FragmentContentBinding? = null
@@ -61,7 +61,7 @@ class SearchResultFragment : Fragment(), SearchResultContract.View, WordsAdapter
         searchResultPresenter.loadSelections()
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentContentBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -229,7 +229,7 @@ class SearchResultFragment : Fragment(), SearchResultContract.View, WordsAdapter
                 container.addView(input)
                 customView = container
                 okButton {
-                    var selectionId = searchResultPresenter.createSelection(input.text.toString())
+                    val selectionId = searchResultPresenter.createSelection(input.text.toString())
                     selectedWords.forEach {
                         searchResultPresenter.addWordToSelection(it.id, selectionId)
                     }

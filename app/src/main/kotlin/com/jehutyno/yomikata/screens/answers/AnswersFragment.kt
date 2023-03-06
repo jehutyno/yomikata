@@ -37,7 +37,7 @@ class AnswersFragment : Fragment(), AnswersContract.View, AnswersAdapter.Callbac
     private lateinit var presenter: AnswersContract.Presenter
     private lateinit var layoutManager: LinearLayoutManager
     private lateinit var adapter: AnswersAdapter
-    lateinit private var selections: List<Quiz>
+    private lateinit var selections: List<Quiz>
 
     private var tts: TextToSpeech? = null
     private var ttsSupported: Int = TextToSpeech.LANG_NOT_SUPPORTED

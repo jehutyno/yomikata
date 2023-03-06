@@ -254,7 +254,7 @@ class ContentFragment : Fragment(), ContentContract.View, WordsAdapter.Callback,
                 container.addView(input)
                 customView = container
                 okButton {
-                    var selectionId = mpresenter!!.createSelection(input.text.toString())
+                    val selectionId = mpresenter!!.createSelection(input.text.toString())
                     selectedWords.forEach {
                         mpresenter!!.addWordToSelection(it.id, selectionId)
                     }

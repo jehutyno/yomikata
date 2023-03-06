@@ -192,7 +192,7 @@ class WordDetailDialogFragment : DialogFragment(), WordContract.View, WordPagerA
             container.addView(input)
             customView = container
             okButton {
-                var selectionId = wordPresenter.createSelection(input.text.toString())
+                val selectionId = wordPresenter.createSelection(input.text.toString())
                 wordPresenter.addWordToSelection(wordId, selectionId)
                 wordPresenter.loadSelections()
             }

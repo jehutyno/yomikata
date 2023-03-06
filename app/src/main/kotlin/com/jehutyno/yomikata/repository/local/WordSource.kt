@@ -19,6 +19,7 @@ class WordSource(var context: Context) : WordRepository {
 
     override fun migration_8to9() {
         val query0 = "ALTER TABLE ${SQLiteTables.WORDS.tableName} RENAME TO 'OLD_${SQLiteTables.WORDS.tableName}'"
+
         val query1 = "CREATE TABLE words (\n" +
             "    ${SQLiteWord.ID.column}           INTEGER      PRIMARY KEY AUTOINCREMENT,\n" +
             "    ${SQLiteWord.JAPANESE.column}      TEXT         NOT NULL,\n" +
@@ -36,6 +37,7 @@ class WordSource(var context: Context) : WordRepository {
             "    ${SQLiteWord.IS_SELECTED.column}    INTEGER      DEFAULT (0),\n" +
             "    ${SQLiteWord.SENTENCE_ID.column}   INTEGER      DEFAULT ( -1) \n" +
             ");"
+
         val query2 = "INSERT INTO ${SQLiteTables.WORDS.tableName} " +
             "(${SQLiteWord.ID.column}, ${SQLiteWord.JAPANESE.column}, ${SQLiteWord.ENGLISH.column}, ${SQLiteWord.FRENCH.column}," +
             "${SQLiteWord.READING.column}, ${SQLiteWord.LEVEL.column}, ${SQLiteWord.COUNT_TRY.column}, " +
@@ -47,6 +49,7 @@ class WordSource(var context: Context) : WordRepository {
             "${SQLiteWord.COUNT_SUCCESS.column}, ${SQLiteWord.COUNT_FAIL.column}, ${SQLiteWord.IS_KANA.column}, " +
             "${SQLiteWord.REPETITION.column}, ${SQLiteWord.POINTS.column}, ${SQLiteWord.BASE_CATEGORY.column}, " +
             "${SQLiteWord.IS_SELECTED.column} FROM OLD_${SQLiteTables.WORDS.tableName}"
+
         val query3 = "DROP TABLE OLD_${SQLiteTables.WORDS.tableName}"
             context.database.use {
                 execSQL(query0)

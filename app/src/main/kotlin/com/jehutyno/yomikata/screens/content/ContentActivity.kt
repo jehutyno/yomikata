@@ -76,7 +76,7 @@ class ContentActivity : AppCompatActivity() {
 
         category = intent.getIntExtra(Extras.EXTRA_CATEGORY, -1)
         level = intent.getIntExtra(Extras.EXTRA_LEVEL, -1)
-        var quizPosition = intent.getIntExtra(Extras.EXTRA_QUIZ_POSITION, -1)
+        val quizPosition = intent.getIntExtra(Extras.EXTRA_QUIZ_POSITION, -1)
         selectedTypes = intent.getIntArrayExtra(Extras.EXTRA_QUIZ_TYPES) ?: intArrayOf()
 
         setSupportActionBar(findViewById(R.id.toolbar))
@@ -86,7 +86,7 @@ class ContentActivity : AppCompatActivity() {
             setDisplayHomeAsUpEnabled(true)
         }
 
-        var quizSource: QuizRepository = appKodein.invoke().instance()
+        val quizSource: QuizRepository = appKodein.invoke().instance()
 
 
         quizSource.getQuiz(category, object : QuizRepository.LoadQuizCallback {
@@ -133,8 +133,8 @@ class ContentActivity : AppCompatActivity() {
                         }
 
                         override fun onPageSelected(position: Int) {
-                            val quizTitle = quizzes[position].getName().split("%")[0]
-                            title = quizTitle
+                            val newQuizTitle = quizzes[position].getName().split("%")[0]
+                            title = newQuizTitle
                             quizIds = longArrayOf(quizzes[position].id)
                         }
 
