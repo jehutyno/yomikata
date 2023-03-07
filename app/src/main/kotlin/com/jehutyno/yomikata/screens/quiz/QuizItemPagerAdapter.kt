@@ -1,7 +1,7 @@
 package com.jehutyno.yomikata.screens.quiz
 
 import android.content.Context
-import android.preference.PreferenceManager
+import androidx.preference.PreferenceManager
 import androidx.core.content.ContextCompat
 import androidx.viewpager.widget.PagerAdapter
 import androidx.appcompat.widget.PopupMenu
