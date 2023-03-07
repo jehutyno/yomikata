@@ -1,15 +1,15 @@
 package com.jehutyno.yomikata.screens.search
 
 import android.os.Bundle
-import androidx.fragment.app.Fragment
-import androidx.core.view.MenuItemCompat
-import androidx.recyclerview.widget.GridLayoutManager
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.appcompat.widget.PopupMenu
-import androidx.appcompat.widget.SearchView
 import android.view.*
+import android.view.MenuItem
 import android.widget.EditText
 import android.widget.FrameLayout
+import androidx.appcompat.widget.PopupMenu
+import androidx.appcompat.widget.SearchView
+import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.databinding.FragmentContentBinding
 import com.jehutyno.yomikata.model.Quiz
@@ -108,7 +108,7 @@ class SearchResultFragment : Fragment(), SearchResultContract.View, WordsAdapter
         })
 
         searchMenuItem.setIcon(R.drawable.ic_arrow_back_orange_24dp)
-        MenuItemCompat.setOnActionExpandListener(searchMenuItem, object : MenuItemCompat.OnActionExpandListener{
+        searchMenuItem.setOnActionExpandListener(object : MenuItem.OnActionExpandListener {
             override fun onMenuItemActionExpand(item: MenuItem?): Boolean {
                 return true
             }
