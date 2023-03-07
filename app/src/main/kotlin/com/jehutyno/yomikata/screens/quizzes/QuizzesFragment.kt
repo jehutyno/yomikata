@@ -253,16 +253,17 @@ class QuizzesFragment : Fragment(), QuizzesContract.View, QuizzesAdapter.Callbac
 
     fun openContent(position: Int, level: Int) {
         if ((selectedCategory == Categories.CATEGORY_SELECTIONS)) {
-
+            // TODO: ?
         } else {
-            val intent = Intent(context, ContentActivity::class.java).apply {
-                putExtra(Extras.EXTRA_CATEGORY, selectedCategory)
-                putExtra(Extras.EXTRA_QUIZ_POSITION, position)
-                putExtra(Extras.EXTRA_QUIZ_TYPES, mpresenter!!.getSelectedTypes())
-                putExtra(Extras.EXTRA_LEVEL, level)
-            }
-            startActivity(intent)
+
         }
+        val intent = Intent(context, ContentActivity::class.java).apply {
+            putExtra(Extras.EXTRA_CATEGORY, selectedCategory)
+            putExtra(Extras.EXTRA_QUIZ_POSITION, position)
+            putExtra(Extras.EXTRA_QUIZ_TYPES, mpresenter!!.getSelectedTypes())
+            putExtra(Extras.EXTRA_LEVEL, level)
+        }
+        startActivity(intent)
     }
 
     override fun displayNoData() {
