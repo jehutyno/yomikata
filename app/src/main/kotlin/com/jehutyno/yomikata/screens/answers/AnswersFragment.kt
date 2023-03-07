@@ -22,10 +22,6 @@ import com.jehutyno.yomikata.managers.VoicesManager
 import com.jehutyno.yomikata.model.Answer
 import com.jehutyno.yomikata.model.Quiz
 import com.jehutyno.yomikata.util.*
-import org.jetbrains.anko.cancelButton
-import org.jetbrains.anko.okButton
-import org.jetbrains.anko.support.v4.alert
-import org.jetbrains.anko.support.v4.defaultSharedPreferences
 import java.util.*
 
 /**
@@ -127,25 +123,30 @@ class AnswersFragment : Fragment(), AnswersContract.View, AnswersAdapter.Callbac
     }
 
     private fun addSelection(wordId: Long) {
-        alert {
-            title = getString(R.string.new_selection)
-            val input = EditText(activity)
-            input.setSingleLine()
-            input.hint = getString(R.string.selection_name)
-            val container = FrameLayout(requireActivity())
-            val params = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-            params.leftMargin = DimensionHelper.getPixelFromDip(activity, 20)
-            params.rightMargin = DimensionHelper.getPixelFromDip(activity, 20)
-            input.layoutParams = params
-            container.addView(input)
-            customView = container
-            okButton {
-                var selectionId = presenter.createSelection(input.text.toString())
-                presenter.addWordToSelection(wordId, selectionId)
-                presenter.loadSelections()
-            }
-            cancelButton { }
-        }.show()
+        val builder = AlertDialog.Builder(requireActivity())
+        builder.setTitle(R.string.new_selection)
+
+        val input = EditText(activity)
+        input.setSingleLine()
+        input.hint = getString(R.string.selection_name)
+        val container = FrameLayout(requireActivity())
+        val params = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+        params.leftMargin = DimensionHelper.getPixelFromDip(activity, 20)
+        params.rightMargin = DimensionHelper.getPixelFromDip(activity, 20)
+        input.layoutParams = params
+        container.addView(input)
+
+        builder.setView(input)
+
+        builder.setPositiveButton(R.string.ok) {_, _ ->
+            val selectionId = presenter.createSelection(input.text.toString())
+            presenter.addWordToSelection(wordId, selectionId)
+            presenter.loadSelections()
+        }
+
+        builder.setNegativeButton(R.string.cancel_caps) {_, _ -> }
+
+        builder.show()
     }
 
 
