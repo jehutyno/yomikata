@@ -22,7 +22,7 @@ object Extras {
 
     @JvmStatic val REQUEST_PREFS = 33
     @JvmStatic val REQUEST_RESTORE = 55
-    @JvmStatic val REQUEST_EXTERNAL_STORAGE_BACKPUP = 44
+    @JvmStatic val REQUEST_EXTERNAL_STORAGE_BACKUP = 44
     @JvmStatic val REQUEST_EXTERNAL_STORAGE_RESTORE = 66
     @JvmStatic val PERMISSIONS_STORAGE = arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE)
 }

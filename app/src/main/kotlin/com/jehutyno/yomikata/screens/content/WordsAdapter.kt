@@ -9,6 +9,8 @@ import android.view.View
 import android.view.View.GONE
 import android.view.View.VISIBLE
 import android.view.ViewGroup
+import androidx.core.graphics.BlendModeColorFilterCompat
+import androidx.core.graphics.BlendModeCompat
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.databinding.VhWordShortBinding
 import com.jehutyno.yomikata.model.Word
