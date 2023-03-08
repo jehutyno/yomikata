@@ -5,12 +5,13 @@ import android.content.Context
 import android.media.AudioManager
 import android.net.Uri
 import android.speech.tts.TextToSpeech
+import android.widget.Toast
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.model.Sentence
 import com.jehutyno.yomikata.model.Word
 import com.jehutyno.yomikata.util.*
 import component.ExoPlayerAudio
-import org.jetbrains.anko.toast
+
 
 /**
  * Created by valentinlanfranchi on 01/09/2017.
@@ -23,7 +24,8 @@ class VoicesManager(val context: Activity) {
     fun speakSentence(sentence: Sentence, ttsSupported: Int, tts: TextToSpeech?) {
         val audio = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
         if (audio.getStreamVolume(AudioManager.STREAM_MUSIC) == 0) {
-            context.toast(context.getString(R.string.message_adjuste_volume))
+            val toast = Toast.makeText(context, R.string.message_adjuste_volume, Toast.LENGTH_LONG)
+            toast.show()
         }
         val speechAvailability = checkSpeechAvailability(context, ttsSupported, sentence.level)
         when (speechAvailability) {
@@ -46,7 +48,8 @@ class VoicesManager(val context: Activity) {
     fun speakWord(word: Word, ttsSupported: Int, tts: TextToSpeech?) {
         val audio = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
         if (audio.getStreamVolume(AudioManager.STREAM_MUSIC) == 0) {
-            context.toast(context.getString(R.string.message_adjuste_volume))
+            val toast = Toast.makeText(context, R.string.message_adjuste_volume, Toast.LENGTH_SHORT)
+            toast.show()
         }
         val level = getCategoryLevel(word.baseCategory)
         val speechAvailability = checkSpeechAvailability(context, ttsSupported, level)
