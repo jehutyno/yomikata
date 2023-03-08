@@ -58,7 +58,7 @@ fun Activity.migrateFromYomikata() {
     val context = this
     val toPath = getString(R.string.db_path)
     val toName = getString(R.string.db_name_yomi)
-    val file = File(toPath + "/" + toName)
+    val file = File("$toPath/$toName")
     if (file.exists()) {
         try {
             CopyUtils.reinitDataBase(this)
@@ -68,21 +68,20 @@ fun Activity.migrateFromYomikata() {
             // TODO: use coroutines library
             doAsync {
                 wordTables.forEach {
-                    val wordtable = migrationSource.getWordTable(it)
-                    wordtable.forEach {
+                    val wordTable = migrationSource.getWordTable(it)
+                    wordTable.forEach { word ->
                         val source = WordSource(context)
-                        if (it.counterTry > 0 || it.priority > 0)
-                            source.restoreWord(it.word, it.prononciation, it)
+                        if (word.counterTry > 0 || word.priority > 0)
+                            source.restoreWord(word.word, word.prononciation, word)
                     }
                 }
                 File(toPath + toName).delete()
-
             }
         } catch (exception: Exception) {
             val builder = AlertDialog.Builder(this)
             builder.setTitle(R.string.restore_error)
             builder.setMessage(R.string.restore_error_message)
-            builder.setPositiveButton(R.string.ok) {_, _, -> }
+            builder.setPositiveButton(R.string.ok) {_, _ -> }
             builder.show()
         }
     }
@@ -97,7 +96,7 @@ fun Context.updateBDD(db: SQLiteDatabase?, filePathEncrypted: String, oldVersion
         }, 2000)
     var filePath = ""
     File(getString(R.string.db_path) + UpdateSQLiteHelper.UPDATE_DATABASE_NAME).delete()
-    if (!filePathEncrypted.isEmpty()) {
+    if (filePathEncrypted.isNotEmpty()) {
         val file = File(filePathEncrypted)
         filePath = filePathEncrypted.replace(".yomikataz", ".import")
         try {
@@ -154,7 +153,7 @@ fun Context.updateBDD(db: SQLiteDatabase?, filePathEncrypted: String, oldVersion
                 sendBroadcast(intent)
             }
         }
-        if (!filePath.isEmpty()) {
+        if (filePath.isNotEmpty()) {
             statSource.removeAllStats()
             stats.forEach {
                 statSource.addStatEntry(it)
@@ -170,9 +169,9 @@ fun Context.updateBDD(db: SQLiteDatabase?, filePathEncrypted: String, oldVersion
             val quiz = quizSource.getQuiz(it.id)
             if (quiz == null) {
                 val id = quizSource.saveQuiz(it.getName(), it.category)
-                quizIdsMap.put(id, it.id)
+                quizIdsMap[id] = it.id
             } else {
-                quizIdsMap.put(quiz.id, it.id)
+                quizIdsMap[quiz.id] = it.id
             }
             i++
             if (i % 100 == 0) {
