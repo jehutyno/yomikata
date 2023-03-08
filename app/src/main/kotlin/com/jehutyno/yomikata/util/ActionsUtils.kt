@@ -3,6 +3,7 @@
 package com.jehutyno.yomikata.util
 
 import android.app.Activity
+import android.app.AlertDialog
 import android.app.ProgressDialog
 import android.content.Context
 import android.content.Intent
@@ -16,6 +17,7 @@ import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.core.content.ContextCompat
+import androidx.preference.PreferenceManager
 import com.google.firebase.storage.FirebaseStorage
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.YomikataZKApplication
@@ -25,7 +27,6 @@ import com.wooplr.spotlight.SpotlightConfig
 import com.wooplr.spotlight.SpotlightView
 import com.wooplr.spotlight.prefs.PreferencesManager
 import com.wooplr.spotlight.utils.SpotlightListener
-import org.jetbrains.anko.*
 import java.io.File
 import java.util.*
 
@@ -133,7 +134,8 @@ fun checkSpeechAvailability(context: Context, ttsSupported: Int, level: Int): Sp
 
 fun anyVoicesDownloaded(context: Context, level: Int): Boolean {
     return (0..getLevelDownloadVersion(level)).any {
-        context.defaultSharedPreferences.getBoolean("${Prefs.VOICE_DOWNLOADED_LEVEL_V.pref}${it}_$level", false)
+        val pref = PreferenceManager.getDefaultSharedPreferences(context)
+        pref.getBoolean("${Prefs.VOICE_DOWNLOADED_LEVEL_V.pref}${it}_$level", false)
     }
 }
 
@@ -183,78 +185,104 @@ fun getWordPositionInFuriSentence(sentenceJap: String, word: Word): Int {
         return 0
 }
 
+private fun createDlButton(activity: Activity, level: Int, finishedListener: () -> Unit) : Button {
+    val dlButton = Button(activity)
+    dlButton.setCompoundDrawablesWithIntrinsicBounds(ContextCompat.getDrawable(activity, R.drawable.ic_download), null, null, null)
+    try {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+            val attrs = intArrayOf(android.R.attr.selectableItemBackgroundBorderless /* index 0 */)
+            val ta = activity.obtainStyledAttributes(attrs)
+            val drawableFromTheme = ta.getDrawable(0 /* index */)
+            ta.recycle()
+            dlButton.background = drawableFromTheme
+        }
+    } catch (e: Exception) {
+        e.printStackTrace()
+    }
+    dlButton.text = activity.getString(R.string.download_voices_action, getLevelDownloadSize(level))
+    dlButton.compoundDrawablePadding = 20
+
+    dlButton.setOnClickListener {
+        val builder = AlertDialog.Builder(activity)
+        builder.setTitle(R.string.download_voices_alert)
+
+        val formattedMessage = activity.getString(R.string.download_voices_alert_message, getLevelDownloadSize(level))
+        builder.setMessage(formattedMessage)
+
+        builder.setPositiveButton(R.string.ok) { inter, _ ->
+            inter.dismiss()
+            launchVoicesDownload(activity, level) { finishedListener() }
+        }
+
+        builder.setNegativeButton(R.string.cancel_caps) {_, _ -> }
+
+        builder.show()
+    }
+
+    return dlButton
+}
+
+private fun createGpButton(activity: Activity) : Button {
+    val gpButton = Button(activity)
+    gpButton.setCompoundDrawablesWithIntrinsicBounds(ContextCompat.getDrawable(activity, R.drawable.ic_google_play), null, null, null)
+    try {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+            val attrs = intArrayOf(android.R.attr.selectableItemBackgroundBorderless /* index 0 */)
+            val ta = activity.obtainStyledAttributes(attrs)
+            val drawableFromTheme = ta.getDrawable(0 /* index */)
+            ta.recycle()
+            gpButton.background = drawableFromTheme
+        }
+    } catch (e: Exception) {
+        e.printStackTrace()
+    }
+    gpButton.text = activity.getString(R.string.get_google_tts_action)
+    gpButton.compoundDrawablePadding = 20
+
+    gpButton.setOnClickListener {
+        val manager = activity.packageManager
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(activity.getString(R.string.google_tts_uri)))
+        if (manager.queryIntentActivities(intent, 0).size == 0) {
+            val toast = Toast.makeText(activity,R.string.action_not_possible, Toast.LENGTH_LONG)
+            toast.show()
+        }
+        else {
+            activity.startActivity(intent)
+        }
+    }
+
+    return gpButton
+}
+
 fun speechNotSupportedAlert(activity: Activity, level: Int, finishedListener: () -> Unit) {
-    if (!activity.defaultSharedPreferences.getBoolean(Prefs.DONT_SHOW_VOICES_POPUP.pref, false)) {
-        activity.alert {
-            title = activity.getString(R.string.set_up_tts_title)
-            message = activity.getString(R.string.set_up_tts)
-            val dlButton = Button(activity)
-            dlButton.setCompoundDrawablesWithIntrinsicBounds(ContextCompat.getDrawable(activity, R.drawable.ic_download), null, null, null)
-            try {
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
-                    val attrs = intArrayOf(android.R.attr.selectableItemBackgroundBorderless /* index 0 */)
-                    val ta = activity.obtainStyledAttributes(attrs)
-                    val drawableFromTheme = ta.getDrawable(0 /* index */)
-                    ta.recycle()
-                    dlButton.backgroundDrawable = drawableFromTheme
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-            dlButton.text = activity.getString(R.string.download_voices_action, getLevelDownloadSize(level))
-            dlButton.compoundDrawablePadding = 20
-            dlButton.setOnClickListener {
-                activity.alert {
-                    titleResource = R.string.download_voices_alert
-                    message = activity.getString(R.string.download_voices_alert_message, getLevelDownloadSize(level))
-                    okButton {
-                        it.dismiss()
-                        launchVoicesDownload(activity, level, { finishedListener() })
-                    }
-                    cancelButton { }
-                }.show()
-            }
+    val pref = PreferenceManager.getDefaultSharedPreferences(activity)
+    if (!pref.getBoolean(Prefs.DONT_SHOW_VOICES_POPUP.pref, false)) {
+        val builder = AlertDialog.Builder(activity)
+        builder.setTitle(R.string.set_up_tts_title)
+        builder.setMessage(R.string.set_up_tts)
 
-            val gpButton = Button(activity)
-            gpButton.setCompoundDrawablesWithIntrinsicBounds(ContextCompat.getDrawable(activity, R.drawable.ic_google_play), null, null, null)
-            try {
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
-                    val attrs = intArrayOf(android.R.attr.selectableItemBackgroundBorderless /* index 0 */)
-                    val ta = activity.obtainStyledAttributes(attrs)
-                    val drawableFromTheme = ta.getDrawable(0 /* index */)
-                    ta.recycle()
-                    gpButton.backgroundDrawable = drawableFromTheme
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-            gpButton.text = activity.getString(R.string.get_google_tts_action)
-            gpButton.compoundDrawablePadding = 20
-            gpButton.setOnClickListener {
-                val manager = activity.packageManager
-                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(activity.getString(R.string.google_tts_uri)))
-                if (manager.queryIntentActivities(intent, 0).size == 0)
-                    activity.toast(R.string.action_not_possible)
-                else {
-                    activity.startActivity(intent)
-                }
-            }
-            val container = LinearLayout(activity)
-            container.orientation = LinearLayout.VERTICAL
-            val params = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-            params.gravity = Gravity.CENTER
-            dlButton.layoutParams = params
-            gpButton.layoutParams = params
-            container.addView(dlButton)
-            container.addView(gpButton)
-            customView = container
-            cancelButton {
+        builder.setNeutralButton(R.string.dont_ask_voices) { _, _ ->
+            pref.edit().putBoolean(Prefs.DONT_SHOW_VOICES_POPUP.pref, true).apply()
+        }
 
-            }
+        builder.setNegativeButton(R.string.cancel_caps) {_, _ -> }
 
-            neutralPressed(activity.getString(R.string.dont_ask_voices), { activity.defaultSharedPreferences.edit().putBoolean(Prefs.DONT_SHOW_VOICES_POPUP.pref, true).apply() })
+        val dlButton = createDlButton(activity, level, finishedListener)
+        val gpButton = createGpButton(activity)
 
-        }.show()
+        val params = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+        params.gravity = Gravity.CENTER
+        dlButton.layoutParams = params
+        gpButton.layoutParams = params
+
+        val container = LinearLayout(activity)
+        container.orientation = LinearLayout.VERTICAL
+
+        container.addView(dlButton)
+        container.addView(gpButton)
+        builder.setView(container)
+
+        builder.show()
     }
 }
 
@@ -278,22 +306,26 @@ fun launchVoicesDownload(activity: Activity, level: Int, finishedListener: () ->
         val file = File(localFile.absolutePath)
         file.delete()
 
-        activity.defaultSharedPreferences.edit().putBoolean(Prefs.VOICE_DOWNLOADED_LEVEL_V.pref +
+        val pref = PreferenceManager.getDefaultSharedPreferences(activity)
+        pref.edit().putBoolean(Prefs.VOICE_DOWNLOADED_LEVEL_V.pref +
                 "${getLevelDownloadVersion(level)}_$level", true).apply()
         progressDialog.dismiss()
-        activity.alert {
-            title = activity.getString(R.string.download_success)
-            okButton { finishedListener() }
-            message = activity.getString(R.string.download_success_message)
-        }.show()
+
+        val successBuilder = AlertDialog.Builder(activity)
+        successBuilder.setTitle(R.string.download_success)
+        successBuilder.setPositiveButton(R.string.ok) { _, _ -> finishedListener() }
+        successBuilder.setMessage(R.string.download_success_message)
+        successBuilder.show()
 
     }.addOnFailureListener {
         progressDialog.dismiss()
-        activity.alert {
-            title = activity.getString(R.string.download_failed)
-            okButton { }
-            message = activity.getString(R.string.download_failed_message)
-        }.show()
+
+        val failBuilder = AlertDialog.Builder(activity)
+        failBuilder.setTitle(R.string.download_failed)
+        failBuilder.setPositiveButton(R.string.ok) {_, _ -> }
+        failBuilder.setMessage(R.string.download_failed_message)
+        failBuilder.show()
+
     }.addOnProgressListener {
         val progress: Double = 100.0 * it.bytesTransferred / it.totalByteCount
         progressDialog!!.progress = progress.toInt()
