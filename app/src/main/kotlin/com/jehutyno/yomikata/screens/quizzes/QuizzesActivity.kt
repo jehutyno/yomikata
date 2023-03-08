@@ -334,7 +334,7 @@ class QuizzesActivity : AppCompatActivity() {
                 }
                 R.id.day_night_item -> {
                     menuItem.isChecked = !menuItem.isChecked
-                    menuItem.actionView.find<SwitchCompat>(R.id.my_switch).toggle()
+                    menuItem.actionView?.find<SwitchCompat>(R.id.my_switch)?.toggle()
                 }
                 R.id.settings -> {
                     menuItem.isChecked = false
@@ -347,9 +347,9 @@ class QuizzesActivity : AppCompatActivity() {
             true
         }
 
-        navigationView.menu.findItem(R.id.day_night_item).actionView.find<SwitchCompat>(R.id.my_switch).isChecked = AppCompatDelegate.getDefaultNightMode() == AppCompatDelegate.MODE_NIGHT_YES
+        navigationView.menu.findItem(R.id.day_night_item).actionView?.find<SwitchCompat>(R.id.my_switch)?.isChecked = AppCompatDelegate.getDefaultNightMode() == AppCompatDelegate.MODE_NIGHT_YES
         navigationView.menu.findItem(R.id.day_night_item).isChecked = AppCompatDelegate.getDefaultNightMode() == AppCompatDelegate.MODE_NIGHT_YES
-        navigationView.menu.findItem(R.id.day_night_item).actionView.find<SwitchCompat>(R.id.my_switch).setOnCheckedChangeListener {
+        navigationView.menu.findItem(R.id.day_night_item).actionView?.find<SwitchCompat>(R.id.my_switch)?.setOnCheckedChangeListener {
             switch, isChecked ->
             navigationView.menu.findItem(R.id.day_night_item).isChecked = isChecked
             if (isChecked) {

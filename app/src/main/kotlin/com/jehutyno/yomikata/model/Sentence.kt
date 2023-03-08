@@ -12,12 +12,12 @@ open class Sentence(var id: Long = -1, val jap: String = "", val en: String = ""
     constructor(source: Parcel): this(source.readLong(), source.readString()!!,
         source.readString()!!, source.readString()!!, source.readInt())
 
-    override fun writeToParcel(dest: Parcel?, flags: Int) {
-        dest?.writeLong(id)
-        dest?.writeString(jap)
-        dest?.writeString(en)
-        dest?.writeString(fr)
-        dest?.writeInt(level)
+    override fun writeToParcel(dest: Parcel, flags: Int) {
+        dest.writeLong(id)
+        dest.writeString(jap)
+        dest.writeString(en)
+        dest.writeString(fr)
+        dest.writeInt(level)
     }
 
     override fun describeContents(): Int {

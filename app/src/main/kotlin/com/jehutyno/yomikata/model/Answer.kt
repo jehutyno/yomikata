@@ -12,12 +12,12 @@ open class Answer(val result: Int, var answer: String, val wordId: Long, val sen
 
     constructor(source: Parcel): this(source.readInt(), source.readString()!!, source.readLong(), source.readLong(), source.readParcelable(QuizType::class.java.classLoader)!!)
 
-    override fun writeToParcel(dest: Parcel?, flags: Int) {
-        dest?.writeInt(result)
-        dest?.writeString(answer)
-        dest?.writeLong(wordId)
-        dest?.writeLong(sentenceId)
-        dest?.writeParcelable(quizType, flags)
+    override fun writeToParcel(dest: Parcel, flags: Int) {
+        dest.writeInt(result)
+        dest.writeString(answer)
+        dest.writeLong(wordId)
+        dest.writeLong(sentenceId)
+        dest.writeParcelable(quizType, flags)
     }
 
     override fun describeContents(): Int {

@@ -16,8 +16,8 @@ enum class QuizType(val type: Int, val points: Int): Parcelable {
     TYPE_EN_JAP(4, 50),
     TYPE_JAP_EN(5, 50);
 
-    override fun writeToParcel(dest: Parcel?, flags: Int) {
-        dest?.writeInt(ordinal)
+    override fun writeToParcel(dest: Parcel, flags: Int) {
+        dest.writeInt(ordinal)
     }
 
     fun getRandomType(): QuizType {

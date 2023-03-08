@@ -1,6 +1,5 @@
 package com.jehutyno.yomikata
 
-import android.R
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.multidex.MultiDexApplication
 import com.facebook.stetho.Stetho
@@ -8,7 +7,6 @@ import com.github.salomonbrys.kodein.*
 import com.jehutyno.yomikata.repository.*
 import com.jehutyno.yomikata.repository.local.*
 import com.jehutyno.yomikata.util.Prefs
-import com.squareup.leakcanary.LeakCanary
 import io.github.inflationx.calligraphy3.CalligraphyConfig
 import io.github.inflationx.calligraphy3.CalligraphyInterceptor
 import io.github.inflationx.viewpump.ViewPump
@@ -37,10 +35,7 @@ class YomikataZKApplication : MultiDexApplication(), KodeinAware {
 
     override fun onCreate() {
         super.onCreate()
-        if (LeakCanary.isInAnalyzerProcess(this)) {
-            return
-        }
-        LeakCanary.install(this)
+
         Stetho.initializeWithDefaults(this)
         AppCompatDelegate.setDefaultNightMode(defaultSharedPreferences.getInt(Prefs.DAY_NIGHT_MODE.pref, AppCompatDelegate.MODE_NIGHT_YES))
         ViewPump.init(ViewPump.builder()

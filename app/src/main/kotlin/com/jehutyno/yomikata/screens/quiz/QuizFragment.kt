@@ -128,7 +128,7 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
         tts = TextToSpeech(activity, this)
         injector.inject(Kodein {
             extend(appKodein())
-            bind<VoicesManager>() with singleton { VoicesManager(activity!!) }
+            bind<VoicesManager>() with singleton { VoicesManager(requireActivity()) }
         })
 
         initUI()
@@ -136,7 +136,7 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
         if (savedInstanceState != null) {
             binding.hiraganaEdit.setText(savedInstanceState.getString("edit"))
             savedInstanceState.getString("edit")?.let { binding.hiraganaEdit.setSelection(it.length) }
-            binding.hiraganaEdit.setTextColor(ContextCompat.getColor(activity!!, currentEditColor))
+            binding.hiraganaEdit.setTextColor(ContextCompat.getColor(requireActivity(), currentEditColor))
             presenter.onRestoreInstanceState(savedInstanceState)
         } else
             presenter.initQuiz()
@@ -156,7 +156,7 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
 
     override fun onPause() {
         super.onPause()
-        activity!!.hideSoftKeyboard()
+        requireActivity().hideSoftKeyboard()
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
@@ -180,10 +180,10 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
             ttsErrorsImage.padding = DimensionHelper.getPixelFromDip(activity, 12)
             ttsErrorsImage.setOnClickListener {
                 val category = adapter!!.words[binding.pager.currentItem].first.baseCategory
-                val speechAvailability = checkSpeechAvailability(activity!!, ttsSupported, getCategoryLevel(category))
+                val speechAvailability = checkSpeechAvailability(requireActivity(), ttsSupported, getCategoryLevel(category))
                 when (speechAvailability) {
                     SpeechAvailability.NOT_AVAILABLE -> {
-                        speechNotSupportedAlert(activity!!, getCategoryLevel(category), {})
+                        speechNotSupportedAlert(requireActivity(), getCategoryLevel(category), {})
                     }
                     else -> {
                         if (isSettingsOpen) {
@@ -220,7 +220,7 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
     }
 
     private fun initPager() {
-        adapter = QuizItemPagerAdapter(context!!, this)
+        adapter = QuizItemPagerAdapter(requireContext(), this)
         binding.pager.adapter = adapter
         binding.pager.setAllowedSwipeDirection(SwipeDirection.none)
         binding.pager.offscreenPageLimit = 0
@@ -286,12 +286,12 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
     override fun displayEditAnswer(answer: String) {
         binding.hiraganaEdit.setText(answer)
         currentEditColor = R.color.level_master_4
-        binding.hiraganaEdit.setTextColor(ContextCompat.getColor(activity!!, R.color.level_master_4))
+        binding.hiraganaEdit.setTextColor(ContextCompat.getColor(requireActivity(), R.color.level_master_4))
         binding.hiraganaEdit.setSelection(binding.hiraganaEdit.text.length)
     }
 
     private fun setUpAudioManager() {
-        val audioManager = activity!!.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+        val audioManager = requireActivity().getSystemService(Context.AUDIO_SERVICE) as AudioManager
         binding.seekVolume.max = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
         binding.seekVolume.progress = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
         binding.seekVolume.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
@@ -332,7 +332,7 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
         }
     }
 
-    private fun initAnswersButtons() {
+    fun initAnswersButtons() {
         binding.quizContainer.setOnClickListener { if (isSettingsOpen) closeTTSSettings() }
         binding.answerContainer.setOnClickListener { if (isSettingsOpen) closeTTSSettings() }
         binding.option1Container.setOnClickListener {
@@ -408,15 +408,15 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
     override fun reInitUI() {
         binding.hiraganaEdit.setText("")
         binding.editAction.setImageResource(R.drawable.ic_cancel_black_24dp)
-        binding.editAction.setColorFilter(ContextCompat.getColor(activity!!, R.color.lighter_gray))
-        binding.option1Tv.setTextColor(ContextCompat.getColor(activity!!, android.R.color.white))
-        binding.option2Tv.setTextColor(ContextCompat.getColor(activity!!, android.R.color.white))
-        binding.option3Tv.setTextColor(ContextCompat.getColor(activity!!, android.R.color.white))
-        binding.option4Tv.setTextColor(ContextCompat.getColor(activity!!, android.R.color.white))
-        binding.option1Furi.setTextColor(ContextCompat.getColor(activity!!, android.R.color.white))
-        binding.option2Furi.setTextColor(ContextCompat.getColor(activity!!, android.R.color.white))
-        binding.option3Furi.setTextColor(ContextCompat.getColor(activity!!, android.R.color.white))
-        binding.option4Furi.setTextColor(ContextCompat.getColor(activity!!, android.R.color.white))
+        binding.editAction.setColorFilter(ContextCompat.getColor(requireActivity(), R.color.lighter_gray))
+        binding.option1Tv.setTextColor(ContextCompat.getColor(requireActivity(), android.R.color.white))
+        binding.option2Tv.setTextColor(ContextCompat.getColor(requireActivity(), android.R.color.white))
+        binding.option3Tv.setTextColor(ContextCompat.getColor(requireActivity(), android.R.color.white))
+        binding.option4Tv.setTextColor(ContextCompat.getColor(requireActivity(), android.R.color.white))
+        binding.option1Furi.setTextColor(ContextCompat.getColor(requireActivity(), android.R.color.white))
+        binding.option2Furi.setTextColor(ContextCompat.getColor(requireActivity(), android.R.color.white))
+        binding.option3Furi.setTextColor(ContextCompat.getColor(requireActivity(), android.R.color.white))
+        binding.option4Furi.setTextColor(ContextCompat.getColor(requireActivity(), android.R.color.white))
     }
 
     /**
@@ -435,8 +435,8 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
         binding.answerContainer.visibility = GONE
         alert {
             message = getString(R.string.quiz_empty)
-            okButton { activity!!.finish() }
-            onCancelled { activity!!.finish() }
+            okButton { requireActivity().finish() }
+            onCancelled { requireActivity().finish() }
         }.show()
     }
 
@@ -450,28 +450,28 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
     }
 
     override fun setEditTextColor(color: Int) {
-        binding.hiraganaEdit.setTextColor(ContextCompat.getColor(activity!!, color))
+        binding.hiraganaEdit.setTextColor(ContextCompat.getColor(requireActivity(), color))
         binding.hiraganaEdit.setSelection(binding.hiraganaEdit.text.length)
     }
 
     override fun animateCheck(result: Boolean) {
         if (result) {
             binding.check.setImageResource(R.drawable.ic_check_black_48dp)
-            binding.check.setColorFilter(ContextCompat.getColor(activity!!, R.color.level_master_4))
+            binding.check.setColorFilter(ContextCompat.getColor(requireActivity(), R.color.level_master_4))
         } else {
             binding.check.setImageResource(R.drawable.ic_clear_black_48dp)
-            binding.check.setColorFilter(ContextCompat.getColor(activity!!, R.color.level_low_1))
+            binding.check.setColorFilter(ContextCompat.getColor(requireActivity(), R.color.level_low_1))
         }
         binding.check.animate().alpha(1f).setDuration(200).setStartDelay(0).setListener(object : Animator.AnimatorListener {
-            override fun onAnimationRepeat(animation: Animator?) {
+            override fun onAnimationRepeat(animation: Animator) {
             }
 
-            override fun onAnimationEnd(animation: Animator?) {
+            override fun onAnimationEnd(animation: Animator) {
                 binding.check.animate().alpha(0f).setDuration(300).setStartDelay(300).setListener(object : Animator.AnimatorListener {
-                    override fun onAnimationRepeat(animation: Animator?) {
+                    override fun onAnimationRepeat(animation: Animator) {
                     }
 
-                    override fun onAnimationEnd(animation: Animator?) {
+                    override fun onAnimationEnd(animation: Animator) {
                         binding.check.visibility = View.GONE
                         if (result) {
                             presenter.onNextWord()
@@ -481,19 +481,19 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
                         }
                     }
 
-                    override fun onAnimationCancel(animation: Animator?) {
+                    override fun onAnimationCancel(animation: Animator) {
                     }
 
-                    override fun onAnimationStart(animation: Animator?) {
+                    override fun onAnimationStart(animation: Animator) {
                     }
 
                 }).start()
             }
 
-            override fun onAnimationCancel(animation: Animator?) {
+            override fun onAnimationCancel(animation: Animator) {
             }
 
-            override fun onAnimationStart(animation: Animator?) {
+            override fun onAnimationStart(animation: Animator) {
                 binding.check.visibility = View.VISIBLE
             }
 
@@ -503,7 +503,7 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
 
     override fun displayEditDisplayAnswerButton() {
         binding.editAction.setImageResource(R.drawable.ic_visibility_black_24dp)
-        binding.editAction.setColorFilter(ContextCompat.getColor(activity!!, R.color.level_master_4))
+        binding.editAction.setColorFilter(ContextCompat.getColor(requireActivity(), R.color.level_master_4))
     }
 
     override fun displayQCMMode() {
@@ -544,22 +544,22 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
 
     override fun displayQCMTv1(option: String, color: Int) {
         binding.option1Tv.text = option
-        binding.option1Tv.textColor = ContextCompat.getColor(context!!, color)
+        binding.option1Tv.textColor = ContextCompat.getColor(requireContext(), color)
     }
 
     override fun displayQCMTv2(option: String, color: Int) {
         binding.option2Tv.text = option
-        binding.option2Tv.textColor = ContextCompat.getColor(context!!, color)
+        binding.option2Tv.textColor = ContextCompat.getColor(requireContext(), color)
     }
 
     override fun displayQCMTv3(option: String, color: Int) {
         binding.option3Tv.text = option
-        binding.option3Tv.textColor = ContextCompat.getColor(context!!, color)
+        binding.option3Tv.textColor = ContextCompat.getColor(requireContext(), color)
     }
 
     override fun displayQCMTv4(option: String, color: Int) {
         binding.option4Tv.text = option
-        binding.option4Tv.textColor = ContextCompat.getColor(context!!, color)
+        binding.option4Tv.textColor = ContextCompat.getColor(requireContext(), color)
     }
 
     override fun displayQCMFuri1(optionFuri: String, start: Int, end: Int, color: Int) {
@@ -593,13 +593,13 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
     }
 
     override fun showKeyboard() {
-        val inputMethodManager = context!!.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        val inputMethodManager = requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
         inputMethodManager.showSoftInput(binding.hiraganaEdit, InputMethodManager.SHOW_FORCED)
         binding.hiraganaEdit.requestFocus()
     }
 
     override fun hideKeyboard() {
-        val inputMethodManager = context!!.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        val inputMethodManager = requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
         inputMethodManager.hideSoftInputFromWindow(binding.hiraganaEdit.windowToken, 0)
     }
 
@@ -611,8 +611,8 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
         val sound = view.findViewById<ImageButton>(R.id.sound)
         val sentenceNoFuri = sentenceNoFuri(sentence)
         val colorAnimation = ValueAnimator.ofObject(ArgbEvaluator(),
-            getWordColor(context!!, fromLevel, fromPoints),
-            getWordColor(context!!, toLevel, toPoints))
+            getWordColor(requireContext(), fromLevel, fromPoints),
+            getWordColor(requireContext(), toLevel, toPoints))
         colorAnimation.addUpdateListener {
             animator ->
             run {
@@ -742,7 +742,7 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
     }
 
     override fun finishQuiz() {
-        activity!!.finish()
+        requireActivity().finish()
     }
 
     override fun openAnswersScreen(answers: ArrayList<Answer>) {
@@ -758,10 +758,10 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
             }
             R.id.tts_settings -> {
                 val category = adapter!!.words[binding.pager.currentItem].first.baseCategory
-                val speechAvailability = checkSpeechAvailability(activity!!, ttsSupported, getCategoryLevel(category))
+                val speechAvailability = checkSpeechAvailability(requireActivity(), ttsSupported, getCategoryLevel(category))
                 when (speechAvailability) {
                     SpeechAvailability.NOT_AVAILABLE -> {
-                        speechNotSupportedAlert(activity!!, getCategoryLevel(category), {})
+                        speechNotSupportedAlert(requireActivity(), getCategoryLevel(category), {})
                     }
                     else -> {
                         if (isSettingsOpen) {
@@ -830,7 +830,7 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
     }
 
     override fun reportError(word: Word, sentence: Sentence) {
-        reportError(activity!!, word, sentence)
+        reportError(requireActivity(), word, sentence)
     }
 
     override fun onFuriClick(position: Int, isSelected: Boolean) {

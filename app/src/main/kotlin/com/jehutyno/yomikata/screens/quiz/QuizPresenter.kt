@@ -4,8 +4,8 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
+import android.util.Log
 import androidx.core.content.ContextCompat
-import com.google.firebase.crash.FirebaseCrash
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.model.*
 import com.jehutyno.yomikata.repository.QuizRepository
@@ -92,7 +92,7 @@ class QuizPresenter(
         val words = LocalPersistence.readObjectFromFile(context, "words") as ArrayList<Word>
         val types = LocalPersistence.readObjectFromFile(context, "types") as ArrayList<QuizType>
 
-        quizWords = (0 until words.size).map { Pair(words[it], types[it]) }
+        quizWords = (0..words.size - 1).map { Pair(words[it], types[it]) }
         quizView.displayWords(quizWords)
         currentItem = savedInstanceState.getInt("position") - 1 // -1 because setUpQuiz will do the +1
         quizView.setPagerPosition(currentItem)
@@ -413,22 +413,22 @@ class QuizPresenter(
                 quizView.setEditTextColor(color)
             }
             QuizType.TYPE_PRONUNCIATION_QCM -> {
-                if (choice == -1) FirebaseCrash.log("Type Issue. QuizType = ${quizType.type}, but choice -1")
+                if (choice == -1) Log.e("QuizTypeissue", "Type Issue. QuizType = ${quizType.type}, but choice -1")
                 else randoms[choice] = Pair(randoms[choice].first, color)
                 setupQCMPronunciationQuiz()
             }
             QuizType.TYPE_AUDIO -> {
-                if (choice == -1) FirebaseCrash.log("Type Issue. QuizType = ${quizType.type}, but choice -1")
+                if (choice == -1) Log.e("QuizTypeissue", "Type Issue. QuizType = ${quizType.type}, but choice -1")
                 else randoms[choice] = Pair(randoms[choice].first, color)
                 setupQCMQAudioQuiz()
             }
             QuizType.TYPE_EN_JAP -> {
-                if (choice == -1) FirebaseCrash.log("Type Issue. QuizType = ${quizType.type}, but choice -1")
+                if (choice == -1) Log.e("QuizTypeissue", "Type Issue. QuizType = ${quizType.type}, but choice -1")
                 else randoms[choice] = Pair(randoms[choice].first, color)
                 setupQCMEnJapQuiz()
             }
             QuizType.TYPE_JAP_EN -> {
-                if (choice == -1) FirebaseCrash.log("Type Issue. QuizType = ${quizType.type}, but choice -1")
+                if (choice == -1) Log.e("QuizTypeissue", "Type Issue. QuizType = ${quizType.type}, but choice -1")
                 else randoms[choice] = Pair(randoms[choice].first, color)
                 setupQCMJapEnQuiz()
             }

@@ -22,22 +22,22 @@ open class Word(var id: Long, var japanese: String, var english: String, var fre
         source.readInt(), source.readInt(), source.readInt(), source.readInt(), source.readInt(),
         source.readInt(), source.readInt(), source.readInt(), source.readLong())
 
-    override fun writeToParcel(dest: Parcel?, flags: Int) {
-        dest?.writeLong(id)
-        dest?.writeString(japanese)
-        dest?.writeString(english)
-        dest?.writeString(french)
-        dest?.writeString(reading)
-        dest?.writeInt(level)
-        dest?.writeInt(countTry)
-        dest?.writeInt(countSuccess)
-        dest?.writeInt(countFail)
-        dest?.writeInt(isKana)
-        dest?.writeInt(repetition)
-        dest?.writeInt(points)
-        dest?.writeInt(baseCategory)
-        dest?.writeInt(isSelected)
-        dest?.writeLong(sentenceId)
+    override fun writeToParcel(dest: Parcel, flags: Int) {
+        dest.writeLong(id)
+        dest.writeString(japanese)
+        dest.writeString(english)
+        dest.writeString(french)
+        dest.writeString(reading)
+        dest.writeInt(level)
+        dest.writeInt(countTry)
+        dest.writeInt(countSuccess)
+        dest.writeInt(countFail)
+        dest.writeInt(isKana)
+        dest.writeInt(repetition)
+        dest.writeInt(points)
+        dest.writeInt(baseCategory)
+        dest.writeInt(isSelected)
+        dest.writeLong(sentenceId)
     }
 
     override fun describeContents(): Int {

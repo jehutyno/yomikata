@@ -8,6 +8,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.speech.tts.TextToSpeech
+import android.util.Log
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
@@ -15,7 +16,6 @@ import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.core.content.ContextCompat
-import com.google.firebase.crash.FirebaseCrash
 import com.google.firebase.storage.FirebaseStorage
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.YomikataZKApplication
@@ -144,7 +144,7 @@ fun sentenceNoFuri(sentence: Sentence): String {
             sentenceNoFuri = sentenceNoFuri.replaceFirst("""\{.+?\}""".toRegex(), sentenceNoFuri.substring(sentenceNoFuri.indexOf("{") + 1, sentenceNoFuri.indexOf(";")))
         }
     } catch (e: StringIndexOutOfBoundsException) {
-        FirebaseCrash.log("NoFuriError in ${sentence.id}:${sentence.jap}")
+        Log.e("StringIssue", "NoFuriError in ${sentence.id}:${sentence.jap}")
     }
     return sentenceNoFuri
 }
@@ -164,7 +164,7 @@ fun sentenceFuri(sentence: Sentence): String {
                     sentenceFuri.substring(sentenceFuri.indexOf(";") + 1, sentenceFuri.indexOf("}")))
         }
     } catch (e: StringIndexOutOfBoundsException) {
-        FirebaseCrash.log("FuriError in ${sentence.id}:${sentence.jap}")
+        Log.e("StringIssue","FuriError in ${sentence.id}:${sentence.jap}")
     }
 
     return sentenceFuri
