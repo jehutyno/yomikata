@@ -1,7 +1,7 @@
 package com.jehutyno.yomikata.screens.quiz
 
 import android.content.Context
-import android.preference.PreferenceManager
+import androidx.preference.PreferenceManager
 import androidx.core.content.ContextCompat
 import androidx.viewpager.widget.PagerAdapter
 import androidx.appcompat.widget.PopupMenu
@@ -18,8 +18,6 @@ import com.jehutyno.yomikata.model.Sentence
 import com.jehutyno.yomikata.model.Word
 import com.jehutyno.yomikata.model.getWordColor
 import com.jehutyno.yomikata.util.*
-import org.jetbrains.anko.defaultSharedPreferences
-import org.jetbrains.anko.textColor
 import java.util.*
 
 /**
@@ -54,8 +52,10 @@ class QuizItemPagerAdapter(var context: Context, var callback: Callback) : Pager
         val session_count = view.findViewById<TextView>(R.id.session_count)
 
         session_count.text = "${position + 1} / ${words.size}"
-        btn_furi.isSelected = context.defaultSharedPreferences.getBoolean(Prefs.FURI_DISPLAYED.pref, true)
-        btn_trad.isSelected = context.defaultSharedPreferences.getBoolean(Prefs.TRAD_DISPLAYED.pref, true)
+
+        val pref = PreferenceManager.getDefaultSharedPreferences(context)
+        btn_furi.isSelected = pref.getBoolean(Prefs.FURI_DISPLAYED.pref, true)
+        btn_trad.isSelected = pref.getBoolean(Prefs.TRAD_DISPLAYED.pref, true)
 
         when (words[position].second) {
             QuizType.TYPE_PRONUNCIATION, QuizType.TYPE_PRONUNCIATION_QCM, QuizType.TYPE_JAP_EN -> {
@@ -63,7 +63,7 @@ class QuizItemPagerAdapter(var context: Context, var callback: Callback) : Pager
                 btn_trad.visibility = View.VISIBLE
                 trad_sentence.visibility = View.VISIBLE
                 trad_sentence.textSize = 16f
-                trad_sentence.textColor = ContextCompat.getColor(context, R.color.lighter_gray)
+                trad_sentence.setTextColor(ContextCompat.getColor(context, R.color.lighter_gray))
                 val sentenceNoFuri = sentenceNoFuri(sentence)
                 val colorEntireWord = word.isKana == 2 && words[position].second == QuizType.TYPE_JAP_EN
                 val wordTruePosition = if (colorEntireWord) 0 else getWordPositionInFuriSentence(sentence.jap, word)
@@ -91,7 +91,7 @@ class QuizItemPagerAdapter(var context: Context, var callback: Callback) : Pager
                 btn_trad.visibility = View.GONE
                 trad_sentence.visibility = View.VISIBLE
                 trad_sentence.movementMethod = ScrollingMovementMethod()
-                trad_sentence.textColor = getWordColor(context, word.level, word.points)
+                trad_sentence.setTextColor(getWordColor(context, word.level, word.points))
                 trad_sentence.textSize = PreferenceManager.getDefaultSharedPreferences(context).getString("font_size", "18")!!.toFloat()
                 trad_sentence.text = word.getTrad()
             }
@@ -119,14 +119,14 @@ class QuizItemPagerAdapter(var context: Context, var callback: Callback) : Pager
 
         btn_furi.setOnClickListener {
             btn_furi.isSelected = !btn_furi.isSelected
-            context.defaultSharedPreferences.edit().putBoolean(Prefs.FURI_DISPLAYED.pref, btn_furi.isSelected).apply()
+            pref.edit().putBoolean(Prefs.FURI_DISPLAYED.pref, btn_furi.isSelected).apply()
             notifyDataSetChanged()
             callback.onFuriClick(position, btn_furi.isSelected)
         }
 
         btn_trad.setOnClickListener {
             btn_trad.isSelected = !btn_trad.isSelected
-            context.defaultSharedPreferences.edit().putBoolean(Prefs.TRAD_DISPLAYED.pref, btn_trad.isSelected).apply()
+            pref.edit().putBoolean(Prefs.TRAD_DISPLAYED.pref, btn_trad.isSelected).apply()
             notifyDataSetChanged()
             callback.onTradClick(position)
         }
