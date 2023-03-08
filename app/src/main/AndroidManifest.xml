@@ -23,13 +23,15 @@
             android:name="com.google.firebase.messaging.default_notification_color"
             android:resource="@color/colorAccent" />
 
-        <service android:name=".util.FileDownloadService">
+        <service android:name=".util.FileDownloadService"
+            android:exported="false">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT"/>
             </intent-filter>
         </service>
 
-        <activity android:name="com.jehutyno.yomikata.screens.splash.SplashActivity">
+        <activity android:name="com.jehutyno.yomikata.screens.splash.SplashActivity"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
 

@@ -7,7 +7,6 @@ import android.os.Bundle
 import androidx.viewpager.widget.ViewPager
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
-import androidx.appcompat.widget.Toolbar
 import android.view.MenuItem
 import android.view.View.GONE
 import android.view.View.VISIBLE
@@ -48,7 +47,7 @@ class ContentActivity : AppCompatActivity() {
 
     private var contentLevelFragment: ContentFragment? = null
     private val injector = KodeinInjector()
-    private val contentPresetnter: ContentContract.Presenter by injector.instance()
+    private val contentPresenter: ContentContract.Presenter by injector.instance()
 
     private var contentPagerAdapter: ContentPagerAdapter? = null
 
@@ -77,19 +76,17 @@ class ContentActivity : AppCompatActivity() {
 
         category = intent.getIntExtra(Extras.EXTRA_CATEGORY, -1)
         level = intent.getIntExtra(Extras.EXTRA_LEVEL, -1)
-        var quizPosition = intent.getIntExtra(Extras.EXTRA_QUIZ_POSITION, -1)
+        val quizPosition = intent.getIntExtra(Extras.EXTRA_QUIZ_POSITION, -1)
         selectedTypes = intent.getIntArrayExtra(Extras.EXTRA_QUIZ_TYPES) ?: intArrayOf()
 
-        findViewById<Toolbar>(R.id.toolbar).let {
-            setSupportActionBar(it)
-        }
+        setSupportActionBar(findViewById(R.id.toolbar))
 
         supportActionBar?.apply {
             setHomeAsUpIndicator(R.drawable.ic_arrow_back_orange_24dp)
             setDisplayHomeAsUpEnabled(true)
         }
 
-        var quizSource: QuizRepository = appKodein.invoke().instance()
+        val quizSource: QuizRepository = appKodein.invoke().instance()
 
 
         quizSource.getQuiz(category, object : QuizRepository.LoadQuizCallback {
@@ -136,8 +133,8 @@ class ContentActivity : AppCompatActivity() {
                         }
 
                         override fun onPageSelected(position: Int) {
-                            val quizTitle = quizzes[position].getName().split("%")[0]
-                            title = quizTitle
+                            val newQuizTitle = quizzes[position].getName().split("%")[0]
+                            title = newQuizTitle
                             quizIds = longArrayOf(quizzes[position].id)
                         }
 
@@ -176,7 +173,7 @@ class ContentActivity : AppCompatActivity() {
         }
     }
 
-    fun launchQuiz(strategy: QuizStrategy) {
+    private fun launchQuiz(strategy: QuizStrategy) {
         statsRepository.addStatEntry(StatAction.LAUNCH_QUIZ_FROM_CATEGORY, category.toLong(), Calendar.getInstance().timeInMillis, StatResult.OTHER)
         val cat1 = defaultSharedPreferences.getInt(Prefs.LATEST_CATEGORY_1.pref, -1)
 

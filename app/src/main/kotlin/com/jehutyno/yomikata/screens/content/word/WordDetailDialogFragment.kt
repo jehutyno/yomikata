@@ -25,7 +25,6 @@ import org.jetbrains.anko.cancelButton
 import org.jetbrains.anko.doAsync
 import org.jetbrains.anko.okButton
 import org.jetbrains.anko.support.v4.alert
-import org.jetbrains.anko.support.v4.defaultSharedPreferences
 import org.jetbrains.anko.uiThread
 
 /**
@@ -134,9 +133,9 @@ class WordDetailDialogFragment : DialogFragment(), WordContract.View, WordPagerA
     override fun onResume() {
         super.onResume()
         wordPresenter.start()
-        if (quizIds != null && !quizIds!!.isEmpty())
+        if (quizIds != null && quizIds!!.isNotEmpty())
             wordPresenter.loadWords(quizIds!!, level)
-        else if (!searchString.isEmpty())
+        else if (searchString.isNotEmpty())
             (wordPresenter.searchWords(searchString))
         else if (wordId != -1L)
             wordPresenter.loadWord(wordId)
@@ -156,11 +155,9 @@ class WordDetailDialogFragment : DialogFragment(), WordContract.View, WordPagerA
     override fun onSelectionClick(view: View, position: Int) {
         val popup = PopupMenu(activity!!, view)
         popup.menuInflater.inflate(R.menu.popup_selections, popup.menu)
-        var i = 0
-        for (selection in selections) {
+        for ((i, selection) in selections.withIndex()) {
             popup.menu.add(1, i, i, selection.getName()).isChecked = wordPresenter.isWordInQuiz(adapter.words[position].first.id, selection.id)
             popup.menu.setGroupCheckable(1, true, false)
-            i++
         }
         popup.setOnMenuItemClickListener {
             when (it.itemId) {
@@ -193,7 +190,7 @@ class WordDetailDialogFragment : DialogFragment(), WordContract.View, WordPagerA
             container.addView(input)
             customView = container
             okButton {
-                var selectionId = wordPresenter.createSelection(input.text.toString())
+                val selectionId = wordPresenter.createSelection(input.text.toString())
                 wordPresenter.addWordToSelection(wordId, selectionId)
                 wordPresenter.loadSelections()
             }
@@ -228,7 +225,7 @@ class WordDetailDialogFragment : DialogFragment(), WordContract.View, WordPagerA
         dialog?.dismiss()
     }
 
-    fun waitAndUpdateLevel(position: Int, newLevel: Int, points: Int) {
+    private fun waitAndUpdateLevel(position: Int, newLevel: Int, points: Int) {
         if (newLevel != adapter.words[position].first.level) {
             adapter.words[position].first.level = newLevel
         }

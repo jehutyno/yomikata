@@ -5,7 +5,6 @@ import android.content.pm.ActivityInfo
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
-import androidx.appcompat.widget.Toolbar
 import android.view.KeyEvent
 import android.view.MenuItem
 import com.github.salomonbrys.kodein.Kodein
@@ -36,7 +35,7 @@ class QuizActivity : AppCompatActivity() {
 
     private lateinit var quizIds: LongArray
     private lateinit var quizStrategy: QuizStrategy
-    private lateinit var quiztypes: IntArray
+    private lateinit var quizTypes: IntArray
 
     override fun attachBaseContext(newBase: Context) {
         super.attachBaseContext(ViewPumpContextWrapper.wrap(newBase))
@@ -50,9 +49,7 @@ class QuizActivity : AppCompatActivity() {
             requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         }
 
-        findViewById<Toolbar>(R.id.toolbar).let {
-            setSupportActionBar(it)
-        }
+        setSupportActionBar(findViewById(R.id.toolbar))
         supportActionBar?.apply {
             setHomeAsUpIndicator(R.drawable.ic_clear_orange_24dp)
             setDisplayHomeAsUpEnabled(true)
@@ -64,16 +61,16 @@ class QuizActivity : AppCompatActivity() {
             quizFragment = supportFragmentManager.getFragment(savedInstanceState, "quizFragment") as QuizFragment
             quizIds = savedInstanceState.getLongArray("quiz_ids")?: longArrayOf()
             quizStrategy = savedInstanceState.getSerializable("quiz_strategy") as QuizStrategy
-            quiztypes = savedInstanceState.getIntArray("quiz_types")?: intArrayOf()
+            quizTypes = savedInstanceState.getIntArray("quiz_types")?: intArrayOf()
         } else {
             quizIds = intent.getLongArrayExtra(Extras.EXTRA_QUIZ_IDS) ?: longArrayOf()
             quizStrategy = intent.getSerializableExtra(Extras.EXTRA_QUIZ_STRATEGY) as QuizStrategy
-            quiztypes = intent.getIntArrayExtra(Extras.EXTRA_QUIZ_TYPES) ?: intArrayOf()
+            quizTypes = intent.getIntArrayExtra(Extras.EXTRA_QUIZ_TYPES) ?: intArrayOf()
 
             quizFragment = QuizFragment().withArguments(
                 Extras.EXTRA_QUIZ_IDS to quizIds,
                 Extras.EXTRA_QUIZ_STRATEGY to quizStrategy,
-                Extras.EXTRA_QUIZ_TYPES to quiztypes)
+                Extras.EXTRA_QUIZ_TYPES to quizTypes)
         }
         addOrReplaceFragment(R.id.container_content, quizFragment)
 
@@ -81,7 +78,7 @@ class QuizActivity : AppCompatActivity() {
             extend(appKodein())
             import(quizPresenterModule(quizFragment))
             bind<QuizContract.Presenter>() with provider {
-                QuizPresenter(instance(), instance(), instance(), instance(), instance(), instance(), quizIds, quizStrategy, quiztypes)
+                QuizPresenter(instance(), instance(), instance(), instance(), instance(), instance(), quizIds, quizStrategy, quizTypes)
             }
         })
     }
@@ -93,7 +90,7 @@ class QuizActivity : AppCompatActivity() {
         supportFragmentManager.putFragment(outState, "quizFragment", quizFragment)
         outState.putLongArray("quiz_ids", quizIds)
         outState.putSerializable("quiz_strategy", quizStrategy)
-        outState.putIntArray("quiz_types", quiztypes)
+        outState.putIntArray("quiz_types", quizTypes)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -114,7 +111,7 @@ class QuizActivity : AppCompatActivity() {
         alert(R.string.quit_quiz) {
             yesButton { finish() }
             noButton { }
-            onKeyPressed { _, keyCode, e ->
+            onKeyPressed { _, keyCode, _ ->
                 if (keyCode == KeyEvent.KEYCODE_BACK)
                     finish()
                 true

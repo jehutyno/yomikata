@@ -177,7 +177,7 @@ class QuizzesPresenter(
             savedList.add(default)
         } else {
             val st = StringTokenizer(savedString, ",")
-            for (i in 0..st.countTokens() - 1) {
+            for (i in 0 until st.countTokens()) {
                 savedList.add(Integer.parseInt(st.nextToken()))
             }
         }

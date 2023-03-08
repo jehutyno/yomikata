@@ -20,13 +20,11 @@ import com.jehutyno.yomikata.model.Word
 import com.jehutyno.yomikata.screens.content.word.WordDetailDialogFragment
 import com.jehutyno.yomikata.util.DimensionHelper
 import com.jehutyno.yomikata.util.Extras
-import com.jehutyno.yomikata.util.Prefs
 import com.jehutyno.yomikata.util.animateSeekBar
 import org.jetbrains.anko.cancelButton
 import org.jetbrains.anko.find
 import org.jetbrains.anko.okButton
 import org.jetbrains.anko.support.v4.alert
-import org.jetbrains.anko.support.v4.defaultSharedPreferences
 import org.jetbrains.anko.support.v4.withArguments
 import java.util.*
 
@@ -41,7 +39,7 @@ class ContentFragment : Fragment(), ContentContract.View, WordsAdapter.Callback,
     private var quizTitle: String = ""
     private var level = -1
     private var lastPosition = -1
-    lateinit private var selections: List<Quiz>
+    private lateinit var selections: List<Quiz>
 
     // View Binding
     private var _binding: FragmentContentGraphBinding? = null
@@ -194,9 +192,9 @@ class ContentFragment : Fragment(), ContentContract.View, WordsAdapter.Callback,
                     for ((i, selection) in selections.withIndex()) {
                         popup.menu.add(1, i, i, selection.getName()).isChecked = false
                     }
-                    popup.setOnMenuItemClickListener {
+                    popup.setOnMenuItemClickListener { it ->
                         val selectedWords: ArrayList<Word> = arrayListOf()
-                        adapter.items.forEach { if (it.isSelected == 1) selectedWords.add(it) }
+                        adapter.items.forEach { item -> if (item.isSelected == 1) selectedWords.add(item) }
                         val selectionItemId = it.itemId
                         when (it.itemId) {
                             R.id.add_selection -> addSelection(selectedWords)
@@ -215,14 +213,12 @@ class ContentFragment : Fragment(), ContentContract.View, WordsAdapter.Callback,
                 2 -> {
 
                     val popup = PopupMenu(activity!!, activity!!.find(2))
-                    var i = 0
-                    for (selection in selections) {
+                    for ((i, selection) in selections.withIndex()) {
                         popup.menu.add(1, i, i, selection.getName()).isChecked = false
-                        i++
                     }
-                    popup.setOnMenuItemClickListener {
+                    popup.setOnMenuItemClickListener {it ->
                         val selectedWords: ArrayList<Word> = arrayListOf()
-                        adapter.items.forEach { if (it.isSelected == 1) selectedWords.add(it) }
+                        adapter.items.forEach { item -> if (item.isSelected == 1) selectedWords.add(item) }
                         val selectionItemId = it.itemId
                         when (it.itemId) {
                             else -> {
@@ -256,7 +252,7 @@ class ContentFragment : Fragment(), ContentContract.View, WordsAdapter.Callback,
                 container.addView(input)
                 customView = container
                 okButton {
-                    var selectionId = mpresenter!!.createSelection(input.text.toString())
+                    val selectionId = mpresenter!!.createSelection(input.text.toString())
                     selectedWords.forEach {
                         mpresenter!!.addWordToSelection(it.id, selectionId)
                     }

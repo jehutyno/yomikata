@@ -96,9 +96,9 @@ class QuizzesFragment : Fragment(), QuizzesContract.View, QuizzesAdapter.Callbac
         }
         binding.btnAudioSwitch.setOnClickListener {
             spotlightTuto(activity!!, binding.btnAudioSwitch, getString(R.string.tutos_audio_quiz), getString(R.string.tutos_audio_quiz_message), SpotlightListener { })
-            val speechAvailability = checkSpeechAvailability(activity!!, ttsSupported, getCateogryLevel(selectedCategory))
+            val speechAvailability = checkSpeechAvailability(activity!!, ttsSupported, getCategoryLevel(selectedCategory))
             when (speechAvailability) {
-                SpeechAvailability.NOT_AVAILABLE -> speechNotSupportedAlert(activity!!, getCateogryLevel(selectedCategory), { (activity as QuizzesActivity).quizzesAdapter.notifyDataSetChanged() })
+                SpeechAvailability.NOT_AVAILABLE -> speechNotSupportedAlert(activity!!, getCategoryLevel(selectedCategory), { (activity as QuizzesActivity).quizzesAdapter.notifyDataSetChanged() })
                 else -> mpresenter!!.audioSwitch()
             }
         }
@@ -130,27 +130,27 @@ class QuizzesFragment : Fragment(), QuizzesContract.View, QuizzesAdapter.Callbac
 
         if (selectedCategory == -1 || selectedCategory == 8
             || defaultSharedPreferences.getBoolean(Prefs.VOICE_DOWNLOADED_LEVEL_V.pref +
-            "${getLevelDownloadVersion(getCateogryLevel(selectedCategory))}_${getCateogryLevel(selectedCategory)}", false)) {
+            "${getLevelDownloadVersion(getCategoryLevel(selectedCategory))}_${getCategoryLevel(selectedCategory)}", false)) {
             binding.download.visibility = GONE
         } else {
             binding.download.visibility = VISIBLE
-            if (getLevelDownloadVersion(getCateogryLevel(selectedCategory)) > 0 && previousVoicesDownloaded(getLevelDownloadVersion(getCateogryLevel(selectedCategory)))) {
-                binding.download.text = getString(R.string.update_voices, getLevelDonwloadSize(getCateogryLevel(selectedCategory)))
+            if (getLevelDownloadVersion(getCategoryLevel(selectedCategory)) > 0 && previousVoicesDownloaded(getLevelDownloadVersion(getCategoryLevel(selectedCategory)))) {
+                binding.download.text = getString(R.string.update_voices, getLevelDownloadSize(getCategoryLevel(selectedCategory)))
             } else {
-                binding.download.text = getString(R.string.download_voices, getLevelDonwloadSize(getCateogryLevel(selectedCategory)))
+                binding.download.text = getString(R.string.download_voices, getLevelDownloadSize(getCategoryLevel(selectedCategory)))
             }
         }
 
         binding.download.setOnClickListener {
             alert {
-                if (getLevelDownloadVersion(getCateogryLevel(selectedCategory)) > 0 && previousVoicesDownloaded(getLevelDownloadVersion(getCateogryLevel(selectedCategory)))) {
+                if (getLevelDownloadVersion(getCategoryLevel(selectedCategory)) > 0 && previousVoicesDownloaded(getLevelDownloadVersion(getCategoryLevel(selectedCategory)))) {
                     titleResource = R.string.update_voices_alert
-                    message = getString(R.string.update_voices_alert_message, getLevelDonwloadSize(getCateogryLevel(selectedCategory)))
+                    message = getString(R.string.update_voices_alert_message, getLevelDownloadSize(getCategoryLevel(selectedCategory)))
                 } else {
                     titleResource = R.string.download_voices_alert
-                    message = getString(R.string.download_voices_alert_message, getLevelDonwloadSize(getCateogryLevel(selectedCategory)))
+                    message = getString(R.string.download_voices_alert_message, getLevelDownloadSize(getCategoryLevel(selectedCategory)))
                 }
-                okButton { (activity as QuizzesActivity).voicesDownload(getCateogryLevel(selectedCategory)) }
+                okButton { (activity as QuizzesActivity).voicesDownload(getCategoryLevel(selectedCategory)) }
                 cancelButton { }
             }.show()
         }
@@ -158,7 +158,7 @@ class QuizzesFragment : Fragment(), QuizzesContract.View, QuizzesAdapter.Callbac
 
     fun previousVoicesDownloaded(downloadVersion: Int): Boolean {
         return (0 until downloadVersion).any {
-            defaultSharedPreferences.getBoolean("${Prefs.VOICE_DOWNLOADED_LEVEL_V.pref}${it}_${getCateogryLevel(selectedCategory)}", false)
+            defaultSharedPreferences.getBoolean("${Prefs.VOICE_DOWNLOADED_LEVEL_V.pref}${it}_${getCategoryLevel(selectedCategory)}", false)
         }
     }
 
@@ -187,7 +187,7 @@ class QuizzesFragment : Fragment(), QuizzesContract.View, QuizzesAdapter.Callbac
     }
 
     override fun launchQuiz(strategy: QuizStrategy, selectedTypes: IntArray, title: String) {
-        var ids = mutableListOf<Long>()
+        val ids = mutableListOf<Long>()
         adapter.items.forEach {
             if (it.isSelected == 1)
                 ids.add(it.id)
@@ -226,7 +226,7 @@ class QuizzesFragment : Fragment(), QuizzesContract.View, QuizzesAdapter.Callbac
         adapter.replaceData(quizzes, selectedCategory == Categories.CATEGORY_SELECTIONS)
         binding.recyclerview.scrollToPosition(0)
 
-        var ids = arrayListOf<Long>()
+        val ids = arrayListOf<Long>()
         quizzes.forEach {
             ids.add(it.id)
         }
@@ -398,7 +398,7 @@ class QuizzesFragment : Fragment(), QuizzesContract.View, QuizzesAdapter.Callbac
                                 spotlightTuto(activity!!, binding.textLow, getString(R.string.tuto_progress), getString(R.string.tuto_progress_message),
                                     SpotlightListener {
                                         if (activity != null) {
-                                            spotlightTuto(activity!!, binding.recyclerview.findViewHolderForAdapterPosition(0)?.itemView?.find<View>(R.id.quiz_check), getString(R.string.tuto_part_selection), getString(R.string.tuto_part_selection_message),
+                                            spotlightTuto(activity!!, binding.recyclerview.findViewHolderForAdapterPosition(0)?.itemView?.find(R.id.quiz_check), getString(R.string.tuto_part_selection), getString(R.string.tuto_part_selection_message),
                                                 SpotlightListener {})
                                         }
                                     })

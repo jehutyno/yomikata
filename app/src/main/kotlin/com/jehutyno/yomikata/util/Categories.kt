@@ -27,7 +27,7 @@ object Categories {
     @JvmStatic val CATEGORY_SELECTIONS = 8
 }
 
-fun getCateogryLevel(category: Int): Int {
+fun getCategoryLevel(category: Int): Int {
     return when (category) {
         CATEGORY_HIRAGANA -> 0
         CATEGORY_KATAKANA -> 0
@@ -55,7 +55,7 @@ fun getLevelDownloadUrl(level: Int): String {
     }
 }
 
-fun getLevelDonwloadSize(level: Int): Int {
+fun getLevelDownloadSize(level: Int): Int {
     return when (level) {
         0 -> 5
         1 -> 6

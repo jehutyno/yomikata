@@ -101,12 +101,12 @@ fun contactDiscord(context: Context) {
 }
 
 fun onTTSinit(context: Context?, status: Int, tts: TextToSpeech?): Int {
-    var suported: Int = TextToSpeech.LANG_NOT_SUPPORTED
+    var supported: Int = TextToSpeech.LANG_NOT_SUPPORTED
     try {
         // Initialize the TTS in Japanese if available
         if (status == TextToSpeech.SUCCESS) {
-            suported = tts!!.isLanguageAvailable(Locale.JAPANESE)
-            if (suported == TextToSpeech.LANG_MISSING_DATA || suported == TextToSpeech.LANG_NOT_SUPPORTED) {
+            supported = tts!!.isLanguageAvailable(Locale.JAPANESE)
+            if (supported == TextToSpeech.LANG_MISSING_DATA || supported == TextToSpeech.LANG_NOT_SUPPORTED) {
             } else {
                 tts.language = Locale.JAPANESE
             }
@@ -115,10 +115,10 @@ fun onTTSinit(context: Context?, status: Int, tts: TextToSpeech?): Int {
         }
     } catch (e: Exception) {
         e.printStackTrace()
-        suported = TextToSpeech.LANG_NOT_SUPPORTED
+        supported = TextToSpeech.LANG_NOT_SUPPORTED
     }
 
-    return suported
+    return supported
 }
 
 fun checkSpeechAvailability(context: Context, ttsSupported: Int, level: Int): SpeechAvailability {
@@ -201,12 +201,12 @@ fun speechNotSupportedAlert(activity: Activity, level: Int, finishedListener: ()
             } catch (e: Exception) {
                 e.printStackTrace()
             }
-            dlButton.text = activity.getString(R.string.download_voices_action, getLevelDonwloadSize(level))
+            dlButton.text = activity.getString(R.string.download_voices_action, getLevelDownloadSize(level))
             dlButton.compoundDrawablePadding = 20
             dlButton.setOnClickListener {
                 activity.alert {
                     titleResource = R.string.download_voices_alert
-                    message = activity.getString(R.string.download_voices_alert_message, getLevelDonwloadSize(level))
+                    message = activity.getString(R.string.download_voices_alert_message, getLevelDownloadSize(level))
                     okButton {
                         it.dismiss()
                         launchVoicesDownload(activity, level, { finishedListener() })

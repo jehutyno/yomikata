@@ -161,7 +161,7 @@ class PrefsActivity : AppCompatActivity(), FileChooserDialog.ChooserListener {
     override fun onSelect(path: String?) {
         if (path?.endsWith(".yomikata")!!) {
             importYomikata(path)
-        } else if (path?.endsWith(".yomikataz")!!) {
+        } else if (path.endsWith(".yomikataz")) {
             importYomikataZ(path)
         } else {
             alert {
@@ -180,6 +180,7 @@ class PrefsActivity : AppCompatActivity(), FileChooserDialog.ChooserListener {
             CopyUtils.restoreEncryptedBdd(File(path), toPath + toName)
             val migrationSource = MigrationSource(this, DatabaseHelper.getInstance(this, toName, toPath))
             val wordTables = MigrationTable.allTables(MigrationTables.values())
+
             val progressDialog: ProgressDialog = ProgressDialog(this)
             progressDialog.max = wordTables.count()
             progressDialog.setTitle(getString(R.string.progress_import_title))

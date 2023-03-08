@@ -92,7 +92,7 @@ class QuizPresenter(
         val words = LocalPersistence.readObjectFromFile(context, "words") as ArrayList<Word>
         val types = LocalPersistence.readObjectFromFile(context, "types") as ArrayList<QuizType>
 
-        quizWords = (0..words.size - 1).map { Pair(words[it], types[it]) }
+        quizWords = (0 until words.size).map { Pair(words[it], types[it]) }
         quizView.displayWords(quizWords)
         currentItem = savedInstanceState.getInt("position") - 1 // -1 because setUpQuiz will do the +1
         quizView.setPagerPosition(currentItem)
@@ -218,6 +218,7 @@ class QuizPresenter(
                 randoms = generateQCMRandoms(word, quizType, word.japanese)
                 setupQCMJapEnQuiz()
             }
+            QuizType.TYPE_AUTO -> TODO()
         }
 
         if (!errorMode)
@@ -242,13 +243,13 @@ class QuizPresenter(
 
     fun setupQCMEnJapQuiz() {
         quizView.displayQCMFuriTextViews()
-        val word1 = getQCMDIsplayForEnJap(randoms[0].first)
+        val word1 = getQCMDisPlayForEnJap(randoms[0].first)
         quizView.displayQCMFuri1(word1, 0, word1.length, ContextCompat.getColor(context, randoms[0].second))
-        val word2 = getQCMDIsplayForEnJap(randoms[1].first)
+        val word2 = getQCMDisPlayForEnJap(randoms[1].first)
         quizView.displayQCMFuri2(word2, 0, word2.length, ContextCompat.getColor(context, randoms[1].second))
-        val word3 = getQCMDIsplayForEnJap(randoms[2].first)
+        val word3 = getQCMDisPlayForEnJap(randoms[2].first)
         quizView.displayQCMFuri3(word3, 0, word3.length, ContextCompat.getColor(context, randoms[2].second))
-        val word4 = getQCMDIsplayForEnJap(randoms[3].first)
+        val word4 = getQCMDisPlayForEnJap(randoms[3].first)
         quizView.displayQCMFuri4(word4, 0, word4.length, ContextCompat.getColor(context, randoms[3].second))
     }
 
@@ -260,11 +261,13 @@ class QuizPresenter(
         quizView.displayQCMTv4(randoms[3].first.getTrad().trim(), randoms[3].second)
     }
 
-    fun getQCMDIsplayForEnJap(word: Word): String {
-        return if (word.isKana == 2 && isFuriDisplayed)
-            sentenceRepository.getSentenceById(word.sentenceId).jap
-        else if (word.isKana == 2 && !isFuriDisplayed)
-            sentenceNoFuri(sentenceRepository.getSentenceById(word.sentenceId))
+    fun getQCMDisPlayForEnJap(word: Word): String {
+        return if (word.isKana == 2) {
+            if (isFuriDisplayed)
+                sentenceRepository.getSentenceById(word.sentenceId).jap
+            else
+                sentenceNoFuri(sentenceRepository.getSentenceById(word.sentenceId))
+        }
         else if (isFuriDisplayed)
             " {${word.japanese};${word.reading}} "
         else
@@ -429,6 +432,7 @@ class QuizPresenter(
                 else randoms[choice] = Pair(randoms[choice].first, color)
                 setupQCMJapEnQuiz()
             }
+            QuizType.TYPE_AUTO -> TODO()
         }
 
         if (result && defaultSharedPreferences.getBoolean("play_end", true))
@@ -692,7 +696,7 @@ class QuizPresenter(
     }
 
     override fun getRandomSentence(word: Word): Sentence {
-        val sentence = sentenceRepository.getRandomSentence(word, getCateogryLevel(word.baseCategory))
+        val sentence = sentenceRepository.getRandomSentence(word, getCategoryLevel(word.baseCategory))
         return if (word.isKana == 2 || sentence == null)
             sentenceRepository.getSentenceById(word.sentenceId)
         else

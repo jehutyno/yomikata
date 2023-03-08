@@ -22,12 +22,8 @@ import org.jetbrains.anko.defaultSharedPreferences
  */
 class WordsAdapter(private val context: Context, private val callback: Callback) : RecyclerView.Adapter<WordsAdapter.ViewHolder>() {
 
-    var items: MutableList<Word>
+    var items: MutableList<Word> = arrayListOf()
     var flag = false
-
-    init {
-        items = arrayListOf<Word>()
-    }
 
     var checkMode = false
 

@@ -69,7 +69,7 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
 
 
     override fun onInit(status: Int) {
-        if (adapter != null && !adapter!!.words.isEmpty()) {
+        if (adapter != null && adapter!!.words.isNotEmpty()) {
             ttsSupported = onTTSinit(activity, status, tts)
             presenter.setTTSSupported(ttsSupported)
             if (adapter!!.words[binding.pager.currentItem].second == QuizType.TYPE_AUDIO ||
@@ -180,10 +180,10 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
             ttsErrorsImage.padding = DimensionHelper.getPixelFromDip(activity, 12)
             ttsErrorsImage.setOnClickListener {
                 val category = adapter!!.words[binding.pager.currentItem].first.baseCategory
-                val speechAvailability = checkSpeechAvailability(activity!!, ttsSupported, getCateogryLevel(category))
+                val speechAvailability = checkSpeechAvailability(activity!!, ttsSupported, getCategoryLevel(category))
                 when (speechAvailability) {
                     SpeechAvailability.NOT_AVAILABLE -> {
-                        speechNotSupportedAlert(activity!!, getCateogryLevel(category), {})
+                        speechNotSupportedAlert(activity!!, getCategoryLevel(category), {})
                     }
                     else -> {
                         if (isSettingsOpen) {
@@ -212,14 +212,14 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
      *  UI Initialization
      */
 
-    fun initUI() {
+    private fun initUI() {
         initPager()
         initEditText()
         setUpAudioManager()
         initAnswersButtons()
     }
 
-    fun initPager() {
+    private fun initPager() {
         adapter = QuizItemPagerAdapter(context!!, this)
         binding.pager.adapter = adapter
         binding.pager.setAllowedSwipeDirection(SwipeDirection.none)
@@ -238,7 +238,7 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
         })
     }
 
-    fun initEditText() {
+    private fun initEditText() {
         binding.hiraganaEdit.setOnEditorActionListener { _, i, keyEvent ->
             if (isSettingsOpen) closeTTSSettings()
             if (adapter!!.words[binding.pager.currentItem].second == QuizType.TYPE_PRONUNCIATION
@@ -290,7 +290,7 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
         binding.hiraganaEdit.setSelection(binding.hiraganaEdit.text.length)
     }
 
-    fun setUpAudioManager() {
+    private fun setUpAudioManager() {
         val audioManager = activity!!.getSystemService(Context.AUDIO_SERVICE) as AudioManager
         binding.seekVolume.max = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
         binding.seekVolume.progress = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
@@ -332,7 +332,7 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
         }
     }
 
-    fun initAnswersButtons() {
+    private fun initAnswersButtons() {
         binding.quizContainer.setOnClickListener { if (isSettingsOpen) closeTTSSettings() }
         binding.answerContainer.setOnClickListener { if (isSettingsOpen) closeTTSSettings() }
         binding.option1Container.setOnClickListener {
@@ -426,7 +426,7 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
     override fun displayWords(quizWordsPair: List<Pair<Word, QuizType>>) {
         holdOn = false
         adapter!!.replaceData(quizWordsPair)
-        // TODO do somthing with that
+        // TODO do something with that
 //        pager.post { tutos() }
     }
 
@@ -604,12 +604,12 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
     }
 
     override fun animateColor(position: Int, word: Word, sentence: Sentence, quizType: QuizType, fromLevel: Int, toLevel: Int, fromPoints: Int, toPoints: Int) {
-        val view = binding.pager.findViewWithTag<View>("pos_" + position)
+        val view = binding.pager.findViewWithTag<View>("pos_$position")
         val btn_furi = view.findViewById<View>(R.id.btn_furi)
         val furi_sentence = view.findViewById<FuriganaView>(R.id.furi_sentence)
         val trad_sentence = view.findViewById<TextView>(R.id.trad_sentence)
         val sound = view.findViewById<ImageButton>(R.id.sound)
-        var sentenceNoFuri = sentenceNoFuri(sentence)
+        val sentenceNoFuri = sentenceNoFuri(sentence)
         val colorAnimation = ValueAnimator.ofObject(ArgbEvaluator(),
             getWordColor(context!!, fromLevel, fromPoints),
             getWordColor(context!!, toLevel, toPoints))
@@ -621,7 +621,7 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
                         val colorEntireWord = word.isKana == 2 && quizType == QuizType.TYPE_JAP_EN
                         val wordTruePosition = if (colorEntireWord) 0 else getWordPositionInFuriSentence(sentence.jap, word)
                         if (btn_furi.isSelected) {
-                            if (colorEntireWord) 0 else wordTruePosition.let {
+                            if (!colorEntireWord) wordTruePosition.let {
                                 furi_sentence.text_set(
                                     if (colorEntireWord) sentence.jap else sentenceNoAnswerFuri(sentence, word),
                                     it,
@@ -758,10 +758,10 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
             }
             R.id.tts_settings -> {
                 val category = adapter!!.words[binding.pager.currentItem].first.baseCategory
-                val speechAvailability = checkSpeechAvailability(activity!!, ttsSupported, getCateogryLevel(category))
+                val speechAvailability = checkSpeechAvailability(activity!!, ttsSupported, getCategoryLevel(category))
                 when (speechAvailability) {
                     SpeechAvailability.NOT_AVAILABLE -> {
-                        speechNotSupportedAlert(activity!!, getCateogryLevel(category), {})
+                        speechNotSupportedAlert(activity!!, getCategoryLevel(category), {})
                     }
                     else -> {
                         if (isSettingsOpen) {
@@ -804,11 +804,9 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
         val popup = PopupMenu(activity, view)
         val word = adapter!!.words[position].first
         popup.menuInflater.inflate(R.menu.popup_selections, popup.menu)
-        var i = 0
-        for (selection in selections) {
+        for ((i, selection) in selections.withIndex()) {
             popup.menu.add(1, i, i, selection.getName()).isChecked = presenter.isWordInQuiz(word.id, selection.id)
             popup.menu.setGroupCheckable(1, true, false)
-            i++
         }
         popup.setOnMenuItemClickListener {
             when (it.itemId) {
