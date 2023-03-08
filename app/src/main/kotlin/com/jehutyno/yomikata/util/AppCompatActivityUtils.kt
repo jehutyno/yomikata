@@ -1,16 +1,17 @@
 package com.jehutyno.yomikata.util
 
 import android.app.Activity
+import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.database.sqlite.SQLiteDatabase
-import android.os.Bundle
 import android.os.Handler
+import android.os.Looper
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentTransaction
 import androidx.appcompat.app.AppCompatActivity
 import android.view.inputmethod.InputMethodManager
+import androidx.preference.PreferenceManager
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.model.Sentence
 import com.jehutyno.yomikata.model.Word
@@ -20,10 +21,7 @@ import com.jehutyno.yomikata.repository.migration.MigrationSource
 import com.jehutyno.yomikata.repository.migration.MigrationTable
 import com.jehutyno.yomikata.repository.migration.MigrationTables
 import com.jehutyno.yomikata.screens.quizzes.QuizzesActivity
-import org.jetbrains.anko.alert
-import org.jetbrains.anko.defaultSharedPreferences
 import org.jetbrains.anko.doAsync
-import org.jetbrains.anko.okButton
 import java.io.File
 
 
@@ -67,6 +65,7 @@ fun Activity.migrateFromYomikata() {
             val migrationSource = MigrationSource(this, DatabaseHelper.getInstance(this, toName, toPath))
             val wordTables = MigrationTable.allTables(MigrationTables.values())
 
+            // TODO: use coroutines library
             doAsync {
                 wordTables.forEach {
                     val wordtable = migrationSource.getWordTable(it)
@@ -80,20 +79,21 @@ fun Activity.migrateFromYomikata() {
 
             }
         } catch (exception: Exception) {
-            alert {
-                title = getString(R.string.restore_error)
-                message = getString(R.string.restore_error_message)
-                okButton { }
-            }.show()
+            val builder = AlertDialog.Builder(this)
+            builder.setTitle(R.string.restore_error)
+            builder.setMessage(R.string.restore_error_message)
+            builder.setPositiveButton(R.string.ok) {_, _, -> }
+            builder.show()
         }
     }
 }
 
 fun Context.updateBDD(db: SQLiteDatabase?, filePathEncrypted: String, oldVersion: Int) {
-    val handler = Handler()
+    val pref = PreferenceManager.getDefaultSharedPreferences(this)
+    val handler = Handler(Looper.getMainLooper())
     handler.postDelayed(
         {
-            defaultSharedPreferences.edit().putBoolean(Prefs.DB_UPDATE_ONGOING.pref, true).apply()
+            pref.edit().putBoolean(Prefs.DB_UPDATE_ONGOING.pref, true).apply()
         }, 2000)
     var filePath = ""
     File(getString(R.string.db_path) + UpdateSQLiteHelper.UPDATE_DATABASE_NAME).delete()
@@ -106,8 +106,8 @@ fun Context.updateBDD(db: SQLiteDatabase?, filePathEncrypted: String, oldVersion
             return
         }
     }
-    defaultSharedPreferences.edit().putString(Prefs.DB_UPDATE_FILE.pref, filePath).apply()
-    defaultSharedPreferences.edit().putInt(Prefs.DB_UPDATE_OLD_VERSION.pref, oldVersion).apply()
+    pref.edit().putString(Prefs.DB_UPDATE_FILE.pref, filePath).apply()
+    pref.edit().putInt(Prefs.DB_UPDATE_OLD_VERSION.pref, oldVersion).apply()
     val updateSource = UpdateSource(this, filePath)
     val updateWords = updateSource.getAllWords().sortedBy(Word::id)
     val stats = updateSource.getAllStatEntries()
@@ -244,8 +244,8 @@ fun Context.updateBDD(db: SQLiteDatabase?, filePathEncrypted: String, oldVersion
         intent.putExtra(QuizzesActivity.UPDATE_FINISHED, true)
         sendBroadcast(intent)
 
-        defaultSharedPreferences.edit().putBoolean(Prefs.DB_UPDATE_ONGOING.pref, false).apply()
-        defaultSharedPreferences.edit().putString(Prefs.DB_UPDATE_FILE.pref, "").apply()
+        pref.edit().putBoolean(Prefs.DB_UPDATE_ONGOING.pref, false).apply()
+        pref.edit().putString(Prefs.DB_UPDATE_FILE.pref, "").apply()
         if (filePath.isEmpty())
             File(getString(R.string.db_path) + UpdateSQLiteHelper.UPDATE_DATABASE_NAME).delete()
         else
