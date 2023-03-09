@@ -24,7 +24,8 @@ import com.jehutyno.yomikata.screens.content.ContentActivity
 import com.jehutyno.yomikata.screens.quiz.QuizActivity
 import com.jehutyno.yomikata.util.*
 import com.wooplr.spotlight.utils.SpotlightListener
-import org.jetbrains.anko.*
+import org.jetbrains.anko.doAsync
+import org.jetbrains.anko.support.v4.uiThread
 import splitties.alertdialog.appcompat.*
 import java.lang.Thread.sleep
 
