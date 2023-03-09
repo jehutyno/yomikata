@@ -21,11 +21,7 @@ import com.jehutyno.yomikata.screens.content.word.WordDetailDialogFragment
 import com.jehutyno.yomikata.util.DimensionHelper
 import com.jehutyno.yomikata.util.Extras
 import com.jehutyno.yomikata.util.animateSeekBar
-import org.jetbrains.anko.find
-import splitties.alertdialog.appcompat.alertDialog
-import splitties.alertdialog.appcompat.cancelButton
-import splitties.alertdialog.appcompat.okButton
-import splitties.alertdialog.appcompat.title
+import splitties.alertdialog.appcompat.*
 import java.util.*
 
 
@@ -190,7 +186,7 @@ class ContentFragment : Fragment(), ContentContract.View, WordsAdapter.Callback,
                     adapter.notifyDataSetChanged()
                 }
                 1 -> {
-                    val popup = PopupMenu(activity!!, activity!!.find(1))
+                    val popup = PopupMenu(activity!!, activity!!.findViewById(1))
                     popup.menuInflater.inflate(R.menu.popup_selections, popup.menu)
                     for ((i, selection) in selections.withIndex()) {
                         popup.menu.add(1, i, i, selection.getName()).isChecked = false
@@ -214,8 +210,7 @@ class ContentFragment : Fragment(), ContentContract.View, WordsAdapter.Callback,
                     popup.show()
                 }
                 2 -> {
-
-                    val popup = PopupMenu(activity!!, activity!!.find(2))
+                    val popup = PopupMenu(activity!!, activity!!.findViewById(2))
                     for ((i, selection) in selections.withIndex()) {
                         popup.menu.add(1, i, i, selection.getName()).isChecked = false
                     }
@@ -243,7 +238,7 @@ class ContentFragment : Fragment(), ContentContract.View, WordsAdapter.Callback,
 
         private fun addSelection(selectedWords: ArrayList<Word>) {
             requireContext().alertDialog {
-                title = getString(R.string.new_selection)
+                titleResource = R.string.new_selection
                 val input = EditText(activity)
                 input.setSingleLine()
                 input.hint = getString(R.string.selection_name)
