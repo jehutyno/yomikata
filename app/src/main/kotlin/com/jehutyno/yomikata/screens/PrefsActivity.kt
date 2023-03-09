@@ -8,10 +8,12 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.app.ActivityCompat
 import androidx.preference.Preference
+import androidx.preference.PreferenceManager
 import androidx.preference.PreferenceFragmentCompat
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.filechooser.FileChooserDialog
@@ -39,7 +41,8 @@ class PrefsActivity : AppCompatActivity(), FileChooserDialog.ChooserListener {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        AppCompatDelegate.setDefaultNightMode(defaultSharedPreferences.getInt(Prefs.DAY_NIGHT_MODE.pref, AppCompatDelegate.MODE_NIGHT_YES))
+        val pref = PreferenceManager.getDefaultSharedPreferences(this)
+        AppCompatDelegate.setDefaultNightMode(pref.getInt(Prefs.DAY_NIGHT_MODE.pref, AppCompatDelegate.MODE_NIGHT_YES))
         supportFragmentManager.beginTransaction()
                 .replace(android.R.id.content, PrefsFragment()).commit()
     }
@@ -74,7 +77,8 @@ class PrefsActivity : AppCompatActivity(), FileChooserDialog.ChooserListener {
             builder.setMessage(R.string.prefs_reinit_sure)
             builder.setPositiveButton(R.string.ok) { _, _ ->
                 CopyUtils.reinitDataBase(activity)
-                requireActivity().toast(R.string.prefs_reinit_done)
+                val toast = Toast.makeText(context, R.string.prefs_reinit_done, Toast.LENGTH_LONG)
+                toast.show()
                 requireActivity().finish()
             }
             builder.setNegativeButton(R.string.cancel_caps) { _, _ -> }
@@ -88,11 +92,14 @@ class PrefsActivity : AppCompatActivity(), FileChooserDialog.ChooserListener {
             builder.setMessage(R.string.prefs_delete_voices_sure)
             builder.setPositiveButton(R.string.ok) { _, _ ->
                 FileUtils.deleteFolder(activity, "Voices")
+                val pref = PreferenceManager.getDefaultSharedPreferences(context)
                 for (i in 0 until 7) {
-                    requireActivity().defaultSharedPreferences.edit()
-                            .putBoolean("${Prefs.VOICE_DOWNLOADED_LEVEL_V.pref}${getLevelDownloadVersion(i)}_$i", false).apply()
+                    pref.edit().putBoolean(
+                            "${Prefs.VOICE_DOWNLOADED_LEVEL_V.pref}${getLevelDownloadVersion(i)}_$i", false
+                    ).apply()
                 }
-                requireActivity().toast(getString(R.string.voices_reinit_done))
+                val toast = Toast.makeText(context, R.string.voices_reinit_done, Toast.LENGTH_LONG)
+                toast.show()
                 requireActivity().finish()
             }
             builder.setNegativeButton(R.string.cancel_caps) { _, _ -> }
@@ -162,12 +169,14 @@ class PrefsActivity : AppCompatActivity(), FileChooserDialog.ChooserListener {
     }
 
     fun backupProgress() {
-        alert {
-            title = getString(R.string.backup)
-            message = getString(R.string.backup_sure)
-            okButton { CopyUtils.copyEncryptedBddToSd(this@PrefsActivity) }
-            cancelButton { }
-        }.show()
+        val builder = AlertDialog.Builder(this)
+        builder.setTitle(R.string.backup)
+        builder.setMessage(R.string.backup_sure)
+        builder.setPositiveButton(R.string.ok) { _, _ ->
+            CopyUtils.copyEncryptedBddToSd(this@PrefsActivity)
+        }
+        builder.setNegativeButton(R.string.cancel_caps) { _, _ -> }
+        builder.show()
     }
 
     override fun onSelect(path: String?) {
@@ -176,10 +185,10 @@ class PrefsActivity : AppCompatActivity(), FileChooserDialog.ChooserListener {
         } else if (path.endsWith(".yomikataz")) {
             importYomikataZ(path)
         } else {
-            alert {
-                title = getString(R.string.use_yomikata_file)
-                okButton { }
-            }.show()
+            val builder = AlertDialog.Builder(this)
+            builder.setTitle(R.string.use_yomikata_file)
+            builder.setPositiveButton(R.string.ok) { _, _ -> }
+            builder.show()
         }
     }
 
