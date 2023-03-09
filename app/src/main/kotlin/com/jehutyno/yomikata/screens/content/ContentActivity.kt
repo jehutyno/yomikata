@@ -10,6 +10,7 @@ import androidx.appcompat.app.AppCompatDelegate
 import android.view.MenuItem
 import android.view.View.GONE
 import android.view.View.VISIBLE
+import androidx.preference.PreferenceManager
 import com.github.salomonbrys.kodein.Kodein
 import com.github.salomonbrys.kodein.KodeinInjector
 import com.github.salomonbrys.kodein.android.appKodein
@@ -29,9 +30,8 @@ import com.jehutyno.yomikata.util.Extras.EXTRA_QUIZ_IDS
 import com.jehutyno.yomikata.util.Extras.EXTRA_QUIZ_TITLE
 import io.github.inflationx.viewpump.ViewPumpContextWrapper
 import mu.KLogging
-import org.jetbrains.anko.defaultSharedPreferences
-import org.jetbrains.anko.support.v4.withArguments
 import java.util.*
+
 
 class ContentActivity : AppCompatActivity() {
 
@@ -61,7 +61,8 @@ class ContentActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        AppCompatDelegate.setDefaultNightMode(defaultSharedPreferences.getInt(Prefs.DAY_NIGHT_MODE.pref, AppCompatDelegate.MODE_NIGHT_YES))
+        val pref = PreferenceManager.getDefaultSharedPreferences(this)
+        AppCompatDelegate.setDefaultNightMode(pref.getInt(Prefs.DAY_NIGHT_MODE.pref, AppCompatDelegate.MODE_NIGHT_YES))
 
         binding = ActivityContentBinding.inflate(layoutInflater)
         val view = binding.root
@@ -105,7 +106,12 @@ class ContentActivity : AppCompatActivity() {
                     } else {
                         val ids = mutableListOf<Long>()
                         quizzes.forEach { ids.add(it.id) }
-                        contentLevelFragment = ContentFragment().withArguments(EXTRA_QUIZ_IDS to ids.toLongArray(), EXTRA_QUIZ_TITLE to title, EXTRA_LEVEL to level)
+                        val bundle = Bundle()
+                        bundle.putLongArray(EXTRA_QUIZ_IDS, ids.toLongArray())
+                        bundle.putString(EXTRA_QUIZ_TITLE, title as String)
+                        bundle.putInt(EXTRA_LEVEL, level)
+                        contentLevelFragment = ContentFragment()
+                        contentLevelFragment!!.arguments = bundle
                         quizIds = ids.toLongArray()
                     }
                     addOrReplaceFragment(R.id.fragment_container, contentLevelFragment!!)
@@ -175,11 +181,12 @@ class ContentActivity : AppCompatActivity() {
 
     private fun launchQuiz(strategy: QuizStrategy) {
         statsRepository.addStatEntry(StatAction.LAUNCH_QUIZ_FROM_CATEGORY, category.toLong(), Calendar.getInstance().timeInMillis, StatResult.OTHER)
-        val cat1 = defaultSharedPreferences.getInt(Prefs.LATEST_CATEGORY_1.pref, -1)
+        val pref = PreferenceManager.getDefaultSharedPreferences(this)
+        val cat1 = pref.getInt(Prefs.LATEST_CATEGORY_1.pref, -1)
 
         if (category != cat1) {
-            defaultSharedPreferences.edit().putInt(Prefs.LATEST_CATEGORY_2.pref, cat1).apply()
-            defaultSharedPreferences.edit().putInt(Prefs.LATEST_CATEGORY_1.pref, category).apply()
+            pref.edit().putInt(Prefs.LATEST_CATEGORY_2.pref, cat1).apply()
+            pref.edit().putInt(Prefs.LATEST_CATEGORY_1.pref, category).apply()
         }
 
         val intent = Intent(this, QuizActivity::class.java).apply {
