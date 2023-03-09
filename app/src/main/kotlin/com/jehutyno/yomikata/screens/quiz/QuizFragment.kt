@@ -38,16 +38,7 @@ import com.jehutyno.yomikata.screens.answers.AnswersActivity
 import com.jehutyno.yomikata.screens.content.word.WordDetailDialogFragment
 import com.jehutyno.yomikata.util.*
 import com.jehutyno.yomikata.view.SwipeDirection
-import org.jetbrains.anko.support.v4.withArguments
-
-// TODO: use splitties to write alertdialogs
-//import splitties.alertdialog.appcompat.alertDialog
-//import splitties.alertdialog.appcompat.cancelButton
-//import splitties.alertdialog.appcompat.messageResource
-//import splitties.alertdialog.appcompat.okButton
-//import splitties.alertdialog.appcompat.onShow
-//import splitties.alertdialog.appcompat.positiveButton
-
+import splitties.alertdialog.appcompat.*
 
 
 /**
@@ -444,11 +435,11 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
         binding.qcmContainer.visibility = GONE
         binding.answerContainer.visibility = GONE
 
-        val builder = AlertDialog.Builder(context)
-        builder.setMessage(R.string.quiz_empty)
-        builder.setPositiveButton(R.string.ok) { _, _ -> requireActivity().finish() }
-        builder.setNegativeButton(R.string.cancel_caps) {_, _ -> requireActivity().finish() }
-        builder.show()
+        requireContext().alertDialog {
+            messageResource = R.string.quiz_empty
+            okButton { requireActivity().finish() }
+            cancelButton { requireActivity().finish() }
+        }.show()
     }
 
     override fun setPagerPosition(position: Int) {
@@ -664,70 +655,76 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
 
     override fun showAlertProgressiveSessionEnd(proposeErrors: Boolean) {
         val sessionLength = adapter!!.words.size
-        val message = getString(R.string.alert_session_finished, sessionLength)
 
-        val builder = AlertDialog.Builder(context)
-        builder.setMessage(message)
-        builder.setNeutralButton(R.string.alert_continue) {_, _ -> presenter.onLaunchNextProgressiveSession() }
-        builder.setPositiveButton(R.string.alert_quit) {_, _ -> finishQuiz() }
-        builder.setOnCancelListener{ finishQuiz() }
-        builder.show()
+        requireContext().alertDialog {
+            message = getString(R.string.alert_session_finished, sessionLength)
+            neutralButton(R.string.alert_continue) { presenter.onLaunchNextProgressiveSession() }
+            positiveButton(R.string.alert_quit) { finishQuiz() }
+        }.show()
     }
 
     override fun showAlertErrorSessionEnd(quizEnded: Boolean) {
-        val builder = AlertDialog.Builder(context)
-        builder.setMessage(R.string.alert_error_review_finished)
+        requireContext().alertDialog {
+            messageResource = R.string.alert_error_review_finished
 
-        if (!quizEnded) {
-            builder.setMessage(R.string.alert_error_review_session_message)
-            builder.setPositiveButton(R.string.alert_continue_quiz) {_, _ ->
-                presenter.onContinueQuizAfterErrorSession()
+            if (!quizEnded) {
+                messageResource = R.string.alert_error_review_session_message
+                positiveButton(R.string.alert_continue_quiz) {
+                    presenter.onContinueQuizAfterErrorSession()
+                }
+            } else {
+                messageResource = R.string.alert_error_review_quiz_message
+                positiveButton(R.string.alert_restart) {
+                    presenter.onRestartQuiz()
+                }
             }
-        } else {
-            builder.setMessage(R.string.alert_error_review_quiz_message)
-            builder.setPositiveButton(R.string.alert_restart) {_, _ ->
-                presenter.onRestartQuiz()
+            neutralButton(R.string.alert_quit) {
+                finishQuiz()
             }
-        }
-        builder.setNeutralButton(R.string.alert_quit) {_, _ -> finishQuiz() }
-        builder.setOnCancelListener{ presenter.onFinishQuiz() }
-
-        builder.show()
+            setOnCancelListener {
+                presenter.onFinishQuiz()
+            }
+        }.show()
     }
 
     override fun showAlertNonProgressiveSessionEnd(proposeErrors: Boolean) {
         val pref = PreferenceManager.getDefaultSharedPreferences(context)
-        val message = getString(R.string.alert_session_finished, pref.getString("length", "-1")?.toInt())
 
-        val builder = AlertDialog.Builder(context)
-        builder.setMessage(message)
-        builder.setPositiveButton(R.string.alert_continue) {_, _ ->
-            presenter.onContinueAfterNonProgressiveSessionEnd()
-        }
-        if (proposeErrors) {
-            builder.setNegativeButton(R.string.alert_review_session_errors) {_, _ ->
-                // TODO handle shuffle ?
-                presenter.onLaunchErrorSession()
+        requireContext().alertDialog {
+            message = getString(R.string.alert_session_finished, pref.getString("length", "-1")?.toInt())
+            positiveButton(R.string.alert_continue) {
+                presenter.onContinueAfterNonProgressiveSessionEnd()
             }
-        }
-        builder.setNeutralButton(R.string.alert_quit) {_, _ -> presenter.onFinishQuiz() }
-        builder.setOnCancelListener{ presenter.onContinueAfterNonProgressiveSessionEnd() }
-
-        builder.show()
+            if (proposeErrors) {
+                negativeButton(R.string.alert_review_session_errors) {
+                    // TODO handle shuffle ?
+                    presenter.onLaunchErrorSession()
+                }
+            }
+            neutralButton(R.string.alert_quit) {
+                presenter.onFinishQuiz()
+            }
+            setOnCancelListener {
+                presenter.onContinueAfterNonProgressiveSessionEnd()
+            }
+        }.show()
     }
 
     override fun showAlertQuizEnd(proposeErrors: Boolean) {
-        val builder = AlertDialog.Builder(context)
-        builder.setMessage(R.string.alert_quiz_finished)
-        builder.setNeutralButton(R.string.alert_restart) {_, _ -> presenter.onRestartQuiz() }
-        if (proposeErrors) {
-            builder.setNegativeButton(R.string.alert_review_quiz_errors) {_, _ ->
-                presenter.onLaunchErrorSession()
+        requireContext().alertDialog {
+            messageResource = R.string.alert_quiz_finished
+            neutralButton(R.string.alert_restart) {
+                presenter.onRestartQuiz()
             }
-        }
-        builder.setPositiveButton(R.string.alert_quit) {_, _ -> finishQuiz() }
-
-        builder.show()
+            if (proposeErrors) {
+                negativeButton(R.string.alert_review_quiz_errors) {
+                    presenter.onLaunchErrorSession()
+                }
+            }
+            positiveButton(R.string.alert_quit) {
+                finishQuiz()
+            }
+        }.show()
     }
 
     // TODO move to presenter ?
