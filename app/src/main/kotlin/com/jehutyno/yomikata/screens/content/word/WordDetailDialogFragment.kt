@@ -31,7 +31,9 @@ import splitties.alertdialog.appcompat.*
 class WordDetailDialogFragment : DialogFragment(), WordContract.View, WordPagerAdapter.Callback, TextToSpeech.OnInitListener {
 
     private val injector = KodeinInjector()
+    @Suppress("unused")
     private val wordPresenter: WordContract.Presenter by injector.instance()
+    @Suppress("unused")
     private val voicesManager: VoicesManager by injector.instance()
     private lateinit var adapter: WordPagerAdapter
     private var wordId: Long = -1

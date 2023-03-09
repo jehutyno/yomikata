@@ -18,6 +18,7 @@ import org.jetbrains.anko.defaultSharedPreferences
 class SearchResultActivity : AppCompatActivity() {
 
     private val injector = KodeinInjector()
+    @Suppress("unused")
     private val searchResultPresenter: SearchResultContract.Presenter by injector.instance()
     private lateinit var searchResultFragment : SearchResultFragment
 

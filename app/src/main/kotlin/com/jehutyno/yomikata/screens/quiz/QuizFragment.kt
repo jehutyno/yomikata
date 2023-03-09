@@ -47,6 +47,7 @@ import splitties.alertdialog.appcompat.*
 class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callback, TextToSpeech.OnInitListener {
 
     private val injector = KodeinInjector()
+    @Suppress("unused")
     private val voicesManager: VoicesManager by injector.instance()
     private lateinit var presenter: QuizContract.Presenter
     private var adapter: QuizItemPagerAdapter? = null

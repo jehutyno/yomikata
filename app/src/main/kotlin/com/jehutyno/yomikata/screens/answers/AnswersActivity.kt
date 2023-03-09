@@ -26,6 +26,7 @@ class AnswersActivity : AppCompatActivity() {
     companion object : KLogging()
 
     private val injector = KodeinInjector()
+    @Suppress("unused")
     private val answersPresenter: AnswersContract.Presenter by injector.instance()
     private lateinit var answersFragment: AnswersFragment
 

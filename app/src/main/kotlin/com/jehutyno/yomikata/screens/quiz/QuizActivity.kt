@@ -30,6 +30,7 @@ class QuizActivity : AppCompatActivity() {
     companion object : KLogging()
 
     private val injector = KodeinInjector()
+    @Suppress("unused")
     private val quizPresenter: QuizContract.Presenter by injector.instance()
     private lateinit var quizFragment: QuizFragment
 

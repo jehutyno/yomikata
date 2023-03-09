@@ -47,6 +47,7 @@ class ContentActivity : AppCompatActivity() {
 
     private var contentLevelFragment: ContentFragment? = null
     private val injector = KodeinInjector()
+    @Suppress("unused")
     private val contentPresenter: ContentContract.Presenter by injector.instance()
 
     private var contentPagerAdapter: ContentPagerAdapter? = null

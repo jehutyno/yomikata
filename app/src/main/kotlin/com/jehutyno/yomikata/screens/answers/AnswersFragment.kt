@@ -30,6 +30,7 @@ import java.util.*
 class AnswersFragment : Fragment(), AnswersContract.View, AnswersAdapter.Callback, TextToSpeech.OnInitListener {
 
     private val injector = KodeinInjector()
+    @Suppress("unused")
     private val voicesManager: VoicesManager by injector.instance()
     private lateinit var presenter: AnswersContract.Presenter
     private lateinit var layoutManager: LinearLayoutManager
