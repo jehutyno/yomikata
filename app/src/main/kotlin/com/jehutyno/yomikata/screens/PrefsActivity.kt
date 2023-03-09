@@ -2,13 +2,13 @@ package com.jehutyno.yomikata.screens
 
 import android.Manifest
 import android.app.Activity
-import android.app.AlertDialog
 import android.app.ProgressDialog
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.app.ActivityCompat
@@ -28,7 +28,9 @@ import com.jehutyno.yomikata.util.Extras.REQUEST_EXTERNAL_STORAGE_BACKUP
 import com.jehutyno.yomikata.util.Extras.REQUEST_EXTERNAL_STORAGE_RESTORE
 import com.wooplr.spotlight.prefs.PreferencesManager
 import mu.KLogging
-import org.jetbrains.anko.*
+import org.jetbrains.anko.doAsync
+import org.jetbrains.anko.uiThread
+import splitties.alertdialog.appcompat.*
 import java.io.File
 
 
@@ -71,40 +73,36 @@ class PrefsActivity : AppCompatActivity(), FileChooserDialog.ChooserListener {
             return permission == PackageManager.PERMISSION_GRANTED
         }
 
-        private fun getResetAlert() : AlertDialog.Builder {
-            val builder = AlertDialog.Builder(context)
-
-            builder.setMessage(R.string.prefs_reinit_sure)
-            builder.setPositiveButton(R.string.ok) { _, _ ->
-                CopyUtils.reinitDataBase(activity)
-                val toast = Toast.makeText(context, R.string.prefs_reinit_done, Toast.LENGTH_LONG)
-                toast.show()
-                requireActivity().finish()
+        private fun getResetAlert() : AlertDialog {
+            return requireContext().alertDialog {
+                messageResource = R.string.prefs_reinit_sure
+                okButton {
+                    CopyUtils.reinitDataBase(activity)
+                    val toast = Toast.makeText(context, R.string.prefs_reinit_done, Toast.LENGTH_LONG)
+                    toast.show()
+                    requireActivity().finish()
+                }
+                cancelButton()
             }
-            builder.setNegativeButton(R.string.cancel_caps) { _, _ -> }
-
-            return builder
         }
 
-        private fun getDeleteVoicesAlert() : AlertDialog.Builder {
-            val builder = AlertDialog.Builder(context)
-
-            builder.setMessage(R.string.prefs_delete_voices_sure)
-            builder.setPositiveButton(R.string.ok) { _, _ ->
-                FileUtils.deleteFolder(activity, "Voices")
-                val pref = PreferenceManager.getDefaultSharedPreferences(context)
-                for (i in 0 until 7) {
-                    pref.edit().putBoolean(
-                            "${Prefs.VOICE_DOWNLOADED_LEVEL_V.pref}${getLevelDownloadVersion(i)}_$i", false
-                    ).apply()
+        private fun getDeleteVoicesAlert() : AlertDialog {
+            return requireContext().alertDialog {
+                messageResource = R.string.prefs_delete_voices_sure
+                okButton {
+                    FileUtils.deleteFolder(activity, "Voices")
+                    val pref = PreferenceManager.getDefaultSharedPreferences(context)
+                    for (i in 0 until 7) {
+                        pref.edit().putBoolean(
+                                "${Prefs.VOICE_DOWNLOADED_LEVEL_V.pref}${getLevelDownloadVersion(i)}_$i", false
+                        ).apply()
+                    }
+                    val toast = Toast.makeText(context, R.string.voices_reinit_done, Toast.LENGTH_LONG)
+                    toast.show()
+                    requireActivity().finish()
                 }
-                val toast = Toast.makeText(context, R.string.voices_reinit_done, Toast.LENGTH_LONG)
-                toast.show()
-                requireActivity().finish()
+                cancelButton()
             }
-            builder.setNegativeButton(R.string.cancel_caps) { _, _ -> }
-
-            return builder
         }
 
         override fun onPreferenceTreeClick(preference: Preference): Boolean {
@@ -169,14 +167,14 @@ class PrefsActivity : AppCompatActivity(), FileChooserDialog.ChooserListener {
     }
 
     fun backupProgress() {
-        val builder = AlertDialog.Builder(this)
-        builder.setTitle(R.string.backup)
-        builder.setMessage(R.string.backup_sure)
-        builder.setPositiveButton(R.string.ok) { _, _ ->
-            CopyUtils.copyEncryptedBddToSd(this@PrefsActivity)
-        }
-        builder.setNegativeButton(R.string.cancel_caps) { _, _ -> }
-        builder.show()
+        alertDialog {
+            titleResource = R.string.backup
+            messageResource = R.string.backup_sure
+            okButton {
+                CopyUtils.copyEncryptedBddToSd(this@PrefsActivity)
+            }
+            cancelButton()
+        }.show()
     }
 
     override fun onSelect(path: String?) {
@@ -185,10 +183,10 @@ class PrefsActivity : AppCompatActivity(), FileChooserDialog.ChooserListener {
         } else if (path.endsWith(".yomikataz")) {
             importYomikataZ(path)
         } else {
-            val builder = AlertDialog.Builder(this)
-            builder.setTitle(R.string.use_yomikata_file)
-            builder.setPositiveButton(R.string.ok) { _, _ -> }
-            builder.show()
+            alertDialog {
+                titleResource = R.string.use_yomikata_file
+                okButton()
+            }.show()
         }
     }
 
@@ -214,17 +212,17 @@ class PrefsActivity : AppCompatActivity(), FileChooserDialog.ChooserListener {
                 wordTables.forEach {
                     val wordtable = migrationSource.getWordTable(it)
                     progressDialog.incrementProgressBy(1)
-                    wordtable.forEach {
+                    wordtable.forEach {word ->
                         val source = WordSource(this@PrefsActivity)
-                        if (it.counterTry > 0 || it.priority > 0)
-                            source.restoreWord(it.word, it.prononciation, it)
+                        if (word.counterTry > 0 || word.priority > 0)
+                            source.restoreWord(word.word, word.prononciation, word)
                     }
                 }
                 File(toPath + toName).delete()
 
                 uiThread {
                     progressDialog.dismiss()
-                    alert {
+                    alertDialog {
                         title = getString(R.string.restore_success)
                         okButton { }
                         message = getString(R.string.restore_success_message)
@@ -233,7 +231,7 @@ class PrefsActivity : AppCompatActivity(), FileChooserDialog.ChooserListener {
 
             }
         } catch (exception: Exception) {
-            alert {
+            alertDialog {
                 title = getString(R.string.restore_error)
                 message = getString(R.string.restore_error_message)
                 okButton { }
