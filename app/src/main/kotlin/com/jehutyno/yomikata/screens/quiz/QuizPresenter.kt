@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.speech.tts.TextToSpeech
 import android.util.Log
 import androidx.core.content.ContextCompat
+import androidx.preference.PreferenceManager
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.model.*
 import com.jehutyno.yomikata.repository.QuizRepository
@@ -13,7 +14,6 @@ import com.jehutyno.yomikata.repository.SentenceRepository
 import com.jehutyno.yomikata.repository.StatsRepository
 import com.jehutyno.yomikata.repository.WordRepository
 import com.jehutyno.yomikata.util.*
-import org.jetbrains.anko.defaultSharedPreferences
 import java.util.*
 
 /**
@@ -25,7 +25,7 @@ class QuizPresenter(
     private val statsRepository: StatsRepository, private val quizView: QuizContract.View,
     private var quizIds: LongArray, private var strategy: QuizStrategy, private val quizTypes: IntArray) : QuizContract.Presenter {
 
-    private val defaultSharedPreferences: SharedPreferences = context.defaultSharedPreferences
+    private val defaultSharedPreferences: SharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
 
     private var quizWords = listOf<Pair<Word, QuizType>>()
     private var errors = arrayListOf<Pair<Word, QuizType>>()

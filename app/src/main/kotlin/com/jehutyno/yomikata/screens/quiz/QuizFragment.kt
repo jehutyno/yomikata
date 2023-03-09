@@ -40,7 +40,7 @@ import com.jehutyno.yomikata.util.*
 import com.jehutyno.yomikata.view.SwipeDirection
 import org.jetbrains.anko.support.v4.withArguments
 
-// Splitties
+// TODO: use splitties to write alertdialogs
 //import splitties.alertdialog.appcompat.alertDialog
 //import splitties.alertdialog.appcompat.cancelButton
 //import splitties.alertdialog.appcompat.messageResource
@@ -799,11 +799,11 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
     override fun onItemClick(position: Int) {
         Intent().putExtra(Extras.EXTRA_QUIZ_TYPE, adapter!!.words[position].second as Parcelable)
         val dialog = WordDetailDialogFragment()
-
-        val dialog1 = WordDetailDialogFragment().withArguments(
-            Extras.EXTRA_WORD_ID to adapter!!.words[position].first.id,
-            Extras.EXTRA_QUIZ_TYPE to if (presenter.hasMistaken()) null else adapter!!.words[position].second,
-            Extras.EXTRA_SEARCH_STRING to "")
+        val bundle = Bundle()
+        bundle.putLong(Extras.EXTRA_WORD_ID, adapter!!.words[position].first.id)
+        bundle.putSerializable(Extras.EXTRA_QUIZ_TYPE, if (presenter.hasMistaken()) null else adapter!!.words[position].second)
+        bundle.putString(Extras.EXTRA_SEARCH_STRING, "")
+        dialog.arguments = bundle
         dialog.show(childFragmentManager, "")
         dialog.isCancelable = true
     }
