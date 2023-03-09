@@ -223,18 +223,18 @@ class PrefsActivity : AppCompatActivity(), FileChooserDialog.ChooserListener {
                 uiThread {
                     progressDialog.dismiss()
                     alertDialog {
-                        title = getString(R.string.restore_success)
-                        okButton { }
-                        message = getString(R.string.restore_success_message)
+                        titleResource = R.string.restore_success
+                        messageResource = R.string.restore_success_message
+                        okButton()
                     }.show()
                 }
 
             }
         } catch (exception: Exception) {
             alertDialog {
-                title = getString(R.string.restore_error)
-                message = getString(R.string.restore_error_message)
-                okButton { }
+                titleResource = R.string.restore_error
+                messageResource = R.string.restore_error_message
+                okButton()
             }.show()
         }
     }

@@ -46,10 +46,7 @@ import com.jehutyno.yomikata.util.Extras.REQUEST_PREFS
 import com.jehutyno.yomikata.view.AppBarStateChangeListener
 import com.wooplr.spotlight.utils.SpotlightListener
 import mu.KLogging
-import splitties.alertdialog.appcompat.alertDialog
-import splitties.alertdialog.appcompat.cancelButton
-import splitties.alertdialog.appcompat.message
-import splitties.alertdialog.appcompat.okButton
+import splitties.alertdialog.appcompat.*
 import java.util.*
 
 
@@ -104,9 +101,9 @@ class QuizzesActivity : AppCompatActivity() {
                     progressDialog!!.dismiss()
                     progressDialog = null
                     alertDialog {
-                        title = getString(R.string.update_success_title)
+                        titleResource = R.string.update_success_title
                         okButton { }
-                        message = getString(R.string.update_success_message)
+                        messageResource = R.string.update_success_message
                         binding.pagerQuizzes.adapter = null
                         binding.pagerQuizzes.adapter = quizzesAdapter
                         selectedCategory = Categories.HOME
@@ -487,7 +484,7 @@ class QuizzesActivity : AppCompatActivity() {
             binding.multipleActions.collapse()
         else
             alertDialog {
-                title = getString(R.string.app_quit)
+                titleResource = R.string.app_quit
                 okButton { finishAffinity() }
                 cancelButton()
                 setOnKeyListener { _, keyCode, _ ->

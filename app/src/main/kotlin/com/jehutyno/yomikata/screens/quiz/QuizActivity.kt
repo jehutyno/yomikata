@@ -23,6 +23,7 @@ import mu.KLogging
 import splitties.alertdialog.appcompat.alertDialog
 import splitties.alertdialog.appcompat.cancelButton
 import splitties.alertdialog.appcompat.okButton
+import splitties.alertdialog.appcompat.titleResource
 
 class QuizActivity : AppCompatActivity() {
 
@@ -100,7 +101,7 @@ class QuizActivity : AppCompatActivity() {
         when (item.itemId) {
             android.R.id.home -> {
                 alertDialog {
-                    title = getString(R.string.quit_quiz)
+                    titleResource = R.string.quit_quiz
                     okButton { finish() }
                     cancelButton()
                 }.show()

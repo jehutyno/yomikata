@@ -301,7 +301,7 @@ class QuizzesFragment : Fragment(), QuizzesContract.View, QuizzesAdapter.Callbac
             return
         }
         requireContext().alertDialog {
-            title = getString(R.string.selection_edit)
+            titleResource = R.string.selection_edit
             val input = EditText(activity)
             input.setSingleLine()
             input.hint = getString(R.string.selection_name)
@@ -325,7 +325,7 @@ class QuizzesFragment : Fragment(), QuizzesContract.View, QuizzesAdapter.Callbac
 
             neutralButton(R.string.action_delete) {
                 requireContext().alertDialog {
-                    title = getString(R.string.selection_delete_sure)
+                    titleResource = R.string.selection_delete_sure
                     okButton {
                         mpresenter!!.deleteQuiz(adapter.items[position].id)
                         adapter.deleteItem(position)
@@ -347,7 +347,7 @@ class QuizzesFragment : Fragment(), QuizzesContract.View, QuizzesAdapter.Callbac
 
     override fun addSelection() {
         requireContext().alertDialog {
-            title = getString(R.string.new_selection)
+            titleResource = R.string.new_selection
             val input = EditText(activity)
             input.setSingleLine()
             input.inputType = InputType.TYPE_TEXT_FLAG_CAP_SENTENCES

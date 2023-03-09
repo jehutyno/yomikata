@@ -19,10 +19,7 @@ import com.jehutyno.yomikata.screens.content.WordsAdapter
 import com.jehutyno.yomikata.screens.content.word.WordDetailDialogFragment
 import com.jehutyno.yomikata.util.DimensionHelper
 import com.jehutyno.yomikata.util.Extras
-import splitties.alertdialog.appcompat.alertDialog
-import splitties.alertdialog.appcompat.cancelButton
-import splitties.alertdialog.appcompat.okButton
-import splitties.alertdialog.appcompat.title
+import splitties.alertdialog.appcompat.*
 import java.util.*
 
 /**
@@ -216,7 +213,7 @@ class SearchResultFragment : Fragment(), SearchResultContract.View, WordsAdapter
 
         private fun addSelection(selectedWords: ArrayList<Word>) {
             requireContext().alertDialog {
-                title = getString(R.string.new_selection)
+                titleResource = R.string.new_selection
                 val input = EditText(activity)
                 input.setSingleLine()
                 input.hint = getString(R.string.selection_name)
