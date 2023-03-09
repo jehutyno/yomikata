@@ -7,6 +7,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import android.view.KeyEvent
 import android.view.MenuItem
+import androidx.preference.PreferenceManager
 import com.github.salomonbrys.kodein.Kodein
 import com.github.salomonbrys.kodein.KodeinInjector
 import com.github.salomonbrys.kodein.android.appKodein
@@ -19,11 +20,9 @@ import com.jehutyno.yomikata.util.QuizStrategy
 import com.jehutyno.yomikata.util.addOrReplaceFragment
 import io.github.inflationx.viewpump.ViewPumpContextWrapper
 import mu.KLogging
-import org.jetbrains.anko.alert
-import org.jetbrains.anko.defaultSharedPreferences
-import org.jetbrains.anko.noButton
-import org.jetbrains.anko.support.v4.withArguments
-import org.jetbrains.anko.yesButton
+import splitties.alertdialog.appcompat.alertDialog
+import splitties.alertdialog.appcompat.cancelButton
+import splitties.alertdialog.appcompat.okButton
 
 class QuizActivity : AppCompatActivity() {
 
@@ -43,7 +42,8 @@ class QuizActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        AppCompatDelegate.setDefaultNightMode(defaultSharedPreferences.getInt(Prefs.DAY_NIGHT_MODE.pref, AppCompatDelegate.MODE_NIGHT_YES))
+        val pref = PreferenceManager.getDefaultSharedPreferences(this)
+        AppCompatDelegate.setDefaultNightMode(pref.getInt(Prefs.DAY_NIGHT_MODE.pref, AppCompatDelegate.MODE_NIGHT_YES))
         setContentView(R.layout.activity_quiz)
         if(resources.getBoolean(R.bool.portrait_only)){
             requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
@@ -67,10 +67,13 @@ class QuizActivity : AppCompatActivity() {
             quizStrategy = intent.getSerializableExtra(Extras.EXTRA_QUIZ_STRATEGY) as QuizStrategy
             quizTypes = intent.getIntArrayExtra(Extras.EXTRA_QUIZ_TYPES) ?: intArrayOf()
 
-            quizFragment = QuizFragment().withArguments(
-                Extras.EXTRA_QUIZ_IDS to quizIds,
-                Extras.EXTRA_QUIZ_STRATEGY to quizStrategy,
-                Extras.EXTRA_QUIZ_TYPES to quizTypes)
+            val bundle = Bundle()
+            bundle.putLongArray(Extras.EXTRA_QUIZ_IDS, quizIds)
+            bundle.putSerializable(Extras.EXTRA_QUIZ_STRATEGY, quizStrategy)
+            bundle.putIntArray(Extras.EXTRA_QUIZ_TYPES, quizTypes)
+
+            quizFragment = QuizFragment()
+            quizFragment.arguments = bundle
         }
         addOrReplaceFragment(R.id.container_content, quizFragment)
 
@@ -96,10 +99,10 @@ class QuizActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             android.R.id.home -> {
-                alert {
+                alertDialog {
                     title = getString(R.string.quit_quiz)
-                    yesButton { finish() }
-                    noButton { }
+                    okButton { finish() }
+                    cancelButton()
                 }.show()
                 return true
             }
@@ -108,10 +111,10 @@ class QuizActivity : AppCompatActivity() {
     }
 
     override fun onBackPressed() {
-        alert(R.string.quit_quiz) {
-            yesButton { finish() }
-            noButton { }
-            onKeyPressed { _, keyCode, _ ->
+        alertDialog(getString(R.string.quit_quiz)) {
+            okButton { finish() }
+            cancelButton()
+            setOnKeyListener { _, keyCode, _ ->
                 if (keyCode == KeyEvent.KEYCODE_BACK)
                     finish()
                 true
