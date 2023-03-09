@@ -5,6 +5,7 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import android.view.MenuItem
+import androidx.preference.PreferenceManager
 import com.github.salomonbrys.kodein.Kodein
 import com.github.salomonbrys.kodein.KodeinInjector
 import com.github.salomonbrys.kodein.android.appKodein
@@ -13,7 +14,7 @@ import com.github.salomonbrys.kodein.provider
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.util.Prefs
 import com.jehutyno.yomikata.util.addOrReplaceFragment
-import org.jetbrains.anko.defaultSharedPreferences
+
 
 class SearchResultActivity : AppCompatActivity() {
 
@@ -24,7 +25,8 @@ class SearchResultActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        AppCompatDelegate.setDefaultNightMode(defaultSharedPreferences.getInt(Prefs.DAY_NIGHT_MODE.pref, AppCompatDelegate.MODE_NIGHT_YES))
+        val pref = PreferenceManager.getDefaultSharedPreferences(this)
+        AppCompatDelegate.setDefaultNightMode(pref.getInt(Prefs.DAY_NIGHT_MODE.pref, AppCompatDelegate.MODE_NIGHT_YES))
         setContentView(R.layout.activity_search)
 
         if(resources.getBoolean(R.bool.portrait_only)){
