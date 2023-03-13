@@ -660,6 +660,7 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
             message = getString(R.string.alert_session_finished, sessionLength)
             neutralButton(R.string.alert_continue) { presenter.onLaunchNextProgressiveSession() }
             positiveButton(R.string.alert_quit) { finishQuiz() }
+            setCancelable(false)    // avoid accidental click out of session
         }.show()
     }
 
@@ -681,9 +682,7 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
             neutralButton(R.string.alert_quit) {
                 finishQuiz()
             }
-            setOnCancelListener {
-                presenter.onFinishQuiz()
-            }
+            setCancelable(false)    // avoid accidental click out of session
         }.show()
     }
 
@@ -704,9 +703,7 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
             neutralButton(R.string.alert_quit) {
                 presenter.onFinishQuiz()
             }
-            setOnCancelListener {
-                presenter.onContinueAfterNonProgressiveSessionEnd()
-            }
+            setCancelable(false)    // avoid accidental click out of session
         }.show()
     }
 
@@ -724,6 +721,7 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
             positiveButton(R.string.alert_quit) {
                 finishQuiz()
             }
+            setCancelable(false)    // avoid accidental click out of session
         }.show()
     }
 
