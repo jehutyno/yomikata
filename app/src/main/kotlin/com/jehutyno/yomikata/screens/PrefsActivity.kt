@@ -122,11 +122,11 @@ class PrefsActivity : AppCompatActivity(), FileChooserDialog.ChooserListener {
                 }
                 "reset" -> {
                     getResetAlert().show()
-                    return super.onPreferenceTreeClick(preference)    // to allow fragment creation
+                    return true
                 }
                 "delete_voices" -> {
                     getDeleteVoicesAlert().show()
-                    return super.onPreferenceTreeClick(preference)
+                    return true
                 }
                 "reset_tuto" -> {
                     PreferencesManager(activity).resetAll()
@@ -141,7 +141,7 @@ class PrefsActivity : AppCompatActivity(), FileChooserDialog.ChooserListener {
                     return true
                 }
                 else -> {
-                    return true
+                    throw Error("unknown preference key: ${preference.key}")
                 }
             }
         }
