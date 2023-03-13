@@ -3,7 +3,6 @@ package com.jehutyno.yomikata.screens.quiz
 import android.animation.Animator
 import android.animation.ArgbEvaluator
 import android.animation.ValueAnimator
-import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.media.AudioManager
@@ -860,9 +859,6 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
     }
 
     private fun addSelection(wordId: Long) {
-        val builder = AlertDialog.Builder(context)
-        builder.setTitle(R.string.new_selection)
-
         val input = EditText(activity)
         input.setSingleLine()
         input.hint = getString(R.string.selection_name)
@@ -872,17 +868,18 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
         params.leftMargin = DimensionHelper.getPixelFromDip(activity, 20)
         params.rightMargin = DimensionHelper.getPixelFromDip(activity, 20)
         input.layoutParams = params
-
         container.addView(input)
-        builder.setView(container)
-        builder.setPositiveButton(R.string.ok) { _, _ ->
-            val selectionId = presenter.createSelection(input.text.toString())
-            presenter.addWordToSelection(wordId, selectionId)
-            presenter.loadSelections()
-        }
-        builder.setNegativeButton(R.string.cancel_caps) {_, _ -> }
 
-        builder.show()
+        requireContext().alertDialog {
+            titleResource = R.string.new_selection
+            setView(container)
+            okButton {
+                val selectionId = presenter.createSelection(input.text.toString())
+                presenter.addWordToSelection(wordId, selectionId)
+                presenter.loadSelections()
+            }
+            cancelButton()
+        }.show()
     }
 
 }

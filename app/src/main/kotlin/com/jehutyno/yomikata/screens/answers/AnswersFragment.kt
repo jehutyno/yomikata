@@ -1,6 +1,5 @@
 package com.jehutyno.yomikata.screens.answers
 
-import android.app.AlertDialog
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
 import androidx.fragment.app.Fragment
@@ -22,7 +21,12 @@ import com.jehutyno.yomikata.managers.VoicesManager
 import com.jehutyno.yomikata.model.Answer
 import com.jehutyno.yomikata.model.Quiz
 import com.jehutyno.yomikata.util.*
+import splitties.alertdialog.appcompat.alertDialog
+import splitties.alertdialog.appcompat.cancelButton
+import splitties.alertdialog.appcompat.okButton
+import splitties.alertdialog.appcompat.titleResource
 import java.util.*
+
 
 /**
  * Created by valentin on 25/10/2016.
@@ -124,12 +128,10 @@ class AnswersFragment : Fragment(), AnswersContract.View, AnswersAdapter.Callbac
     }
 
     private fun addSelection(wordId: Long) {
-        val builder = AlertDialog.Builder(requireActivity())
-        builder.setTitle(R.string.new_selection)
-
         val input = EditText(activity)
         input.setSingleLine()
         input.hint = getString(R.string.selection_name)
+
         val container = FrameLayout(requireActivity())
         val params = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
         params.leftMargin = DimensionHelper.getPixelFromDip(activity, 20)
@@ -137,17 +139,16 @@ class AnswersFragment : Fragment(), AnswersContract.View, AnswersAdapter.Callbac
         input.layoutParams = params
         container.addView(input)
 
-        builder.setView(input)
-
-        builder.setPositiveButton(R.string.ok) {_, _ ->
-            val selectionId = presenter.createSelection(input.text.toString())
-            presenter.addWordToSelection(wordId, selectionId)
-            presenter.loadSelections()
-        }
-
-        builder.setNegativeButton(R.string.cancel_caps) {_, _ -> }
-
-        builder.show()
+        requireActivity().alertDialog {
+            titleResource = R.string.new_selection
+            setView(input)
+            okButton {
+                val selectionId = presenter.createSelection(input.text.toString())
+                presenter.addWordToSelection(wordId, selectionId)
+                presenter.loadSelections()
+            }
+            cancelButton()
+        }.show()
     }
 
 

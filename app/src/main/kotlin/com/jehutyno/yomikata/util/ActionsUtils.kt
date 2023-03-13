@@ -3,7 +3,6 @@
 package com.jehutyno.yomikata.util
 
 import android.app.Activity
-import android.app.AlertDialog
 import android.app.ProgressDialog
 import android.content.Context
 import android.content.Intent
@@ -27,6 +26,7 @@ import com.wooplr.spotlight.SpotlightConfig
 import com.wooplr.spotlight.SpotlightView
 import com.wooplr.spotlight.prefs.PreferencesManager
 import com.wooplr.spotlight.utils.SpotlightListener
+import splitties.alertdialog.appcompat.*
 import java.io.File
 import java.util.*
 
@@ -203,20 +203,17 @@ private fun createDlButton(activity: Activity, level: Int, finishedListener: () 
     dlButton.compoundDrawablePadding = 20
 
     dlButton.setOnClickListener {
-        val builder = AlertDialog.Builder(activity)
-        builder.setTitle(R.string.download_voices_alert)
-
         val formattedMessage = activity.getString(R.string.download_voices_alert_message, getLevelDownloadSize(level))
-        builder.setMessage(formattedMessage)
 
-        builder.setPositiveButton(R.string.ok) { inter, _ ->
-            inter.dismiss()
-            launchVoicesDownload(activity, level) { finishedListener() }
-        }
-
-        builder.setNegativeButton(R.string.cancel_caps) {_, _ -> }
-
-        builder.show()
+        activity.alertDialog {
+            titleResource = R.string.download_voices_alert
+            message = formattedMessage
+            okButton { inter ->
+                inter.dismiss()
+                launchVoicesDownload(activity, level) { finishedListener() }
+            }
+            cancelButton()
+        }.show()
     }
 
     return dlButton
@@ -257,16 +254,6 @@ private fun createGpButton(activity: Activity) : Button {
 fun speechNotSupportedAlert(activity: Activity, level: Int, finishedListener: () -> Unit) {
     val pref = PreferenceManager.getDefaultSharedPreferences(activity)
     if (!pref.getBoolean(Prefs.DONT_SHOW_VOICES_POPUP.pref, false)) {
-        val builder = AlertDialog.Builder(activity)
-        builder.setTitle(R.string.set_up_tts_title)
-        builder.setMessage(R.string.set_up_tts)
-
-        builder.setNeutralButton(R.string.dont_ask_voices) { _, _ ->
-            pref.edit().putBoolean(Prefs.DONT_SHOW_VOICES_POPUP.pref, true).apply()
-        }
-
-        builder.setNegativeButton(R.string.cancel_caps) {_, _ -> }
-
         val dlButton = createDlButton(activity, level, finishedListener)
         val gpButton = createGpButton(activity)
 
@@ -277,12 +264,20 @@ fun speechNotSupportedAlert(activity: Activity, level: Int, finishedListener: ()
 
         val container = LinearLayout(activity)
         container.orientation = LinearLayout.VERTICAL
-
         container.addView(dlButton)
         container.addView(gpButton)
-        builder.setView(container)
 
-        builder.show()
+        activity.alertDialog {
+            titleResource = R.string.set_up_tts_title
+            messageResource = R.string.set_up_tts
+
+            neutralButton(R.string.dont_ask_voices) {
+                pref.edit().putBoolean(Prefs.DONT_SHOW_VOICES_POPUP.pref, true).apply()
+            }
+            cancelButton()
+
+            setView(container)
+        }.show()
     }
 }
 
@@ -311,20 +306,21 @@ fun launchVoicesDownload(activity: Activity, level: Int, finishedListener: () ->
                 "${getLevelDownloadVersion(level)}_$level", true).apply()
         progressDialog.dismiss()
 
-        val successBuilder = AlertDialog.Builder(activity)
-        successBuilder.setTitle(R.string.download_success)
-        successBuilder.setPositiveButton(R.string.ok) { _, _ -> finishedListener() }
-        successBuilder.setMessage(R.string.download_success_message)
-        successBuilder.show()
+        activity.alertDialog {
+            titleResource = R.string.download_success
+            messageResource = R.string.download_success_message
+
+            okButton { finishedListener() }
+        }.show()
 
     }.addOnFailureListener {
         progressDialog.dismiss()
 
-        val failBuilder = AlertDialog.Builder(activity)
-        failBuilder.setTitle(R.string.download_failed)
-        failBuilder.setPositiveButton(R.string.ok) {_, _ -> }
-        failBuilder.setMessage(R.string.download_failed_message)
-        failBuilder.show()
+        activity.alertDialog {
+            titleResource = R.string.download_failed
+            messageResource = R.string.download_failed_message
+            okButton()
+        }.show()
 
     }.addOnProgressListener {
         val progress: Double = 100.0 * it.bytesTransferred / it.totalByteCount

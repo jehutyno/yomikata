@@ -1,7 +1,6 @@
 package com.jehutyno.yomikata.util
 
 import android.app.Activity
-import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.database.sqlite.SQLiteDatabase
@@ -23,6 +22,10 @@ import com.jehutyno.yomikata.repository.migration.MigrationTables
 import com.jehutyno.yomikata.screens.quizzes.QuizzesActivity
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.async
+import splitties.alertdialog.appcompat.alertDialog
+import splitties.alertdialog.appcompat.messageResource
+import splitties.alertdialog.appcompat.okButton
+import splitties.alertdialog.appcompat.titleResource
 import java.io.File
 
 
@@ -78,11 +81,11 @@ fun Activity.migrateFromYomikata() {
                 File(toPath + toName).delete()
             }
         } catch (exception: Exception) {
-            val builder = AlertDialog.Builder(this)
-            builder.setTitle(R.string.restore_error)
-            builder.setMessage(R.string.restore_error_message)
-            builder.setPositiveButton(R.string.ok) {_, _ -> }
-            builder.show()
+            alertDialog {
+                titleResource = R.string.restore_error
+                messageResource = R.string.restore_error_message
+                okButton()
+            }.show()
         }
     }
 }
