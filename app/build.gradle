@@ -83,11 +83,11 @@ dependencies {
     // preference
     implementation("androidx.preference:preference-ktx:1.1.0")
 
+    // coroutines
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4")
+
     //anko
-    implementation 'org.jetbrains.anko:anko-sdk25:0.10.6'
     implementation 'org.jetbrains.anko:anko-sqlite:0.10.6'
-    implementation 'org.jetbrains.anko:anko-support-v4:0.10.6'
-    implementation 'org.jetbrains.anko:anko-appcompat-v7:0.10.6'
 
     // Splitties
     implementation("com.louiscad.splitties:splitties-fun-pack-android-appcompat:3.0.0")

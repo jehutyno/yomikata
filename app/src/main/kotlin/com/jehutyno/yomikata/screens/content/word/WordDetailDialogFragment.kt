@@ -4,14 +4,14 @@ import android.app.Dialog
 import android.content.DialogInterface
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
-import androidx.fragment.app.DialogFragment
-import androidx.viewpager.widget.ViewPager
-import androidx.appcompat.widget.PopupMenu
 import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.ImageView
+import androidx.appcompat.widget.PopupMenu
+import androidx.fragment.app.DialogFragment
+import androidx.viewpager.widget.ViewPager
 import com.github.salomonbrys.kodein.*
 import com.github.salomonbrys.kodein.android.appKodein
 import com.jehutyno.yomikata.R
@@ -21,9 +21,12 @@ import com.jehutyno.yomikata.model.Quiz
 import com.jehutyno.yomikata.model.Sentence
 import com.jehutyno.yomikata.model.Word
 import com.jehutyno.yomikata.util.*
-import org.jetbrains.anko.doAsync
-import org.jetbrains.anko.uiThread
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.withContext
 import splitties.alertdialog.appcompat.*
+
 
 /**
  * Created by jehutyno on 08/10/2016.
@@ -230,9 +233,11 @@ class WordDetailDialogFragment : DialogFragment(), WordContract.View, WordPagerA
             adapter.words[position].first.level = newLevel
         }
         adapter.words[position].first.points = points
-        doAsync {
-            Thread.sleep(300)
-            uiThread {
+        MainScope().async {
+            withContext(Dispatchers.IO) {
+                Thread.sleep(300)
+            }
+            withContext(Dispatchers.Main) {
                 adapter.notifyDataSetChanged()
             }
         }

@@ -1,7 +1,6 @@
 package com.jehutyno.yomikata.screens
 
 import android.Manifest
-import android.app.Activity
 import android.app.ProgressDialog
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -27,9 +26,11 @@ import com.jehutyno.yomikata.util.Extras.PERMISSIONS_STORAGE
 import com.jehutyno.yomikata.util.Extras.REQUEST_EXTERNAL_STORAGE_BACKUP
 import com.jehutyno.yomikata.util.Extras.REQUEST_EXTERNAL_STORAGE_RESTORE
 import com.wooplr.spotlight.prefs.PreferencesManager
+import kotlinx.coroutines.Dispatchers.Main
+import kotlinx.coroutines.MainScope
 import mu.KLogging
-import org.jetbrains.anko.doAsync
-import org.jetbrains.anko.uiThread
+import kotlinx.coroutines.async
+import kotlinx.coroutines.withContext
 import splitties.alertdialog.appcompat.*
 import java.io.File
 
@@ -129,7 +130,7 @@ class PrefsActivity : AppCompatActivity(), FileChooserDialog.ChooserListener {
                 }
                 "reset_tuto" -> {
                     PreferencesManager(activity).resetAll()
-                    requireActivity().setResult(Activity.RESULT_OK)
+                    requireActivity().setResult(RESULT_OK)
                     requireActivity().finish()
                     return true
                 }
@@ -208,7 +209,7 @@ class PrefsActivity : AppCompatActivity(), FileChooserDialog.ChooserListener {
             progressDialog.setCancelable(false)
             progressDialog.show()
 
-            doAsync {
+            MainScope().async {
                 wordTables.forEach {
                     val wordtable = migrationSource.getWordTable(it)
                     progressDialog.incrementProgressBy(1)
@@ -220,7 +221,7 @@ class PrefsActivity : AppCompatActivity(), FileChooserDialog.ChooserListener {
                 }
                 File(toPath + toName).delete()
 
-                uiThread {
+                withContext(Main) {
                     progressDialog.dismiss()
                     alertDialog {
                         titleResource = R.string.restore_success

@@ -21,7 +21,8 @@ import com.jehutyno.yomikata.repository.migration.MigrationSource
 import com.jehutyno.yomikata.repository.migration.MigrationTable
 import com.jehutyno.yomikata.repository.migration.MigrationTables
 import com.jehutyno.yomikata.screens.quizzes.QuizzesActivity
-import org.jetbrains.anko.doAsync
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.async
 import java.io.File
 
 
@@ -65,8 +66,7 @@ fun Activity.migrateFromYomikata() {
             val migrationSource = MigrationSource(this, DatabaseHelper.getInstance(this, toName, toPath))
             val wordTables = MigrationTable.allTables(MigrationTables.values())
 
-            // TODO: use coroutines library
-            doAsync {
+            MainScope().async {
                 wordTables.forEach {
                     val wordTable = migrationSource.getWordTable(it)
                     wordTable.forEach { word ->
@@ -126,7 +126,7 @@ fun Context.updateBDD(db: SQLiteDatabase?, filePathEncrypted: String, oldVersion
     val kanjiSoloCount = kanjiSoloSource.kanjiSoloCount(db)
     val radCount = kanjiSoloSource.radicalsCount(db)
 
-    doAsync {
+    MainScope().async {
         var i = 0
         val intent = Intent()
         intent.action = QuizzesActivity.UPDATE_INTENT

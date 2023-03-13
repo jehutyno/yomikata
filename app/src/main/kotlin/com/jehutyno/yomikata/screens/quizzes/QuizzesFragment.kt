@@ -24,8 +24,11 @@ import com.jehutyno.yomikata.screens.content.ContentActivity
 import com.jehutyno.yomikata.screens.quiz.QuizActivity
 import com.jehutyno.yomikata.util.*
 import com.wooplr.spotlight.utils.SpotlightListener
-import org.jetbrains.anko.doAsync
-import org.jetbrains.anko.support.v4.uiThread
+import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.Dispatchers.Main
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.withContext
 import splitties.alertdialog.appcompat.*
 import java.lang.Thread.sleep
 
@@ -392,9 +395,11 @@ class QuizzesFragment : Fragment(), QuizzesContract.View, QuizzesAdapter.Callbac
     }
 
     fun tutos() {
-        doAsync {
-            sleep(500)
-            uiThread {
+        MainScope().async {
+            withContext(IO) {
+                sleep(500)
+            }
+            withContext(Main) {
                 if (activity != null) {
                     spotlightTuto(requireActivity(), binding.btnPronunciationQcmSwitch, getString(R.string.tuto_quiz_type), getString(R.string.tuto_quiz_type_message),
                         SpotlightListener {
