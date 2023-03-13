@@ -108,6 +108,26 @@ class PrefsActivity : AppCompatActivity(), FileChooserDialog.ChooserListener {
 
         override fun onPreferenceTreeClick(preference: Preference): Boolean {
             when (preference.key) {
+                // Quiz Settings
+                "font_size" -> {
+                    return true
+                }
+                "speed" -> {
+                    return true
+                }
+                "length" -> {
+                    return true
+                }
+
+                // Tutorials
+                "reset_tuto" -> {
+                    PreferencesManager(activity).resetAll()
+                    requireActivity().setResult(RESULT_OK)
+                    requireActivity().finish()
+                    return true
+                }
+
+                // Backup and Restore
                 "backup" -> {
                     if (checkAndRequestPermission()) {
                         (activity as PrefsActivity).backupProgress()
@@ -128,18 +148,15 @@ class PrefsActivity : AppCompatActivity(), FileChooserDialog.ChooserListener {
                     getDeleteVoicesAlert().show()
                     return true
                 }
-                "reset_tuto" -> {
-                    PreferencesManager(activity).resetAll()
-                    requireActivity().setResult(RESULT_OK)
-                    requireActivity().finish()
-                    return true
-                }
+
+                // Others
                 "privacy" -> {
                     val privacyString = "https://cdn.rawgit.com/jehutyno/privacy-policies/56b6fcf3/PrivacyPolicyYomikataZ.html"
                     val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(privacyString))
                     startActivity(browserIntent)
                     return true
                 }
+
                 else -> {
                     throw Error("unknown preference key: ${preference.key}")
                 }
