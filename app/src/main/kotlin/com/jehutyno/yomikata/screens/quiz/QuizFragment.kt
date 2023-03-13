@@ -438,7 +438,7 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
         requireContext().alertDialog {
             messageResource = R.string.quiz_empty
             okButton { requireActivity().finish() }
-            cancelButton { requireActivity().finish() }
+            setOnCancelListener { requireActivity().finish() }
         }.show()
     }
 
