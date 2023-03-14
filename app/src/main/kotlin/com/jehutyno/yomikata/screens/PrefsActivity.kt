@@ -112,10 +112,19 @@ class PrefsActivity : AppCompatActivity(), FileChooserDialog.ChooserListener {
                 "font_size" -> {
                     return true
                 }
+                "input_change" -> {
+                    return true
+                }
                 "speed" -> {
                     return true
                 }
                 "length" -> {
+                    return true
+                }
+                "play_start" -> {
+                    return true
+                }
+                "play_end" -> {
                     return true
                 }
 
