@@ -212,18 +212,21 @@ class SearchResultFragment : Fragment(), SearchResultContract.View, WordsAdapter
         }
 
         private fun addSelection(selectedWords: ArrayList<Word>) {
+            val input = EditText(activity)
+            input.setSingleLine()
+            input.hint = getString(R.string.selection_name)
+
+            val container = FrameLayout(requireActivity())
+            val params = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+            params.leftMargin = DimensionHelper.getPixelFromDip(activity, 20)
+            params.rightMargin = DimensionHelper.getPixelFromDip(activity, 20)
+            input.layoutParams = params
+            container.addView(input)
+
             requireContext().alertDialog {
                 titleResource = R.string.new_selection
-                val input = EditText(activity)
-                input.setSingleLine()
-                input.hint = getString(R.string.selection_name)
-                val container = FrameLayout(requireActivity())
-                val params = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-                params.leftMargin = DimensionHelper.getPixelFromDip(activity, 20)
-                params.rightMargin = DimensionHelper.getPixelFromDip(activity, 20)
-                input.layoutParams = params
-                container.addView(input)
                 setView(container)
+
                 okButton {
                     val selectionId = searchResultPresenter.createSelection(input.text.toString())
                     selectedWords.forEach {

@@ -304,27 +304,29 @@ class QuizzesFragment : Fragment(), QuizzesContract.View, QuizzesAdapter.Callbac
             // TODO propose to add all words to selections
             return
         }
+        val input = EditText(activity)
+        input.setSingleLine()
+        input.hint = getString(R.string.selection_name)
+        input.setText(adapter.items[position].getName())
+
+        val container = FrameLayout(requireActivity())
+        val params = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+        params.leftMargin = DimensionHelper.getPixelFromDip(activity, 20)
+        params.rightMargin = DimensionHelper.getPixelFromDip(activity, 20)
+        input.layoutParams = params
+
+        input.addTextChangedListener(object : TextValidator(input) {
+            override fun validate(textView: TextView, text: String) {
+                if (text.isEmpty())
+                    input.error = getString(R.string.selection_not_empty_name)
+                else
+                    input.error = null
+            }
+        })
+        container.addView(input)
+
         requireContext().alertDialog {
             titleResource = R.string.selection_edit
-            val input = EditText(activity)
-            input.setSingleLine()
-            input.hint = getString(R.string.selection_name)
-            input.setText(adapter.items[position].getName())
-            val container = FrameLayout(requireActivity())
-            val params = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-            params.leftMargin = DimensionHelper.getPixelFromDip(activity, 20)
-            params.rightMargin = DimensionHelper.getPixelFromDip(activity, 20)
-            input.layoutParams = params
-            input.addTextChangedListener(object : TextValidator(input) {
-                override fun validate(textView: TextView, text: String) {
-                    if (text.isEmpty())
-                        input.error = getString(R.string.selection_not_empty_name)
-                    else
-                        input.error = null
-                }
-            })
-
-            container.addView(input)
             setView(container)
 
             neutralButton(R.string.action_delete) {
@@ -350,29 +352,33 @@ class QuizzesFragment : Fragment(), QuizzesContract.View, QuizzesAdapter.Callbac
     }
 
     override fun addSelection() {
+        val input = EditText(activity)
+        input.setSingleLine()
+        input.inputType = InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
+        input.hint = getString(R.string.selection_name)
+
+        val container = FrameLayout(requireActivity())
+        val params = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+        params.leftMargin = DimensionHelper.getPixelFromDip(activity, 20)
+        params.rightMargin = DimensionHelper.getPixelFromDip(activity, 20)
+        input.layoutParams = params
+
+        input.addTextChangedListener(object : TextValidator(input) {
+            override fun validate(textView: TextView, text: String) {
+                if (text.isEmpty()) {
+                    input.error = getString(R.string.selection_not_empty_name)
+                } else {
+                    input.error = null
+                }
+            }
+        })
+        input.error = getString(R.string.selection_not_empty_name)
+        container.addView(input)
+
         requireContext().alertDialog {
             titleResource = R.string.new_selection
-            val input = EditText(activity)
-            input.setSingleLine()
-            input.inputType = InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
-            input.hint = getString(R.string.selection_name)
-            val container = FrameLayout(requireActivity())
-            val params = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-            params.leftMargin = DimensionHelper.getPixelFromDip(activity, 20)
-            params.rightMargin = DimensionHelper.getPixelFromDip(activity, 20)
-            input.layoutParams = params
-            input.addTextChangedListener(object : TextValidator(input) {
-                override fun validate(textView: TextView, text: String) {
-                    if (text.isEmpty()) {
-                        input.error = getString(R.string.selection_not_empty_name)
-                    } else {
-                        input.error = null
-                    }
-                }
-            })
-            input.error = getString(R.string.selection_not_empty_name)
-            container.addView(input)
             setView(container)
+
             okButton {
                 if (input.error == null) {
                     mpresenter!!.createQuiz(input.text.toString())

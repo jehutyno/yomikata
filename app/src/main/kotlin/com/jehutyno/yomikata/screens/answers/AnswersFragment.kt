@@ -142,6 +142,7 @@ class AnswersFragment : Fragment(), AnswersContract.View, AnswersAdapter.Callbac
         requireActivity().alertDialog {
             titleResource = R.string.new_selection
             setView(input)
+
             okButton {
                 val selectionId = presenter.createSelection(input.text.toString())
                 presenter.addWordToSelection(wordId, selectionId)

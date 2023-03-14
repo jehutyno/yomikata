@@ -180,18 +180,21 @@ class WordDetailDialogFragment : DialogFragment(), WordContract.View, WordPagerA
     }
 
     private fun addSelection(wordId: Long) {
+        val input = EditText(activity)
+        input.setSingleLine()
+        input.hint = getString(R.string.selection_name)
+
+        val container = FrameLayout(requireActivity())
+        val params = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+        params.leftMargin = DimensionHelper.getPixelFromDip(activity, 20)
+        params.rightMargin = DimensionHelper.getPixelFromDip(activity, 20)
+        input.layoutParams = params
+        container.addView(input)
+
         requireContext().alertDialog {
             titleResource = R.string.new_selection
-            val input = EditText(activity)
-            input.setSingleLine()
-            input.hint = getString(R.string.selection_name)
-            val container = FrameLayout(requireActivity())
-            val params = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-            params.leftMargin = DimensionHelper.getPixelFromDip(activity, 20)
-            params.rightMargin = DimensionHelper.getPixelFromDip(activity, 20)
-            input.layoutParams = params
-            container.addView(input)
             setView(container)
+
             okButton {
                 val selectionId = wordPresenter.createSelection(input.text.toString())
                 wordPresenter.addWordToSelection(wordId, selectionId)
