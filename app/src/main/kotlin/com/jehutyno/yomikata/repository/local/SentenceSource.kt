@@ -61,8 +61,8 @@ class SentenceSource(var context: Context) : SentenceRepository {
     override fun getSentenceById(id: Long): Sentence {
         var sentence: Sentence? = null
         context.database.use {
-            select(SQLiteTables.SENTENCES.tableName).where(
-                "${SQLiteSentences.ID.column} = $id").limit(1).exec {
+            select(SQLiteTables.SENTENCES.tableName).whereArgs(
+                    "${SQLiteSentences.ID.column} = $id").limit(1).exec {
                 sentence = parseSingle(getSentencesParser())
             }
         }
