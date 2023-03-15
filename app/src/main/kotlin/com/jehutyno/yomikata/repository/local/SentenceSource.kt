@@ -90,17 +90,17 @@ class SentenceSource(var context: Context) : SentenceRepository {
 
     override fun updateSentence(updateSentence: Sentence, sentence: Sentence?) {
         context.database.use {
-            if (sentence != null && updateSentence.jap != sentence!!.jap) {
+            if (sentence != null && updateSentence.jap != sentence.jap) {
                 update(SQLiteTables.SENTENCES.tableName,
                     SQLiteSentences.JAP.column to updateSentence.jap).whereArgs(
                     "${SQLiteSentences.ID.column} = '${updateSentence.id}'").exec()
             }
-            if (sentence != null && updateSentence.en != sentence!!.en) {
+            if (sentence != null && updateSentence.en != sentence.en) {
                 update(SQLiteTables.SENTENCES.tableName,
                     SQLiteSentences.EN.column to updateSentence.en).whereArgs(
                     "${SQLiteSentences.ID.column} = '${updateSentence.id}'").exec()
             }
-            if (sentence != null && updateSentence.fr != sentence!!.fr) {
+            if (sentence != null && updateSentence.fr != sentence.fr) {
                 update(SQLiteTables.SENTENCES.tableName,
                     SQLiteSentences.FR.column to updateSentence.fr).whereArgs(
                     "${SQLiteSentences.ID.column} = '${updateSentence.id}'").exec()
