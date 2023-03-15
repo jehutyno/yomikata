@@ -27,17 +27,13 @@ class VoicesManager(val context: Activity) {
             val toast = Toast.makeText(context, R.string.message_adjuste_volume, Toast.LENGTH_LONG)
             toast.show()
         }
-        val speechAvailability = checkSpeechAvailability(context, ttsSupported, sentence.level)
-        when (speechAvailability) {
+        when (checkSpeechAvailability(context, ttsSupported, sentence.level)) {
             SpeechAvailability.VOICES_AVAILABLE -> {
                 try {
                     exoPlayer.prepare(exoPlayerAudio.extractorMediaSource(Uri.parse("${FileUtils.getDataDir(context, "Voices").absolutePath}/s_${sentence.id}.mp3")))
                     exoPlayer.playWhenReady = true
                 } catch (e: Exception) {
-                    if (speechAvailability == SpeechAvailability.TTS_AVAILABLE)
-                        tts?.speak(sentenceNoFuri(sentence), TextToSpeech.QUEUE_FLUSH, null)
-                    else
-                        speechNotSupportedAlert(context, sentence.level, {})
+                    speechNotSupportedAlert(context, sentence.level, {})
                 }
             }
             SpeechAvailability.TTS_AVAILABLE -> tts?.speak(sentenceNoFuri(sentence), TextToSpeech.QUEUE_FLUSH, null)
@@ -60,15 +56,7 @@ class VoicesManager(val context: Activity) {
                     exoPlayer.prepare(exoPlayerAudio.extractorMediaSource(Uri.parse("${FileUtils.getDataDir(context, "Voices").absolutePath}/w_${word.id}.mp3")))
                     exoPlayer.playWhenReady = true
                 } catch (e: Exception) {
-                    if (speechAvailability == SpeechAvailability.TTS_AVAILABLE) {
-                        tts?.speak(
-                            if (word.isKana >= 1)
-                                word.japanese.split("/")[0].split(";")[0]
-                            else
-                                word.reading.split("/")[0].split(";")[0],
-                            TextToSpeech.QUEUE_FLUSH, null)
-                    } else
-                        speechNotSupportedAlert(context, level, {})
+                    speechNotSupportedAlert(context, level, {})
                 }
             }
             SpeechAvailability.TTS_AVAILABLE -> {
