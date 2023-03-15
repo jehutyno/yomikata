@@ -3,7 +3,6 @@ package com.jehutyno.yomikata.screens.quizzes
 import android.R.id.home
 import android.annotation.SuppressLint
 import android.app.Activity
-import android.app.ProgressDialog
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -12,6 +11,7 @@ import android.content.pm.ActivityInfo
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.os.Handler
+import android.os.Looper
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.navigation.NavigationView
 import androidx.core.content.ContextCompat
@@ -30,7 +30,9 @@ import android.view.View.GONE
 import android.view.View.VISIBLE
 import android.widget.ImageButton
 import android.widget.ImageView
+import android.widget.ProgressBar
 import android.widget.TextView
+import androidx.appcompat.app.AlertDialog
 import androidx.preference.PreferenceManager
 import com.flaviofaria.kenburnsview.KenBurnsView
 import com.getbase.floatingactionbutton.FloatingActionButton
@@ -67,8 +69,12 @@ class QuizzesActivity : AppCompatActivity() {
     lateinit var quizzesAdapter: QuizzesPagerAdapter
     private lateinit var kenburns: KenBurnsView
     private var menu: Menu? = null
-    var progressDialog: ProgressDialog? = null
-    val handler = Handler()
+
+    // alertDialog for progressBar
+    private var progressAlertDialog: AlertDialog? = null
+    private lateinit var progressBar: ProgressBar
+
+    val handler = Handler(Looper.getMainLooper())
     val runnable = object : Runnable {
         override fun run() {
             setImageRandom()
@@ -80,26 +86,27 @@ class QuizzesActivity : AppCompatActivity() {
         R.drawable.pic_07, R.drawable.pic_08, R.drawable.pic_21, R.drawable.pic_22,
         R.drawable.pic_23, R.drawable.pic_24, R.drawable.pic_25)
 
-    private val mHandler = Handler()
+    private val mHandler = Handler(Looper.getMainLooper())
     private var receiversRegistered = false
     private val updateReceiver = object : BroadcastReceiver() {
 
         override fun onReceive(context: Context, intent: Intent) {
             if (intent.action == UPDATE_INTENT) {
-                if (progressDialog == null) {
-                    progressDialog = ProgressDialog(this@QuizzesActivity)
-                    progressDialog!!.max = intent.getIntExtra(UPDATE_COUNT, 0)
-                    progressDialog!!.setTitle(getString(R.string.progress_bdd_update_title))
-                    progressDialog!!.setMessage(getString(R.string.progress_bdd_update_message))
-                    progressDialog!!.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL)
-                    progressDialog!!.setCancelable(false)
-                    progressDialog!!.show()
+                if (progressAlertDialog == null) {
+                    progressBar.max = intent.getIntExtra(UPDATE_COUNT, 0)
 
+                    progressAlertDialog = alertDialog {
+                        titleResource = R.string.progress_bdd_update_title
+                        messageResource = R.string.progress_bdd_update_message
+                        setCancelable(false)
+                        setView(progressBar)
+                    }
+                    progressAlertDialog!!.show()
                 }
-                progressDialog!!.progress = intent.getIntExtra(UPDATE_PROGRESS, 0)
+                progressBar.progress = intent.getIntExtra(UPDATE_PROGRESS, 0)
                 if (intent.getBooleanExtra(UPDATE_FINISHED, false)) {
-                    progressDialog!!.dismiss()
-                    progressDialog = null
+                    progressAlertDialog!!.dismiss()
+                    progressAlertDialog = null
                     alertDialog {
                         titleResource = R.string.update_success_title
                         okButton { }
@@ -136,7 +143,10 @@ class QuizzesActivity : AppCompatActivity() {
         val view = binding.root
         setContentView(view)
 
-        // Register Sync Recievers
+        // progressBar for database update
+        progressBar = ProgressBar(this, null, android.R.style.Widget_ProgressBar_Horizontal)
+
+        // Register Sync Receivers
         if (!receiversRegistered) {
             val intentToReceiveFilter = IntentFilter()
             intentToReceiveFilter.addAction(UPDATE_INTENT)
@@ -213,32 +223,21 @@ class QuizzesActivity : AppCompatActivity() {
 
         })
 
-        progressive = binding.progressivePlay
+        // set onClick for quiz strategies in floating action button
+        fun FloatingActionButton.setLaunchQuizOnClickListener(quizStrategy: QuizStrategy) {
+            this.setOnClickListener {
+                val fragment = quizzesAdapter.registered[binding.pagerQuizzes.currentItem]
+                if (fragment is QuizzesFragment) {
+                    fragment.launchQuizClick(quizStrategy, binding.textTitle.text.toString())
+                    binding.multipleActions.collapseImmediately()
+                }
+            }
+        }
+        binding.progressivePlay.setLaunchQuizOnClickListener(QuizStrategy.PROGRESSIVE)
+        binding.normalPlay.setLaunchQuizOnClickListener(QuizStrategy.STRAIGHT)
+        binding.shufflePlay.setLaunchQuizOnClickListener(QuizStrategy.SHUFFLE)
 
-        progressive.setOnClickListener {
-
-            val fragment = quizzesAdapter.registered[binding.pagerQuizzes.currentItem]
-            if (fragment is QuizzesFragment) {
-                fragment.launchQuizClick(QuizStrategy.PROGRESSIVE, binding.textTitle.text.toString())
-                binding.multipleActions.collapseImmediately()
-            }
-        }
-        binding.normalPlay.setOnClickListener {
-            val fragment = quizzesAdapter.registered[binding.pagerQuizzes.currentItem]
-            if (fragment is QuizzesFragment) {
-                fragment.launchQuizClick(QuizStrategy.STRAIGHT, binding.textTitle.text.toString())
-                binding.multipleActions.collapseImmediately()
-            }
-        }
-        binding.shufflePlay.setOnClickListener {
-            val fragment = quizzesAdapter.registered[binding.pagerQuizzes.currentItem]
-            if (fragment is QuizzesFragment) {
-                fragment.launchQuizClick(QuizStrategy.SHUFFLE, binding.textTitle.text.toString())
-                binding.multipleActions.collapse()
-            }
-        }
         fabMenu = binding.multipleActions
-
 
         binding.anchor.postDelayed({ tutos() }, 500)
 

@@ -3,7 +3,6 @@
 package com.jehutyno.yomikata.util
 
 import android.app.Activity
-import android.app.ProgressDialog
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -14,6 +13,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.LinearLayout
+import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.preference.PreferenceManager
@@ -27,6 +27,7 @@ import com.wooplr.spotlight.SpotlightView
 import com.wooplr.spotlight.prefs.PreferencesManager
 import com.wooplr.spotlight.utils.SpotlightListener
 import splitties.alertdialog.appcompat.*
+import splitties.views.horizontalPadding
 import java.io.File
 import java.util.*
 
@@ -288,13 +289,17 @@ fun launchVoicesDownload(activity: Activity, level: Int, finishedListener: () ->
     val localFile = File.createTempFile(fileName, ".zip")
     val unzipPath = FileUtils.getDataDir(activity, "Voices").absolutePath
 
-    val progressDialog = ProgressDialog(activity)
-    progressDialog.max = 100
-    progressDialog.setTitle(activity.getString(R.string.voice_download_progress))
-    progressDialog.setMessage(activity.getString(R.string.voices_download_progress_message))
-    progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL)
-    progressDialog.setCancelable(false)
-    progressDialog.show()
+    val progressBar = ProgressBar(activity, null, android.R.attr.progressBarStyleHorizontal)
+    progressBar.horizontalPadding = 40
+    progressBar.max = 100
+
+    val progressAlertDialog = activity.alertDialog {
+        titleResource = R.string.voice_download_progress
+        messageResource = R.string.voices_download_progress_message
+        setCancelable(false)
+        setView(progressBar)
+    }
+    progressAlertDialog.show()
 
     reference.getFile(localFile).addOnSuccessListener {
         FileDownloadService.unzip(localFile.absolutePath, unzipPath)
@@ -304,7 +309,7 @@ fun launchVoicesDownload(activity: Activity, level: Int, finishedListener: () ->
         val pref = PreferenceManager.getDefaultSharedPreferences(activity)
         pref.edit().putBoolean(Prefs.VOICE_DOWNLOADED_LEVEL_V.pref +
                 "${getLevelDownloadVersion(level)}_$level", true).apply()
-        progressDialog.dismiss()
+        progressAlertDialog.dismiss()
 
         activity.alertDialog {
             titleResource = R.string.download_success
@@ -314,7 +319,7 @@ fun launchVoicesDownload(activity: Activity, level: Int, finishedListener: () ->
         }.show()
 
     }.addOnFailureListener {
-        progressDialog.dismiss()
+        progressAlertDialog.dismiss()
 
         activity.alertDialog {
             titleResource = R.string.download_failed
@@ -324,7 +329,7 @@ fun launchVoicesDownload(activity: Activity, level: Int, finishedListener: () ->
 
     }.addOnProgressListener {
         val progress: Double = 100.0 * it.bytesTransferred / it.totalByteCount
-        progressDialog!!.progress = progress.toInt()
+        progressBar!!.progress = progress.toInt()
     }
 
 }
