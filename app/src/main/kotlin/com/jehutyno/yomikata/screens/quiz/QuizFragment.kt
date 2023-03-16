@@ -596,7 +596,7 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
 
     override fun showKeyboard() {
         val inputMethodManager = requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-        inputMethodManager.showSoftInput(binding.hiraganaEdit, InputMethodManager.SHOW_FORCED)
+        inputMethodManager.showSoftInput(binding.hiraganaEdit, InputMethodManager.SHOW_IMPLICIT)
         binding.hiraganaEdit.requestFocus()
     }
 
