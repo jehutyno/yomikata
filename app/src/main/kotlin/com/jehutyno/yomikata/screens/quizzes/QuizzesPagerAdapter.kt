@@ -4,10 +4,9 @@ import android.content.Context
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
-import androidx.fragment.app.FragmentStatePagerAdapter
-import androidx.viewpager.widget.PagerAdapter
 import android.util.SparseArray
-import android.view.ViewGroup
+import androidx.lifecycle.Lifecycle
+import androidx.viewpager2.adapter.FragmentStateAdapter
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.screens.home.HomeFragment
 import com.jehutyno.yomikata.screens.quizzes.QuizzesFragment
@@ -18,7 +17,7 @@ import com.jehutyno.yomikata.util.Extras
 /**
  * Created by valentin on 19/12/2016.
  */
-class QuizzesPagerAdapter(val context: Context, fm: FragmentManager) : FragmentStatePagerAdapter(fm) {
+class QuizzesPagerAdapter(val context: Context, fm: FragmentManager, lifecycle: Lifecycle) : FragmentStateAdapter(fm, lifecycle) {
 
     val categories = intArrayOf(Categories.HOME,
         Categories.CATEGORY_SELECTIONS,
@@ -31,37 +30,22 @@ class QuizzesPagerAdapter(val context: Context, fm: FragmentManager) : FragmentS
         Categories.CATEGORY_JLPT_3,
         Categories.CATEGORY_JLPT_2,
         Categories.CATEGORY_JLPT_1)
-    val registered: SparseArray<Fragment> = SparseArray()
+//    val registered: SparseArray<Fragment> = SparseArray()
 
-    override fun getItem(position: Int): Fragment {
-        if (position == 0) {
-            return HomeFragment()
+    override fun getItemCount(): Int {
+        return categories.size
+    }
+
+    override fun createFragment(position: Int): Fragment {
+        return if (categories[position] == Categories.HOME) {
+            HomeFragment()
         } else {
             val bundle = Bundle()
             bundle.putInt(Extras.EXTRA_CATEGORY, categories[position])
             val quizzesFragment = QuizzesFragment()
             quizzesFragment.arguments = bundle
-            return quizzesFragment
+            quizzesFragment
         }
-    }
-
-    override fun instantiateItem(container: ViewGroup, position: Int): Any {
-        val fragment = super.instantiateItem(container, position) as Fragment
-        registered.put(position, fragment)
-        return fragment
-    }
-
-    override fun getCount(): Int {
-        return categories.size
-    }
-
-    override fun getItemPosition(`object`: Any): Int {
-        return PagerAdapter.POSITION_NONE
-    }
-
-    override fun destroyItem(container: ViewGroup, position: Int, view: Any) {
-        registered.remove(position)
-        super.destroyItem(container, position, view)
     }
 
     fun positionFromCategory(selectedCategory: Int): Int {
@@ -77,22 +61,6 @@ class QuizzesPagerAdapter(val context: Context, fm: FragmentManager) : FragmentS
             Categories.CATEGORY_JLPT_3 -> 8
             Categories.CATEGORY_JLPT_2 -> 9
             else -> 10
-        }
-    }
-
-    fun categoryFromPosition(position: Int): Int {
-        return when (position) {
-            0 -> Categories.HOME
-            1 -> Categories.CATEGORY_SELECTIONS
-            2 -> Categories.CATEGORY_HIRAGANA
-            3 -> Categories.CATEGORY_KATAKANA
-            4 -> Categories.CATEGORY_KANJI
-            5 -> Categories.CATEGORY_COUNTERS
-            6 -> Categories.CATEGORY_JLPT_5
-            7 -> Categories.CATEGORY_JLPT_4
-            8 -> Categories.CATEGORY_JLPT_3
-            9 -> Categories.CATEGORY_JLPT_2
-            else -> Categories.CATEGORY_JLPT_1
         }
     }
 

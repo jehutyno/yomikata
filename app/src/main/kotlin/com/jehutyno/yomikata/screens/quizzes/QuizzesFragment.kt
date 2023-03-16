@@ -71,6 +71,7 @@ class QuizzesFragment : Fragment(), QuizzesContract.View, QuizzesAdapter.Callbac
         mpresenter!!.start()
         mpresenter!!.loadQuizzes(selectedCategory)
         binding.recyclerview.scrollToPosition(position)
+        tutos()
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {

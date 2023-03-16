@@ -16,7 +16,6 @@ import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.navigation.NavigationView
 import androidx.core.content.ContextCompat
 import androidx.core.view.GravityCompat
-import androidx.viewpager.widget.ViewPager
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
@@ -34,6 +33,7 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.preference.PreferenceManager
+import androidx.viewpager2.widget.ViewPager2
 import com.flaviofaria.kenburnsview.KenBurnsView
 import com.getbase.floatingactionbutton.FloatingActionButton
 import com.getbase.floatingactionbutton.FloatingActionsMenu
@@ -64,7 +64,6 @@ class QuizzesActivity : AppCompatActivity() {
     private var selectedCategory: Int = 0
     private lateinit var toolbar: Toolbar
     lateinit var fabMenu: FloatingActionsMenu
-    lateinit var progressive: FloatingActionButton
     private var recreate = false
     lateinit var quizzesAdapter: QuizzesPagerAdapter
     private lateinit var kenburns: KenBurnsView
@@ -169,7 +168,7 @@ class QuizzesActivity : AppCompatActivity() {
         }
 
         binding.appbar.addOnOffsetChangedListener(object : AppBarStateChangeListener() {
-            override fun onStateChanged(appBarLayout: AppBarLayout, state: AppBarStateChangeListener.State) {
+            override fun onStateChanged(appBarLayout: AppBarLayout, state: State) {
                 when (state) {
                     State.COLLAPSED -> {
                         supportActionBar?.setBackgroundDrawable(ColorDrawable(ContextCompat.getColor(this@QuizzesActivity, R.color.toolbarColor)))
@@ -189,33 +188,18 @@ class QuizzesActivity : AppCompatActivity() {
         binding.drawerLayout.setStatusBarBackground(R.color.colorPrimaryDark)
         setupDrawerContent(binding.navView)
 
-        quizzesAdapter = QuizzesPagerAdapter(this, supportFragmentManager)
+        quizzesAdapter = QuizzesPagerAdapter(this, supportFragmentManager, lifecycle)
         binding.pagerQuizzes.adapter = quizzesAdapter
         binding.pagerQuizzes.currentItem = quizzesAdapter.positionFromCategory(selectedCategory)
-        progressive = binding.progressivePlay
-        binding.pagerQuizzes.addOnPageChangeListener(object : ViewPager.OnPageChangeListener {
-            override fun onPageScrollStateChanged(state: Int) {
-
-            }
-
-            override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) {
-
-            }
+        binding.pagerQuizzes.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
 
             override fun onPageSelected(position: Int) {
-                selectedCategory = quizzesAdapter.categoryFromPosition(position)
+                selectedCategory = quizzesAdapter.categories[position]
                 if (selectedCategory == Categories.HOME) {
                     binding.multipleActions.visibility = GONE
-                    if (quizzesAdapter.registered[position] != null)
-                        (quizzesAdapter.registered[position] as HomeFragment).displayLatestCategories()
-                } else if (selectedCategory == Categories.CATEGORY_SELECTIONS) {
-                        binding.multipleActions.visibility = View.VISIBLE
                 } else {
                     binding.multipleActions.visibility = VISIBLE
-                    if (selectedCategory != Categories.CATEGORY_SELECTIONS)
-                        (quizzesAdapter.registered[binding.pagerQuizzes.currentItem] as QuizzesFragment).tutos()
                 }
-
                 pref.edit().putInt(Prefs.SELECTED_CATEGORY.pref, selectedCategory).apply()
                 displayCategoryTitle(selectedCategory)
                 binding.navView.setCheckedItem(quizzesAdapter.getMenuItemFromPosition(position))
@@ -226,7 +210,9 @@ class QuizzesActivity : AppCompatActivity() {
         // set onClick for quiz strategies in floating action button
         fun FloatingActionButton.setLaunchQuizOnClickListener(quizStrategy: QuizStrategy) {
             this.setOnClickListener {
-                val fragment = quizzesAdapter.registered[binding.pagerQuizzes.currentItem]
+                // Hacky way of finding selected fragment:
+                // Viewpager2 uses the tag: "f" + position to store its fragments
+                val fragment = supportFragmentManager.findFragmentByTag("f${binding.pagerQuizzes.currentItem}")
                 if (fragment is QuizzesFragment) {
                     fragment.launchQuizClick(quizStrategy, binding.textTitle.text.toString())
                     binding.multipleActions.collapseImmediately()
