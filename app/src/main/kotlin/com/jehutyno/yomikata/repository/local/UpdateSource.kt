@@ -38,7 +38,7 @@ class UpdateSource(private var context: Context, private val filePath: String) {
         var quizWord = listOf<QuizWord>()
         UpdateSQLiteHelper.getInstance(context, filePath).use {
             select(SQLiteTables.QUIZ_WORD.tableName, *SQLiteTable.allColumns(SQLiteQuizWord.values()))
-                    .where("${SQLiteQuizWord.ID.column} > 7504")
+                    .whereArgs("${SQLiteQuizWord.ID.column} > 7504")
                     .exec {
                         quizWord = parseList(rowParser(::QuizWord))
                     }
@@ -50,7 +50,7 @@ class UpdateSource(private var context: Context, private val filePath: String) {
         var quizzes = listOf<Quiz>()
         UpdateSQLiteHelper.getInstance(context, filePath).use {
             select(SQLiteTables.QUIZ.tableName, *SQLiteTable.allColumns(SQLiteQuiz.values()))
-                    .where("${SQLiteQuiz.ID.column} > 96")
+                    .whereArgs("${SQLiteQuiz.ID.column} > 96")
                     .exec {
                         quizzes = parseList(rowParser(::Quiz))
                     }

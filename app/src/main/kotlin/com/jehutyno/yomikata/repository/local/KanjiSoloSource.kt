@@ -123,7 +123,7 @@ class KanjiSoloSource(var context: Context) : KanjiSoloRepository {
         var radical: KanjiSolo? = null
         context.database.use {
             select(SQLiteTables.KANJI_SOLO.tableName, *SQLiteTable.allColumns(SQLiteKanjiSolo.values()))
-                .where("${SQLiteKanjiSolo.KANJI.column} = '$kanji'")
+                .whereArgs("${SQLiteKanjiSolo.KANJI.column} = '$kanji'")
                 .exec {
                     if (count == 1) {
                         moveToFirst()
@@ -164,7 +164,7 @@ class KanjiSoloSource(var context: Context) : KanjiSoloRepository {
         var radical: Radical? = null
         context.database.use {
             select(SQLiteTables.RADICALS.tableName, *SQLiteTable.allColumns(SQLiteRadicals.values()))
-                .where("${SQLiteRadicals.RADICAL.column} = '$radicalString'")
+                .whereArgs("${SQLiteRadicals.RADICAL.column} = '$radicalString'")
                 .exec {
                     if (count == 1) {
                         moveToFirst()

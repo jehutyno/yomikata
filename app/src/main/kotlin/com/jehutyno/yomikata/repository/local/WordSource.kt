@@ -205,8 +205,7 @@ class WordSource(var context: Context) : WordRepository {
         val hiragana = HiraganaUtils.toHiragana(searchString)
         context.database.use {
             select(SQLiteTables.WORDS.tableName, *SQLiteTable.allColumns(SQLiteWord.values()))
-                .where(
-                    "${SQLiteWord.READING} LIKE '%$searchString%'" +
+                .whereArgs("${SQLiteWord.READING} LIKE '%$searchString%'" +
                         " or ${SQLiteWord.READING} LIKE '%$hiragana%'" +
                         " or ${SQLiteWord.JAPANESE} LIKE '%$searchString%'" +
                         " or ${SQLiteWord.JAPANESE} LIKE '%$hiragana%'" +
@@ -231,9 +230,9 @@ class WordSource(var context: Context) : WordRepository {
     override fun isWordInQuiz(wordId: Long, quizId: Long): Boolean {
         var ret = false
         context.database.use {
-            select(SQLiteTables.QUIZ_WORD.tableName).where(
-                "${SQLiteQuizWord.WORD_ID.column} = $wordId AND " +
-                    "${SQLiteQuizWord.QUIZ_ID.column} = $quizId").exec {
+            select(SQLiteTables.QUIZ_WORD.tableName).whereArgs(
+                    "${SQLiteQuizWord.WORD_ID.column} = $wordId AND " +
+                            "${SQLiteQuizWord.QUIZ_ID.column} = $quizId").exec {
                 ret = count > 0
             }
         }
@@ -244,9 +243,9 @@ class WordSource(var context: Context) : WordRepository {
         val ret: ArrayList<Boolean> = arrayListOf()
         context.database.use {
             for (quizId in quizIds) {
-                select(SQLiteTables.QUIZ_WORD.tableName).where(
-                    "${SQLiteQuizWord.WORD_ID.column} = $wordId AND " +
-                        "${SQLiteQuizWord.QUIZ_ID.column} = $quizId").exec {
+                select(SQLiteTables.QUIZ_WORD.tableName).whereArgs(
+                        "${SQLiteQuizWord.WORD_ID.column} = $wordId AND " +
+                                "${SQLiteQuizWord.QUIZ_ID.column} = $quizId").exec {
                     ret.add(count > 0)
                 }
             }
@@ -258,8 +257,8 @@ class WordSource(var context: Context) : WordRepository {
     override fun getWordById(wordId: Long): Word {
         var word: Word? = null
         context.database.use {
-            select(SQLiteTables.WORDS.tableName).where(
-                "${SQLiteWord.ID.column} = $wordId").exec {
+            select(SQLiteTables.WORDS.tableName).whereArgs(
+                    "${SQLiteWord.ID.column} = $wordId").exec {
                 word = parseSingle(getWordsParser())
             }
         }
@@ -302,7 +301,7 @@ class WordSource(var context: Context) : WordRepository {
     override fun updateWordRepetition(wordId: Long, repetition: Int) {
         context.database.use {
             update(SQLiteTables.WORDS.tableName, SQLiteWord.REPETITION.column to repetition)
-                .where("${SQLiteWord.ID.column} = {wordId}", "wordId" to wordId)
+                .whereArgs("${SQLiteWord.ID.column} = {wordId}", "wordId" to wordId)
                 .exec()
         }
     }
@@ -399,37 +398,37 @@ class WordSource(var context: Context) : WordRepository {
         context.database.use {
             if (word != null && updateWord.countFail > 0) {
                 update(SQLiteTables.WORDS.tableName,
-                    SQLiteWord.COUNT_FAIL.column to updateWord.countFail).where(
-                    "${SQLiteWord.ID.column} = '${updateWord.id}'").exec()
+                    SQLiteWord.COUNT_FAIL.column to updateWord.countFail).whereArgs(
+                  "${SQLiteWord.ID.column} = '${updateWord.id}'").exec()
             }
             if (word != null && updateWord.countSuccess > 0) {
                 update(SQLiteTables.WORDS.tableName,
-                    SQLiteWord.COUNT_SUCCESS.column to updateWord.countSuccess).where(
+                    SQLiteWord.COUNT_SUCCESS.column to updateWord.countSuccess).whereArgs(
                     "${SQLiteWord.ID.column} = '${updateWord.id}'").exec()
             }
             if (word != null && updateWord.countTry > 0) {
                 update(SQLiteTables.WORDS.tableName,
-                    SQLiteWord.COUNT_TRY.column to updateWord.countTry).where(
+                    SQLiteWord.COUNT_TRY.column to updateWord.countTry).whereArgs(
                     "${SQLiteWord.ID.column} = '${updateWord.id}'").exec()
             }
             if (word != null && updateWord.isSelected > 0) {
                 update(SQLiteTables.WORDS.tableName,
-                    SQLiteWord.IS_SELECTED.column to updateWord.isSelected).where(
+                    SQLiteWord.IS_SELECTED.column to updateWord.isSelected).whereArgs(
                     "${SQLiteWord.ID.column} = '${updateWord.id}'").exec()
             }
             if (word != null && updateWord.level > 0) {
                 update(SQLiteTables.WORDS.tableName,
-                    SQLiteWord.LEVEL.column to updateWord.level).where(
+                    SQLiteWord.LEVEL.column to updateWord.level).whereArgs(
                     "${SQLiteWord.ID.column} = '${updateWord.id}'").exec()
             }
             if (word != null && updateWord.points > 0) {
                 update(SQLiteTables.WORDS.tableName,
-                    SQLiteWord.POINTS.column to updateWord.points).where(
+                    SQLiteWord.POINTS.column to updateWord.points).whereArgs(
                     "${SQLiteWord.ID.column} = '${updateWord.id}'").exec()
             }
             if (word != null && updateWord.repetition > 0) {
                 update(SQLiteTables.WORDS.tableName,
-                    SQLiteWord.REPETITION.column to updateWord.repetition).where(
+                    SQLiteWord.REPETITION.column to updateWord.repetition).whereArgs(
                     "${SQLiteWord.ID.column} = '${updateWord.id}'").exec()
             }
 
@@ -456,7 +455,7 @@ class WordSource(var context: Context) : WordRepository {
         var quizWord: QuizWord? = null
         context.database.use {
             select(SQLiteTables.QUIZ_WORD.tableName)
-                .where("${SQLiteQuizWord.QUIZ_ID.column} = $quizId and ${SQLiteQuizWord.WORD_ID.column} = $wordId")
+                .whereArgs("${SQLiteQuizWord.QUIZ_ID.column} = $quizId and ${SQLiteQuizWord.WORD_ID.column} = $wordId")
                 .exec {
                     if (count > 0)
                         quizWord = parseSingle(rowParser(::QuizWord))

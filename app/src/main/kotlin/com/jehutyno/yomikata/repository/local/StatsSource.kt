@@ -62,7 +62,7 @@ class StatsSource(var context: Context) : StatsRepository {
         val startEnd = getStartEndOFWeek(today)
         context.database.use {
             select(SQLiteTables.STAT_ENTRY.tableName, *SQLiteTable.allColumns(SQLiteStatEntry.values()))
-                .where("${SQLiteStatEntry.DATE} > ${startEnd[0]} AND ${SQLiteStatEntry.DATE} < ${startEnd[1]}")
+                .whereArgs("${SQLiteStatEntry.DATE} > ${startEnd[0]} AND ${SQLiteStatEntry.DATE} < ${startEnd[1]}")
                 .exec {
                     val rowParser = rowParser(::StatEntry)
                     callback.onStatsLoaded(StatTime.THIS_WEEK, parseList(rowParser))
@@ -74,7 +74,7 @@ class StatsSource(var context: Context) : StatsRepository {
         val startEnd = getStartEndOfMonth(today)
         context.database.use {
             select(SQLiteTables.STAT_ENTRY.tableName, *SQLiteTable.allColumns(SQLiteStatEntry.values()))
-                .where("${SQLiteStatEntry.DATE} > ${startEnd[0]} AND ${SQLiteStatEntry.DATE} < ${startEnd[1]}")
+                .whereArgs("${SQLiteStatEntry.DATE} > ${startEnd[0]} AND ${SQLiteStatEntry.DATE} < ${startEnd[1]}")
                 .exec {
                     val rowParser = rowParser(::StatEntry)
                     callback.onStatsLoaded(StatTime.THIS_MONTH, parseList(rowParser))
