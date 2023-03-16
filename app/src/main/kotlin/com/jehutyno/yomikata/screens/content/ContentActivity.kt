@@ -5,7 +5,6 @@ import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.os.Build
 import android.os.Bundle
-import androidx.viewpager.widget.ViewPager
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import android.view.MenuItem
@@ -14,6 +13,7 @@ import android.view.View.VISIBLE
 import android.window.OnBackInvokedDispatcher
 import androidx.activity.addCallback
 import androidx.preference.PreferenceManager
+import androidx.viewpager2.widget.ViewPager2
 import com.github.salomonbrys.kodein.Kodein
 import com.github.salomonbrys.kodein.KodeinInjector
 import com.github.salomonbrys.kodein.android.appKodein
@@ -127,20 +127,13 @@ class ContentActivity : AppCompatActivity() {
                         }
                     })
                 } else {
-                    contentPagerAdapter = ContentPagerAdapter(this@ContentActivity, supportFragmentManager, quizzes)
+                    contentPagerAdapter = ContentPagerAdapter(this@ContentActivity, supportFragmentManager, quizzes, lifecycle)
                     binding.pagerContent.adapter = contentPagerAdapter
                     val quizTitle = quizzes[quizPosition].getName().split("%")[0]
                     quizIds = longArrayOf(quizzes[quizPosition].id)
                     title = quizTitle
                     binding.pagerContent.currentItem = quizPosition
-                    binding.pagerContent.addOnPageChangeListener(object : ViewPager.OnPageChangeListener {
-                        override fun onPageScrollStateChanged(state: Int) {
-
-                        }
-
-                        override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) {
-
-                        }
+                    binding.pagerContent.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
 
                         override fun onPageSelected(position: Int) {
                             val newQuizTitle = quizzes[position].getName().split("%")[0]
