@@ -2,11 +2,14 @@ package com.jehutyno.yomikata.screens.quiz
 
 import android.content.Context
 import android.content.pm.ActivityInfo
+import android.os.Build
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import android.view.KeyEvent
 import android.view.MenuItem
+import android.window.OnBackInvokedDispatcher
+import androidx.activity.addCallback
 import androidx.preference.PreferenceManager
 import com.github.salomonbrys.kodein.Kodein
 import com.github.salomonbrys.kodein.KodeinInjector
@@ -86,6 +89,32 @@ class QuizActivity : AppCompatActivity() {
                 QuizPresenter(instance(), instance(), instance(), instance(), instance(), instance(), quizIds, quizStrategy, quizTypes)
             }
         })
+
+        fun askToQuitSession() {
+            alertDialog(getString(R.string.quit_quiz)) {
+                okButton { finish() }
+                cancelButton()
+                setOnKeyListener { _, keyCode, _ ->
+                    if (keyCode == KeyEvent.KEYCODE_BACK)
+                        finish()
+                    true
+                }
+            }.show()
+        }
+
+        // set back button: ask if user wants to quit out of session
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            onBackInvokedDispatcher.registerOnBackInvokedCallback(
+                    OnBackInvokedDispatcher.PRIORITY_DEFAULT
+            ) {
+                askToQuitSession()
+            }
+        } else {
+            onBackPressedDispatcher.addCallback(this /* lifecycle owner */) {
+                askToQuitSession()
+            }
+        }
+
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -110,18 +139,6 @@ class QuizActivity : AppCompatActivity() {
             }
         }
         return super.onOptionsItemSelected(item)
-    }
-
-    override fun onBackPressed() {
-        alertDialog(getString(R.string.quit_quiz)) {
-            okButton { finish() }
-            cancelButton()
-            setOnKeyListener { _, keyCode, _ ->
-                if (keyCode == KeyEvent.KEYCODE_BACK)
-                    finish()
-                true
-            }
-        }.show()
     }
 
     fun unlockFullVersion() {

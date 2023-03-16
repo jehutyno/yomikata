@@ -3,6 +3,7 @@ package com.jehutyno.yomikata.screens.content
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
+import android.os.Build
 import android.os.Bundle
 import androidx.viewpager.widget.ViewPager
 import androidx.appcompat.app.AppCompatActivity
@@ -10,6 +11,8 @@ import androidx.appcompat.app.AppCompatDelegate
 import android.view.MenuItem
 import android.view.View.GONE
 import android.view.View.VISIBLE
+import android.window.OnBackInvokedDispatcher
+import androidx.activity.addCallback
 import androidx.preference.PreferenceManager
 import com.github.salomonbrys.kodein.Kodein
 import com.github.salomonbrys.kodein.KodeinInjector
@@ -178,6 +181,22 @@ class ContentActivity : AppCompatActivity() {
                 else -> launchQuiz(QuizStrategy.SHUFFLE)
             }
         }
+
+        // set back button to close floating actions menu
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            onBackInvokedDispatcher.registerOnBackInvokedCallback(
+                    OnBackInvokedDispatcher.PRIORITY_DEFAULT
+            ) {
+                if (binding.multipleActions.isExpanded)
+                    binding.multipleActions.collapse()
+            }
+        } else {
+            onBackPressedDispatcher.addCallback(this) {
+                if (binding.multipleActions.isExpanded)
+                    binding.multipleActions.collapse()
+            }
+        }
+
     }
 
     private fun launchQuiz(strategy: QuizStrategy) {
@@ -215,13 +234,6 @@ class ContentActivity : AppCompatActivity() {
             }
         }
         return super.onOptionsItemSelected(item)
-    }
-
-    override fun onBackPressed() {
-        if (binding.multipleActions.isExpanded)
-            binding.multipleActions.collapse()
-        else
-            super.onBackPressed()
     }
 
     fun unlockFullVersion() {
