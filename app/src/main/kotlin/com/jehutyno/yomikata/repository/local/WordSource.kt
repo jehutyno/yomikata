@@ -314,9 +314,17 @@ class WordSource(var context: Context) : WordRepository {
 
         context.database.use {
             val cursor = rawQuery(query, null)
+            val repetitionCursorIndex = cursor.getColumnIndex(SQLiteWord.REPETITION.column)
+            if (repetitionCursorIndex == -1) { // could not find column
+                throw Error("could not find column REPETITION: ${SQLiteWord.REPETITION.column}")
+            }
+            val idCursorIndex = cursor.getColumnIndex(SQLiteWord.ID.column)
+            if (idCursorIndex == -1) {
+                throw Error("could not find column ID: ${SQLiteWord.ID.column}")
+            }
             while (cursor.moveToNext()) {
-                update(SQLiteTables.WORDS.tableName, SQLiteWord.REPETITION.column to cursor.getInt(cursor.getColumnIndex(SQLiteWord.REPETITION.column)) - 1)
-                    .where("${SQLiteWord.ID.column} = {id}", "id" to cursor.getLong(cursor.getColumnIndex(SQLiteWord.ID.column)))
+                update(SQLiteTables.WORDS.tableName, SQLiteWord.REPETITION.column to cursor.getInt(repetitionCursorIndex) - 1)
+                    .whereArgs("${SQLiteWord.ID.column} = {id}", "id" to cursor.getLong(idCursorIndex))
                     .exec()
             }
             cursor.close()
