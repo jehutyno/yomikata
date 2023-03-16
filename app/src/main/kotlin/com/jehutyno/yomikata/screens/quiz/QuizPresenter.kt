@@ -2,6 +2,7 @@ package com.jehutyno.yomikata.screens.quiz
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.os.Build
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
 import android.util.Log
@@ -80,11 +81,29 @@ class QuizPresenter(
     override fun onRestoreInstanceState(savedInstanceState: Bundle) {
         quizView.reInitUI()
         hasMistaken = savedInstanceState.getBoolean("hasMistaken")
-        answers = savedInstanceState.getParcelableArrayList("errors")!!
-        val random0 : Word? = savedInstanceState.getParcelable("random0")
-        val random1 : Word? = savedInstanceState.getParcelable("random1")
-        val random2 : Word? = savedInstanceState.getParcelable("random2")
-        val random3 : Word? = savedInstanceState.getParcelable("random3")
+
+        val random0: Word?
+        val random1: Word?
+        val random2: Word?
+        val random3: Word?
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            answers = savedInstanceState.getParcelableArrayList("errors", Answer::class.java)!!
+            random0 = savedInstanceState.getParcelable("random0", Word::class.java)
+            random1 = savedInstanceState.getParcelable("random1", Word::class.java)
+            random2 = savedInstanceState.getParcelable("random2", Word::class.java)
+            random3 = savedInstanceState.getParcelable("random3", Word::class.java)
+        } else {
+            @Suppress("DEPRECATION")
+            answers = savedInstanceState.getParcelableArrayList("errors")!!
+            @Suppress("DEPRECATION")
+            random0 = savedInstanceState.getParcelable("random0")
+            @Suppress("DEPRECATION")
+            random1 = savedInstanceState.getParcelable("random1")
+            @Suppress("DEPRECATION")
+            random2 = savedInstanceState.getParcelable("random2")
+            @Suppress("DEPRECATION")
+            random3 = savedInstanceState.getParcelable("random3")
+        }
         if (random0 != null) randoms.add(Pair(random0, savedInstanceState.getInt("random0_color")))
         if (random1 != null) randoms.add(Pair(random1, savedInstanceState.getInt("random1_color")))
         if (random2 != null) randoms.add(Pair(random2, savedInstanceState.getInt("random2_color")))
