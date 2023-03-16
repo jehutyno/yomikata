@@ -107,11 +107,11 @@ class HomeFragment : Fragment(), HomeContract.View {
         displayStat(stats, binding.totalQuizLaunch, binding.totalWordsSeen, binding.totalGoodAnswer, binding.totalWrongAnswer)
     }
 
-    fun displayStat(stats: List<StatEntry>, vararg textViews: TextView) {
-        val quizLaunched = stats.filter { it.action == StatAction.LAUNCH_QUIZ_FROM_CATEGORY.value }.count()
-        val wordsSeen = stats.filter { it.action == StatAction.WORD_SEEN.value }.count()
-        val goodAnswer = stats.filter { it.action == StatAction.ANSWER_QUESTION.value && it.result == StatResult.SUCCESS.value }.count()
-        val wrongAnswer = stats.filter { it.action == StatAction.ANSWER_QUESTION.value && it.result == StatResult.FAIL.value }.count()
+    private fun displayStat(stats: List<StatEntry>, vararg textViews: TextView) {
+        val quizLaunched = stats.count { it.action == StatAction.LAUNCH_QUIZ_FROM_CATEGORY.value }
+        val wordsSeen = stats.count { it.action == StatAction.WORD_SEEN.value }
+        val goodAnswer = stats.count { it.action == StatAction.ANSWER_QUESTION.value && it.result == StatResult.SUCCESS.value }
+        val wrongAnswer = stats.count { it.action == StatAction.ANSWER_QUESTION.value && it.result == StatResult.FAIL.value }
 
         textViews[0].text = getString(R.string.quiz_launched, quizLaunched)
         textViews[1].text = getString(R.string.words_seen, wordsSeen)
@@ -146,7 +146,7 @@ class HomeFragment : Fragment(), HomeContract.View {
         binding.noCategories.visibility = if (cat1 == -1 && cat2 == -1) VISIBLE else GONE
     }
 
-    fun getCategoryResId(category: Int): Int {
+    private fun getCategoryResId(category: Int): Int {
         return when (category) {
             Categories.CATEGORY_HIRAGANA -> {
                 R.drawable.ic_hiragana_big
