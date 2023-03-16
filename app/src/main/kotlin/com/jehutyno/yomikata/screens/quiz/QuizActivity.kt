@@ -65,11 +65,27 @@ class QuizActivity : AppCompatActivity() {
             //Restore the fragment's instance
             quizFragment = supportFragmentManager.getFragment(savedInstanceState, "quizFragment") as QuizFragment
             quizIds = savedInstanceState.getLongArray("quiz_ids")?: longArrayOf()
-            quizStrategy = savedInstanceState.getSerializable("quiz_strategy") as QuizStrategy
+
+            quizStrategy = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                savedInstanceState.getSerializable("quiz_strategy", QuizStrategy::class.java)!!
+            }
+            else {
+                @Suppress("DEPRECATION")
+                savedInstanceState.getSerializable("quiz_strategy") as QuizStrategy
+            }
+
             quizTypes = savedInstanceState.getIntArray("quiz_types")?: intArrayOf()
         } else {
             quizIds = intent.getLongArrayExtra(Extras.EXTRA_QUIZ_IDS) ?: longArrayOf()
-            quizStrategy = intent.getSerializableExtra(Extras.EXTRA_QUIZ_STRATEGY) as QuizStrategy
+
+            quizStrategy = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                intent.getSerializableExtra(Extras.EXTRA_QUIZ_STRATEGY, QuizStrategy::class.java)!!
+            }
+            else {
+                @Suppress("DEPRECATION")
+                intent.getSerializableExtra(Extras.EXTRA_QUIZ_STRATEGY) as QuizStrategy
+            }
+
             quizTypes = intent.getIntArrayExtra(Extras.EXTRA_QUIZ_TYPES) ?: intArrayOf()
 
             val bundle = Bundle()
