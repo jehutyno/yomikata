@@ -9,6 +9,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.ActivityInfo
 import android.graphics.drawable.ColorDrawable
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -31,6 +32,8 @@ import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.TextView
+import android.window.OnBackInvokedDispatcher
+import androidx.activity.addCallback
 import androidx.appcompat.app.AlertDialog
 import androidx.preference.PreferenceManager
 import androidx.viewpager2.widget.ViewPager2
@@ -41,7 +44,6 @@ import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.databinding.ActivityQuizzesBinding
 import com.jehutyno.yomikata.screens.PrefsActivity
 import com.jehutyno.yomikata.screens.content.QuizzesPagerAdapter
-import com.jehutyno.yomikata.screens.home.HomeFragment
 import com.jehutyno.yomikata.screens.search.SearchResultActivity
 import com.jehutyno.yomikata.util.*
 import com.jehutyno.yomikata.util.Extras.REQUEST_PREFS
@@ -248,6 +250,35 @@ class QuizzesActivity : AppCompatActivity() {
             }
 
         })
+
+        fun collapseOrQuit() {
+            if (binding.multipleActions.isExpanded)
+                binding.multipleActions.collapse()
+            else
+                alertDialog {
+                    titleResource = R.string.app_quit
+                    okButton { finishAffinity() }
+                    cancelButton()
+                    setOnKeyListener { _, keyCode, _ ->
+                        if (keyCode == KeyEvent.KEYCODE_BACK)
+                            finishAffinity()
+                        true
+                    }
+                }.show()
+        }
+
+        // set back button to close floating actions menu or show alertDialog
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            onBackInvokedDispatcher.registerOnBackInvokedCallback(
+                    OnBackInvokedDispatcher.PRIORITY_DEFAULT
+            ) {
+                collapseOrQuit()
+            }
+        } else {
+            onBackPressedDispatcher.addCallback(this) {
+                collapseOrQuit()
+            }
+        }
 
     }
 
@@ -462,22 +493,6 @@ class QuizzesActivity : AppCompatActivity() {
             }
         }
         return super.onOptionsItemSelected(item)
-    }
-
-    override fun onBackPressed() {
-        if (binding.multipleActions.isExpanded)
-            binding.multipleActions.collapse()
-        else
-            alertDialog {
-                titleResource = R.string.app_quit
-                okButton { finishAffinity() }
-                cancelButton()
-                setOnKeyListener { _, keyCode, _ ->
-                    if (keyCode == KeyEvent.KEYCODE_BACK)
-                        finishAffinity()
-                    true
-                }
-            }.show()
     }
 
     fun gotoCategory(category: Int) {
