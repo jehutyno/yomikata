@@ -10,7 +10,7 @@ import org.jetbrains.anko.db.select
 /**
  * Created by jehutyno on 08/10/2016.
  */
-class UpdateSource(var context: Context, val filePath: String) {
+class UpdateSource(private var context: Context, private val filePath: String) {
 
     fun getAllWords(): List<Word> {
         var words = listOf<Word>()

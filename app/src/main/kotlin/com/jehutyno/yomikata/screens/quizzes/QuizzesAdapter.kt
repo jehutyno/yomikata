@@ -66,7 +66,7 @@ class QuizzesAdapter(val context: Context, val category: Int, private val callba
                     true
                 }
                 holder.quizCheck.setOnCheckedChangeListener {
-                    compoundButton, b ->
+                    _, b ->
                     if (category != Categories.CATEGORY_SELECTIONS) {
                         if (!flag) {
                             run {

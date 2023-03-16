@@ -137,7 +137,7 @@ class KanjiSoloSource(var context: Context) : KanjiSoloRepository {
 
     override fun getSoloByKanjiRadical(kanji: String): KanjiSoloRadical? {
         var radical: KanjiSoloRadical? = null
-        var query = "select ${SQLiteTables.KANJI_SOLO.tableName}.${SQLiteTable.allColumns(SQLiteKanjiSolo.values()).joinToString(",${SQLiteTables.KANJI_SOLO.tableName}.")}," +
+        val query = "select ${SQLiteTables.KANJI_SOLO.tableName}.${SQLiteTable.allColumns(SQLiteKanjiSolo.values()).joinToString(",${SQLiteTables.KANJI_SOLO.tableName}.")}," +
             "${SQLiteTables.RADICALS.tableName}.${SQLiteRadicals.STROKES.column}," +
             "${SQLiteTables.RADICALS.tableName}.${SQLiteRadicals.READING.column}," +
             "${SQLiteTables.RADICALS.tableName}.${SQLiteRadicals.EN.column}," +

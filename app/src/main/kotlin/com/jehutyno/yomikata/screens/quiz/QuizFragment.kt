@@ -180,10 +180,9 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
             ttsErrorsImage.setPadding(pad, pad, pad, pad)
             ttsErrorsImage.setOnClickListener {
                 val category = adapter!!.words[binding.pager.currentItem].first.baseCategory
-                val speechAvailability = checkSpeechAvailability(requireActivity(), ttsSupported, getCategoryLevel(category))
-                when (speechAvailability) {
+                when (val speechAvailability = checkSpeechAvailability(requireActivity(), ttsSupported, getCategoryLevel(category))) {
                     SpeechAvailability.NOT_AVAILABLE -> {
-                        speechNotSupportedAlert(requireActivity(), getCategoryLevel(category), {})
+                        speechNotSupportedAlert(requireActivity(), getCategoryLevel(category)) {}
                     }
                     else -> {
                         if (isSettingsOpen) {
@@ -257,7 +256,7 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
 
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
                 if (isSettingsOpen) closeTTSSettings()
-                // Return to nuraml color when typing again (because it becomes Red or Green when
+                // Return to normal color when typing again (because it becomes Red or Green when
                 // you validate
                 currentEditColor = R.color.lighter_gray
                 binding.hiraganaEdit.setTextColor(ContextCompat.getColor(activity!!, currentEditColor))
@@ -333,7 +332,7 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
         }
     }
 
-    fun initAnswersButtons() {
+    private fun initAnswersButtons() {
         binding.quizContainer.setOnClickListener { if (isSettingsOpen) closeTTSSettings() }
         binding.answerContainer.setOnClickListener { if (isSettingsOpen) closeTTSSettings() }
         binding.option1Container.setOnClickListener {
@@ -608,9 +607,9 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
 
     override fun animateColor(position: Int, word: Word, sentence: Sentence, quizType: QuizType, fromLevel: Int, toLevel: Int, fromPoints: Int, toPoints: Int) {
         val view = binding.pager.findViewWithTag<View>("pos_$position")
-        val btn_furi = view.findViewById<View>(R.id.btn_furi)
-        val furi_sentence = view.findViewById<FuriganaView>(R.id.furi_sentence)
-        val trad_sentence = view.findViewById<TextView>(R.id.trad_sentence)
+        val btnFuri = view.findViewById<View>(R.id.btn_furi)
+        val furiSentence = view.findViewById<FuriganaView>(R.id.furi_sentence)
+        val tradSentence = view.findViewById<TextView>(R.id.trad_sentence)
         val sound = view.findViewById<ImageButton>(R.id.sound)
         val sentenceNoFuri = sentenceNoFuri(sentence)
         val colorAnimation = ValueAnimator.ofObject(ArgbEvaluator(),
@@ -623,16 +622,15 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
                     QuizType.TYPE_PRONUNCIATION, QuizType.TYPE_PRONUNCIATION_QCM, QuizType.TYPE_JAP_EN -> {
                         val colorEntireWord = word.isKana == 2 && quizType == QuizType.TYPE_JAP_EN
                         val wordTruePosition = if (colorEntireWord) 0 else getWordPositionInFuriSentence(sentence.jap, word)
-                        if (btn_furi.isSelected) {
+                        if (btnFuri.isSelected) {
                             if (!colorEntireWord) wordTruePosition.let {
-                                furi_sentence.text_set(
-                                    if (colorEntireWord) sentence.jap else sentenceNoAnswerFuri(sentence, word),
-                                    it,
-                                    if (colorEntireWord) sentence.jap.length else wordTruePosition + word.japanese.length,
+                                furiSentence.text_set(
+                                    sentenceNoAnswerFuri(sentence, word), it,
+                             wordTruePosition + word.japanese.length,
                                     animator.animatedValue as Int)
                             }
                         } else {
-                            furi_sentence.text_set(
+                            furiSentence.text_set(
                                 if (colorEntireWord) sentence.jap else sentenceNoFuri.replace("%", word.japanese),
                                 (if (colorEntireWord) 0 else wordTruePosition),
                                 if (colorEntireWord) sentence.jap.length else wordTruePosition + word.japanese.length,
@@ -640,7 +638,7 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
                         }
                     }
                     QuizType.TYPE_EN_JAP -> {
-                        trad_sentence.setTextColor(animator.animatedValue as Int)
+                        tradSentence.setTextColor(animator.animatedValue as Int)
                     }
                     QuizType.TYPE_AUDIO -> {
                         sound.setColorFilter(animator.animatedValue as Int)
@@ -763,10 +761,9 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
             }
             R.id.tts_settings -> {
                 val category = adapter!!.words[binding.pager.currentItem].first.baseCategory
-                val speechAvailability = checkSpeechAvailability(requireActivity(), ttsSupported, getCategoryLevel(category))
-                when (speechAvailability) {
+                when (val speechAvailability = checkSpeechAvailability(requireActivity(), ttsSupported, getCategoryLevel(category))) {
                     SpeechAvailability.NOT_AVAILABLE -> {
-                        speechNotSupportedAlert(requireActivity(), getCategoryLevel(category), {})
+                        speechNotSupportedAlert(requireActivity(), getCategoryLevel(category)) {}
                     }
                     else -> {
                         if (isSettingsOpen) {

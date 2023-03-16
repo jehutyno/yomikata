@@ -50,11 +50,11 @@ class AnswersActivity : AppCompatActivity() {
             setDisplayHomeAsUpEnabled(true)
         }
 
-        if (savedInstanceState != null) {
+        answersFragment = if (savedInstanceState != null) {
             //Restore the fragment's instance
-            answersFragment = supportFragmentManager.getFragment(savedInstanceState, "answersFragment") as AnswersFragment
+            supportFragmentManager.getFragment(savedInstanceState, "answersFragment") as AnswersFragment
         } else {
-            answersFragment = AnswersFragment()
+            AnswersFragment()
         }
         addOrReplaceFragment(R.id.container_content, answersFragment)
 

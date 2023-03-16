@@ -78,7 +78,7 @@ class WordSource(var context: Context) : WordRepository {
     }
 
     override fun getWords(quizId: Long, callback: WordRepository.LoadWordsCallback) {
-        var query = "select ${SQLiteTables.WORDS.tableName}.${SQLiteTable.allColumns(SQLiteWord.values()).joinToString(",")} " +
+        val query = "select ${SQLiteTables.WORDS.tableName}.${SQLiteTable.allColumns(SQLiteWord.values()).joinToString(",")} " +
             "from ${SQLiteTables.WORDS.tableName} join ${SQLiteTables.QUIZ_WORD.tableName} " +
             "ON ${SQLiteQuizWord.WORD_ID.column} = ${SQLiteTables.WORDS.tableName}.${SQLiteWord.ID.column} " +
             "and ${SQLiteQuizWord.QUIZ_ID.column} = $quizId"
@@ -96,7 +96,7 @@ class WordSource(var context: Context) : WordRepository {
     }
 
     override fun getWords(quizIds: LongArray, callback: WordRepository.LoadWordsCallback) {
-        var query = "select ${SQLiteTables.WORDS.tableName}.${SQLiteTable.allColumns(SQLiteWord.values()).joinToString(",")} " +
+        val query = "select ${SQLiteTables.WORDS.tableName}.${SQLiteTable.allColumns(SQLiteWord.values()).joinToString(",")} " +
             "from ${SQLiteTables.WORDS.tableName} join ${SQLiteTables.QUIZ_WORD.tableName} " +
             "ON ${SQLiteQuizWord.WORD_ID.column} = ${SQLiteTables.WORDS.tableName}.${SQLiteWord.ID.column} " +
             "and ${SQLiteQuizWord.QUIZ_ID.column} in (${quizIds.joinToString(",")})"
@@ -113,7 +113,7 @@ class WordSource(var context: Context) : WordRepository {
     }
 
     override fun getWordsByLevel(quizIds: LongArray, level: Int, callback: WordRepository.LoadWordsCallback) {
-        var query = "select ${SQLiteTables.WORDS.tableName}.${SQLiteTable.allColumns(SQLiteWord.values()).joinToString(",")} " +
+        val query = "select ${SQLiteTables.WORDS.tableName}.${SQLiteTable.allColumns(SQLiteWord.values()).joinToString(",")} " +
             "from ${SQLiteTables.WORDS.tableName} join ${SQLiteTables.QUIZ_WORD.tableName} " +
             "ON ${SQLiteQuizWord.WORD_ID.column} = ${SQLiteTables.WORDS.tableName}.${SQLiteWord.ID.column} " +
             "and ${SQLiteQuizWord.QUIZ_ID.column} in (${quizIds.joinToString(",")}) " +
@@ -135,8 +135,8 @@ class WordSource(var context: Context) : WordRepository {
     }
 
     override fun getWordsByRepetition(quizIds: LongArray, repetition: Int, limit: Int): ArrayList<Word> {
-        var words = arrayListOf<Word>()
-        var query = "select ${SQLiteTables.WORDS.tableName}.${SQLiteTable.allColumns(SQLiteWord.values()).joinToString(",")} " +
+        val words = arrayListOf<Word>()
+        val query = "select ${SQLiteTables.WORDS.tableName}.${SQLiteTable.allColumns(SQLiteWord.values()).joinToString(",")} " +
             "from ${SQLiteTables.WORDS.tableName} join ${SQLiteTables.QUIZ_WORD.tableName} " +
             "ON ${SQLiteQuizWord.WORD_ID.column} = ${SQLiteTables.WORDS.tableName}.${SQLiteWord.ID.column} " +
             "and ${SQLiteQuizWord.QUIZ_ID.column} in (${quizIds.joinToString(",")}) " +
@@ -152,7 +152,7 @@ class WordSource(var context: Context) : WordRepository {
     }
 
     override fun getRandomWords(wordId: Long, answer: String, wordSize: Int, limit: Int, quizType: QuizType): ArrayList<Word> {
-        var words = arrayListOf<Word>()
+        val words = arrayListOf<Word>()
         val column = when(quizType) {
             QuizType.TYPE_PRONUNCIATION -> "${SQLiteTables.WORDS.tableName}.${SQLiteWord.READING.column}"
             QuizType.TYPE_PRONUNCIATION_QCM -> "${SQLiteTables.WORDS.tableName}.${SQLiteWord.READING.column}"
@@ -202,7 +202,7 @@ class WordSource(var context: Context) : WordRepository {
     }
 
     override fun searchWords(searchString: String, callback: WordRepository.LoadWordsCallback) {
-        var hiragana = HiraganaUtils.toHiragana(searchString)
+        val hiragana = HiraganaUtils.toHiragana(searchString)
         context.database.use {
             select(SQLiteTables.WORDS.tableName, *SQLiteTable.allColumns(SQLiteWord.values()))
                 .where(
@@ -241,7 +241,7 @@ class WordSource(var context: Context) : WordRepository {
     }
 
     override fun isWordInQuizzes(wordId: Long, quizIds: Array<Long>): ArrayList<Boolean> {
-        var ret: ArrayList<Boolean> = arrayListOf()
+        val ret: ArrayList<Boolean> = arrayListOf()
         context.database.use {
             for (quizId in quizIds) {
                 select(SQLiteTables.QUIZ_WORD.tableName).where(
@@ -308,7 +308,7 @@ class WordSource(var context: Context) : WordRepository {
     }
 
     override fun decreaseWordsRepetition(quizIds: LongArray) {
-        var query = "select ${SQLiteTables.WORDS.tableName}.${SQLiteWord.ID.column},${SQLiteTables.WORDS.tableName}.${SQLiteWord.REPETITION.column} " +
+        val query = "select ${SQLiteTables.WORDS.tableName}.${SQLiteWord.ID.column},${SQLiteTables.WORDS.tableName}.${SQLiteWord.REPETITION.column} " +
             "from ${SQLiteTables.WORDS.tableName} join ${SQLiteTables.QUIZ_WORD.tableName} " +
             "ON ${SQLiteQuizWord.WORD_ID.column} = ${SQLiteTables.WORDS.tableName}.${SQLiteWord.ID.column} " +
             "and ${SQLiteQuizWord.QUIZ_ID.column} in (${quizIds.joinToString(",")}) and ${SQLiteWord.REPETITION.column} > 0"
@@ -325,13 +325,13 @@ class WordSource(var context: Context) : WordRepository {
     }
 
     override fun restoreWord(word: String, prononciation: String, wordTable: WordTable) {
-        var points = when (wordTable.priority) {
+        val points = when (wordTable.priority) {
             1 -> 75
             2 -> 50
             3 -> 100
             else -> 0
         }
-        var priority = when (wordTable.priority) {
+        val priority = when (wordTable.priority) {
             1 -> 0
             else -> wordTable.priority
         }

@@ -47,7 +47,7 @@ class StatsSource(var context: Context) : StatsRepository {
         val start = today.timeInMillis
         today.set(Calendar.HOUR_OF_DAY, 23)
         today.set(Calendar.MINUTE, 59)
-        val end = today.timeInMillis;
+        val end = today.timeInMillis
         context.database.use {
             select(SQLiteTables.STAT_ENTRY.tableName, *SQLiteTable.allColumns(SQLiteStatEntry.values()))
                 .whereArgs("${SQLiteStatEntry.DATE} > $start AND ${SQLiteStatEntry.DATE} < $end")
