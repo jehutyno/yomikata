@@ -350,27 +350,27 @@ class WordSource(var context: Context) : WordRepository {
 
     override fun updateWord(updateWord: Word, word: Word?) {
         context.database.use {
-            if (word != null && updateWord.japanese != word!!.japanese) {
+            if (word != null && updateWord.japanese != word.japanese) {
                 update(SQLiteTables.WORDS.tableName,
                     SQLiteWord.JAPANESE.column to updateWord.japanese).whereArgs(
                     "${SQLiteWord.ID.column} = '${updateWord.id}'").exec()
             }
-            if (word != null && updateWord.english != word!!.english) {
+            if (word != null && updateWord.english != word.english) {
                 update(SQLiteTables.WORDS.tableName,
                     SQLiteWord.ENGLISH.column to updateWord.english).whereArgs(
                     "${SQLiteWord.ID.column} = '${updateWord.id}'").exec()
             }
-            if (word != null && updateWord.french != word!!.french) {
+            if (word != null && updateWord.french != word.french) {
                 update(SQLiteTables.WORDS.tableName,
                     SQLiteWord.FRENCH.column to updateWord.french).whereArgs(
                     "${SQLiteWord.ID.column} = '${updateWord.id}'").exec()
             }
-            if (word != null && updateWord.reading != word!!.reading) {
+            if (word != null && updateWord.reading != word.reading) {
                 update(SQLiteTables.WORDS.tableName,
                     SQLiteWord.READING.column to updateWord.reading).whereArgs(
                     "${SQLiteWord.ID.column} = '${updateWord.id}'").exec()
             }
-            if (word != null && updateWord.sentenceId != word!!.sentenceId) {
+            if (word != null && updateWord.sentenceId != word.sentenceId) {
                 update(SQLiteTables.WORDS.tableName,
                     SQLiteWord.SENTENCE_ID.column to updateWord.sentenceId).whereArgs(
                     "${SQLiteWord.ID.column} = '${updateWord.id}'").exec()

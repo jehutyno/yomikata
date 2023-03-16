@@ -62,7 +62,7 @@ class HomeFragment : Fragment(), HomeContract.View {
         super.onViewCreated(view, savedInstanceState)
 
         if (mpresenter == null) {
-            mpresenter = HomePresenter(activity!!.appKodein.invoke().instance(), context!!.appKodein.invoke().instance(), this)
+            mpresenter = HomePresenter(requireActivity().appKodein.invoke().instance(), requireContext().appKodein.invoke().instance(), this)
         }
 
         val database = FirebaseDatabase.getInstance()
@@ -84,10 +84,10 @@ class HomeFragment : Fragment(), HomeContract.View {
             }
         })
 
-        binding.share.setOnClickListener { shareApp(activity!!) }
+        binding.share.setOnClickListener { shareApp(requireActivity()) }
         binding.facebook.setOnClickListener { contactFacebook(activity) }
-        binding.playStore.setOnClickListener { contactPlayStore(activity!!) }
-        binding.discord.setOnClickListener { contactDiscord(activity!!) }
+        binding.playStore.setOnClickListener { contactPlayStore(requireActivity()) }
+        binding.discord.setOnClickListener { contactDiscord(requireActivity()) }
 
     }
 

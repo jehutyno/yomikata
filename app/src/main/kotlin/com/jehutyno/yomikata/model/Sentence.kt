@@ -39,9 +39,9 @@ open class Sentence(var id: Long = -1, val jap: String = "", val en: String = ""
 
     fun getTrad(): String {
         return if (Locale.getDefault().language == "fr")
-            fr!!
+            fr
         else
-            en!!
+            en
     }
 
 }
