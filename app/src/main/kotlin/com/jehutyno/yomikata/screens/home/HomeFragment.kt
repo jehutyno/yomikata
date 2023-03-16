@@ -46,10 +46,6 @@ class HomeFragment : Fragment(), HomeContract.View {
         mpresenter = presenter
     }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-    }
-
     override fun onResume() {
         super.onResume()
         mpresenter!!.start()
