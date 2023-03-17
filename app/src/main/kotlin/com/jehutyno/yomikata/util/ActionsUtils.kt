@@ -5,7 +5,9 @@ package com.jehutyno.yomikata.util
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.speech.tts.TextToSpeech
 import android.util.Log
 import android.view.Gravity
@@ -42,8 +44,13 @@ fun reportError(context: Activity, word: Word, sentence: Sentence) {
     i.putExtra(Intent.EXTRA_EMAIL, arrayOf<String>(context.getString(R.string.email_contact)))
     i.putExtra(Intent.EXTRA_SUBJECT, context.getString(R.string.error_mail_subject))
     val sb = StringBuilder()
+    val packageInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        context.packageManager.getPackageInfo(context.packageName, PackageManager.PackageInfoFlags.of(0))
+    } else {
+        @Suppress("DEPRECATION") context.packageManager.getPackageInfo(context.packageName, 0)
+    }
     sb.append(context.getString(R.string.error_mail_body_1))
-            .append("App version: V").append(context.packageManager.getPackageInfo(context.packageName, 0).versionName).append("\n")
+            .append("App version: V").append(packageInfo.versionName).append("\n")
             .append("Word Id: ").append(word.id).append(" | ").append("Quiz Id: ").append(word.baseCategory)
             .append(" | ").append(word.japanese).append(" | ").append(word.reading).append("\n")
             .append("Sentence Id: ").append(sentence.id).append("\n")
@@ -87,7 +94,12 @@ fun contactEmail(context: Context) {
 
 fun contactFacebook(context: Context?) {
     try {
-        context?.packageManager?.getPackageInfo("com.facebook.katana", 0)
+        val packageName = "com.facebook.katana"
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            context?.packageManager?.getPackageInfo(packageName, PackageManager.PackageInfoFlags.of(0))
+        } else {
+            @Suppress("DEPRECATION") context?.packageManager?.getPackageInfo(packageName, 0)
+        }
         context?.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("fb://page/412201938791197")).setFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
     } catch (e: Exception) {
         context?.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://www.facebook.com/YomikataAndroid")).setFlags(Intent.FLAG_ACTIVITY_NEW_TASK))

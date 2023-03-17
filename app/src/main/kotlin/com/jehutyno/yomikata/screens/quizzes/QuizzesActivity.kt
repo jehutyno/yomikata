@@ -8,6 +8,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.ActivityInfo
+import android.content.pm.PackageManager
 import android.graphics.drawable.ColorDrawable
 import android.os.Build
 import android.os.Bundle
@@ -297,7 +298,12 @@ class QuizzesActivity : AppCompatActivity() {
     }
 
     private fun setupDrawerContent(navigationView: NavigationView) {
-        navigationView.getHeaderView(0).findViewById<TextView>(R.id.version).text = getString(R.string.yomiakataz_drawer, packageManager.getPackageInfo(packageName, 0).versionName)
+        val packageInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            packageManager.getPackageInfo(packageName, PackageManager.PackageInfoFlags.of(0))
+        } else {
+            @Suppress("DEPRECATION") packageManager.getPackageInfo(packageName, 0)
+        }
+        navigationView.getHeaderView(0).findViewById<TextView>(R.id.version).text = getString(R.string.yomiakataz_drawer, packageInfo.versionName)
         navigationView.getHeaderView(0).findViewById<ImageView>(R.id.facebook).setOnClickListener { contactFacebook(this) }
         navigationView.getHeaderView(0).findViewById<ImageView>(R.id.discord).setOnClickListener { contactDiscord(this) }
         navigationView.getHeaderView(0).findViewById<ImageView>(R.id.play_store).setOnClickListener { contactPlayStore(this) }
@@ -369,7 +375,7 @@ class QuizzesActivity : AppCompatActivity() {
         navigationView.menu.findItem(R.id.day_night_item).actionView?.findViewById<SwitchCompat>(R.id.my_switch)?.isChecked = AppCompatDelegate.getDefaultNightMode() == AppCompatDelegate.MODE_NIGHT_YES
         navigationView.menu.findItem(R.id.day_night_item).isChecked = AppCompatDelegate.getDefaultNightMode() == AppCompatDelegate.MODE_NIGHT_YES
         navigationView.menu.findItem(R.id.day_night_item).actionView?.findViewById<SwitchCompat>(R.id.my_switch)?.setOnCheckedChangeListener {
-            switch, isChecked ->
+            _, isChecked ->
             navigationView.menu.findItem(R.id.day_night_item).isChecked = isChecked
             val pref = PreferenceManager.getDefaultSharedPreferences(this)
             if (isChecked) {
