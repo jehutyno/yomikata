@@ -175,18 +175,28 @@ class ContentActivity : AppCompatActivity() {
             }
         }
 
+        /**
+         * Collapse or quit
+         * If action button is expanded -> collapse it
+         * Otherwise -> finish this activity
+         */
+        fun collapseOrQuit() {
+            if (binding.multipleActions.isExpanded)
+                binding.multipleActions.collapse()
+            else
+                finish()
+        }
+
         // set back button to close floating actions menu
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             onBackInvokedDispatcher.registerOnBackInvokedCallback(
                     OnBackInvokedDispatcher.PRIORITY_DEFAULT
             ) {
-                if (binding.multipleActions.isExpanded)
-                    binding.multipleActions.collapse()
+                collapseOrQuit()
             }
         } else {
             onBackPressedDispatcher.addCallback(this) {
-                if (binding.multipleActions.isExpanded)
-                    binding.multipleActions.collapse()
+                collapseOrQuit()
             }
         }
 
