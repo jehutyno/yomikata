@@ -133,7 +133,7 @@ class QuizzesFragment : Fragment(), QuizzesContract.View, QuizzesAdapter.Callbac
             openContent(selectedCategory, 3)
         }
 
-        val pref = PreferenceManager.getDefaultSharedPreferences(context)
+        val pref = PreferenceManager.getDefaultSharedPreferences(requireContext())
         if (selectedCategory == -1 || selectedCategory == 8
             || pref.getBoolean(Prefs.VOICE_DOWNLOADED_LEVEL_V.pref +
             "${getLevelDownloadVersion(getCategoryLevel(selectedCategory))}_${getCategoryLevel(selectedCategory)}", false)) {
@@ -163,7 +163,7 @@ class QuizzesFragment : Fragment(), QuizzesContract.View, QuizzesAdapter.Callbac
     }
 
     fun previousVoicesDownloaded(downloadVersion: Int): Boolean {
-        val pref = PreferenceManager.getDefaultSharedPreferences(context)
+        val pref = PreferenceManager.getDefaultSharedPreferences(requireContext())
         return (0 until downloadVersion).any {
             pref.getBoolean("${Prefs.VOICE_DOWNLOADED_LEVEL_V.pref}${it}_${getCategoryLevel(selectedCategory)}", false)
         }

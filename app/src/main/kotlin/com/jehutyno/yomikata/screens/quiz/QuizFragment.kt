@@ -68,7 +68,7 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
         if (adapter != null && adapter!!.words.isNotEmpty()) {
             ttsSupported = onTTSinit(activity, status, tts)
             presenter.setTTSSupported(ttsSupported)
-            val pref = PreferenceManager.getDefaultSharedPreferences(context)
+            val pref = PreferenceManager.getDefaultSharedPreferences(requireContext())
             val noPlayStart = pref.getBoolean("play_start", false)
             if (adapter!!.words[binding.pager.currentItem].second == QuizType.TYPE_AUDIO || noPlayStart) {
                 voicesManager.speakWord(adapter!!.words[binding.pager.currentItem].first, ttsSupported, tts)
@@ -100,7 +100,7 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
 
     override fun onResume() {
         super.onResume()
-        val pref = PreferenceManager.getDefaultSharedPreferences(context)
+        val pref = PreferenceManager.getDefaultSharedPreferences(requireContext())
         binding.hiraganaEdit.inputType = if (pref.getBoolean("input_change", false))
             InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
         else
@@ -308,7 +308,7 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
         })
 
         binding.seekSpeed.max = 250
-        val pref = PreferenceManager.getDefaultSharedPreferences(context)
+        val pref = PreferenceManager.getDefaultSharedPreferences(requireContext())
         val rate = pref.getInt(Prefs.TTS_RATE.pref, 50)
         binding.seekSpeed.progress = rate
         tts?.setSpeechRate((rate + 50).toFloat() / 100)
@@ -518,7 +518,7 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
     }
 
     override fun displayQCMNormalTextViews() {
-        val pref = PreferenceManager.getDefaultSharedPreferences(context)
+        val pref = PreferenceManager.getDefaultSharedPreferences(requireContext())
         binding.option1Tv.textSize = pref.getString("font_size", "18")!!.toFloat()
         binding.option2Tv.textSize = pref.getString("font_size", "18")!!.toFloat()
         binding.option3Tv.textSize = pref.getString("font_size", "18")!!.toFloat()
@@ -685,7 +685,7 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
     }
 
     override fun showAlertNonProgressiveSessionEnd(proposeErrors: Boolean) {
-        val pref = PreferenceManager.getDefaultSharedPreferences(context)
+        val pref = PreferenceManager.getDefaultSharedPreferences(requireContext())
 
         requireContext().alertDialog {
             message = getString(R.string.alert_session_finished, pref.getString("length", "-1")?.toInt())

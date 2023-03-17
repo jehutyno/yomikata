@@ -120,7 +120,7 @@ class HomeFragment : Fragment(), HomeContract.View {
     }
 
     fun displayLatestCategories() {
-        val pref = PreferenceManager.getDefaultSharedPreferences(context)
+        val pref = PreferenceManager.getDefaultSharedPreferences(requireContext())
         val cat1 = pref.getInt(Prefs.LATEST_CATEGORY_1.pref, -1)
         val cat2 = pref.getInt(Prefs.LATEST_CATEGORY_2.pref, -1)
 
