@@ -25,6 +25,7 @@ open class Sentence(var id: Long = -1, val jap: String = "", val en: String = ""
     }
 
     companion object {
+        @Suppress("UNUSED")
         @JvmField val CREATOR: Parcelable.Creator<Sentence> = object : Parcelable.Creator<Sentence> {
             override fun createFromParcel(source: Parcel): Sentence{
                 return Sentence(source)

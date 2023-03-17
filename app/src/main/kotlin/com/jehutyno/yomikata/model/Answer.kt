@@ -33,6 +33,7 @@ open class Answer(val result: Int, var answer: String, val wordId: Long, val sen
     }
 
     companion object {
+        @Suppress("UNUSED")
         @JvmField val CREATOR: Parcelable.Creator<Answer> = object : Parcelable.Creator<Answer> {
             override fun createFromParcel(source: Parcel): Answer {
                 return Answer(source)
