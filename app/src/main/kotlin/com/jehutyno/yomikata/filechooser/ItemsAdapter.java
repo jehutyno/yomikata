@@ -1,6 +1,9 @@
 package com.jehutyno.yomikata.filechooser;
 
+import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
+import android.annotation.SuppressLint;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 
@@ -18,11 +21,13 @@ class ItemsAdapter extends RecyclerView.Adapter<ItemHolder> {
         items = new ArrayList<>();
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     public void setItems(List<Item> items) {
         this.items = items;
         notifyDataSetChanged();
     }
 
+    @NonNull
     @Override
     public ItemHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         LayoutInflater inflater = LayoutInflater.from(parent.getContext());
