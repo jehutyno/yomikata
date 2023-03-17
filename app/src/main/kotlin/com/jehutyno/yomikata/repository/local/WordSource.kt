@@ -51,12 +51,13 @@ class WordSource(var context: Context) : WordRepository {
             "${SQLiteWord.IS_SELECTED.column} FROM OLD_${SQLiteTables.WORDS.tableName}"
 
         val query3 = "DROP TABLE OLD_${SQLiteTables.WORDS.tableName}"
-            context.database.use {
-                execSQL(query0)
-                execSQL(query1)
-                execSQL(query2)
-                execSQL(query3)
-            }
+
+        context.database.use {
+            execSQL(query0)
+            execSQL(query1)
+            execSQL(query2)
+            execSQL(query3)
+        }
     }
 
     override fun getAllWords(db: SQLiteDatabase?): List<Word> {
@@ -331,7 +332,7 @@ class WordSource(var context: Context) : WordRepository {
         }
     }
 
-    override fun restoreWord(word: String, prononciation: String, wordTable: WordTable) {
+    override fun restoreWord(word: String, pronunciation: String, wordTable: WordTable) {
         val points = when (wordTable.priority) {
             1 -> 75
             2 -> 50
@@ -351,7 +352,7 @@ class WordSource(var context: Context) : WordRepository {
                 SQLiteWord.COUNT_TRY.column to wordTable.counterTry,
                 SQLiteWord.COUNT_SUCCESS.column to wordTable.counterSuccess).whereArgs(
                 "${SQLiteWord.JAPANESE.column} = '$word' AND " +
-                    "${SQLiteWord.READING.column} LIKE '%$prononciation%'").exec()
+                    "${SQLiteWord.READING.column} LIKE '%$pronunciation%'").exec()
         }
     }
 

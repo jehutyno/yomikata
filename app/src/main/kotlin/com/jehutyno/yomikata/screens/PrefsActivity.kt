@@ -241,12 +241,12 @@ class PrefsActivity : AppCompatActivity(), FileChooserDialog.ChooserListener {
 
             MainScope().async {
                 wordTables.forEach {
-                    val wordtable = migrationSource.getWordTable(it)
+                    val wordTable = migrationSource.getWordTable(it)
                     progressBar.incrementProgressBy(1)
-                    wordtable.forEach {word ->
+                    wordTable.forEach { word ->
                         val source = WordSource(this@PrefsActivity)
                         if (word.counterTry > 0 || word.priority > 0)
-                            source.restoreWord(word.word, word.prononciation, word)
+                            source.restoreWord(word.word, word.pronunciation, word)
                     }
                 }
                 File(toPath + toName).delete()

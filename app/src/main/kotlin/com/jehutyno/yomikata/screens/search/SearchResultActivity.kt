@@ -41,11 +41,11 @@ class SearchResultActivity : AppCompatActivity() {
             title = getString(R.string.search_title)
         }
 
-        if (savedInstanceState != null) {
+        searchResultFragment = if (savedInstanceState != null) {
             //Restore the fragment's instance
-            searchResultFragment = supportFragmentManager.getFragment(savedInstanceState, "searchResultFragment") as SearchResultFragment
+            supportFragmentManager.getFragment(savedInstanceState, "searchResultFragment") as SearchResultFragment
         } else {
-            searchResultFragment = SearchResultFragment()
+            SearchResultFragment()
         }
         addOrReplaceFragment(R.id.container_content, searchResultFragment)
 

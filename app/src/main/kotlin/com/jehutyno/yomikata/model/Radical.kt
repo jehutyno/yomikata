@@ -8,10 +8,10 @@ import java.util.*
 open class Radical(val id: Long, val strokes: Int, val radical: String, val reading: String, val en: String, val fr: String) {
 
     fun getTrad(): String {
-        if (Locale.getDefault().language == "fr")
-            return fr
+        return if (Locale.getDefault().language == "fr")
+            fr
         else
-            return en
+            en
     }
 
 }

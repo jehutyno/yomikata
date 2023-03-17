@@ -48,7 +48,6 @@ import com.jehutyno.yomikata.screens.PrefsActivity
 import com.jehutyno.yomikata.screens.content.QuizzesPagerAdapter
 import com.jehutyno.yomikata.screens.search.SearchResultActivity
 import com.jehutyno.yomikata.util.*
-import com.jehutyno.yomikata.util.Extras.REQUEST_PREFS
 import com.jehutyno.yomikata.view.AppBarStateChangeListener
 import com.wooplr.spotlight.utils.SpotlightListener
 import mu.KLogging
@@ -129,7 +128,9 @@ class QuizzesActivity : AppCompatActivity() {
 
 
     fun voicesDownload(level: Int) {
-        launchVoicesDownload(this, level) {quizzesAdapter.notifyDataSetChanged()}
+        launchVoicesDownload(this, level) {
+            quizzesAdapter.notifyDataSetChanged()
+        }
     }
 
     @SuppressLint("MissingSuperCall")

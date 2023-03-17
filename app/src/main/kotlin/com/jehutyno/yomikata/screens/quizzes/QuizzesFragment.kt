@@ -101,9 +101,8 @@ class QuizzesFragment : Fragment(), QuizzesContract.View, QuizzesAdapter.Callbac
         }
         binding.btnAudioSwitch.setOnClickListener {
             spotlightTuto(requireActivity(), binding.btnAudioSwitch, getString(R.string.tutos_audio_quiz), getString(R.string.tutos_audio_quiz_message), SpotlightListener { })
-            val speechAvailability = checkSpeechAvailability(requireActivity(), ttsSupported, getCategoryLevel(selectedCategory))
-            when (speechAvailability) {
-                SpeechAvailability.NOT_AVAILABLE -> speechNotSupportedAlert(requireActivity(), getCategoryLevel(selectedCategory), { (activity as QuizzesActivity).quizzesAdapter.notifyDataSetChanged() })
+            when (checkSpeechAvailability(requireActivity(), ttsSupported, getCategoryLevel(selectedCategory))) {
+                SpeechAvailability.NOT_AVAILABLE -> speechNotSupportedAlert(requireActivity(), getCategoryLevel(selectedCategory)) { (activity as QuizzesActivity).quizzesAdapter.notifyDataSetChanged() }
                 else -> mpresenter!!.audioSwitch()
             }
         }
@@ -162,7 +161,7 @@ class QuizzesFragment : Fragment(), QuizzesContract.View, QuizzesAdapter.Callbac
         }
     }
 
-    fun previousVoicesDownloaded(downloadVersion: Int): Boolean {
+    private fun previousVoicesDownloaded(downloadVersion: Int): Boolean {
         val pref = PreferenceManager.getDefaultSharedPreferences(requireContext())
         return (0 until downloadVersion).any {
             pref.getBoolean("${Prefs.VOICE_DOWNLOADED_LEVEL_V.pref}${it}_${getCategoryLevel(selectedCategory)}", false)
@@ -259,7 +258,7 @@ class QuizzesFragment : Fragment(), QuizzesContract.View, QuizzesAdapter.Callbac
         binding.playMaster.visibility = if (master > 0) VISIBLE else INVISIBLE
     }
 
-    fun openContent(position: Int, level: Int) {
+    private fun openContent(position: Int, level: Int) {
         if ((selectedCategory == Categories.CATEGORY_SELECTIONS)) {
             // TODO: ?
         } else {
@@ -401,7 +400,7 @@ class QuizzesFragment : Fragment(), QuizzesContract.View, QuizzesAdapter.Callbac
         _binding = null
     }
 
-    fun tutos() {
+    private fun tutos() {
         MainScope().async {
             withContext(IO) {
                 sleep(500)

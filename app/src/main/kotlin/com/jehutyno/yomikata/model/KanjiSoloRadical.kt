@@ -10,10 +10,10 @@ open class KanjiSoloRadical(id: Long, kanji: String, strokes: Int, en: String, f
                             val radEn: String, val radFr: String): KanjiSolo(id, kanji, strokes, en, fr, kunyomi, onyomi, radical){
 
     fun getRadTrad(): String {
-        if (Locale.getDefault().language == "fr")
-            return radFr
+        return if (Locale.getDefault().language == "fr")
+            radFr
         else
-            return radEn
+            radEn
     }
 
 }

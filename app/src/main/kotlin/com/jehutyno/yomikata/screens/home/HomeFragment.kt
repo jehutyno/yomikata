@@ -119,7 +119,7 @@ class HomeFragment : Fragment(), HomeContract.View {
         textViews[3].text = getString(R.string.wrong_answers, wrongAnswer)
     }
 
-    fun displayLatestCategories() {
+    private fun displayLatestCategories() {
         val pref = PreferenceManager.getDefaultSharedPreferences(requireContext())
         val cat1 = pref.getInt(Prefs.LATEST_CATEGORY_1.pref, -1)
         val cat2 = pref.getInt(Prefs.LATEST_CATEGORY_2.pref, -1)
