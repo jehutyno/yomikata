@@ -5,6 +5,8 @@ plugins {
 }
 
 android {
+    namespace 'com.jehutyno.yomikata'
+
     compileSdkVersion 33
     buildToolsVersion '29.0.3'
 
