@@ -27,7 +27,7 @@ interface WordContract {
         fun isWordInQuizzes(wordId: Long, quizIds: Array<Long>) : ArrayList<Boolean>
         fun isWordInQuiz(wordId: Long, quizId: Long) : Boolean
         fun deleteWordFromSelection(wordId: Long, selectionId: Long)
-        fun searchWords(seazrchString: String)
+        fun searchWords(searchString: String)
         fun levelUp(id: Long, level: Int) : Int
         fun levelDown(id: Long, level: Int) : Int
         fun loadWord(wordId: Long)

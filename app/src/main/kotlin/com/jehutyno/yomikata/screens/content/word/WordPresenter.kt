@@ -77,8 +77,8 @@ class WordPresenter(
         contentView.displayWords(wordsRad)
     }
 
-    override fun searchWords(seazrchString: String) {
-        wordRepository.searchWords(seazrchString, object : WordRepository.LoadWordsCallback {
+    override fun searchWords(searchString: String) {
+        wordRepository.searchWords(searchString, object : WordRepository.LoadWordsCallback {
             override fun onWordsLoaded(words: List<Word>) {
                 val wordsRad = mutableListOf<Triple<Word, List<KanjiSoloRadical?>, Sentence>>()
                 words.forEach {
@@ -89,7 +89,7 @@ class WordPresenter(
             }
 
             override fun onDataNotAvailable() {
-                logger.info { "*************** NO DATA FOUND FOR QUIZ : $seazrchString ***************" }
+                logger.info { "*************** NO DATA FOUND FOR QUIZ : $searchString ***************" }
             }
 
         })
@@ -138,25 +138,25 @@ class WordPresenter(
     }
 
     override fun levelUp(id: Long, level: Int): Int {
-        if (level < 3) {
+        return if (level < 3) {
             wordRepository.updateWordLevel(id, level + 1)
-            return level + 1
+            level + 1
         } else if (level == 3) {
             wordRepository.updateWordPoints(id, 100)
-            return 3
+            3
         } else {
-            return level
+            level
         }
     }
 
     override fun levelDown(id: Long, level: Int): Int {
-        if (level > 0) {
+        return if (level > 0) {
             wordRepository.updateWordPoints(id, 0)
             wordRepository.updateWordLevel(id, level - 1)
-            return level - 1
+            level - 1
         } else {
             wordRepository.updateWordPoints(id, 0)
-            return level
+            level
         }
     }
 }
