@@ -61,7 +61,7 @@ class WordsAdapter(private val context: Context, private val callback: Callback)
             setOnClickListener {
                 checkMode = true
                 word.isSelected = 1
-                notifyDataSetChanged()
+                notifyItemRangeChanged(0, items.size)
                 callback.onCategoryIconClick(position)
             }
         }
@@ -86,6 +86,7 @@ class WordsAdapter(private val context: Context, private val callback: Callback)
     fun replaceData(list: List<Word>) {
         items.clear()
         items.addAll(list)
+        @Suppress("notifyDataSetChanged")
         notifyDataSetChanged()
     }
 
@@ -102,8 +103,9 @@ class WordsAdapter(private val context: Context, private val callback: Callback)
     }
 
     fun clearData() {
+        val size = items.size
         items.clear()
-        notifyDataSetChanged()
+        notifyItemRangeRemoved(0, size)
     }
 
 }

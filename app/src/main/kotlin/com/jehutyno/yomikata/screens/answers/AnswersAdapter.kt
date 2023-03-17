@@ -62,6 +62,7 @@ class AnswersAdapter(private val context: Context, private val callback: Callbac
 
     fun replaceData(list: List<Triple<Answer, Word, Sentence>>) {
         items = list
+        @Suppress("notifyDataSetChanged")
         notifyDataSetChanged()
     }
 

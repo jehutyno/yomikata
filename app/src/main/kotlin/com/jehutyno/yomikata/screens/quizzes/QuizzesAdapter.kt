@@ -26,14 +26,14 @@ class QuizzesAdapter(val context: Context, val category: Int, private val callba
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         val layoutInflater = LayoutInflater.from(parent.context)
 
-        when (viewType) {
+        return when (viewType) {
             TYPE_NEW_SELECTION -> {
                 val binding = VhNewSelectionBinding.inflate(layoutInflater, parent, false)
-                return ViewHolder.ViewHolderNewSelection(binding)
+                ViewHolder.ViewHolderNewSelection(binding)
             }
             TYPE_QUIZ -> {
                 val binding = VhQuizBinding.inflate(layoutInflater, parent, false)
-                return ViewHolder.ViewHolderQuiz(binding)
+                ViewHolder.ViewHolderQuiz(binding)
             }
             else -> throw IllegalArgumentException("Invalid ViewType Provided")
         }
@@ -90,31 +90,33 @@ class QuizzesAdapter(val context: Context, val category: Int, private val callba
     }
 
     override fun getItemCount(): Int {
-        if (isSelections)
-            return items.count() + 1
+        return if (isSelections)
+            items.count() + 1
         else
-            return items.count()
+            items.count()
 
     }
 
     override fun getItemViewType(position: Int): Int {
-        if (isSelections && position == items.count())
-            return TYPE_NEW_SELECTION
+        return if (isSelections && position == items.count())
+            TYPE_NEW_SELECTION
         else
-            return TYPE_QUIZ
+            TYPE_QUIZ
     }
 
     fun replaceData(list: List<Quiz>, isSelections: Boolean) {
         this.isSelections = isSelections
         items.clear()
         items.addAll(list)
+        @Suppress("notifyDataSetChanged")
         notifyDataSetChanged()
     }
 
     fun noData(isSelections: Boolean) {
         this.isSelections = isSelections
+        val size = items.size
         items.clear()
-        notifyDataSetChanged()
+        notifyItemRangeRemoved(0, size)
     }
 
     sealed class ViewHolder(binding: ViewBinding) : RecyclerView.ViewHolder(binding.root) {
