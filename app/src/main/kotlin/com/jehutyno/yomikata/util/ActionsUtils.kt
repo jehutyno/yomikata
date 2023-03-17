@@ -252,7 +252,12 @@ private fun createGpButton(activity: Activity) : Button {
     gpButton.setOnClickListener {
         val manager = activity.packageManager
         val intent = Intent(Intent.ACTION_VIEW, Uri.parse(activity.getString(R.string.google_tts_uri)))
-        if (manager.queryIntentActivities(intent, 0).size == 0) {
+        val query = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            manager.queryIntentActivities(intent, PackageManager.ResolveInfoFlags.of(0))
+        } else {
+            @Suppress("DEPRECATION") manager.queryIntentActivities(intent, 0)
+        }
+        if (query.size == 0) {
             val toast = Toast.makeText(activity,R.string.action_not_possible, Toast.LENGTH_LONG)
             toast.show()
         }
