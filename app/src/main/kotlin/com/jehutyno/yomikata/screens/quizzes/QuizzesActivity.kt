@@ -35,6 +35,7 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import android.window.OnBackInvokedDispatcher
 import androidx.activity.addCallback
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.preference.PreferenceManager
 import androidx.viewpager2.widget.ViewPager2
@@ -363,7 +364,7 @@ class QuizzesActivity : AppCompatActivity() {
                 R.id.settings -> {
                     menuItem.isChecked = false
                     val intent = Intent(this, PrefsActivity::class.java)
-                    startActivityForResult(intent, REQUEST_PREFS)
+                    getResult.launch(intent)
                 }
                 else -> {
                 }
@@ -511,12 +512,13 @@ class QuizzesActivity : AppCompatActivity() {
         quizzesAdapter.notifyDataSetChanged()
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        when (requestCode) {
-            REQUEST_PREFS -> if (resultCode == Activity.RESULT_OK) tutos()
-        }
-    }
+    private val getResult =
+            registerForActivityResult(
+                    ActivityResultContracts.StartActivityForResult()
+            ) {
+                if (it.resultCode == Activity.RESULT_OK)
+                    tutos()
+            }
 
     override fun onPause() {
         super.onPause()
