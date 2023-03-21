@@ -1,5 +1,6 @@
 package com.jehutyno.yomikata.screens.quizzes
 
+import android.animation.ObjectAnimator
 import android.content.Intent
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
@@ -45,6 +46,40 @@ class QuizzesFragment : Fragment(), QuizzesContract.View, QuizzesAdapter.Callbac
     private var tts: TextToSpeech? = null
     private var ttsSupported: Int = TextToSpeech.LANG_NOT_SUPPORTED
 
+    /**
+     * Singleton used to keep track of the seekBars settings / animations.
+     */
+    private object SeekBars {
+        var seekLowAnimation : ObjectAnimator? = null
+        var seekMediumAnimation : ObjectAnimator? = null
+        var seekHighAnimation : ObjectAnimator? = null
+        var seekMasterAnimation : ObjectAnimator? = null
+
+        var count : Int = 0
+        var low : Int = 0
+        var medium : Int = 0
+        var high : Int = 0
+        var master : Int = 0
+
+        fun animateAll(binding: FragmentQuizzesBinding) {
+            seekLowAnimation = animateSeekBar(binding.seekLow, 0, low, count)
+            seekMediumAnimation = animateSeekBar(binding.seekMedium, 0, medium, count)
+            seekHighAnimation = animateSeekBar(binding.seekHigh, 0, high, count)
+            seekMasterAnimation = animateSeekBar(binding.seekMaster, 0, master, count)
+        }
+
+        /**
+         * Cancel all animations of the seekBars.
+         * Use before manually setting seekBar.progress = value (since the animation may override your value)
+         */
+        fun cancelAll() {
+            seekLowAnimation?.cancel()
+            seekMediumAnimation?.cancel()
+            seekHighAnimation?.cancel()
+            seekMasterAnimation?.cancel()
+        }
+    }
+
     // View Binding
     private var _binding: FragmentQuizzesBinding? = null
     private val binding get() = _binding!!
@@ -70,6 +105,7 @@ class QuizzesFragment : Fragment(), QuizzesContract.View, QuizzesAdapter.Callbac
         val position = (binding.recyclerview.layoutManager as LinearLayoutManager).findFirstVisibleItemPosition()
         mpresenter!!.start()
         mpresenter!!.loadQuizzes(selectedCategory)
+        SeekBars.animateAll(binding)    // call this after loadQuizzes, since SeekBars variables are set there
         binding.recyclerview.scrollToPosition(position)
         tutos()
     }
@@ -238,24 +274,21 @@ class QuizzesFragment : Fragment(), QuizzesContract.View, QuizzesAdapter.Callbac
             ids.add(it.id)
         }
 
-        val count = mpresenter!!.countQuiz(ids.toLongArray())
-        val low = mpresenter!!.countLow(ids.toLongArray())
-        val medium = mpresenter!!.countMedium(ids.toLongArray())
-        val high = mpresenter!!.countHigh(ids.toLongArray())
-        val master = mpresenter!!.countMaster(ids.toLongArray())
-        animateSeekBar(binding.seekLow, 0, low, count)
-        binding.textLow.text = low.toString()
-        animateSeekBar(binding.seekMedium, 0, medium, count)
-        binding.textMedium.text = medium.toString()
-        animateSeekBar(binding.seekHigh, 0, high, count)
-        binding.textHigh.text = high.toString()
-        animateSeekBar(binding.seekMaster, 0, master, count)
-        binding.textMaster.text = master.toString()
+        SeekBars.count = mpresenter!!.countQuiz(ids.toLongArray())
+        SeekBars.low = mpresenter!!.countLow(ids.toLongArray())
+        SeekBars.medium = mpresenter!!.countMedium(ids.toLongArray())
+        SeekBars.high = mpresenter!!.countHigh(ids.toLongArray())
+        SeekBars.master = mpresenter!!.countMaster(ids.toLongArray())
 
-        binding.playLow.visibility = if (low > 0) VISIBLE else INVISIBLE
-        binding.playMedium.visibility = if (medium > 0) VISIBLE else INVISIBLE
-        binding.playHigh.visibility = if (high > 0) VISIBLE else INVISIBLE
-        binding.playMaster.visibility = if (master > 0) VISIBLE else INVISIBLE
+        binding.textLow.text = SeekBars.low.toString()
+        binding.textMedium.text = SeekBars.medium.toString()
+        binding.textHigh.text = SeekBars.high.toString()
+        binding.textMaster.text = SeekBars.master.toString()
+
+        binding.playLow.visibility = if (SeekBars.low > 0) VISIBLE else INVISIBLE
+        binding.playMedium.visibility = if (SeekBars.medium > 0) VISIBLE else INVISIBLE
+        binding.playHigh.visibility = if (SeekBars.high > 0) VISIBLE else INVISIBLE
+        binding.playMaster.visibility = if (SeekBars.master > 0) VISIBLE else INVISIBLE
     }
 
     private fun openContent(position: Int, level: Int) {
