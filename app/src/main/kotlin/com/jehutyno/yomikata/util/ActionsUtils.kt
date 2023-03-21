@@ -333,6 +333,7 @@ fun launchVoicesDownload(activity: Activity, level: Int, finishedListener: () ->
             messageResource = R.string.download_success_message
 
             okButton { finishedListener() }
+            setOnCancelListener { finishedListener() }
         }.show()
 
     }.addOnFailureListener {
