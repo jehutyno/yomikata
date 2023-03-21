@@ -108,8 +108,19 @@ class QuizPresenter(
         if (random1 != null) randoms.add(Pair(random1, savedInstanceState.getInt("random1_color")))
         if (random2 != null) randoms.add(Pair(random2, savedInstanceState.getInt("random2_color")))
         if (random3 != null) randoms.add(Pair(random3, savedInstanceState.getInt("random3_color")))
-        val words = LocalPersistence.readObjectFromFile(context, "words") as ArrayList<Word>
-        val types = LocalPersistence.readObjectFromFile(context, "types") as ArrayList<QuizType>
+
+        val wordsListRaw = LocalPersistence.readObjectFromFile(context, "words")
+        val wordsList = wordsListRaw as ArrayList<*>
+        val words = wordsListRaw.filterIsInstance<Word>()
+        if (words.size != wordsList.size) {
+            Log.e("Failed cast", "Some items in the read list of words were not of the type Word")
+        }
+        val typesListRaw = LocalPersistence.readObjectFromFile(context, "types")
+        val typesList = typesListRaw as ArrayList<*>
+        val types = typesListRaw.filterIsInstance<QuizType>()
+        if (types.size != typesList.size) {
+            Log.e("Failed cast", "Some items in the read list of quiz types were not of the type QuizType")
+        }
 
         quizWords = (0..words.size - 1).map { Pair(words[it], types[it]) }
         quizView.displayWords(quizWords)

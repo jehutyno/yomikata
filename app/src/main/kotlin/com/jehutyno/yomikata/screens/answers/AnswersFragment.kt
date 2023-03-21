@@ -2,6 +2,7 @@ package com.jehutyno.yomikata.screens.answers
 
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
+import android.util.Log
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.appcompat.widget.PopupMenu
@@ -26,6 +27,7 @@ import splitties.alertdialog.appcompat.cancelButton
 import splitties.alertdialog.appcompat.okButton
 import splitties.alertdialog.appcompat.titleResource
 import java.util.*
+import kotlin.collections.ArrayList
 
 
 /**
@@ -60,7 +62,13 @@ class AnswersFragment : Fragment(), AnswersContract.View, AnswersAdapter.Callbac
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         tts = TextToSpeech(activity, this)
-        val answers = LocalPersistence.readObjectFromFile(context, "answers") as ArrayList<Answer>
+
+        val answersListRaw = LocalPersistence.readObjectFromFile(context, "answers")
+        val answersList = answersListRaw as ArrayList<*>
+        val answers = answersListRaw.filterIsInstance<Answer>()
+        if (answers.size != answersList.size) {
+            Log.e("Failed cast", "Some items in the read list of answers were not of the type Answer")
+        }
         adapter = AnswersAdapter(requireActivity(), this)
         layoutManager = LinearLayoutManager(activity)
         adapter.replaceData(presenter.getAnswersWordsSentences(answers))
