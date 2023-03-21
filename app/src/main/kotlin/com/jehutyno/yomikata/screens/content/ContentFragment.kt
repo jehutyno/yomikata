@@ -20,7 +20,7 @@ import com.jehutyno.yomikata.model.Word
 import com.jehutyno.yomikata.screens.content.word.WordDetailDialogFragment
 import com.jehutyno.yomikata.util.DimensionHelper
 import com.jehutyno.yomikata.util.Extras
-import com.jehutyno.yomikata.util.animateSeekBar
+import com.jehutyno.yomikata.util.SeekBarsManager
 import splitties.alertdialog.appcompat.*
 import java.util.*
 
@@ -36,6 +36,9 @@ class ContentFragment : Fragment(), ContentContract.View, WordsAdapter.Callback,
     private var level = -1
     private var lastPosition = -1
     private lateinit var selections: List<Quiz>
+
+    // seekBars
+    private lateinit var seekBars : SeekBarsManager
 
     // View Binding
     private var _binding: FragmentContentGraphBinding? = null
@@ -68,6 +71,15 @@ class ContentFragment : Fragment(), ContentContract.View, WordsAdapter.Callback,
         setHasOptionsMenu(true)
     }
 
+    override fun onStart() {
+        super.onStart()
+        mpresenter?.start()
+        mpresenter?.loadWords(quizIds, level)
+        mpresenter?.loadSelections()
+
+        displayStats()
+    }
+
     override fun onResume() {
         super.onResume()
         val position =
@@ -80,28 +92,38 @@ class ContentFragment : Fragment(), ContentContract.View, WordsAdapter.Callback,
         mpresenter?.loadSelections()
 
         displayStats()
+        seekBars.animateAll()
+    }
+
+    override fun onPause() {
+        super.onPause()
+
+        // cancel animation in case it is currently running
+        seekBars.cancelAll()
+
+        // set all to zero to prepare for the next animation when the page resumes again
+        binding.seekLow.progress = 0
+        binding.seekMedium.progress = 0
+        binding.seekHigh.progress = 0
+        binding.seekMaster.progress = 0
     }
 
     override fun displayStats() {
-        val count = mpresenter!!.countQuiz(quizIds)
-        val low = mpresenter!!.countLow(quizIds)
-        val medium = mpresenter!!.countMedium(quizIds)
-        val high = mpresenter!!.countHigh(quizIds)
-        val master = mpresenter!!.countMaster(quizIds)
+        seekBars.count = mpresenter!!.countQuiz(quizIds)
+        seekBars.low = mpresenter!!.countLow(quizIds)
+        seekBars.medium = mpresenter!!.countMedium(quizIds)
+        seekBars.high = mpresenter!!.countHigh(quizIds)
+        seekBars.master = mpresenter!!.countMaster(quizIds)
         if (level > -1) {
             binding.seekLowContainer.visibility = if (level == 0) VISIBLE else GONE
             binding.seekMediumContainer.visibility = if (level == 1) VISIBLE else GONE
             binding.seekHighContainer.visibility = if (level == 2) VISIBLE else GONE
             binding.seekMasterContainer.visibility = if (level == 3) VISIBLE else GONE
         }
-        animateSeekBar(binding.seekLow, 0, low, count)
-        binding.textLow.text = low.toString()
-        animateSeekBar(binding.seekMedium, 0, medium, count)
-        binding.textMedium.text = medium.toString()
-        animateSeekBar(binding.seekHigh, 0, high, count)
-        binding.textHigh.text = high.toString()
-        animateSeekBar(binding.seekMaster, 0, master, count)
-        binding.textMaster.text = master.toString()
+        binding.textLow.text = seekBars.low.toString()
+        binding.textMedium.text = seekBars.medium.toString()
+        binding.textHigh.text = seekBars.high.toString()
+        binding.textMaster.text = seekBars.master.toString()
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -119,6 +141,9 @@ class ContentFragment : Fragment(), ContentContract.View, WordsAdapter.Callback,
             it.adapter = adapter
             it.layoutManager = GridLayoutManager(context, 2)
         }
+
+        // initialize seekBarsManager
+        seekBars = SeekBarsManager(binding.seekLow, binding.seekMedium, binding.seekHigh, binding.seekMaster)
     }
 
     override fun displayWords(words: List<Word>) {
