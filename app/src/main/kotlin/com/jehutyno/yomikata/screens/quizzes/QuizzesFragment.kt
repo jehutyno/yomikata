@@ -83,6 +83,9 @@ class QuizzesFragment : Fragment(), QuizzesContract.View, QuizzesAdapter.Callbac
         seekBars.animateAll()    // call this after loadQuizzes, since seekBars variables are set there
         binding.recyclerview.scrollToPosition(position)
         tutos()
+
+        // check if voices downloads have changed (e.g. voices files have been deleted in preferences)
+        updateVoicesDownloadVisibility()
     }
 
     override fun onPause() {
@@ -156,19 +159,7 @@ class QuizzesFragment : Fragment(), QuizzesContract.View, QuizzesAdapter.Callbac
             openContent(selectedCategory, 3)
         }
 
-        val pref = PreferenceManager.getDefaultSharedPreferences(requireContext())
-        if (selectedCategory == -1 || selectedCategory == 8
-            || pref.getBoolean(Prefs.VOICE_DOWNLOADED_LEVEL_V.pref +
-            "${getLevelDownloadVersion(getCategoryLevel(selectedCategory))}_${getCategoryLevel(selectedCategory)}", false)) {
-            binding.download.visibility = GONE
-        } else {
-            binding.download.visibility = VISIBLE
-            if (getLevelDownloadVersion(getCategoryLevel(selectedCategory)) > 0 && previousVoicesDownloaded(getLevelDownloadVersion(getCategoryLevel(selectedCategory)))) {
-                binding.download.text = getString(R.string.update_voices, getLevelDownloadSize(getCategoryLevel(selectedCategory)))
-            } else {
-                binding.download.text = getString(R.string.download_voices, getLevelDownloadSize(getCategoryLevel(selectedCategory)))
-            }
-        }
+        updateVoicesDownloadVisibility()
 
         binding.download.setOnClickListener {
             requireContext().alertDialog {
@@ -190,6 +181,22 @@ class QuizzesFragment : Fragment(), QuizzesContract.View, QuizzesAdapter.Callbac
 
         // initialize seekBarsManager
         seekBars = SeekBarsManager(binding.seekLow, binding.seekMedium, binding.seekHigh, binding.seekMaster)
+    }
+
+    private fun updateVoicesDownloadVisibility() {
+        val pref = PreferenceManager.getDefaultSharedPreferences(requireContext())
+        if (selectedCategory == -1 || selectedCategory == 8
+                || pref.getBoolean(Prefs.VOICE_DOWNLOADED_LEVEL_V.pref +
+                        "${getLevelDownloadVersion(getCategoryLevel(selectedCategory))}_${getCategoryLevel(selectedCategory)}", false)) {
+            binding.download.visibility = GONE
+        } else {
+            binding.download.visibility = VISIBLE
+            if (getLevelDownloadVersion(getCategoryLevel(selectedCategory)) > 0 && previousVoicesDownloaded(getLevelDownloadVersion(getCategoryLevel(selectedCategory)))) {
+                binding.download.text = getString(R.string.update_voices, getLevelDownloadSize(getCategoryLevel(selectedCategory)))
+            } else {
+                binding.download.text = getString(R.string.download_voices, getLevelDownloadSize(getCategoryLevel(selectedCategory)))
+            }
+        }
     }
 
     private fun previousVoicesDownloaded(downloadVersion: Int): Boolean {
