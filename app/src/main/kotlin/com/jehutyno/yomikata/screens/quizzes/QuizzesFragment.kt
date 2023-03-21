@@ -100,6 +100,13 @@ class QuizzesFragment : Fragment(), QuizzesContract.View, QuizzesAdapter.Callbac
         adapter = QuizzesAdapter(requireActivity(), selectedCategory, this, selectedCategory == Categories.CATEGORY_SELECTIONS)
     }
 
+    override fun onStart() {
+        // use onStart so that viewPager2 can set everything up before the page becomes visible
+        super.onStart()
+        mpresenter!!.start()
+        mpresenter!!.loadQuizzes(selectedCategory)
+    }
+
     override fun onResume() {
         super.onResume()
         val position = (binding.recyclerview.layoutManager as LinearLayoutManager).findFirstVisibleItemPosition()

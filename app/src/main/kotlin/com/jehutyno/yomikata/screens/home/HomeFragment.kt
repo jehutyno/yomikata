@@ -46,6 +46,14 @@ class HomeFragment : Fragment(), HomeContract.View {
         mpresenter = presenter
     }
 
+    override fun onStart() {
+        // preload for viewPager2
+        super.onStart()
+        mpresenter!!.start()
+        mpresenter!!.loadAllStats()
+        displayLatestCategories()
+    }
+
     override fun onResume() {
         super.onResume()
         mpresenter!!.start()
