@@ -849,10 +849,6 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
 
     }
 
-    fun unlockFullVersion() {
-        adapter!!.notifyDataSetChanged()
-    }
-
     private fun addSelection(wordId: Long) {
         val input = EditText(activity)
         input.setSingleLine()

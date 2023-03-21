@@ -83,8 +83,4 @@ class AnswersActivity : AppCompatActivity() {
         return super.onOptionsItemSelected(item)
     }
 
-    fun unlockFullVersion() {
-        answersFragment.unlockFullVersion()
-    }
-
 }

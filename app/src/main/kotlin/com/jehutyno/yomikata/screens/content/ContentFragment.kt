@@ -325,8 +325,4 @@ class ContentFragment : Fragment(), ContentContract.View, WordsAdapter.Callback,
         _binding = null
     }
 
-    fun unlockFullVersion() {
-        adapter.notifyDataSetChanged()
-    }
-
 }

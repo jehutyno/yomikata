@@ -157,7 +157,4 @@ class QuizActivity : AppCompatActivity() {
         return super.onOptionsItemSelected(item)
     }
 
-    fun unlockFullVersion() {
-        quizFragment.unlockFullVersion()
-    }
 }

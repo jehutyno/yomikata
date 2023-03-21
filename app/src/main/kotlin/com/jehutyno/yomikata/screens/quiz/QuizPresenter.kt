@@ -336,31 +336,26 @@ class QuizPresenter(
         val returnTypes: IntArray
         if (quizTypes.contains(QuizType.TYPE_AUTO.type)) {
             val autoTypes = arrayListOf<Int>()
-            if (defaultSharedPreferences.getBoolean(Prefs.FULL_VERSION.pref, false)) {
-                when (word.level) {
-                    0 -> {
-                        autoTypes.add(QuizType.TYPE_PRONUNCIATION_QCM.type)
-                        autoTypes.add(QuizType.TYPE_JAP_EN.type)
-                    }
-                    1 -> {
-                        autoTypes.add(QuizType.TYPE_PRONUNCIATION_QCM.type)
-                        autoTypes.add(QuizType.TYPE_JAP_EN.type)
-                        autoTypes.add(QuizType.TYPE_EN_JAP.type)
-                        if (ttsSupported != TextToSpeech.LANG_MISSING_DATA && ttsSupported != TextToSpeech.LANG_NOT_SUPPORTED)
-                            autoTypes.add(QuizType.TYPE_AUDIO.type)
-                    }
-                    else -> {
-                        autoTypes.add(QuizType.TYPE_PRONUNCIATION_QCM.type)
-                        autoTypes.add(QuizType.TYPE_JAP_EN.type)
-                        autoTypes.add(QuizType.TYPE_EN_JAP.type)
-                        autoTypes.add(QuizType.TYPE_PRONUNCIATION.type)
-                        if (ttsSupported != TextToSpeech.LANG_MISSING_DATA && ttsSupported != TextToSpeech.LANG_NOT_SUPPORTED)
-                            autoTypes.add(QuizType.TYPE_AUDIO.type)
-                    }
+            when (word.level) {
+                0 -> {
+                    autoTypes.add(QuizType.TYPE_PRONUNCIATION_QCM.type)
+                    autoTypes.add(QuizType.TYPE_JAP_EN.type)
                 }
-            } else {
-                autoTypes.add(QuizType.TYPE_PRONUNCIATION_QCM.type)
-                autoTypes.add(QuizType.TYPE_PRONUNCIATION.type)
+                1 -> {
+                    autoTypes.add(QuizType.TYPE_PRONUNCIATION_QCM.type)
+                    autoTypes.add(QuizType.TYPE_JAP_EN.type)
+                    autoTypes.add(QuizType.TYPE_EN_JAP.type)
+                    if (ttsSupported != TextToSpeech.LANG_MISSING_DATA && ttsSupported != TextToSpeech.LANG_NOT_SUPPORTED)
+                        autoTypes.add(QuizType.TYPE_AUDIO.type)
+                }
+                else -> {
+                    autoTypes.add(QuizType.TYPE_PRONUNCIATION_QCM.type)
+                    autoTypes.add(QuizType.TYPE_JAP_EN.type)
+                    autoTypes.add(QuizType.TYPE_EN_JAP.type)
+                    autoTypes.add(QuizType.TYPE_PRONUNCIATION.type)
+                    if (ttsSupported != TextToSpeech.LANG_MISSING_DATA && ttsSupported != TextToSpeech.LANG_NOT_SUPPORTED)
+                        autoTypes.add(QuizType.TYPE_AUDIO.type)
+                }
             }
             returnTypes = autoTypes.toIntArray()
         } else {

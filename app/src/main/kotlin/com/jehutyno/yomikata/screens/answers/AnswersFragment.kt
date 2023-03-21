@@ -178,7 +178,4 @@ class AnswersFragment : Fragment(), AnswersContract.View, AnswersAdapter.Callbac
         _binding = null
     }
 
-    fun unlockFullVersion() {
-        adapter.notifyDataSetChanged()
-    }
 }

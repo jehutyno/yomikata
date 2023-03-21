@@ -158,9 +158,6 @@
     <string name="orange_review">Mots oranges</string>
     <string name="yellow_review">Mots jaunes</string>
     <string name="green_review">Mots verts</string>
-    <string name="action_unlock">Débloquer la version complète</string>
-    <string name="selection_unlock_full_version">Pour créer vos propres sélections, veuillez débloquer la version complète depuis l\'écran principal</string>
-    <string name="purchase_unlock">Débloquer</string>
     <string name="unlock_caps">DEBLOQUER</string>
     <string name="cancel_caps">ANNULER</string>
     <string name="error_billing">Oups ! Veuillez vérifier que vous êtes connecté ou que votre appareil supporte les Google Play Services !</string>

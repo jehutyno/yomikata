@@ -239,8 +239,4 @@ class ContentActivity : AppCompatActivity() {
         return super.onOptionsItemSelected(item)
     }
 
-    fun unlockFullVersion() {
-        finish()
-    }
-
 }
