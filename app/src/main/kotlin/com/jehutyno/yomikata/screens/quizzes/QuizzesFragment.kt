@@ -1,6 +1,5 @@
 package com.jehutyno.yomikata.screens.quizzes
 
-import android.animation.ObjectAnimator
 import android.content.Intent
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
@@ -46,39 +45,8 @@ class QuizzesFragment : Fragment(), QuizzesContract.View, QuizzesAdapter.Callbac
     private var tts: TextToSpeech? = null
     private var ttsSupported: Int = TextToSpeech.LANG_NOT_SUPPORTED
 
-    /**
-     * Singleton used to keep track of the seekBars settings / animations.
-     */
-    private object SeekBars {
-        var seekLowAnimation : ObjectAnimator? = null
-        var seekMediumAnimation : ObjectAnimator? = null
-        var seekHighAnimation : ObjectAnimator? = null
-        var seekMasterAnimation : ObjectAnimator? = null
-
-        var count : Int = 0
-        var low : Int = 0
-        var medium : Int = 0
-        var high : Int = 0
-        var master : Int = 0
-
-        fun animateAll(binding: FragmentQuizzesBinding) {
-            seekLowAnimation = animateSeekBar(binding.seekLow, 0, low, count)
-            seekMediumAnimation = animateSeekBar(binding.seekMedium, 0, medium, count)
-            seekHighAnimation = animateSeekBar(binding.seekHigh, 0, high, count)
-            seekMasterAnimation = animateSeekBar(binding.seekMaster, 0, master, count)
-        }
-
-        /**
-         * Cancel all animations of the seekBars.
-         * Use before manually setting seekBar.progress = value (since the animation may override your value)
-         */
-        fun cancelAll() {
-            seekLowAnimation?.cancel()
-            seekMediumAnimation?.cancel()
-            seekHighAnimation?.cancel()
-            seekMasterAnimation?.cancel()
-        }
-    }
+    // seekBars
+    private lateinit var seekBars : SeekBarsManager
 
     // View Binding
     private var _binding: FragmentQuizzesBinding? = null
@@ -112,7 +80,7 @@ class QuizzesFragment : Fragment(), QuizzesContract.View, QuizzesAdapter.Callbac
         val position = (binding.recyclerview.layoutManager as LinearLayoutManager).findFirstVisibleItemPosition()
         mpresenter!!.start()
         mpresenter!!.loadQuizzes(selectedCategory)
-        SeekBars.animateAll(binding)    // call this after loadQuizzes, since SeekBars variables are set there
+        seekBars.animateAll()    // call this after loadQuizzes, since seekBars variables are set there
         binding.recyclerview.scrollToPosition(position)
         tutos()
     }
@@ -121,7 +89,7 @@ class QuizzesFragment : Fragment(), QuizzesContract.View, QuizzesAdapter.Callbac
         super.onPause()
 
         // cancel animation in case it is currently running
-        SeekBars.cancelAll()
+        seekBars.cancelAll()
 
         // set all to zero to prepare for the next animation when the page resumes again
         binding.seekLow.progress = 0
@@ -215,6 +183,9 @@ class QuizzesFragment : Fragment(), QuizzesContract.View, QuizzesAdapter.Callbac
                 cancelButton { }
             }.show()
         }
+
+        // initialize seekBarsManager
+        seekBars = SeekBarsManager(binding.seekLow, binding.seekMedium, binding.seekHigh, binding.seekMaster)
     }
 
     private fun previousVoicesDownloaded(downloadVersion: Int): Boolean {
@@ -294,21 +265,21 @@ class QuizzesFragment : Fragment(), QuizzesContract.View, QuizzesAdapter.Callbac
             ids.add(it.id)
         }
 
-        SeekBars.count = mpresenter!!.countQuiz(ids.toLongArray())
-        SeekBars.low = mpresenter!!.countLow(ids.toLongArray())
-        SeekBars.medium = mpresenter!!.countMedium(ids.toLongArray())
-        SeekBars.high = mpresenter!!.countHigh(ids.toLongArray())
-        SeekBars.master = mpresenter!!.countMaster(ids.toLongArray())
+        seekBars.count = mpresenter!!.countQuiz(ids.toLongArray())
+        seekBars.low = mpresenter!!.countLow(ids.toLongArray())
+        seekBars.medium = mpresenter!!.countMedium(ids.toLongArray())
+        seekBars.high = mpresenter!!.countHigh(ids.toLongArray())
+        seekBars.master = mpresenter!!.countMaster(ids.toLongArray())
 
-        binding.textLow.text = SeekBars.low.toString()
-        binding.textMedium.text = SeekBars.medium.toString()
-        binding.textHigh.text = SeekBars.high.toString()
-        binding.textMaster.text = SeekBars.master.toString()
+        binding.textLow.text = seekBars.low.toString()
+        binding.textMedium.text = seekBars.medium.toString()
+        binding.textHigh.text = seekBars.high.toString()
+        binding.textMaster.text = seekBars.master.toString()
 
-        binding.playLow.visibility = if (SeekBars.low > 0) VISIBLE else INVISIBLE
-        binding.playMedium.visibility = if (SeekBars.medium > 0) VISIBLE else INVISIBLE
-        binding.playHigh.visibility = if (SeekBars.high > 0) VISIBLE else INVISIBLE
-        binding.playMaster.visibility = if (SeekBars.master > 0) VISIBLE else INVISIBLE
+        binding.playLow.visibility = if (seekBars.low > 0) VISIBLE else INVISIBLE
+        binding.playMedium.visibility = if (seekBars.medium > 0) VISIBLE else INVISIBLE
+        binding.playHigh.visibility = if (seekBars.high > 0) VISIBLE else INVISIBLE
+        binding.playMaster.visibility = if (seekBars.master > 0) VISIBLE else INVISIBLE
     }
 
     private fun openContent(position: Int, level: Int) {
