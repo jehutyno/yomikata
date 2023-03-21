@@ -317,50 +317,51 @@ class QuizzesActivity : AppCompatActivity() {
 
         navigationView.setNavigationItemSelectedListener { menuItem ->
             binding.multipleActions.collapse()
+            // set smoothScroll to false because scrolling through all of the pages can be bad for performance
             when (menuItem.itemId) {
                 R.id.home -> {
                     menuItem.isChecked = true
-                    binding.pagerQuizzes.currentItem = quizzesAdapter.positionFromCategory(Categories.HOME)
+                    binding.pagerQuizzes.setCurrentItem(quizzesAdapter.positionFromCategory(Categories.HOME), false)
                 }
                 R.id.your_selections_item -> {
                     menuItem.isChecked = true
-                    binding.pagerQuizzes.currentItem = quizzesAdapter.positionFromCategory(Categories.CATEGORY_SELECTIONS)
+                    binding.pagerQuizzes.setCurrentItem(quizzesAdapter.positionFromCategory(Categories.CATEGORY_SELECTIONS), false)
                 }
                 R.id.hiragana_item -> {
                     menuItem.isChecked = true
-                    binding.pagerQuizzes.currentItem = quizzesAdapter.positionFromCategory(Categories.CATEGORY_HIRAGANA)
+                    binding.pagerQuizzes.setCurrentItem(quizzesAdapter.positionFromCategory(Categories.CATEGORY_HIRAGANA), false)
                 }
                 R.id.katakana_item -> {
                     menuItem.isChecked = true
-                    binding.pagerQuizzes.currentItem = quizzesAdapter.positionFromCategory(Categories.CATEGORY_KATAKANA)
+                    binding.pagerQuizzes.setCurrentItem(quizzesAdapter.positionFromCategory(Categories.CATEGORY_KATAKANA), false)
                 }
                 R.id.kanji_item -> {
                     menuItem.isChecked = true
-                    binding.pagerQuizzes.currentItem = quizzesAdapter.positionFromCategory(Categories.CATEGORY_KANJI)
+                    binding.pagerQuizzes.setCurrentItem(quizzesAdapter.positionFromCategory(Categories.CATEGORY_KANJI), false)
                 }
                 R.id.counters_item -> {
                     menuItem.isChecked = true
-                    binding.pagerQuizzes.currentItem = quizzesAdapter.positionFromCategory(Categories.CATEGORY_COUNTERS)
+                    binding.pagerQuizzes.setCurrentItem(quizzesAdapter.positionFromCategory(Categories.CATEGORY_COUNTERS), false)
                 }
                 R.id.jlpt1_item -> {
                     menuItem.isChecked = true
-                    binding.pagerQuizzes.currentItem = quizzesAdapter.positionFromCategory(Categories.CATEGORY_JLPT_1)
+                    binding.pagerQuizzes.setCurrentItem(quizzesAdapter.positionFromCategory(Categories.CATEGORY_JLPT_1), false)
                 }
                 R.id.jlpt2_item -> {
                     menuItem.isChecked = true
-                    binding.pagerQuizzes.currentItem = quizzesAdapter.positionFromCategory(Categories.CATEGORY_JLPT_2)
+                    binding.pagerQuizzes.setCurrentItem(quizzesAdapter.positionFromCategory(Categories.CATEGORY_JLPT_2), false)
                 }
                 R.id.jlpt3_item -> {
                     menuItem.isChecked = true
-                    binding.pagerQuizzes.currentItem = quizzesAdapter.positionFromCategory(Categories.CATEGORY_JLPT_3)
+                    binding.pagerQuizzes.setCurrentItem(quizzesAdapter.positionFromCategory(Categories.CATEGORY_JLPT_3), false)
                 }
                 R.id.jlpt4_item -> {
                     menuItem.isChecked = true
-                    binding.pagerQuizzes.currentItem = quizzesAdapter.positionFromCategory(Categories.CATEGORY_JLPT_4)
+                    binding.pagerQuizzes.setCurrentItem(quizzesAdapter.positionFromCategory(Categories.CATEGORY_JLPT_4), false)
                 }
                 R.id.jlpt5_item -> {
                     menuItem.isChecked = true
-                    binding.pagerQuizzes.currentItem = quizzesAdapter.positionFromCategory(Categories.CATEGORY_JLPT_5)
+                    binding.pagerQuizzes.setCurrentItem(quizzesAdapter.positionFromCategory(Categories.CATEGORY_JLPT_5), false)
                 }
                 R.id.day_night_item -> {
                     menuItem.isChecked = !menuItem.isChecked
