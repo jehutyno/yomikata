@@ -193,12 +193,16 @@ class QuizzesActivity : AppCompatActivity() {
         binding.drawerLayout.setStatusBarBackground(R.color.colorPrimaryDark)
         setupDrawerContent(binding.navView)
 
+        // keep all fragments loaded for performance reasons
+        binding.pagerQuizzes.offscreenPageLimit = 10
+
         quizzesAdapter = QuizzesPagerAdapter(this, supportFragmentManager, lifecycle)
         binding.pagerQuizzes.adapter = quizzesAdapter
         binding.pagerQuizzes.currentItem = quizzesAdapter.positionFromCategory(selectedCategory)
         binding.pagerQuizzes.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
 
             override fun onPageSelected(position: Int) {
+                super.onPageSelected(position)
                 selectedCategory = quizzesAdapter.categories[position]
                 if (selectedCategory == Categories.HOME) {
                     binding.multipleActions.visibility = GONE
