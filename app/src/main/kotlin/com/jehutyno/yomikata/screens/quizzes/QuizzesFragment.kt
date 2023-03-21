@@ -179,7 +179,11 @@ class QuizzesFragment : Fragment(), QuizzesContract.View, QuizzesAdapter.Callbac
                     titleResource = R.string.download_voices_alert
                     message = getString(R.string.download_voices_alert_message, getLevelDownloadSize(getCategoryLevel(selectedCategory)))
                 }
-                okButton { (activity as QuizzesActivity).voicesDownload(getCategoryLevel(selectedCategory)) }
+                okButton {
+                    (activity as QuizzesActivity).voicesDownload(getCategoryLevel(selectedCategory)) {
+                        binding.download.visibility = GONE
+                    }
+                }
                 cancelButton { }
             }.show()
         }

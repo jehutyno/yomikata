@@ -127,9 +127,10 @@ class QuizzesActivity : AppCompatActivity() {
     private lateinit var binding: ActivityQuizzesBinding
 
 
-    fun voicesDownload(level: Int) {
+    fun voicesDownload(level: Int, onSuccess: () -> Unit) {
         launchVoicesDownload(this, level) {
             quizzesAdapter.notifyDataSetChanged()
+            onSuccess()
         }
     }
 
