@@ -117,6 +117,19 @@ class QuizzesFragment : Fragment(), QuizzesContract.View, QuizzesAdapter.Callbac
         tutos()
     }
 
+    override fun onPause() {
+        super.onPause()
+
+        // cancel animation in case it is currently running
+        SeekBars.cancelAll()
+
+        // set all to zero to prepare for the next animation when the page resumes again
+        binding.seekLow.progress = 0
+        binding.seekMedium.progress = 0
+        binding.seekHigh.progress = 0
+        binding.seekMaster.progress = 0
+    }
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentQuizzesBinding.inflate(inflater, container, false)
         return binding.root
