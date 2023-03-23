@@ -11,17 +11,13 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.FrameLayout
-import com.github.salomonbrys.kodein.Kodein
-import com.github.salomonbrys.kodein.KodeinInjector
-import com.github.salomonbrys.kodein.android.appKodein
-import com.github.salomonbrys.kodein.instance
-import com.github.salomonbrys.kodein.singleton
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.databinding.FragmentContentBinding
 import com.jehutyno.yomikata.managers.VoicesManager
 import com.jehutyno.yomikata.model.Answer
 import com.jehutyno.yomikata.model.Quiz
 import com.jehutyno.yomikata.util.*
+import org.kodein.di.*
 import splitties.alertdialog.appcompat.alertDialog
 import splitties.alertdialog.appcompat.cancelButton
 import splitties.alertdialog.appcompat.okButton
@@ -33,11 +29,16 @@ import kotlin.collections.ArrayList
 /**
  * Created by valentin on 25/10/2016.
  */
-class AnswersFragment : Fragment(), AnswersContract.View, AnswersAdapter.Callback, TextToSpeech.OnInitListener {
+class AnswersFragment(private val di: DI) : Fragment(), AnswersContract.View, AnswersAdapter.Callback, TextToSpeech.OnInitListener {
 
-    private val injector = KodeinInjector()
+    // kodein
+    private val subDI by DI.lazy {
+        extend(di)
+        bind<VoicesManager>() with singleton { VoicesManager(requireActivity()) }
+    }
     @Suppress("unused")
-    private val voicesManager: VoicesManager by injector.instance()
+    private val voicesManager: VoicesManager by subDI.instance()
+
     private lateinit var presenter: AnswersContract.Presenter
     private lateinit var layoutManager: LinearLayoutManager
     private lateinit var adapter: AnswersAdapter
@@ -81,11 +82,6 @@ class AnswersFragment : Fragment(), AnswersContract.View, AnswersAdapter.Callbac
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        injector.inject(Kodein {
-            extend(appKodein())
-            bind<VoicesManager>() with singleton { VoicesManager(requireActivity()) }
-        })
 
         binding.recyclerviewContent.let {
             it.adapter = adapter

@@ -51,11 +51,16 @@ import com.jehutyno.yomikata.util.*
 import com.jehutyno.yomikata.view.AppBarStateChangeListener
 import com.wooplr.spotlight.utils.SpotlightListener
 import mu.KLogging
+import org.kodein.di.DIAware
+import org.kodein.di.DI
+import org.kodein.di.android.di
 import splitties.alertdialog.appcompat.*
 import java.util.*
 
 
-class QuizzesActivity : AppCompatActivity() {
+class QuizzesActivity : AppCompatActivity(), DIAware {
+
+    override val di: DI by di()
 
     companion object : KLogging() {
         val UPDATE_INTENT = "update_intent"
@@ -197,7 +202,7 @@ class QuizzesActivity : AppCompatActivity() {
         // keep all fragments loaded for performance reasons
         binding.pagerQuizzes.offscreenPageLimit = 10
 
-        quizzesAdapter = QuizzesPagerAdapter(this, supportFragmentManager, lifecycle)
+        quizzesAdapter = QuizzesPagerAdapter(this, supportFragmentManager, lifecycle, di)
         binding.pagerQuizzes.adapter = quizzesAdapter
         binding.pagerQuizzes.currentItem = quizzesAdapter.positionFromCategory(selectedCategory)
         binding.pagerQuizzes.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {

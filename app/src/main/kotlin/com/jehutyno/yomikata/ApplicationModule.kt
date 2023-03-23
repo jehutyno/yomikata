@@ -1,10 +1,10 @@
 package com.jehutyno.yomikata
 
 import android.content.Context
-import com.github.salomonbrys.kodein.Kodein
-import com.github.salomonbrys.kodein.instance
+import org.kodein.di.DI
+import org.kodein.di.bind
+import org.kodein.di.instance
 
-
-fun applicationModule(context: Context) = Kodein.Module {
+fun applicationModule(context: Context) = DI.Module("applicationModule") {
     bind<Context>() with instance(context)
 }

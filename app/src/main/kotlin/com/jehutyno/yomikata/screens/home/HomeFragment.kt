@@ -9,8 +9,6 @@ import android.view.View.VISIBLE
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.preference.PreferenceManager
-import com.github.salomonbrys.kodein.android.appKodein
-import com.github.salomonbrys.kodein.instance
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
@@ -22,6 +20,7 @@ import com.jehutyno.yomikata.model.StatEntry
 import com.jehutyno.yomikata.model.StatResult
 import com.jehutyno.yomikata.screens.quizzes.QuizzesActivity
 import com.jehutyno.yomikata.util.*
+import org.kodein.di.*
 
 import java.util.*
 
@@ -29,9 +28,12 @@ import java.util.*
 /**
  * Created by valentin on 26/12/2016.
  */
-class HomeFragment : Fragment(), HomeContract.View {
+class HomeFragment(di: DI) : Fragment(), HomeContract.View {
 
-    private var mpresenter: HomeContract.Presenter? = null
+    // kodein
+    private val mpresenter: HomeContract.Presenter by di.newInstance {
+        HomePresenter(instance(), instance(), this@HomeFragment)
+    }
 
     // View Binding
     private var _binding: FragmentHomeBinding? = null
@@ -43,21 +45,22 @@ class HomeFragment : Fragment(), HomeContract.View {
     }
 
     override fun setPresenter(presenter: HomeContract.Presenter) {
-        mpresenter = presenter
+        // no need: see QuizzesFragment setPresenter for explanation
+//        mpresenter = presenter
     }
 
     override fun onStart() {
         // preload for viewPager2
         super.onStart()
-        mpresenter!!.start()
-        mpresenter!!.loadAllStats()
+        mpresenter.start()
+        mpresenter.loadAllStats()
         displayLatestCategories()
     }
 
     override fun onResume() {
         super.onResume()
-        mpresenter!!.start()
-        mpresenter!!.loadAllStats()
+        mpresenter.start()
+        mpresenter.loadAllStats()
         displayLatestCategories()
     }
 
@@ -68,10 +71,6 @@ class HomeFragment : Fragment(), HomeContract.View {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        if (mpresenter == null) {
-            mpresenter = HomePresenter(requireActivity().appKodein.invoke().instance(), requireContext().appKodein.invoke().instance(), this)
-        }
 
         val database = FirebaseDatabase.getInstance()
         val newsRef = if (Locale.getDefault().language == "fr")

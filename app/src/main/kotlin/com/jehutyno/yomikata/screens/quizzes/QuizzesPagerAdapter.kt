@@ -11,12 +11,13 @@ import com.jehutyno.yomikata.screens.home.HomeFragment
 import com.jehutyno.yomikata.screens.quizzes.QuizzesFragment
 import com.jehutyno.yomikata.util.Categories
 import com.jehutyno.yomikata.util.Extras
+import org.kodein.di.DI
 
 
 /**
  * Created by valentin on 19/12/2016.
  */
-class QuizzesPagerAdapter(val context: Context, fm: FragmentManager, lifecycle: Lifecycle) : FragmentStateAdapter(fm, lifecycle) {
+class QuizzesPagerAdapter(val context: Context, fm: FragmentManager, lifecycle: Lifecycle, private val di: DI) : FragmentStateAdapter(fm, lifecycle) {
 
     val categories = intArrayOf(Categories.HOME,
         Categories.CATEGORY_SELECTIONS,
@@ -37,11 +38,11 @@ class QuizzesPagerAdapter(val context: Context, fm: FragmentManager, lifecycle: 
 
     override fun createFragment(position: Int): Fragment {
         return if (categories[position] == Categories.HOME) {
-            HomeFragment()
+            HomeFragment(di)
         } else {
             val bundle = Bundle()
             bundle.putInt(Extras.EXTRA_CATEGORY, categories[position])
-            val quizzesFragment = QuizzesFragment()
+            val quizzesFragment = QuizzesFragment(di)
             quizzesFragment.arguments = bundle
             quizzesFragment
         }

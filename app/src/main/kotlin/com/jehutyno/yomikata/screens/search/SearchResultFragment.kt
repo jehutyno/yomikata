@@ -19,13 +19,14 @@ import com.jehutyno.yomikata.screens.content.WordsAdapter
 import com.jehutyno.yomikata.screens.content.word.WordDetailDialogFragment
 import com.jehutyno.yomikata.util.DimensionHelper
 import com.jehutyno.yomikata.util.Extras
+import org.kodein.di.DI
 import splitties.alertdialog.appcompat.*
 import java.util.*
 
 /**
  * Created by valentin on 13/10/2016.
  */
-class SearchResultFragment : Fragment(), SearchResultContract.View, WordsAdapter.Callback {
+class SearchResultFragment(private val di: DI) : Fragment(), SearchResultContract.View, WordsAdapter.Callback {
     private lateinit var searchResultPresenter : SearchResultContract.Presenter
     private lateinit var adapter: WordsAdapter
     private lateinit var layoutManager: LinearLayoutManager
@@ -127,7 +128,7 @@ class SearchResultFragment : Fragment(), SearchResultContract.View, WordsAdapter
         bundle.putInt(Extras.EXTRA_WORD_POSITION, position)
         bundle.putString(Extras.EXTRA_SEARCH_STRING, searchString)
 
-        val dialog = WordDetailDialogFragment()
+        val dialog = WordDetailDialogFragment(di)
         dialog.arguments = bundle
         dialog.show(childFragmentManager, "")
         dialog.isCancelable = true

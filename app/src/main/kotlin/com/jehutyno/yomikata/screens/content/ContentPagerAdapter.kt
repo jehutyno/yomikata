@@ -8,13 +8,14 @@ import androidx.lifecycle.Lifecycle
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import com.jehutyno.yomikata.model.Quiz
 import com.jehutyno.yomikata.util.Extras
+import org.kodein.di.DI
 
 
 /**
  * Created by valentin on 19/12/2016.
  */
 class ContentPagerAdapter(val context : Context, fm: FragmentManager, var quizzes: List<Quiz>,
-                          lifecycle: Lifecycle) : FragmentStateAdapter (fm, lifecycle) {
+                          lifecycle: Lifecycle, private val di: DI) : FragmentStateAdapter (fm, lifecycle) {
 
 //    override fun getItemPosition(`object`: Any): Int {
 //        return PagerAdapter.POSITION_NONE
@@ -28,7 +29,7 @@ class ContentPagerAdapter(val context : Context, fm: FragmentManager, var quizze
         val bundle = Bundle()
         bundle.putLongArray(Extras.EXTRA_QUIZ_IDS, longArrayOf(quizzes[position].id))
         bundle.putString(Extras.EXTRA_QUIZ_TITLE, quizzes[position].getName())
-        val contentFragment = ContentFragment()
+        val contentFragment = ContentFragment(di)
         contentFragment.arguments = bundle
         return contentFragment
     }

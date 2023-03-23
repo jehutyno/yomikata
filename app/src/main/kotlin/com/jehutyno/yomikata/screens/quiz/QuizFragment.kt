@@ -23,11 +23,6 @@ import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.*
 import androidx.preference.PreferenceManager
-import com.github.salomonbrys.kodein.Kodein
-import com.github.salomonbrys.kodein.KodeinInjector
-import com.github.salomonbrys.kodein.android.appKodein
-import com.github.salomonbrys.kodein.instance
-import com.github.salomonbrys.kodein.singleton
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.databinding.FragmentQuizBinding
 import com.jehutyno.yomikata.furigana.FuriganaView
@@ -37,17 +32,23 @@ import com.jehutyno.yomikata.screens.answers.AnswersActivity
 import com.jehutyno.yomikata.screens.content.word.WordDetailDialogFragment
 import com.jehutyno.yomikata.util.*
 import com.jehutyno.yomikata.view.SwipeDirection
+import org.kodein.di.*
 import splitties.alertdialog.appcompat.*
 
 
 /**
  * Created by valentin on 18/10/2016.
  */
-class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callback, TextToSpeech.OnInitListener {
+class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callback, TextToSpeech.OnInitListener {
 
-    private val injector = KodeinInjector()
+    // kodein
+    private val subDI = DI.lazy {
+        extend(di)
+        bind<VoicesManager>() with singleton { VoicesManager(requireActivity()) }
+    }
     @Suppress("unused")
-    private val voicesManager: VoicesManager by injector.instance()
+    private val voicesManager: VoicesManager by subDI.instance()
+
     private lateinit var presenter: QuizContract.Presenter
     private var adapter: QuizItemPagerAdapter? = null
     private lateinit var selections: List<Quiz>
@@ -124,10 +125,6 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         tts = TextToSpeech(activity, this)
-        injector.inject(Kodein {
-            extend(appKodein())
-            bind<VoicesManager>() with singleton { VoicesManager(requireActivity()) }
-        })
 
         initUI()
 
@@ -790,7 +787,7 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
 
     override fun onItemClick(position: Int) {
         Intent().putExtra(Extras.EXTRA_QUIZ_TYPE, adapter!!.words[position].second as Parcelable)
-        val dialog = WordDetailDialogFragment()
+        val dialog = WordDetailDialogFragment(subDI)
         val bundle = Bundle()
         bundle.putLong(Extras.EXTRA_WORD_ID, adapter!!.words[position].first.id)
         bundle.putSerializable(Extras.EXTRA_QUIZ_TYPE, if (presenter.hasMistaken()) null else adapter!!.words[position].second)

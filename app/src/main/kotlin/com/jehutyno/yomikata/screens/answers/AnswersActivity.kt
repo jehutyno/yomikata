@@ -7,27 +7,32 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.widget.Toolbar
 import android.view.MenuItem
 import androidx.preference.PreferenceManager
-import com.github.salomonbrys.kodein.Kodein
-import com.github.salomonbrys.kodein.KodeinInjector
-import com.github.salomonbrys.kodein.android.appKodein
-import com.github.salomonbrys.kodein.instance
-import com.github.salomonbrys.kodein.provider
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.util.Prefs
 import com.jehutyno.yomikata.util.addOrReplaceFragment
 import mu.KLogging
+import org.kodein.di.*
+import org.kodein.di.android.di
 
 
 /**
  * Created by valentin on 25/10/2016.
  */
-class AnswersActivity : AppCompatActivity() {
+class AnswersActivity : AppCompatActivity(), DIAware {
 
     companion object : KLogging()
 
-    private val injector = KodeinInjector()
-    @Suppress("unused")
-    private val answersPresenter: AnswersContract.Presenter by injector.instance()
+    // kodein
+    override val di by di()
+    private val subDI by DI.lazy {
+        extend(di)
+        import(answersPresenterModule(answersFragment))
+        bind<AnswersContract.Presenter>() with provider { AnswersPresenter(instance(), instance(), instance(), instance()) }
+    }
+    private val trigger = DITrigger()
+    @Suppress("UNUSED")
+    val answersPresenter: AnswersContract.Presenter by subDI.on(trigger = trigger).instance()
+
     private lateinit var answersFragment: AnswersFragment
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -54,15 +59,13 @@ class AnswersActivity : AppCompatActivity() {
             //Restore the fragment's instance
             supportFragmentManager.getFragment(savedInstanceState, "answersFragment") as AnswersFragment
         } else {
-            AnswersFragment()
+            AnswersFragment(di)
         }
         addOrReplaceFragment(R.id.container_content, answersFragment)
 
-        injector.inject(Kodein {
-            extend(appKodein())
-            import(answersPresenterModule(answersFragment))
-            bind<AnswersContract.Presenter>() with provider { AnswersPresenter(instance(), instance(), instance(), instance()) }
-        })
+        // answersFragment has been set, so pull trigger
+        trigger.trigger()
+
     }
 
     override fun onSaveInstanceState(outState: Bundle) {

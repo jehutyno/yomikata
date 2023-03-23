@@ -6,21 +6,26 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import android.view.MenuItem
 import androidx.preference.PreferenceManager
-import com.github.salomonbrys.kodein.Kodein
-import com.github.salomonbrys.kodein.KodeinInjector
-import com.github.salomonbrys.kodein.android.appKodein
-import com.github.salomonbrys.kodein.instance
-import com.github.salomonbrys.kodein.provider
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.util.Prefs
 import com.jehutyno.yomikata.util.addOrReplaceFragment
+import org.kodein.di.*
+import org.kodein.di.android.di
 
 
-class SearchResultActivity : AppCompatActivity() {
+class SearchResultActivity : AppCompatActivity(), DIAware {
 
-    private val injector = KodeinInjector()
+    // kodein
+    override val di by di()
+    private val subDI by DI.lazy {
+        extend(di)
+        import(searchResultPresenterModule(searchResultFragment))
+        bind<SearchResultContract.Presenter>() with provider { SearchResultPresenter(instance(), instance(), instance())}
+    }
+    private val trigger = DITrigger()
     @Suppress("unused")
-    private val searchResultPresenter: SearchResultContract.Presenter by injector.instance()
+    private val searchResultPresenter: SearchResultContract.Presenter by subDI.on(trigger = trigger).instance()
+
     private lateinit var searchResultFragment : SearchResultFragment
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -45,16 +50,12 @@ class SearchResultActivity : AppCompatActivity() {
             //Restore the fragment's instance
             supportFragmentManager.getFragment(savedInstanceState, "searchResultFragment") as SearchResultFragment
         } else {
-            SearchResultFragment()
+            SearchResultFragment(di)
         }
         addOrReplaceFragment(R.id.container_content, searchResultFragment)
 
-        injector.inject(Kodein {
-            extend(appKodein())
-            import(searchResultPresenterModule(searchResultFragment))
-            bind<SearchResultContract.Presenter>() with provider { SearchResultPresenter(instance(),
-                instance(), instance())}
-        })
+        // searchResultFragment has been set so pull trigger for injection
+        trigger.trigger()
 
     }
 

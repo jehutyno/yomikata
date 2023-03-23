@@ -11,8 +11,6 @@ import android.view.View.GONE
 import android.view.View.VISIBLE
 import android.widget.EditText
 import android.widget.FrameLayout
-import com.github.salomonbrys.kodein.android.appKodein
-import com.github.salomonbrys.kodein.instance
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.databinding.FragmentContentGraphBinding
 import com.jehutyno.yomikata.model.Quiz
@@ -21,6 +19,7 @@ import com.jehutyno.yomikata.screens.content.word.WordDetailDialogFragment
 import com.jehutyno.yomikata.util.DimensionHelper
 import com.jehutyno.yomikata.util.Extras
 import com.jehutyno.yomikata.util.SeekBarsManager
+import org.kodein.di.*
 import splitties.alertdialog.appcompat.*
 import java.util.*
 
@@ -28,7 +27,8 @@ import java.util.*
 /**
  * Created by valentin on 30/09/2016.
  */
-class ContentFragment : Fragment(), ContentContract.View, WordsAdapter.Callback, DialogInterface.OnDismissListener {
+class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, WordsAdapter.Callback, DialogInterface.OnDismissListener {
+
     private var mpresenter: ContentContract.Presenter? = null
     private lateinit var adapter: WordsAdapter
     private lateinit var quizIds: LongArray
@@ -134,8 +134,9 @@ class ContentFragment : Fragment(), ContentContract.View, WordsAdapter.Callback,
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        if (mpresenter == null)
-            mpresenter = ContentPresenter(requireContext().appKodein.invoke().instance(), requireContext().appKodein.invoke().instance(), this)
+        if (mpresenter == null) {
+            mpresenter = ContentPresenter(di.direct.instance(), di.direct.instance(), this@ContentFragment)
+        }
 
         binding.recyclerviewContent.let {
             it.adapter = adapter
@@ -159,7 +160,7 @@ class ContentFragment : Fragment(), ContentContract.View, WordsAdapter.Callback,
         bundle.putInt(Extras.EXTRA_WORD_POSITION, position)
         bundle.putString(Extras.EXTRA_SEARCH_STRING, "")
 
-        val dialog = WordDetailDialogFragment()
+        val dialog = WordDetailDialogFragment(di)
         dialog.arguments = bundle
         dialog.show(childFragmentManager, "")
         dialog.isCancelable = true
