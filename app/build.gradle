@@ -88,7 +88,7 @@ dependencies {
     implementation 'org.jetbrains.anko:anko-sqlite:0.10.6'
 
     // Splitties
-    implementation("com.louiscad.splitties:splitties-fun-pack-android-appcompat:3.0.0")
+    implementation("com.louiscad.splitties:splitties-alertdialog-appcompat:3.0.0")
 
     //firebase
     implementation platform('com.google.firebase:firebase-bom:31.2.3')

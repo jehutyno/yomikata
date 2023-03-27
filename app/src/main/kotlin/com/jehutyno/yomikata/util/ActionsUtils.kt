@@ -29,7 +29,6 @@ import com.wooplr.spotlight.SpotlightView
 import com.wooplr.spotlight.prefs.PreferencesManager
 import com.wooplr.spotlight.utils.SpotlightListener
 import splitties.alertdialog.appcompat.*
-import splitties.views.horizontalPadding
 import java.io.File
 import java.util.*
 
@@ -307,7 +306,7 @@ fun launchVoicesDownload(activity: Activity, level: Int, finishedListener: () ->
     val unzipPath = FileUtils.getDataDir(activity, "Voices").absolutePath
 
     val progressBar = ProgressBar(activity, null, android.R.attr.progressBarStyleHorizontal)
-    progressBar.horizontalPadding = 40
+    progressBar.setPadding(40, progressBar.paddingTop, 40, progressBar.paddingBottom)
     progressBar.max = 100
 
     val progressAlertDialog = activity.alertDialog {
