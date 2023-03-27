@@ -4,14 +4,14 @@ import android.app.Dialog
 import android.content.DialogInterface
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
-import androidx.fragment.app.DialogFragment
-import androidx.viewpager.widget.ViewPager
-import androidx.appcompat.widget.PopupMenu
 import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.ImageView
+import androidx.appcompat.widget.PopupMenu
+import androidx.fragment.app.DialogFragment
+import androidx.viewpager.widget.ViewPager
 import com.github.salomonbrys.kodein.*
 import com.github.salomonbrys.kodein.android.appKodein
 import com.jehutyno.yomikata.R
@@ -21,11 +21,12 @@ import com.jehutyno.yomikata.model.Quiz
 import com.jehutyno.yomikata.model.Sentence
 import com.jehutyno.yomikata.model.Word
 import com.jehutyno.yomikata.util.*
-import org.jetbrains.anko.cancelButton
-import org.jetbrains.anko.doAsync
-import org.jetbrains.anko.okButton
-import org.jetbrains.anko.support.v4.alert
-import org.jetbrains.anko.uiThread
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.withContext
+import splitties.alertdialog.appcompat.*
+
 
 /**
  * Created by jehutyno on 08/10/2016.
@@ -33,7 +34,9 @@ import org.jetbrains.anko.uiThread
 class WordDetailDialogFragment : DialogFragment(), WordContract.View, WordPagerAdapter.Callback, TextToSpeech.OnInitListener {
 
     private val injector = KodeinInjector()
+    @Suppress("unused")
     private val wordPresenter: WordContract.Presenter by injector.instance()
+    @Suppress("unused")
     private val voicesManager: VoicesManager by injector.instance()
     private lateinit var adapter: WordPagerAdapter
     private var wordId: Long = -1
@@ -75,23 +78,23 @@ class WordDetailDialogFragment : DialogFragment(), WordContract.View, WordPagerA
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         tts = TextToSpeech(activity, this)
         if (arguments != null) {
-            wordId = arguments!!.getLong(Extras.EXTRA_WORD_ID, -1L)
-            quizType = arguments!!.getSerializable(Extras.EXTRA_QUIZ_TYPE) as QuizType?
-            quizIds = arguments!!.getLongArray(Extras.EXTRA_QUIZ_IDS)
-            quizTitle = arguments!!.getString(Extras.EXTRA_QUIZ_TITLE)
-            wordPosition = arguments!!.getInt(Extras.EXTRA_WORD_POSITION)
-            searchString = arguments!!.getString(Extras.EXTRA_SEARCH_STRING) ?: ""
-            level = arguments!!.getInt(Extras.EXTRA_LEVEL)
+            wordId = requireArguments().getLong(Extras.EXTRA_WORD_ID, -1L)
+            quizType = requireArguments().getSerializable(Extras.EXTRA_QUIZ_TYPE) as QuizType?
+            quizIds = requireArguments().getLongArray(Extras.EXTRA_QUIZ_IDS)
+            quizTitle = requireArguments().getString(Extras.EXTRA_QUIZ_TITLE)
+            wordPosition = requireArguments().getInt(Extras.EXTRA_WORD_POSITION)
+            searchString = requireArguments().getString(Extras.EXTRA_SEARCH_STRING) ?: ""
+            level = requireArguments().getInt(Extras.EXTRA_LEVEL)
         }
 
         if (savedInstanceState != null) {
             wordPosition = savedInstanceState.getInt("position")
         }
 
-        val dialog = Dialog(activity!!, R.style.full_screen_dialog)
+        val dialog = Dialog(requireActivity(), R.style.full_screen_dialog)
         dialog.setContentView(R.layout.dialog_word_detail)
         dialog.setCanceledOnTouchOutside(true)
-        adapter = WordPagerAdapter(activity!!, quizType, this)
+        adapter = WordPagerAdapter(requireActivity(), quizType, this)
         viewPager = dialog.findViewById(R.id.viewpager_words)
         arrowLeft = dialog.findViewById(R.id.arrow_left)
         arrowRight = dialog.findViewById(R.id.arrow_right)
@@ -119,7 +122,7 @@ class WordDetailDialogFragment : DialogFragment(), WordContract.View, WordPagerA
             import(wordPresenterModule(this@WordDetailDialogFragment))
 //            import(voicesManagerModule(activity))
             bind<WordContract.Presenter>() with provider { WordPresenter(instance(), instance(), instance(), instance(), instance()) }
-            bind<VoicesManager>() with singleton { VoicesManager(activity!!) }
+            bind<VoicesManager>() with singleton { VoicesManager(requireActivity()) }
         })
 
         return dialog
@@ -153,7 +156,7 @@ class WordDetailDialogFragment : DialogFragment(), WordContract.View, WordPagerA
     }
 
     override fun onSelectionClick(view: View, position: Int) {
-        val popup = PopupMenu(activity!!, view)
+        val popup = PopupMenu(requireActivity(), view)
         popup.menuInflater.inflate(R.menu.popup_selections, popup.menu)
         for ((i, selection) in selections.withIndex()) {
             popup.menu.add(1, i, i, selection.getName()).isChecked = wordPresenter.isWordInQuiz(adapter.words[position].first.id, selection.id)
@@ -177,18 +180,21 @@ class WordDetailDialogFragment : DialogFragment(), WordContract.View, WordPagerA
     }
 
     private fun addSelection(wordId: Long) {
-        alert {
-            title = getString(R.string.new_selection)
-            val input = EditText(activity)
-            input.setSingleLine()
-            input.hint = getString(R.string.selection_name)
-            val container = FrameLayout(activity!!)
-            val params = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-            params.leftMargin = DimensionHelper.getPixelFromDip(activity, 20)
-            params.rightMargin = DimensionHelper.getPixelFromDip(activity, 20)
-            input.layoutParams = params
-            container.addView(input)
-            customView = container
+        val input = EditText(activity)
+        input.setSingleLine()
+        input.hint = getString(R.string.selection_name)
+
+        val container = FrameLayout(requireActivity())
+        val params = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+        params.leftMargin = DimensionHelper.getPixelFromDip(activity, 20)
+        params.rightMargin = DimensionHelper.getPixelFromDip(activity, 20)
+        input.layoutParams = params
+        container.addView(input)
+
+        requireContext().alertDialog {
+            titleResource = R.string.new_selection
+            setView(container)
+
             okButton {
                 val selectionId = wordPresenter.createSelection(input.text.toString())
                 wordPresenter.addWordToSelection(wordId, selectionId)
@@ -199,7 +205,7 @@ class WordDetailDialogFragment : DialogFragment(), WordContract.View, WordPagerA
     }
 
     override fun onReportClick(position: Int) {
-        reportError(activity!!, adapter.words[position].first, adapter.words[position].third)
+        reportError(requireActivity(), adapter.words[position].first, adapter.words[position].third)
     }
 
     override fun onWordTTSClick(position: Int) {
@@ -230,9 +236,11 @@ class WordDetailDialogFragment : DialogFragment(), WordContract.View, WordPagerA
             adapter.words[position].first.level = newLevel
         }
         adapter.words[position].first.points = points
-        doAsync {
-            Thread.sleep(300)
-            uiThread {
+        MainScope().async {
+            withContext(Dispatchers.IO) {
+                Thread.sleep(300)
+            }
+            withContext(Dispatchers.Main) {
                 adapter.notifyDataSetChanged()
             }
         }

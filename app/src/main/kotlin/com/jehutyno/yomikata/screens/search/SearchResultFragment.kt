@@ -5,6 +5,7 @@ import android.view.*
 import android.view.MenuItem
 import android.widget.EditText
 import android.widget.FrameLayout
+import android.widget.Toast
 import androidx.appcompat.widget.PopupMenu
 import androidx.appcompat.widget.SearchView
 import androidx.fragment.app.Fragment
@@ -18,12 +19,7 @@ import com.jehutyno.yomikata.screens.content.WordsAdapter
 import com.jehutyno.yomikata.screens.content.word.WordDetailDialogFragment
 import com.jehutyno.yomikata.util.DimensionHelper
 import com.jehutyno.yomikata.util.Extras
-import org.jetbrains.anko.cancelButton
-import org.jetbrains.anko.find
-import org.jetbrains.anko.okButton
-import org.jetbrains.anko.support.v4.alert
-import org.jetbrains.anko.support.v4.toast
-import org.jetbrains.anko.support.v4.withArguments
+import splitties.alertdialog.appcompat.*
 import java.util.*
 
 /**
@@ -48,7 +44,7 @@ class SearchResultFragment : Fragment(), SearchResultContract.View, WordsAdapter
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        adapter = WordsAdapter(activity!!, this)
+        adapter = WordsAdapter(requireActivity(), this)
         layoutManager = GridLayoutManager(context, 2)
 
         setHasOptionsMenu(true)
@@ -81,7 +77,8 @@ class SearchResultFragment : Fragment(), SearchResultContract.View, WordsAdapter
 
     override fun displayNoResults() {
         adapter.clearData()
-        toast(getString(R.string.search_no_results))
+        val toast = Toast.makeText(context, R.string.search_no_results, Toast.LENGTH_SHORT)
+        toast.show()
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
@@ -125,17 +122,20 @@ class SearchResultFragment : Fragment(), SearchResultContract.View, WordsAdapter
     }
 
     override fun onItemClick(position: Int) {
-        val dialog = WordDetailDialogFragment().withArguments(
-            Extras.EXTRA_QUIZ_IDS to longArrayOf(),
-            Extras.EXTRA_WORD_POSITION to position,
-            Extras.EXTRA_SEARCH_STRING to searchString)
+        val bundle = Bundle()
+        bundle.putLongArray(Extras.EXTRA_QUIZ_IDS, longArrayOf())
+        bundle.putInt(Extras.EXTRA_WORD_POSITION, position)
+        bundle.putString(Extras.EXTRA_SEARCH_STRING, searchString)
+
+        val dialog = WordDetailDialogFragment()
+        dialog.arguments = bundle
         dialog.show(childFragmentManager, "")
         dialog.isCancelable = true
 
     }
 
     override fun onCategoryIconClick(position: Int) {
-        activity!!.startActionMode(actionModeCallback)
+        requireActivity().startActionMode(actionModeCallback)
     }
 
     override fun onCheckChange(position: Int, check: Boolean) {
@@ -160,7 +160,7 @@ class SearchResultFragment : Fragment(), SearchResultContract.View, WordsAdapter
                     adapter.notifyDataSetChanged()
                 }
                 1 -> {
-                    val popup = PopupMenu(activity!!, activity!!.find(1))
+                    val popup = PopupMenu(activity!!, activity!!.findViewById(1))
                     popup.menuInflater.inflate(R.menu.popup_selections, popup.menu)
                     for ((i, selection) in selections.withIndex()) {
                         popup.menu.add(1, i, i, selection.getName()).isChecked = false
@@ -185,7 +185,7 @@ class SearchResultFragment : Fragment(), SearchResultContract.View, WordsAdapter
 
                 }
                 2 -> {
-                    val popup = PopupMenu(activity!!, activity!!.find(2))
+                    val popup = PopupMenu(activity!!, activity!!.findViewById(2))
                     for ((i, selection) in selections.withIndex()) {
                         popup.menu.add(1, i, i, selection.getName()).isChecked = false
                     }
@@ -212,18 +212,21 @@ class SearchResultFragment : Fragment(), SearchResultContract.View, WordsAdapter
         }
 
         private fun addSelection(selectedWords: ArrayList<Word>) {
-            alert {
-                title = getString(R.string.new_selection)
-                val input = EditText(activity)
-                input.setSingleLine()
-                input.hint = getString(R.string.selection_name)
-                val container = FrameLayout(requireActivity())
-                val params = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-                params.leftMargin = DimensionHelper.getPixelFromDip(activity, 20)
-                params.rightMargin = DimensionHelper.getPixelFromDip(activity, 20)
-                input.layoutParams = params
-                container.addView(input)
-                customView = container
+            val input = EditText(activity)
+            input.setSingleLine()
+            input.hint = getString(R.string.selection_name)
+
+            val container = FrameLayout(requireActivity())
+            val params = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+            params.leftMargin = DimensionHelper.getPixelFromDip(activity, 20)
+            params.rightMargin = DimensionHelper.getPixelFromDip(activity, 20)
+            input.layoutParams = params
+            container.addView(input)
+
+            requireContext().alertDialog {
+                titleResource = R.string.new_selection
+                setView(container)
+
                 okButton {
                     val selectionId = searchResultPresenter.createSelection(input.text.toString())
                     selectedWords.forEach {

@@ -4,13 +4,13 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.database.sqlite.SQLiteDatabase
-import android.os.Bundle
 import android.os.Handler
+import android.os.Looper
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentTransaction
 import androidx.appcompat.app.AppCompatActivity
 import android.view.inputmethod.InputMethodManager
+import androidx.preference.PreferenceManager
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.model.Sentence
 import com.jehutyno.yomikata.model.Word
@@ -20,10 +20,12 @@ import com.jehutyno.yomikata.repository.migration.MigrationSource
 import com.jehutyno.yomikata.repository.migration.MigrationTable
 import com.jehutyno.yomikata.repository.migration.MigrationTables
 import com.jehutyno.yomikata.screens.quizzes.QuizzesActivity
-import org.jetbrains.anko.alert
-import org.jetbrains.anko.defaultSharedPreferences
-import org.jetbrains.anko.doAsync
-import org.jetbrains.anko.okButton
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.async
+import splitties.alertdialog.appcompat.alertDialog
+import splitties.alertdialog.appcompat.messageResource
+import splitties.alertdialog.appcompat.okButton
+import splitties.alertdialog.appcompat.titleResource
 import java.io.File
 
 
@@ -60,44 +62,44 @@ fun Activity.migrateFromYomikata() {
     val context = this
     val toPath = getString(R.string.db_path)
     val toName = getString(R.string.db_name_yomi)
-    val file = File(toPath + "/" + toName)
+    val file = File("$toPath/$toName")
     if (file.exists()) {
         try {
             CopyUtils.reinitDataBase(this)
             val migrationSource = MigrationSource(this, DatabaseHelper.getInstance(this, toName, toPath))
             val wordTables = MigrationTable.allTables(MigrationTables.values())
 
-            doAsync {
+            MainScope().async {
                 wordTables.forEach {
-                    val wordtable = migrationSource.getWordTable(it)
-                    wordtable.forEach {
+                    val wordTable = migrationSource.getWordTable(it)
+                    wordTable.forEach { word ->
                         val source = WordSource(context)
-                        if (it.counterTry > 0 || it.priority > 0)
-                            source.restoreWord(it.word, it.prononciation, it)
+                        if (word.counterTry > 0 || word.priority > 0)
+                            source.restoreWord(word.word, word.prononciation, word)
                     }
                 }
                 File(toPath + toName).delete()
-
             }
         } catch (exception: Exception) {
-            alert {
-                title = getString(R.string.restore_error)
-                message = getString(R.string.restore_error_message)
-                okButton { }
+            alertDialog {
+                titleResource = R.string.restore_error
+                messageResource = R.string.restore_error_message
+                okButton()
             }.show()
         }
     }
 }
 
 fun Context.updateBDD(db: SQLiteDatabase?, filePathEncrypted: String, oldVersion: Int) {
-    val handler = Handler()
+    val pref = PreferenceManager.getDefaultSharedPreferences(this)
+    val handler = Handler(Looper.getMainLooper())
     handler.postDelayed(
         {
-            defaultSharedPreferences.edit().putBoolean(Prefs.DB_UPDATE_ONGOING.pref, true).apply()
+            pref.edit().putBoolean(Prefs.DB_UPDATE_ONGOING.pref, true).apply()
         }, 2000)
     var filePath = ""
     File(getString(R.string.db_path) + UpdateSQLiteHelper.UPDATE_DATABASE_NAME).delete()
-    if (!filePathEncrypted.isEmpty()) {
+    if (filePathEncrypted.isNotEmpty()) {
         val file = File(filePathEncrypted)
         filePath = filePathEncrypted.replace(".yomikataz", ".import")
         try {
@@ -106,8 +108,8 @@ fun Context.updateBDD(db: SQLiteDatabase?, filePathEncrypted: String, oldVersion
             return
         }
     }
-    defaultSharedPreferences.edit().putString(Prefs.DB_UPDATE_FILE.pref, filePath).apply()
-    defaultSharedPreferences.edit().putInt(Prefs.DB_UPDATE_OLD_VERSION.pref, oldVersion).apply()
+    pref.edit().putString(Prefs.DB_UPDATE_FILE.pref, filePath).apply()
+    pref.edit().putInt(Prefs.DB_UPDATE_OLD_VERSION.pref, oldVersion).apply()
     val updateSource = UpdateSource(this, filePath)
     val updateWords = updateSource.getAllWords().sortedBy(Word::id)
     val stats = updateSource.getAllStatEntries()
@@ -127,7 +129,7 @@ fun Context.updateBDD(db: SQLiteDatabase?, filePathEncrypted: String, oldVersion
     val kanjiSoloCount = kanjiSoloSource.kanjiSoloCount(db)
     val radCount = kanjiSoloSource.radicalsCount(db)
 
-    doAsync {
+    MainScope().async {
         var i = 0
         val intent = Intent()
         intent.action = QuizzesActivity.UPDATE_INTENT
@@ -154,7 +156,7 @@ fun Context.updateBDD(db: SQLiteDatabase?, filePathEncrypted: String, oldVersion
                 sendBroadcast(intent)
             }
         }
-        if (!filePath.isEmpty()) {
+        if (filePath.isNotEmpty()) {
             statSource.removeAllStats()
             stats.forEach {
                 statSource.addStatEntry(it)
@@ -170,9 +172,9 @@ fun Context.updateBDD(db: SQLiteDatabase?, filePathEncrypted: String, oldVersion
             val quiz = quizSource.getQuiz(it.id)
             if (quiz == null) {
                 val id = quizSource.saveQuiz(it.getName(), it.category)
-                quizIdsMap.put(id, it.id)
+                quizIdsMap[id] = it.id
             } else {
-                quizIdsMap.put(quiz.id, it.id)
+                quizIdsMap[quiz.id] = it.id
             }
             i++
             if (i % 100 == 0) {
@@ -244,8 +246,8 @@ fun Context.updateBDD(db: SQLiteDatabase?, filePathEncrypted: String, oldVersion
         intent.putExtra(QuizzesActivity.UPDATE_FINISHED, true)
         sendBroadcast(intent)
 
-        defaultSharedPreferences.edit().putBoolean(Prefs.DB_UPDATE_ONGOING.pref, false).apply()
-        defaultSharedPreferences.edit().putString(Prefs.DB_UPDATE_FILE.pref, "").apply()
+        pref.edit().putBoolean(Prefs.DB_UPDATE_ONGOING.pref, false).apply()
+        pref.edit().putString(Prefs.DB_UPDATE_FILE.pref, "").apply()
         if (filePath.isEmpty())
             File(getString(R.string.db_path) + UpdateSQLiteHelper.UPDATE_DATABASE_NAME).delete()
         else

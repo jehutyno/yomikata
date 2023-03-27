@@ -21,11 +21,7 @@ import com.jehutyno.yomikata.screens.content.word.WordDetailDialogFragment
 import com.jehutyno.yomikata.util.DimensionHelper
 import com.jehutyno.yomikata.util.Extras
 import com.jehutyno.yomikata.util.animateSeekBar
-import org.jetbrains.anko.cancelButton
-import org.jetbrains.anko.find
-import org.jetbrains.anko.okButton
-import org.jetbrains.anko.support.v4.alert
-import org.jetbrains.anko.support.v4.withArguments
+import splitties.alertdialog.appcompat.*
 import java.util.*
 
 
@@ -59,16 +55,16 @@ class ContentFragment : Fragment(), ContentContract.View, WordsAdapter.Callback,
         super.onCreate(savedInstanceState)
 
         if (arguments != null) {
-            quizIds = arguments!!.getLongArray(Extras.EXTRA_QUIZ_IDS)!!
-            quizTitle = arguments!!.getString(Extras.EXTRA_QUIZ_TITLE)!!
-            level = arguments!!.getInt(Extras.EXTRA_LEVEL, -1)
+            quizIds = requireArguments().getLongArray(Extras.EXTRA_QUIZ_IDS)!!
+            quizTitle = requireArguments().getString(Extras.EXTRA_QUIZ_TITLE)!!
+            level = requireArguments().getInt(Extras.EXTRA_LEVEL, -1)
         }
 
         if (savedInstanceState != null) {
             lastPosition = savedInstanceState.getInt("position")
         }
 
-        adapter = WordsAdapter(activity!!, this)
+        adapter = WordsAdapter(requireActivity(), this)
         setHasOptionsMenu(true)
     }
 
@@ -117,7 +113,7 @@ class ContentFragment : Fragment(), ContentContract.View, WordsAdapter.Callback,
         super.onViewCreated(view, savedInstanceState)
 
         if (mpresenter == null)
-            mpresenter = ContentPresenter(context!!.appKodein.invoke().instance(), context!!.appKodein.invoke().instance(), this)
+            mpresenter = ContentPresenter(requireContext().appKodein.invoke().instance(), requireContext().appKodein.invoke().instance(), this)
 
         binding.recyclerviewContent.let {
             it.adapter = adapter
@@ -131,18 +127,21 @@ class ContentFragment : Fragment(), ContentContract.View, WordsAdapter.Callback,
 
 
     override fun onItemClick(position: Int) {
-        val dialog = WordDetailDialogFragment().withArguments(
-                Extras.EXTRA_QUIZ_IDS to quizIds,
-                Extras.EXTRA_QUIZ_TITLE to quizTitle,
-                Extras.EXTRA_LEVEL to level,
-                Extras.EXTRA_WORD_POSITION to position,
-                Extras.EXTRA_SEARCH_STRING to "")
+        val bundle = Bundle()
+        bundle.putLongArray(Extras.EXTRA_QUIZ_IDS, quizIds)
+        bundle.putString(Extras.EXTRA_QUIZ_TITLE, quizTitle)
+        bundle.putInt(Extras.EXTRA_LEVEL, level)
+        bundle.putInt(Extras.EXTRA_WORD_POSITION, position)
+        bundle.putString(Extras.EXTRA_SEARCH_STRING, "")
+
+        val dialog = WordDetailDialogFragment()
+        dialog.arguments = bundle
         dialog.show(childFragmentManager, "")
         dialog.isCancelable = true
     }
 
     override fun onCategoryIconClick(position: Int) {
-        activity!!.startActionMode(actionModeCallback)
+        requireActivity().startActionMode(actionModeCallback)
     }
 
     override fun onCheckChange(position: Int, check: Boolean) {
@@ -164,7 +163,7 @@ class ContentFragment : Fragment(), ContentContract.View, WordsAdapter.Callback,
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.select_mode ->
-                activity!!.startActionMode(actionModeCallback)
+                requireActivity().startActionMode(actionModeCallback)
         }
         return super.onOptionsItemSelected(item)
     }
@@ -187,7 +186,7 @@ class ContentFragment : Fragment(), ContentContract.View, WordsAdapter.Callback,
                     adapter.notifyDataSetChanged()
                 }
                 1 -> {
-                    val popup = PopupMenu(activity!!, activity!!.find(1))
+                    val popup = PopupMenu(activity!!, activity!!.findViewById(1))
                     popup.menuInflater.inflate(R.menu.popup_selections, popup.menu)
                     for ((i, selection) in selections.withIndex()) {
                         popup.menu.add(1, i, i, selection.getName()).isChecked = false
@@ -211,8 +210,7 @@ class ContentFragment : Fragment(), ContentContract.View, WordsAdapter.Callback,
                     popup.show()
                 }
                 2 -> {
-
-                    val popup = PopupMenu(activity!!, activity!!.find(2))
+                    val popup = PopupMenu(activity!!, activity!!.findViewById(2))
                     for ((i, selection) in selections.withIndex()) {
                         popup.menu.add(1, i, i, selection.getName()).isChecked = false
                     }
@@ -239,18 +237,21 @@ class ContentFragment : Fragment(), ContentContract.View, WordsAdapter.Callback,
         }
 
         private fun addSelection(selectedWords: ArrayList<Word>) {
-            alert {
-                title = getString(R.string.new_selection)
-                val input = EditText(activity)
-                input.setSingleLine()
-                input.hint = getString(R.string.selection_name)
-                val container = FrameLayout(requireActivity())
-                val params = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-                params.leftMargin = DimensionHelper.getPixelFromDip(activity, 20)
-                params.rightMargin = DimensionHelper.getPixelFromDip(activity, 20)
-                input.layoutParams = params
-                container.addView(input)
-                customView = container
+            val input = EditText(activity)
+            input.setSingleLine()
+            input.hint = getString(R.string.selection_name)
+
+            val container = FrameLayout(requireActivity())
+            val params = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+            params.leftMargin = DimensionHelper.getPixelFromDip(activity, 20)
+            params.rightMargin = DimensionHelper.getPixelFromDip(activity, 20)
+            input.layoutParams = params
+            container.addView(input)
+
+            requireContext().alertDialog {
+                titleResource = R.string.new_selection
+                setView(container)
+
                 okButton {
                     val selectionId = mpresenter!!.createSelection(input.text.toString())
                     selectedWords.forEach {

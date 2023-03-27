@@ -1,17 +1,19 @@
 package com.jehutyno.yomikata.screens
 
 import android.Manifest
-import android.app.Activity
 import android.app.ProgressDialog
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
-import android.preference.Preference
-import android.preference.PreferenceFragment
-import androidx.core.app.ActivityCompat
+import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.app.ActivityCompat
+import androidx.preference.Preference
+import androidx.preference.PreferenceManager
+import androidx.preference.PreferenceFragmentCompat
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.filechooser.FileChooserDialog
 import com.jehutyno.yomikata.repository.local.WordSource
@@ -21,11 +23,15 @@ import com.jehutyno.yomikata.repository.migration.MigrationTable
 import com.jehutyno.yomikata.repository.migration.MigrationTables
 import com.jehutyno.yomikata.util.*
 import com.jehutyno.yomikata.util.Extras.PERMISSIONS_STORAGE
-import com.jehutyno.yomikata.util.Extras.REQUEST_EXTERNAL_STORAGE_BACKPUP
+import com.jehutyno.yomikata.util.Extras.REQUEST_EXTERNAL_STORAGE_BACKUP
 import com.jehutyno.yomikata.util.Extras.REQUEST_EXTERNAL_STORAGE_RESTORE
 import com.wooplr.spotlight.prefs.PreferencesManager
+import kotlinx.coroutines.Dispatchers.Main
+import kotlinx.coroutines.MainScope
 import mu.KLogging
-import org.jetbrains.anko.*
+import kotlinx.coroutines.async
+import kotlinx.coroutines.withContext
+import splitties.alertdialog.appcompat.*
 import java.io.File
 
 
@@ -38,94 +44,132 @@ class PrefsActivity : AppCompatActivity(), FileChooserDialog.ChooserListener {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        AppCompatDelegate.setDefaultNightMode(defaultSharedPreferences.getInt(Prefs.DAY_NIGHT_MODE.pref, AppCompatDelegate.MODE_NIGHT_YES))
-        fragmentManager.beginTransaction()
-            .replace(android.R.id.content, PrefsFragment()).commit()
+        val pref = PreferenceManager.getDefaultSharedPreferences(this)
+        AppCompatDelegate.setDefaultNightMode(pref.getInt(Prefs.DAY_NIGHT_MODE.pref, AppCompatDelegate.MODE_NIGHT_YES))
+        supportFragmentManager.beginTransaction()
+                .replace(android.R.id.content, PrefsFragment()).commit()
     }
 
-    class PrefsFragment : PreferenceFragment() {
+    class PrefsFragment : PreferenceFragmentCompat() {
 
-        override fun onCreate(savedInstanceState: Bundle?) {
-            super.onCreate(savedInstanceState)
-            addPreferencesFromResource(R.xml.preferences)
+        override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
+            setPreferencesFromResource(R.xml.preferences, rootKey)
+        }
 
-            findPreference("backup").onPreferenceClickListener = Preference.OnPreferenceClickListener {
-                val permission = ActivityCompat.checkSelfPermission(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                if (permission != PackageManager.PERMISSION_GRANTED) {
-                    // We don't have permission so prompt the user
-                    ActivityCompat.requestPermissions(
-                        activity,
+        /**
+         * Checks if we have the Manifest.permission.WRITE_EXTERNAL_STORAGE permission.
+         * If not, then prompt the user.
+         * Returns true if permission exists, and false otherwise.
+         */
+        private fun checkAndRequestPermission(): Boolean {
+            val permission = ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.WRITE_EXTERNAL_STORAGE)
+            if (permission != PackageManager.PERMISSION_GRANTED) {
+                // We don't have permission so prompt the user
+                ActivityCompat.requestPermissions(
+                        requireActivity(),
                         PERMISSIONS_STORAGE,
-                        REQUEST_EXTERNAL_STORAGE_BACKPUP
-                    )
-                } else {
-                    (activity as PrefsActivity).backupProgress()
+                        REQUEST_EXTERNAL_STORAGE_BACKUP
+                )
+            }
+            return permission == PackageManager.PERMISSION_GRANTED
+        }
+
+        private fun getResetAlert() : AlertDialog {
+            return requireContext().alertDialog {
+                messageResource = R.string.prefs_reinit_sure
+                okButton {
+                    CopyUtils.reinitDataBase(activity)
+                    val toast = Toast.makeText(context, R.string.prefs_reinit_done, Toast.LENGTH_LONG)
+                    toast.show()
+                    requireActivity().finish()
                 }
-                true
+                cancelButton()
             }
+        }
 
-            findPreference("restore").onPreferenceClickListener = Preference.OnPreferenceClickListener {
-                val permission = ActivityCompat.checkSelfPermission(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                if (permission != PackageManager.PERMISSION_GRANTED) {
-                    // We don't have permission so prompt the user
-                    ActivityCompat.requestPermissions(
-                        activity,
-                        PERMISSIONS_STORAGE,
-                        REQUEST_EXTERNAL_STORAGE_RESTORE
-                    )
-                } else {
-                    (activity as PrefsActivity).showChooser()
+        private fun getDeleteVoicesAlert() : AlertDialog {
+            return requireContext().alertDialog {
+                messageResource = R.string.prefs_delete_voices_sure
+                okButton {
+                    FileUtils.deleteFolder(activity, "Voices")
+                    val pref = PreferenceManager.getDefaultSharedPreferences(context)
+                    for (i in 0 until 7) {
+                        pref.edit().putBoolean(
+                                "${Prefs.VOICE_DOWNLOADED_LEVEL_V.pref}${getLevelDownloadVersion(i)}_$i", false
+                        ).apply()
+                    }
+                    val toast = Toast.makeText(context, R.string.voices_reinit_done, Toast.LENGTH_LONG)
+                    toast.show()
+                    requireActivity().finish()
+                }
+                cancelButton()
+            }
+        }
+
+        override fun onPreferenceTreeClick(preference: Preference): Boolean {
+            when (preference.key) {
+                // Quiz Settings
+                "font_size" -> {
+                    return true
+                }
+                "input_change" -> {
+                    return true
+                }
+                "speed" -> {
+                    return true
+                }
+                "length" -> {
+                    return true
+                }
+                "play_start" -> {
+                    return true
+                }
+                "play_end" -> {
+                    return true
                 }
 
-                true
-            }
+                // Tutorials
+                "reset_tuto" -> {
+                    PreferencesManager(activity).resetAll()
+                    requireActivity().setResult(RESULT_OK)
+                    requireActivity().finish()
+                    return true
+                }
 
-            findPreference("reset").onPreferenceClickListener = Preference.OnPreferenceClickListener {
-                alert {
-                    message = getString(R.string.prefs_reinit_sure)
-                    okButton {
-                        CopyUtils.reinitDataBase(activity)
-                        toast(getString(R.string.prefs_reinit_done))
-                        activity.finish()
+                // Backup and Restore
+                "backup" -> {
+                    if (checkAndRequestPermission()) {
+                        (activity as PrefsActivity).backupProgress()
                     }
-                    cancelButton { }
-                }.show()
-                true
-            }
-
-            findPreference("delete_voices").onPreferenceClickListener = Preference.OnPreferenceClickListener {
-                alert {
-                    message = getString(R.string.prefs_delete_voices_sure)
-                    okButton {
-                        FileUtils.deleteFolder(activity, "Voices")
-                        activity.defaultSharedPreferences.edit().putBoolean("${Prefs.VOICE_DOWNLOADED_LEVEL_V.pref}${getLevelDownloadVersion(0)}_0", false).apply()
-                        activity.defaultSharedPreferences.edit().putBoolean("${Prefs.VOICE_DOWNLOADED_LEVEL_V.pref}${getLevelDownloadVersion(1)}_1", false).apply()
-                        activity.defaultSharedPreferences.edit().putBoolean("${Prefs.VOICE_DOWNLOADED_LEVEL_V.pref}${getLevelDownloadVersion(2)}_2", false).apply()
-                        activity.defaultSharedPreferences.edit().putBoolean("${Prefs.VOICE_DOWNLOADED_LEVEL_V.pref}${getLevelDownloadVersion(3)}_3", false).apply()
-                        activity.defaultSharedPreferences.edit().putBoolean("${Prefs.VOICE_DOWNLOADED_LEVEL_V.pref}${getLevelDownloadVersion(4)}_4", false).apply()
-                        activity.defaultSharedPreferences.edit().putBoolean("${Prefs.VOICE_DOWNLOADED_LEVEL_V.pref}${getLevelDownloadVersion(5)}_5", false).apply()
-                        activity.defaultSharedPreferences.edit().putBoolean("${Prefs.VOICE_DOWNLOADED_LEVEL_V.pref}${getLevelDownloadVersion(6)}_6", false).apply()
-                        toast(getString(R.string.voices_reinit_done))
-                        activity.finish()
+                    return true
+                }
+                "restore" -> {
+                    if (checkAndRequestPermission()) {
+                        (activity as PrefsActivity).showChooser()
                     }
-                    cancelButton { }
-                }.show()
-                true
-            }
+                    return true
+                }
+                "reset" -> {
+                    getResetAlert().show()
+                    return true
+                }
+                "delete_voices" -> {
+                    getDeleteVoicesAlert().show()
+                    return true
+                }
 
-            findPreference("reset_tuto").onPreferenceClickListener = Preference.OnPreferenceClickListener {
-                PreferencesManager(activity).resetAll()
-                activity.setResult(Activity.RESULT_OK)
-                activity.finish()
-                true
-            }
+                // Others
+                "privacy" -> {
+                    val privacyString = "https://cdn.rawgit.com/jehutyno/privacy-policies/56b6fcf3/PrivacyPolicyYomikataZ.html"
+                    val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(privacyString))
+                    startActivity(browserIntent)
+                    return true
+                }
 
-            findPreference("privacy").onPreferenceClickListener = Preference.OnPreferenceClickListener {
-                val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://cdn.rawgit.com/jehutyno/privacy-policies/56b6fcf3/PrivacyPolicyYomikataZ.html"))
-                startActivity(browserIntent)
-                true
+                else -> {
+                    throw Error("unknown preference key: ${preference.key}")
+                }
             }
-
         }
     }
 
@@ -144,17 +188,19 @@ class PrefsActivity : AppCompatActivity(), FileChooserDialog.ChooserListener {
         if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             when (requestCode) {
                 REQUEST_EXTERNAL_STORAGE_RESTORE -> showChooser()
-                REQUEST_EXTERNAL_STORAGE_BACKPUP -> backupProgress()
+                REQUEST_EXTERNAL_STORAGE_BACKUP -> backupProgress()
             }
         }
     }
 
     fun backupProgress() {
-        alert {
-            title = getString(R.string.backup)
-            message = getString(R.string.backup_sure)
-            okButton { CopyUtils.copyEncryptedBddToSd(this@PrefsActivity) }
-            cancelButton { }
+        alertDialog {
+            titleResource = R.string.backup
+            messageResource = R.string.backup_sure
+            okButton {
+                CopyUtils.copyEncryptedBddToSd(this@PrefsActivity)
+            }
+            cancelButton()
         }.show()
     }
 
@@ -164,9 +210,9 @@ class PrefsActivity : AppCompatActivity(), FileChooserDialog.ChooserListener {
         } else if (path.endsWith(".yomikataz")) {
             importYomikataZ(path)
         } else {
-            alert {
-                title = getString(R.string.use_yomikata_file)
-                okButton { }
+            alertDialog {
+                titleResource = R.string.use_yomikata_file
+                okButton()
             }.show()
         }
     }
@@ -189,33 +235,33 @@ class PrefsActivity : AppCompatActivity(), FileChooserDialog.ChooserListener {
             progressDialog.setCancelable(false)
             progressDialog.show()
 
-            doAsync {
+            MainScope().async {
                 wordTables.forEach {
                     val wordtable = migrationSource.getWordTable(it)
                     progressDialog.incrementProgressBy(1)
-                    wordtable.forEach {
+                    wordtable.forEach {word ->
                         val source = WordSource(this@PrefsActivity)
-                        if (it.counterTry > 0 || it.priority > 0)
-                            source.restoreWord(it.word, it.prononciation, it)
+                        if (word.counterTry > 0 || word.priority > 0)
+                            source.restoreWord(word.word, word.prononciation, word)
                     }
                 }
                 File(toPath + toName).delete()
 
-                uiThread {
+                withContext(Main) {
                     progressDialog.dismiss()
-                    alert {
-                        title = getString(R.string.restore_success)
-                        okButton { }
-                        message = getString(R.string.restore_success_message)
+                    alertDialog {
+                        titleResource = R.string.restore_success
+                        messageResource = R.string.restore_success_message
+                        okButton()
                     }.show()
                 }
 
             }
         } catch (exception: Exception) {
-            alert {
-                title = getString(R.string.restore_error)
-                message = getString(R.string.restore_error_message)
-                okButton { }
+            alertDialog {
+                titleResource = R.string.restore_error
+                messageResource = R.string.restore_error_message
+                okButton()
             }.show()
         }
     }

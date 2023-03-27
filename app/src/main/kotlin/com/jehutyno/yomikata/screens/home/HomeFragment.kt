@@ -8,6 +8,7 @@ import android.view.View.GONE
 import android.view.View.VISIBLE
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.preference.PreferenceManager
 import com.github.salomonbrys.kodein.android.appKodein
 import com.github.salomonbrys.kodein.instance
 import com.google.firebase.database.DataSnapshot
@@ -22,7 +23,6 @@ import com.jehutyno.yomikata.model.StatResult
 import com.jehutyno.yomikata.screens.quizzes.QuizzesActivity
 import com.jehutyno.yomikata.util.*
 
-import org.jetbrains.anko.support.v4.defaultSharedPreferences
 import java.util.*
 
 
@@ -124,8 +124,9 @@ class HomeFragment : Fragment(), HomeContract.View {
     }
 
     fun displayLatestCategories() {
-        val cat1 = defaultSharedPreferences.getInt(Prefs.LATEST_CATEGORY_1.pref, -1)
-        val cat2 = defaultSharedPreferences.getInt(Prefs.LATEST_CATEGORY_2.pref, -1)
+        val pref = PreferenceManager.getDefaultSharedPreferences(context)
+        val cat1 = pref.getInt(Prefs.LATEST_CATEGORY_1.pref, -1)
+        val cat2 = pref.getInt(Prefs.LATEST_CATEGORY_2.pref, -1)
 
         if (cat1 != -1) {
             binding.lastCategory1.visibility = VISIBLE

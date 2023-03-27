@@ -22,6 +22,7 @@ import android.view.View.VISIBLE
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.*
+import androidx.preference.PreferenceManager
 import com.github.salomonbrys.kodein.Kodein
 import com.github.salomonbrys.kodein.KodeinInjector
 import com.github.salomonbrys.kodein.android.appKodein
@@ -36,13 +37,7 @@ import com.jehutyno.yomikata.screens.answers.AnswersActivity
 import com.jehutyno.yomikata.screens.content.word.WordDetailDialogFragment
 import com.jehutyno.yomikata.util.*
 import com.jehutyno.yomikata.view.SwipeDirection
-import org.jetbrains.anko.cancelButton
-import org.jetbrains.anko.okButton
-import org.jetbrains.anko.padding
-import org.jetbrains.anko.support.v4.alert
-import org.jetbrains.anko.support.v4.defaultSharedPreferences
-import org.jetbrains.anko.support.v4.withArguments
-import org.jetbrains.anko.textColor
+import splitties.alertdialog.appcompat.*
 
 
 /**
@@ -51,6 +46,7 @@ import org.jetbrains.anko.textColor
 class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callback, TextToSpeech.OnInitListener {
 
     private val injector = KodeinInjector()
+    @Suppress("unused")
     private val voicesManager: VoicesManager by injector.instance()
     private lateinit var presenter: QuizContract.Presenter
     private var adapter: QuizItemPagerAdapter? = null
@@ -72,8 +68,9 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
         if (adapter != null && adapter!!.words.isNotEmpty()) {
             ttsSupported = onTTSinit(activity, status, tts)
             presenter.setTTSSupported(ttsSupported)
-            if (adapter!!.words[binding.pager.currentItem].second == QuizType.TYPE_AUDIO ||
-                defaultSharedPreferences.getBoolean("play_start", false)) {
+            val pref = PreferenceManager.getDefaultSharedPreferences(context)
+            val noPlayStart = pref.getBoolean("play_start", false)
+            if (adapter!!.words[binding.pager.currentItem].second == QuizType.TYPE_AUDIO || noPlayStart) {
                 voicesManager.speakWord(adapter!!.words[binding.pager.currentItem].first, ttsSupported, tts)
             }
         }
@@ -103,7 +100,8 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
 
     override fun onResume() {
         super.onResume()
-        binding.hiraganaEdit.inputType = if (defaultSharedPreferences.getBoolean("input_change", false))
+        val pref = PreferenceManager.getDefaultSharedPreferences(context)
+        binding.hiraganaEdit.inputType = if (pref.getBoolean("input_change", false))
             InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
         else
             InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
@@ -166,7 +164,8 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
         if (context != null) {
             val errorsImage = ImageView(context)
             errorsImage.setImageResource(R.drawable.ic_tooltip_edit)
-            errorsImage.padding = DimensionHelper.getPixelFromDip(activity, 12)
+            val pad = DimensionHelper.getPixelFromDip(activity, 12)
+            errorsImage.setPadding(pad, pad, pad, pad)
             errorsImage.setOnClickListener {
                 presenter.onDisplayAnswersClick()
             }
@@ -177,7 +176,8 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
         if (context != null) {
             val ttsErrorsImage = ImageView(context)
             ttsErrorsImage.setImageResource(R.drawable.ic_tts_settings)
-            ttsErrorsImage.padding = DimensionHelper.getPixelFromDip(activity, 12)
+            val pad = DimensionHelper.getPixelFromDip(activity, 12)
+            ttsErrorsImage.setPadding(pad, pad, pad, pad)
             ttsErrorsImage.setOnClickListener {
                 val category = adapter!!.words[binding.pager.currentItem].first.baseCategory
                 val speechAvailability = checkSpeechAvailability(requireActivity(), ttsSupported, getCategoryLevel(category))
@@ -309,12 +309,13 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
         })
 
         binding.seekSpeed.max = 250
-        val rate = defaultSharedPreferences.getInt(Prefs.TTS_RATE.pref, 50)
+        val pref = PreferenceManager.getDefaultSharedPreferences(context)
+        val rate = pref.getInt(Prefs.TTS_RATE.pref, 50)
         binding.seekSpeed.progress = rate
         tts?.setSpeechRate((rate + 50).toFloat() / 100)
         binding.seekSpeed.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(p0: SeekBar?, p1: Int, p2: Boolean) {
-                defaultSharedPreferences.edit().putInt(Prefs.TTS_RATE.pref, p1).apply()
+                pref.edit().putInt(Prefs.TTS_RATE.pref, p1).apply()
                 tts?.setSpeechRate((p1 + 50).toFloat() / 100)
                 presenter.onSpeakSentence()
             }
@@ -433,10 +434,11 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
     override fun noWords() {
         binding.qcmContainer.visibility = GONE
         binding.answerContainer.visibility = GONE
-        alert {
-            message = getString(R.string.quiz_empty)
+
+        requireContext().alertDialog {
+            messageResource = R.string.quiz_empty
             okButton { requireActivity().finish() }
-            onCancelled { requireActivity().finish() }
+            setOnCancelListener { requireActivity().finish() }
         }.show()
     }
 
@@ -517,10 +519,11 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
     }
 
     override fun displayQCMNormalTextViews() {
-        binding.option1Tv.textSize = defaultSharedPreferences.getString("font_size", "18")!!.toFloat()
-        binding.option2Tv.textSize = defaultSharedPreferences.getString("font_size", "18")!!.toFloat()
-        binding.option3Tv.textSize = defaultSharedPreferences.getString("font_size", "18")!!.toFloat()
-        binding.option4Tv.textSize = defaultSharedPreferences.getString("font_size", "18")!!.toFloat()
+        val pref = PreferenceManager.getDefaultSharedPreferences(context)
+        binding.option1Tv.textSize = pref.getString("font_size", "18")!!.toFloat()
+        binding.option2Tv.textSize = pref.getString("font_size", "18")!!.toFloat()
+        binding.option3Tv.textSize = pref.getString("font_size", "18")!!.toFloat()
+        binding.option4Tv.textSize = pref.getString("font_size", "18")!!.toFloat()
         binding.option1Tv.visibility = View.VISIBLE
         binding.option2Tv.visibility = View.VISIBLE
         binding.option3Tv.visibility = View.VISIBLE
@@ -544,22 +547,22 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
 
     override fun displayQCMTv1(option: String, color: Int) {
         binding.option1Tv.text = option
-        binding.option1Tv.textColor = ContextCompat.getColor(requireContext(), color)
+        binding.option1Tv.setTextColor(ContextCompat.getColor(requireContext(), color))
     }
 
     override fun displayQCMTv2(option: String, color: Int) {
         binding.option2Tv.text = option
-        binding.option2Tv.textColor = ContextCompat.getColor(requireContext(), color)
+        binding.option2Tv.setTextColor(ContextCompat.getColor(requireContext(), color))
     }
 
     override fun displayQCMTv3(option: String, color: Int) {
         binding.option3Tv.text = option
-        binding.option3Tv.textColor = ContextCompat.getColor(requireContext(), color)
+        binding.option3Tv.setTextColor(ContextCompat.getColor(requireContext(), color))
     }
 
     override fun displayQCMTv4(option: String, color: Int) {
         binding.option4Tv.text = option
-        binding.option4Tv.textColor = ContextCompat.getColor(requireContext(), color)
+        binding.option4Tv.setTextColor(ContextCompat.getColor(requireContext(), color))
     }
 
     override fun displayQCMFuri1(optionFuri: String, start: Int, end: Int, color: Int) {
@@ -637,7 +640,7 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
                         }
                     }
                     QuizType.TYPE_EN_JAP -> {
-                        trad_sentence.textColor = animator.animatedValue as Int
+                        trad_sentence.setTextColor(animator.animatedValue as Int)
                     }
                     QuizType.TYPE_AUDIO -> {
                         sound.setColorFilter(animator.animatedValue as Int)
@@ -651,72 +654,74 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
     }
 
     override fun showAlertProgressiveSessionEnd(proposeErrors: Boolean) {
-        alert {
-            val sessionLength = adapter!!.words.size
+        val sessionLength = adapter!!.words.size
+
+        requireContext().alertDialog {
             message = getString(R.string.alert_session_finished, sessionLength)
-            neutralPressed(getString(R.string.alert_continue)) { presenter.onLaunchNextProgressiveSession() }
-            if (proposeErrors) {
-                negativeButton(getString(R.string.alert_review_session_errors)) {
-                    presenter.onLaunchErrorSession()
-                }
-            }
-            positiveButton(getString(R.string.alert_quit)) { finishQuiz() }
-            onCancelled { finishQuiz() }
+            neutralButton(R.string.alert_continue) { presenter.onLaunchNextProgressiveSession() }
+            positiveButton(R.string.alert_quit) { finishQuiz() }
+            setCancelable(false)    // avoid accidental click out of session
         }.show()
     }
 
     override fun showAlertErrorSessionEnd(quizEnded: Boolean) {
-        alert(getString(R.string.alert_error_review_finished)) {
+        requireContext().alertDialog {
+            messageResource = R.string.alert_error_review_finished
+
             if (!quizEnded) {
-                message = getString(R.string.alert_error_review_session_message)
-                positiveButton(getString(R.string.alert_continue_quiz)) {
+                messageResource = R.string.alert_error_review_session_message
+                positiveButton(R.string.alert_continue_quiz) {
                     presenter.onContinueQuizAfterErrorSession()
                 }
             } else {
-                message = getString(R.string.alert_error_review_quiz_message)
-                positiveButton(getString(R.string.alert_restart)) {
+                messageResource = R.string.alert_error_review_quiz_message
+                positiveButton(R.string.alert_restart) {
                     presenter.onRestartQuiz()
                 }
             }
-            neutralPressed(getString(R.string.alert_quit)) { finishQuiz() }
-            onCancelled {
-                presenter.onFinishQuiz()
+            neutralButton(R.string.alert_quit) {
+                finishQuiz()
             }
+            setCancelable(false)    // avoid accidental click out of session
         }.show()
     }
 
     override fun showAlertNonProgressiveSessionEnd(proposeErrors: Boolean) {
-        alert {
-            message = getString(R.string.alert_session_finished, defaultSharedPreferences.getString("length", "-1")?.toInt())
-            positiveButton(getString(R.string.alert_continue)) {
+        val pref = PreferenceManager.getDefaultSharedPreferences(context)
+
+        requireContext().alertDialog {
+            message = getString(R.string.alert_session_finished, pref.getString("length", "-1")?.toInt())
+            positiveButton(R.string.alert_continue) {
                 presenter.onContinueAfterNonProgressiveSessionEnd()
             }
             if (proposeErrors) {
-                negativeButton(getString(R.string.alert_review_session_errors)) {
+                negativeButton(R.string.alert_review_session_errors) {
                     // TODO handle shuffle ?
                     presenter.onLaunchErrorSession()
                 }
             }
-            neutralPressed(getString(R.string.alert_quit)) { presenter.onFinishQuiz() }
-            onCancelled {
-                presenter.onContinueAfterNonProgressiveSessionEnd()
+            neutralButton(R.string.alert_quit) {
+                presenter.onFinishQuiz()
             }
+            setCancelable(false)    // avoid accidental click out of session
         }.show()
     }
 
     override fun showAlertQuizEnd(proposeErrors: Boolean) {
-        alert {
-            message = getString(R.string.alert_quiz_finished)
-            neutralPressed(getString(R.string.alert_restart)) { presenter.onRestartQuiz() }
+        requireContext().alertDialog {
+            messageResource = R.string.alert_quiz_finished
+            neutralButton(R.string.alert_restart) {
+                presenter.onRestartQuiz()
+            }
             if (proposeErrors) {
-                negativeButton(getString(R.string.alert_review_quiz_errors)) {
+                negativeButton(R.string.alert_review_quiz_errors) {
                     presenter.onLaunchErrorSession()
                 }
             }
-            positiveButton(getString(R.string.alert_quit)) { finishQuiz() }
-            onCancelled {
+            positiveButton(R.string.alert_quit) {
                 finishQuiz()
             }
+            setCancelable(false)    // avoid accidental click out of session
         }.show()
     }
 
@@ -788,10 +793,12 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
 
     override fun onItemClick(position: Int) {
         Intent().putExtra(Extras.EXTRA_QUIZ_TYPE, adapter!!.words[position].second as Parcelable)
-        val dialog = WordDetailDialogFragment().withArguments(
-            Extras.EXTRA_WORD_ID to adapter!!.words[position].first.id,
-            Extras.EXTRA_QUIZ_TYPE to if (presenter.hasMistaken()) null else adapter!!.words[position].second,
-            Extras.EXTRA_SEARCH_STRING to "")
+        val dialog = WordDetailDialogFragment()
+        val bundle = Bundle()
+        bundle.putLong(Extras.EXTRA_WORD_ID, adapter!!.words[position].first.id)
+        bundle.putSerializable(Extras.EXTRA_QUIZ_TYPE, if (presenter.hasMistaken()) null else adapter!!.words[position].second)
+        bundle.putString(Extras.EXTRA_SEARCH_STRING, "")
+        dialog.arguments = bundle
         dialog.show(childFragmentManager, "")
         dialog.isCancelable = true
     }
@@ -850,24 +857,26 @@ class QuizFragment : Fragment(), QuizContract.View, QuizItemPagerAdapter.Callbac
     }
 
     private fun addSelection(wordId: Long) {
-        alert {
-            title = getString(R.string.new_selection)
-            val input = EditText(activity)
-            input.setSingleLine()
-            input.hint = getString(R.string.selection_name)
-            val container = FrameLayout(requireActivity())
-            val params = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-            params.leftMargin = DimensionHelper.getPixelFromDip(activity, 20)
-            params.rightMargin = DimensionHelper.getPixelFromDip(activity, 20)
-            input.layoutParams = params
-            container.addView(input)
-            customView = container
+        val input = EditText(activity)
+        input.setSingleLine()
+        input.hint = getString(R.string.selection_name)
+
+        val container = FrameLayout(requireActivity())
+        val params = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+        params.leftMargin = DimensionHelper.getPixelFromDip(activity, 20)
+        params.rightMargin = DimensionHelper.getPixelFromDip(activity, 20)
+        input.layoutParams = params
+        container.addView(input)
+
+        requireContext().alertDialog {
+            titleResource = R.string.new_selection
+            setView(container)
             okButton {
                 val selectionId = presenter.createSelection(input.text.toString())
                 presenter.addWordToSelection(wordId, selectionId)
                 presenter.loadSelections()
             }
-            cancelButton { }
+            cancelButton()
         }.show()
     }
 

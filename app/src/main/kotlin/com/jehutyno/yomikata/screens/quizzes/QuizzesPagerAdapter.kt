@@ -1,6 +1,7 @@
 package com.jehutyno.yomikata.screens.content
 
 import android.content.Context
+import android.os.Bundle
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentStatePagerAdapter
@@ -12,7 +13,7 @@ import com.jehutyno.yomikata.screens.home.HomeFragment
 import com.jehutyno.yomikata.screens.quizzes.QuizzesFragment
 import com.jehutyno.yomikata.util.Categories
 import com.jehutyno.yomikata.util.Extras
-import org.jetbrains.anko.support.v4.withArguments
+
 
 /**
  * Created by valentin on 19/12/2016.
@@ -34,10 +35,12 @@ class QuizzesPagerAdapter(val context: Context, fm: FragmentManager) : FragmentS
 
     override fun getItem(position: Int): Fragment {
         if (position == 0) {
-            val homeFragment = HomeFragment()
-            return homeFragment
+            return HomeFragment()
         } else {
-            val quizzesFragment = QuizzesFragment().withArguments(Extras.EXTRA_CATEGORY to categories[position])
+            val bundle = Bundle()
+            bundle.putInt(Extras.EXTRA_CATEGORY, categories[position])
+            val quizzesFragment = QuizzesFragment()
+            quizzesFragment.arguments = bundle
             return quizzesFragment
         }
     }

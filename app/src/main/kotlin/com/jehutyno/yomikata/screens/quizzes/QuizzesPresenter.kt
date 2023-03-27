@@ -2,6 +2,7 @@ package com.jehutyno.yomikata.screens.quizzes
 
 import android.content.Context
 import android.util.Log
+import androidx.preference.PreferenceManager
 import com.jehutyno.yomikata.model.Quiz
 import com.jehutyno.yomikata.model.StatAction
 import com.jehutyno.yomikata.model.StatResult
@@ -12,7 +13,6 @@ import com.jehutyno.yomikata.util.Prefs
 import com.jehutyno.yomikata.util.QuizStrategy
 import com.jehutyno.yomikata.util.QuizType
 import mu.KLogging
-import org.jetbrains.anko.defaultSharedPreferences
 import java.util.*
 
 /**
@@ -171,7 +171,8 @@ class QuizzesPresenter(
     }
 
     private fun getIntArrayFromPrefs(key: String, default: Int): ArrayList<Int> {
-        val savedString = context.defaultSharedPreferences.getString(key, "")
+        val pref = PreferenceManager.getDefaultSharedPreferences(context)
+        val savedString = pref.getString(key, "")
         val savedList = ArrayList<Int>(5)
         if (savedString == "" && default != -1) {
             savedList.add(default)
@@ -190,16 +191,18 @@ class QuizzesPresenter(
         list.forEach {
             str.append(it).append(",")
         }
-        context.defaultSharedPreferences.edit().putString(key, str.toString()).apply()
+        val pref = PreferenceManager.getDefaultSharedPreferences(context)
+        pref.edit().putString(key, str.toString()).apply()
     }
 
     override fun launchQuizClick(strategy: QuizStrategy, title: String, category: Int) {
         statsRepository.addStatEntry(StatAction.LAUNCH_QUIZ_FROM_CATEGORY, category.toLong(), Calendar.getInstance().timeInMillis, StatResult.OTHER)
-        val cat1 = context.defaultSharedPreferences.getInt(Prefs.LATEST_CATEGORY_1.pref, -1)
+        val pref = PreferenceManager.getDefaultSharedPreferences(context)
+        val cat1 = pref.getInt(Prefs.LATEST_CATEGORY_1.pref, -1)
 
         if (category != cat1) {
-            context.defaultSharedPreferences.edit().putInt(Prefs.LATEST_CATEGORY_2.pref, cat1).apply()
-            context.defaultSharedPreferences.edit().putInt(Prefs.LATEST_CATEGORY_1.pref, category).apply()
+            pref.edit().putInt(Prefs.LATEST_CATEGORY_2.pref, cat1).apply()
+            pref.edit().putInt(Prefs.LATEST_CATEGORY_1.pref, category).apply()
         }
         quizzesView.launchQuiz(strategy, selectedTypes.toIntArray(), title)
     }

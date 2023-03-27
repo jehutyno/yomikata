@@ -6,13 +6,15 @@ import android.os.Handler
 import android.os.Looper
 import androidx.appcompat.app.AppCompatActivity
 import android.view.View
+import androidx.preference.PreferenceManager
 import com.jehutyno.yomikata.databinding.ActivitySplashBinding
 import com.jehutyno.yomikata.screens.quizzes.QuizzesActivity
 import com.jehutyno.yomikata.util.Prefs
 import com.jehutyno.yomikata.util.migrateFromYomikata
 import com.jehutyno.yomikata.util.updateBDD
-import org.jetbrains.anko.defaultSharedPreferences
 
+
+// TODO: migrate to splashScreen https://developer.android.com/develop/ui/views/launch/splash-screen/migrate
 class SplashActivity : AppCompatActivity() {
 
     // View Binding
@@ -26,10 +28,11 @@ class SplashActivity : AppCompatActivity() {
         val view = binding.root
         setContentView(view)
 
-        if (defaultSharedPreferences.getBoolean(Prefs.DB_UPDATE_ONGOING.pref, false))
-            defaultSharedPreferences.getString(Prefs.DB_UPDATE_FILE.pref, "")?.let {
+        val pref = PreferenceManager.getDefaultSharedPreferences(this)
+        if (pref.getBoolean(Prefs.DB_UPDATE_ONGOING.pref, false))
+            pref.getString(Prefs.DB_UPDATE_FILE.pref, "")?.let {
                 updateBDD(null, it,
-                    defaultSharedPreferences.getInt(Prefs.DB_UPDATE_OLD_VERSION.pref, -1))
+                    pref.getInt(Prefs.DB_UPDATE_OLD_VERSION.pref, -1))
             }
 
         binding.pathView.useNaturalColors()
@@ -44,9 +47,9 @@ class SplashActivity : AppCompatActivity() {
         val handler = Handler(Looper.getMainLooper())
         handler.postDelayed(
             {
-                if (!defaultSharedPreferences.getBoolean("migrationYomiDone", false)) {
+                if (!pref.getBoolean("migrationYomiDone", false)) {
                     migrateFromYomikata()
-                    defaultSharedPreferences.edit().putBoolean("migrationYomiDone", true).apply()
+                    pref.edit().putBoolean("migrationYomiDone", true).apply()
                 }
                 val intent = Intent(this@SplashActivity, QuizzesActivity::class.java)
                 startActivity(intent)

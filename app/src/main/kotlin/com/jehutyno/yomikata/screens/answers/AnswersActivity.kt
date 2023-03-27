@@ -6,6 +6,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate 
 import androidx.appcompat.widget.Toolbar
 import android.view.MenuItem
+import androidx.preference.PreferenceManager
 import com.github.salomonbrys.kodein.Kodein
 import com.github.salomonbrys.kodein.KodeinInjector
 import com.github.salomonbrys.kodein.android.appKodein
@@ -15,7 +16,7 @@ import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.util.Prefs
 import com.jehutyno.yomikata.util.addOrReplaceFragment
 import mu.KLogging
-import org.jetbrains.anko.defaultSharedPreferences
+
 
 /**
  * Created by valentin on 25/10/2016.
@@ -25,12 +26,14 @@ class AnswersActivity : AppCompatActivity() {
     companion object : KLogging()
 
     private val injector = KodeinInjector()
+    @Suppress("unused")
     private val answersPresenter: AnswersContract.Presenter by injector.instance()
     private lateinit var answersFragment: AnswersFragment
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        AppCompatDelegate.setDefaultNightMode(defaultSharedPreferences.getInt(Prefs.DAY_NIGHT_MODE.pref, AppCompatDelegate.MODE_NIGHT_YES))
+        val pref = PreferenceManager.getDefaultSharedPreferences(this)
+        AppCompatDelegate.setDefaultNightMode(pref.getInt(Prefs.DAY_NIGHT_MODE.pref, AppCompatDelegate.MODE_NIGHT_YES))
         setContentView(R.layout.activity_answers)
 
         if(resources.getBoolean(R.bool.portrait_only)){

@@ -5,7 +5,6 @@ import android.graphics.PorterDuff
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import android.view.LayoutInflater
-import android.view.View
 import android.view.View.GONE
 import android.view.View.VISIBLE
 import android.view.ViewGroup
@@ -14,8 +13,7 @@ import com.jehutyno.yomikata.databinding.VhWordShortBinding
 import com.jehutyno.yomikata.model.Word
 import com.jehutyno.yomikata.model.getCategoryIcon
 import com.jehutyno.yomikata.model.getWordColor
-import com.jehutyno.yomikata.util.Prefs
-import org.jetbrains.anko.defaultSharedPreferences
+
 
 /**
  * Created by valentin on 04/10/2016.

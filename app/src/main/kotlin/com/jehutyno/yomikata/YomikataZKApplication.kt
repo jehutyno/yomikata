@@ -2,6 +2,7 @@ package com.jehutyno.yomikata
 
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.multidex.MultiDexApplication
+import androidx.preference.PreferenceManager
 import com.facebook.stetho.Stetho
 import com.github.salomonbrys.kodein.*
 import com.jehutyno.yomikata.repository.*
@@ -10,7 +11,6 @@ import com.jehutyno.yomikata.util.Prefs
 import io.github.inflationx.calligraphy3.CalligraphyConfig
 import io.github.inflationx.calligraphy3.CalligraphyInterceptor
 import io.github.inflationx.viewpump.ViewPump
-import org.jetbrains.anko.defaultSharedPreferences
 
 
 /**
@@ -37,7 +37,11 @@ class YomikataZKApplication : MultiDexApplication(), KodeinAware {
         super.onCreate()
 
         Stetho.initializeWithDefaults(this)
-        AppCompatDelegate.setDefaultNightMode(defaultSharedPreferences.getInt(Prefs.DAY_NIGHT_MODE.pref, AppCompatDelegate.MODE_NIGHT_YES))
+
+        val nightModePref = PreferenceManager.getDefaultSharedPreferences(this)
+        val mode = nightModePref.getInt(Prefs.DAY_NIGHT_MODE.pref, AppCompatDelegate.MODE_NIGHT_YES)
+        AppCompatDelegate.setDefaultNightMode(mode)
+
         ViewPump.init(ViewPump.builder()
                 .addInterceptor(CalligraphyInterceptor(
                         CalligraphyConfig.Builder()

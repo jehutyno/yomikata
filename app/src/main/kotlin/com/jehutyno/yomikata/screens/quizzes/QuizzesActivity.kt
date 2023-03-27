@@ -31,6 +31,7 @@ import android.view.View.VISIBLE
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.preference.PreferenceManager
 import com.flaviofaria.kenburnsview.KenBurnsView
 import com.getbase.floatingactionbutton.FloatingActionButton
 import com.getbase.floatingactionbutton.FloatingActionsMenu
@@ -45,7 +46,7 @@ import com.jehutyno.yomikata.util.Extras.REQUEST_PREFS
 import com.jehutyno.yomikata.view.AppBarStateChangeListener
 import com.wooplr.spotlight.utils.SpotlightListener
 import mu.KLogging
-import org.jetbrains.anko.*
+import splitties.alertdialog.appcompat.*
 import java.util.*
 
 
@@ -99,10 +100,10 @@ class QuizzesActivity : AppCompatActivity() {
                 if (intent.getBooleanExtra(UPDATE_FINISHED, false)) {
                     progressDialog!!.dismiss()
                     progressDialog = null
-                    alert {
-                        title = getString(R.string.update_success_title)
+                    alertDialog {
+                        titleResource = R.string.update_success_title
                         okButton { }
-                        message = getString(R.string.update_success_message)
+                        messageResource = R.string.update_success_message
                         binding.pagerQuizzes.adapter = null
                         binding.pagerQuizzes.adapter = quizzesAdapter
                         selectedCategory = Categories.HOME
@@ -128,7 +129,8 @@ class QuizzesActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        AppCompatDelegate.setDefaultNightMode(defaultSharedPreferences.getInt(Prefs.DAY_NIGHT_MODE.pref, AppCompatDelegate.MODE_NIGHT_YES))
+        val pref = PreferenceManager.getDefaultSharedPreferences(this)
+        AppCompatDelegate.setDefaultNightMode(pref.getInt(Prefs.DAY_NIGHT_MODE.pref, AppCompatDelegate.MODE_NIGHT_YES))
 
         binding = ActivityQuizzesBinding.inflate(layoutInflater)
         val view = binding.root
@@ -204,7 +206,7 @@ class QuizzesActivity : AppCompatActivity() {
                         (quizzesAdapter.registered[binding.pagerQuizzes.currentItem] as QuizzesFragment).tutos()
                 }
 
-                defaultSharedPreferences.edit().putInt(Prefs.SELECTED_CATEGORY.pref, selectedCategory).apply()
+                pref.edit().putInt(Prefs.SELECTED_CATEGORY.pref, selectedCategory).apply()
                 displayCategoryTitle(selectedCategory)
                 binding.navView.setCheckedItem(quizzesAdapter.getMenuItemFromPosition(position))
             }
@@ -279,11 +281,11 @@ class QuizzesActivity : AppCompatActivity() {
     }
 
     private fun setupDrawerContent(navigationView: NavigationView) {
-        navigationView.getHeaderView(0).find<TextView>(R.id.version).text = getString(R.string.yomiakataz_drawer, packageManager.getPackageInfo(packageName, 0).versionName)
-        navigationView.getHeaderView(0).find<ImageView>(R.id.facebook).setOnClickListener { contactFacebook(this) }
-        navigationView.getHeaderView(0).find<ImageView>(R.id.discord).setOnClickListener { contactDiscord(this) }
-        navigationView.getHeaderView(0).find<ImageView>(R.id.play_store).setOnClickListener { contactPlayStore(this) }
-        navigationView.getHeaderView(0).find<ImageView>(R.id.share).setOnClickListener { shareApp(this) }
+        navigationView.getHeaderView(0).findViewById<TextView>(R.id.version).text = getString(R.string.yomiakataz_drawer, packageManager.getPackageInfo(packageName, 0).versionName)
+        navigationView.getHeaderView(0).findViewById<ImageView>(R.id.facebook).setOnClickListener { contactFacebook(this) }
+        navigationView.getHeaderView(0).findViewById<ImageView>(R.id.discord).setOnClickListener { contactDiscord(this) }
+        navigationView.getHeaderView(0).findViewById<ImageView>(R.id.play_store).setOnClickListener { contactPlayStore(this) }
+        navigationView.getHeaderView(0).findViewById<ImageView>(R.id.share).setOnClickListener { shareApp(this) }
 
         navigationView.setNavigationItemSelectedListener { menuItem ->
             binding.multipleActions.collapse()
@@ -334,11 +336,12 @@ class QuizzesActivity : AppCompatActivity() {
                 }
                 R.id.day_night_item -> {
                     menuItem.isChecked = !menuItem.isChecked
-                    menuItem.actionView?.find<SwitchCompat>(R.id.my_switch)?.toggle()
+                    menuItem.actionView?.findViewById<SwitchCompat>(R.id.my_switch)?.toggle()
                 }
                 R.id.settings -> {
                     menuItem.isChecked = false
-                    startActivityForResult(intentFor<PrefsActivity>(), REQUEST_PREFS)
+                    val intent = Intent(this, PrefsActivity::class.java)
+                    startActivityForResult(intent, REQUEST_PREFS)
                 }
                 else -> {
                 }
@@ -347,17 +350,18 @@ class QuizzesActivity : AppCompatActivity() {
             true
         }
 
-        navigationView.menu.findItem(R.id.day_night_item).actionView?.find<SwitchCompat>(R.id.my_switch)?.isChecked = AppCompatDelegate.getDefaultNightMode() == AppCompatDelegate.MODE_NIGHT_YES
+        navigationView.menu.findItem(R.id.day_night_item).actionView?.findViewById<SwitchCompat>(R.id.my_switch)?.isChecked = AppCompatDelegate.getDefaultNightMode() == AppCompatDelegate.MODE_NIGHT_YES
         navigationView.menu.findItem(R.id.day_night_item).isChecked = AppCompatDelegate.getDefaultNightMode() == AppCompatDelegate.MODE_NIGHT_YES
-        navigationView.menu.findItem(R.id.day_night_item).actionView?.find<SwitchCompat>(R.id.my_switch)?.setOnCheckedChangeListener {
+        navigationView.menu.findItem(R.id.day_night_item).actionView?.findViewById<SwitchCompat>(R.id.my_switch)?.setOnCheckedChangeListener {
             switch, isChecked ->
             navigationView.menu.findItem(R.id.day_night_item).isChecked = isChecked
+            val pref = PreferenceManager.getDefaultSharedPreferences(this)
             if (isChecked) {
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
-                defaultSharedPreferences.edit().putInt(Prefs.DAY_NIGHT_MODE.pref, AppCompatDelegate.MODE_NIGHT_YES).apply()
+                pref.edit().putInt(Prefs.DAY_NIGHT_MODE.pref, AppCompatDelegate.MODE_NIGHT_YES).apply()
             } else {
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
-                defaultSharedPreferences.edit().putInt(Prefs.DAY_NIGHT_MODE.pref, AppCompatDelegate.MODE_NIGHT_NO).apply()
+                pref.edit().putInt(Prefs.DAY_NIGHT_MODE.pref, AppCompatDelegate.MODE_NIGHT_NO).apply()
             }
             binding.drawerLayout.closeDrawers()
             recreate = true
@@ -467,7 +471,10 @@ class QuizzesActivity : AppCompatActivity() {
                 binding.drawerLayout.openDrawer(GravityCompat.START)
                 return true
             }
-            R.id.search -> startActivity(intentFor<SearchResultActivity>())
+            R.id.search -> {
+                val intent = Intent(this, SearchResultActivity::class.java)
+                startActivity(intent)
+            }
         }
         return super.onOptionsItemSelected(item)
     }
@@ -476,11 +483,11 @@ class QuizzesActivity : AppCompatActivity() {
         if (binding.multipleActions.isExpanded)
             binding.multipleActions.collapse()
         else
-            alert {
-                title = getString(R.string.app_quit)
-                yesButton { finishAffinity() }
-                noButton { }
-                onKeyPressed { _, keyCode, _ ->
+            alertDialog {
+                titleResource = R.string.app_quit
+                okButton { finishAffinity() }
+                cancelButton()
+                setOnKeyListener { _, keyCode, _ ->
                     if (keyCode == KeyEvent.KEYCODE_BACK)
                         finishAffinity()
                     true
