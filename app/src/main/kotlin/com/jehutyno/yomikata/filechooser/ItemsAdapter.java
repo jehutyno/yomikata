@@ -1,9 +1,10 @@
 package com.jehutyno.yomikata.filechooser;
 
+import android.annotation.SuppressLint;
 import androidx.annotation.NonNull;
+
 import androidx.recyclerview.widget.RecyclerView;
 
-import android.annotation.SuppressLint;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 

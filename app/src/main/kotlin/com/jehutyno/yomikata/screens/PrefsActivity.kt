@@ -229,6 +229,7 @@ class PrefsActivity : AppCompatActivity(), FileChooserDialog.ChooserListener {
 
 
             val progressBar = ProgressBar(this, null, android.R.style.Widget_ProgressBar_Horizontal)
+            progressBar.setPadding(40, progressBar.paddingTop, 40, progressBar.paddingBottom)
             progressBar.max = wordTables.count()
 
             val progressAlertDialog = alertDialog {

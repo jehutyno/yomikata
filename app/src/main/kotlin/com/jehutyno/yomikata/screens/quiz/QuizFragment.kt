@@ -470,7 +470,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
                     }
 
                     override fun onAnimationEnd(animation: Animator) {
-                        binding.check.visibility = View.GONE
+                        binding.check.visibility = GONE
                         if (result) {
                             presenter.onNextWord()
                         } else {
@@ -492,7 +492,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
             }
 
             override fun onAnimationStart(animation: Animator) {
-                binding.check.visibility = View.VISIBLE
+                binding.check.visibility = VISIBLE
             }
 
         }).start()
@@ -505,13 +505,13 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
     }
 
     override fun displayQCMMode() {
-        binding.qcmContainer.visibility = View.VISIBLE
-        binding.editContainer.visibility = View.GONE
+        binding.qcmContainer.visibility = VISIBLE
+        binding.editContainer.visibility = GONE
     }
 
     override fun displayEditMode() {
-        binding.qcmContainer.visibility = View.GONE
-        binding.editContainer.visibility = View.VISIBLE
+        binding.qcmContainer.visibility = GONE
+        binding.editContainer.visibility = VISIBLE
     }
 
     override fun displayQCMNormalTextViews() {
@@ -520,25 +520,25 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
         binding.option2Tv.textSize = pref.getString("font_size", "18")!!.toFloat()
         binding.option3Tv.textSize = pref.getString("font_size", "18")!!.toFloat()
         binding.option4Tv.textSize = pref.getString("font_size", "18")!!.toFloat()
-        binding.option1Tv.visibility = View.VISIBLE
-        binding.option2Tv.visibility = View.VISIBLE
-        binding.option3Tv.visibility = View.VISIBLE
-        binding.option4Tv.visibility = View.VISIBLE
-        binding.option1Furi.visibility = View.GONE
-        binding.option2Furi.visibility = View.GONE
-        binding.option3Furi.visibility = View.GONE
-        binding.option4Furi.visibility = View.GONE
+        binding.option1Tv.visibility = VISIBLE
+        binding.option2Tv.visibility = VISIBLE
+        binding.option3Tv.visibility = VISIBLE
+        binding.option4Tv.visibility = VISIBLE
+        binding.option1Furi.visibility = GONE
+        binding.option2Furi.visibility = GONE
+        binding.option3Furi.visibility = GONE
+        binding.option4Furi.visibility = GONE
     }
 
     override fun displayQCMFuriTextViews() {
-        binding.option1Tv.visibility = View.GONE
-        binding.option2Tv.visibility = View.GONE
-        binding.option3Tv.visibility = View.GONE
-        binding.option4Tv.visibility = View.GONE
-        binding.option1Furi.visibility = View.VISIBLE
-        binding.option2Furi.visibility = View.VISIBLE
-        binding.option3Furi.visibility = View.VISIBLE
-        binding.option4Furi.visibility = View.VISIBLE
+        binding.option1Tv.visibility = GONE
+        binding.option2Tv.visibility = GONE
+        binding.option3Tv.visibility = GONE
+        binding.option4Tv.visibility = GONE
+        binding.option1Furi.visibility = VISIBLE
+        binding.option2Furi.visibility = VISIBLE
+        binding.option3Furi.visibility = VISIBLE
+        binding.option4Furi.visibility = VISIBLE
     }
 
     override fun displayQCMTv1(option: String, color: Int) {

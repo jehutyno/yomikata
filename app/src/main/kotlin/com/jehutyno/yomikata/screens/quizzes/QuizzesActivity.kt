@@ -155,6 +155,7 @@ class QuizzesActivity : AppCompatActivity(), DIAware {
 
         // progressBar for database update
         progressBar = ProgressBar(this, null, android.R.style.Widget_ProgressBar_Horizontal)
+        progressBar.setPadding(40, progressBar.paddingTop, 40, progressBar.paddingBottom)
 
         // Register Sync Receivers
         if (!receiversRegistered) {

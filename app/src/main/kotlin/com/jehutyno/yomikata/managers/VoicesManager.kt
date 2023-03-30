@@ -39,7 +39,7 @@ class VoicesManager(val context: Activity) {
             }
             SpeechAvailability.TTS_AVAILABLE -> {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                    tts?.speak(sentenceNoFuri(sentence), TextToSpeech.QUEUE_FLUSH, null,null)
+                    tts?.speak(sentenceNoFuri(sentence), TextToSpeech.QUEUE_FLUSH, null, null)
                 } else {    // remove this if minBuildVersion >= 21 (LOLLIPOP)
                     @Suppress("DEPRECATION")
                     tts?.speak(sentenceNoFuri(sentence), TextToSpeech.QUEUE_FLUSH, null)
