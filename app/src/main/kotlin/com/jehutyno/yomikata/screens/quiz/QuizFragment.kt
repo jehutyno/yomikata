@@ -787,7 +787,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
 
     override fun onItemClick(position: Int) {
         Intent().putExtra(Extras.EXTRA_QUIZ_TYPE, adapter!!.words[position].second as Parcelable)
-        val dialog = WordDetailDialogFragment(subDI)
+        val dialog = WordDetailDialogFragment(di)
         val bundle = Bundle()
         bundle.putLong(Extras.EXTRA_WORD_ID, adapter!!.words[position].first.id)
         bundle.putSerializable(Extras.EXTRA_QUIZ_TYPE, if (presenter.hasMistaken()) null else adapter!!.words[position].second)
