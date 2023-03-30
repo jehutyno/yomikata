@@ -128,7 +128,7 @@ class ContentActivity : AppCompatActivity(), DIAware {
                     trigger.trigger()
 
                 } else {
-                    contentPagerAdapter = ContentPagerAdapter(this@ContentActivity, supportFragmentManager, quizzes, lifecycle, di)
+                    contentPagerAdapter = ContentPagerAdapter(this@ContentActivity, quizzes, di)
                     binding.pagerContent.adapter = contentPagerAdapter
                     val quizTitle = quizzes[quizPosition].getName().split("%")[0]
                     quizIds = longArrayOf(quizzes[quizPosition].id)

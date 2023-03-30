@@ -200,9 +200,9 @@ class QuizzesActivity : AppCompatActivity(), DIAware {
         setupDrawerContent(binding.navView)
 
         // keep all fragments loaded for performance reasons
-        binding.pagerQuizzes.offscreenPageLimit = 10
+//        binding.pagerQuizzes.offscreenPageLimit = 10
 
-        quizzesAdapter = QuizzesPagerAdapter(this, supportFragmentManager, lifecycle, di)
+        quizzesAdapter = QuizzesPagerAdapter(this, di)
         binding.pagerQuizzes.adapter = quizzesAdapter
         binding.pagerQuizzes.currentItem = quizzesAdapter.positionFromCategory(selectedCategory)
         binding.pagerQuizzes.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {

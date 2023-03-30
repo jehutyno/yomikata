@@ -1,13 +1,11 @@
 package com.jehutyno.yomikata.screens.content
 
-import android.content.Context
 import android.os.Bundle
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentManager
-import androidx.lifecycle.Lifecycle
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.screens.home.HomeFragment
+import com.jehutyno.yomikata.screens.quizzes.QuizzesActivity
 import com.jehutyno.yomikata.screens.quizzes.QuizzesFragment
 import com.jehutyno.yomikata.util.Categories
 import com.jehutyno.yomikata.util.Extras
@@ -17,7 +15,7 @@ import org.kodein.di.DI
 /**
  * Created by valentin on 19/12/2016.
  */
-class QuizzesPagerAdapter(val context: Context, fm: FragmentManager, lifecycle: Lifecycle, private val di: DI) : FragmentStateAdapter(fm, lifecycle) {
+class QuizzesPagerAdapter(activity: QuizzesActivity, private val di: DI) : FragmentStateAdapter(activity) {
 
     val categories = intArrayOf(Categories.HOME,
         Categories.CATEGORY_SELECTIONS,
