@@ -94,6 +94,18 @@
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true">
 
+        <TextView
+            android:id="@+id/tap_to_reveal"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:textColor="@color/lighter_gray"
+            android:textSize="22sp"
+            android:background="@drawable/rounded_bg"
+            android:gravity="center"
+            android:text="@string/tap_to_reveal_choices"
+            android:textAppearance="@style/TextAppearance.AppCompat.Headline"
+            android:translationZ="10dp" />
+
         <LinearLayout
             android:id="@+id/edit_container"
             android:layout_width="match_parent"

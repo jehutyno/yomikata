@@ -332,6 +332,8 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
     private fun initAnswersButtons() {
         binding.quizContainer.setOnClickListener { if (isSettingsOpen) closeTTSSettings() }
         binding.answerContainer.setOnClickListener { if (isSettingsOpen) closeTTSSettings() }
+        binding.tapToReveal.setOnClickListener { it.visibility = GONE }
+        binding.tapToReveal.visibility = GONE
         binding.option1Container.setOnClickListener {
             if (isSettingsOpen) closeTTSSettings()
             if (!holdOn) {
@@ -507,6 +509,12 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
     override fun displayQCMMode() {
         binding.qcmContainer.visibility = VISIBLE
         binding.editContainer.visibility = GONE
+        val pref = PreferenceManager.getDefaultSharedPreferences(requireContext())
+        if (pref.getBoolean("tap_to_reveal", false)) {
+            binding.tapToReveal.visibility = VISIBLE
+        } else {
+            binding.tapToReveal.visibility = GONE
+        }
     }
 
     override fun displayEditMode() {

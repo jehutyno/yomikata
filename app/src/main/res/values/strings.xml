@@ -223,4 +223,6 @@
     <string name="delete_voices_files">Delete voices files</string>
     <string name="dont_ask_voices">Don\'t ask again</string>
     <string name="voices_reinit_done">Voice files have been deleted</string>
+    <string name="tap_to_reveal_choices">Tap to reveal choices</string>
+    <string name="tap_to_reveal_choices_summary">Hide multiple choice options until you tap the screen</string>
 </resources>

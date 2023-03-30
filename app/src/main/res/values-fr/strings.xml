@@ -196,4 +196,6 @@
     <string name="delete_voices_files">Effacer les fichiers de voix</string>
     <string name="dont_ask_voices">Ne plus demander</string>
     <string name="voices_reinit_done">Fichiers de voix supprimés</string>
+    <string name="tap_to_reveal_choices">Appuyez pour révéler les choix</string>
+    <string name="tap_to_reveal_choices_summary">Masquez les options de choix multiples jusqu\'au moment où vous touchez l\'écran</string>
 </resources>
