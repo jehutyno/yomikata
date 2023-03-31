@@ -63,6 +63,9 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
     // View Binding
     private var _binding: FragmentQuizBinding? = null
     private val binding get() = _binding!!
+    // for keyboard entry edit and multiple choice
+    private val editBinding get() = binding.quizAnswersKeyboardEntry
+    private val qcmBinding get() = binding.quizAnswersMultipleChoice
 
 
     override fun onInit(status: Int) {
@@ -102,7 +105,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
     override fun onResume() {
         super.onResume()
         val pref = PreferenceManager.getDefaultSharedPreferences(requireContext())
-        binding.hiraganaEdit.inputType = if (pref.getBoolean("input_change", false))
+        editBinding.hiraganaEdit.inputType = if (pref.getBoolean("input_change", false))
             InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
         else
             InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
@@ -112,7 +115,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-        outState.putString("edit", binding.hiraganaEdit.text.toString())
+        outState.putString("edit", editBinding.hiraganaEdit.text.toString())
         outState.putInt("edit_color", currentEditColor)
         presenter.onSaveInstanceState(outState)
     }
@@ -129,9 +132,9 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
         initUI()
 
         if (savedInstanceState != null) {
-            binding.hiraganaEdit.setText(savedInstanceState.getString("edit"))
-            savedInstanceState.getString("edit")?.let { binding.hiraganaEdit.setSelection(it.length) }
-            binding.hiraganaEdit.setTextColor(ContextCompat.getColor(requireActivity(), currentEditColor))
+            editBinding.hiraganaEdit.setText(savedInstanceState.getString("edit"))
+            savedInstanceState.getString("edit")?.let { editBinding.hiraganaEdit.setSelection(it.length) }
+            editBinding.hiraganaEdit.setTextColor(ContextCompat.getColor(requireActivity(), currentEditColor))
             presenter.onRestoreInstanceState(savedInstanceState)
         } else
             presenter.initQuiz()
@@ -228,26 +231,26 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
             }
 
             override fun onPageSelected(position: Int) {
-                binding.hiraganaEdit.isEnableConversion = adapter!!.words[position].first.isKana == 0
+                editBinding.hiraganaEdit.isEnableConversion = adapter!!.words[position].first.isKana == 0
                 holdOn = false
             }
         })
     }
 
     private fun initEditText() {
-        binding.hiraganaEdit.setOnEditorActionListener { _, i, keyEvent ->
+        editBinding.hiraganaEdit.setOnEditorActionListener { _, i, keyEvent ->
             if (isSettingsOpen) closeTTSSettings()
             if (adapter!!.words[binding.pager.currentItem].second == QuizType.TYPE_PRONUNCIATION
                 && (i == EditorInfo.IME_ACTION_DONE || keyEvent?.keyCode == KeyEvent.KEYCODE_ENTER) && !holdOn) {
                 // Validate Action
                 holdOn = true
-                binding.hiraganaEdit.setText(binding.hiraganaEdit.text.toString().replace("n", if (adapter!!.words[binding.pager.currentItem].first.isKana >= 1) "n" else "ん"))
-                presenter.onAnswerGiven(binding.hiraganaEdit.text.toString().trim().replace(" ", "").replace("　", "").replace("\n", "")) // TODO add function clean utils
+                editBinding.hiraganaEdit.setText(editBinding.hiraganaEdit.text.toString().replace("n", if (adapter!!.words[binding.pager.currentItem].first.isKana >= 1) "n" else "ん"))
+                presenter.onAnswerGiven(editBinding.hiraganaEdit.text.toString().trim().replace(" ", "").replace("　", "").replace("\n", "")) // TODO add function clean utils
             }
             true
         }
 
-        binding.hiraganaEdit.addTextChangedListener(object : TextWatcher {
+        editBinding.hiraganaEdit.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(s: Editable?) {
             }
 
@@ -256,7 +259,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
                 // Return to normal color when typing again (because it becomes Red or Green when
                 // you validate
                 currentEditColor = R.color.lighter_gray
-                binding.hiraganaEdit.setTextColor(ContextCompat.getColor(activity!!, currentEditColor))
+                editBinding.hiraganaEdit.setTextColor(ContextCompat.getColor(activity!!, currentEditColor))
             }
 
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
@@ -264,7 +267,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
 
         })
 
-        binding.editAction.setOnClickListener {
+        editBinding.editAction.setOnClickListener {
             if (isSettingsOpen) closeTTSSettings()
             // hold is used to wait so only one answer is validated even with multiple press
             if (!holdOn) {
@@ -276,14 +279,14 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
     }
 
     override fun clearEdit() {
-        binding.hiraganaEdit.setText("")
+        editBinding.hiraganaEdit.setText("")
     }
 
     override fun displayEditAnswer(answer: String) {
-        binding.hiraganaEdit.setText(answer)
+        editBinding.hiraganaEdit.setText(answer)
         currentEditColor = R.color.level_master_4
-        binding.hiraganaEdit.setTextColor(ContextCompat.getColor(requireActivity(), R.color.level_master_4))
-        binding.hiraganaEdit.setSelection(binding.hiraganaEdit.text.length)
+        editBinding.hiraganaEdit.setTextColor(ContextCompat.getColor(requireActivity(), R.color.level_master_4))
+        editBinding.hiraganaEdit.setSelection(editBinding.hiraganaEdit.text.length)
     }
 
     private fun setUpAudioManager() {
@@ -334,7 +337,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
         binding.answerContainer.setOnClickListener { if (isSettingsOpen) closeTTSSettings() }
         binding.tapToReveal.setOnClickListener { it.visibility = GONE }
         binding.tapToReveal.visibility = GONE
-        binding.option1Container.setOnClickListener {
+        qcmBinding.option1Container.setOnClickListener {
             if (isSettingsOpen) closeTTSSettings()
             if (!holdOn) {
                 holdOn = true
@@ -342,7 +345,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
 
             }
         }
-        binding.option2Container.setOnClickListener {
+        qcmBinding.option2Container.setOnClickListener {
             if (isSettingsOpen) closeTTSSettings()
             if (!holdOn) {
                 holdOn = true
@@ -350,7 +353,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
 
             }
         }
-        binding.option3Container.setOnClickListener {
+        qcmBinding.option3Container.setOnClickListener {
             if (isSettingsOpen) closeTTSSettings()
             if (!holdOn) {
                 holdOn = true
@@ -358,7 +361,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
 
             }
         }
-        binding.option4Container.setOnClickListener {
+        qcmBinding.option4Container.setOnClickListener {
             if (isSettingsOpen) closeTTSSettings()
             if (!holdOn) {
                 holdOn = true
@@ -366,7 +369,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
 
             }
         }
-        binding.option1Tv.setOnClickListener {
+        qcmBinding.option1Tv.setOnClickListener {
             if (isSettingsOpen) closeTTSSettings()
             if (!holdOn) {
                 holdOn = true
@@ -374,7 +377,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
 
             }
         }
-        binding.option2Tv.setOnClickListener {
+        qcmBinding.option2Tv.setOnClickListener {
             if (isSettingsOpen) closeTTSSettings()
             if (!holdOn) {
                 holdOn = true
@@ -382,7 +385,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
 
             }
         }
-        binding.option3Tv.setOnClickListener {
+        qcmBinding.option3Tv.setOnClickListener {
             if (isSettingsOpen) closeTTSSettings()
             if (!holdOn) {
                 holdOn = true
@@ -390,7 +393,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
 
             }
         }
-        binding.option4Tv.setOnClickListener {
+        qcmBinding.option4Tv.setOnClickListener {
             if (isSettingsOpen) closeTTSSettings()
             if (!holdOn) {
                 holdOn = true
@@ -398,24 +401,24 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
 
             }
         }
-        binding.option1Tv.movementMethod = ScrollingMovementMethod()
-        binding.option2Tv.movementMethod = ScrollingMovementMethod()
-        binding.option3Tv.movementMethod = ScrollingMovementMethod()
-        binding.option4Tv.movementMethod = ScrollingMovementMethod()
+        qcmBinding.option1Tv.movementMethod = ScrollingMovementMethod()
+        qcmBinding.option2Tv.movementMethod = ScrollingMovementMethod()
+        qcmBinding.option3Tv.movementMethod = ScrollingMovementMethod()
+        qcmBinding.option4Tv.movementMethod = ScrollingMovementMethod()
     }
 
     override fun reInitUI() {
-        binding.hiraganaEdit.setText("")
-        binding.editAction.setImageResource(R.drawable.ic_cancel_black_24dp)
-        binding.editAction.setColorFilter(ContextCompat.getColor(requireActivity(), R.color.lighter_gray))
-        binding.option1Tv.setTextColor(ContextCompat.getColor(requireActivity(), android.R.color.white))
-        binding.option2Tv.setTextColor(ContextCompat.getColor(requireActivity(), android.R.color.white))
-        binding.option3Tv.setTextColor(ContextCompat.getColor(requireActivity(), android.R.color.white))
-        binding.option4Tv.setTextColor(ContextCompat.getColor(requireActivity(), android.R.color.white))
-        binding.option1Furi.setTextColor(ContextCompat.getColor(requireActivity(), android.R.color.white))
-        binding.option2Furi.setTextColor(ContextCompat.getColor(requireActivity(), android.R.color.white))
-        binding.option3Furi.setTextColor(ContextCompat.getColor(requireActivity(), android.R.color.white))
-        binding.option4Furi.setTextColor(ContextCompat.getColor(requireActivity(), android.R.color.white))
+        editBinding.hiraganaEdit.setText("")
+        editBinding.editAction.setImageResource(R.drawable.ic_cancel_black_24dp)
+        editBinding.editAction.setColorFilter(ContextCompat.getColor(requireActivity(), R.color.lighter_gray))
+        qcmBinding.option1Tv.setTextColor(ContextCompat.getColor(requireActivity(), android.R.color.white))
+        qcmBinding.option2Tv.setTextColor(ContextCompat.getColor(requireActivity(), android.R.color.white))
+        qcmBinding.option3Tv.setTextColor(ContextCompat.getColor(requireActivity(), android.R.color.white))
+        qcmBinding.option4Tv.setTextColor(ContextCompat.getColor(requireActivity(), android.R.color.white))
+        qcmBinding.option1Furi.setTextColor(ContextCompat.getColor(requireActivity(), android.R.color.white))
+        qcmBinding.option2Furi.setTextColor(ContextCompat.getColor(requireActivity(), android.R.color.white))
+        qcmBinding.option3Furi.setTextColor(ContextCompat.getColor(requireActivity(), android.R.color.white))
+        qcmBinding.option4Furi.setTextColor(ContextCompat.getColor(requireActivity(), android.R.color.white))
     }
 
     /**
@@ -430,7 +433,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
     }
 
     override fun noWords() {
-        binding.qcmContainer.visibility = GONE
+        qcmBinding.root.visibility = GONE
         binding.answerContainer.visibility = GONE
 
         requireContext().alertDialog {
@@ -450,8 +453,8 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
     }
 
     override fun setEditTextColor(color: Int) {
-        binding.hiraganaEdit.setTextColor(ContextCompat.getColor(requireActivity(), color))
-        binding.hiraganaEdit.setSelection(binding.hiraganaEdit.text.length)
+        editBinding.hiraganaEdit.setTextColor(ContextCompat.getColor(requireActivity(), color))
+        editBinding.hiraganaEdit.setSelection(editBinding.hiraganaEdit.text.length)
     }
 
     override fun animateCheck(result: Boolean) {
@@ -502,13 +505,13 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
     }
 
     override fun displayEditDisplayAnswerButton() {
-        binding.editAction.setImageResource(R.drawable.ic_visibility_black_24dp)
-        binding.editAction.setColorFilter(ContextCompat.getColor(requireActivity(), R.color.level_master_4))
+        editBinding.editAction.setImageResource(R.drawable.ic_visibility_black_24dp)
+        editBinding.editAction.setColorFilter(ContextCompat.getColor(requireActivity(), R.color.level_master_4))
     }
 
     override fun displayQCMMode() {
-        binding.qcmContainer.visibility = VISIBLE
-        binding.editContainer.visibility = GONE
+        qcmBinding.root.visibility = VISIBLE
+        editBinding.root.visibility = GONE
         val pref = PreferenceManager.getDefaultSharedPreferences(requireContext())
         if (pref.getBoolean("tap_to_reveal", false)) {
             binding.tapToReveal.visibility = VISIBLE
@@ -518,78 +521,79 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
     }
 
     override fun displayEditMode() {
-        binding.qcmContainer.visibility = GONE
-        binding.editContainer.visibility = VISIBLE
+
+        qcmBinding.root.visibility = GONE
+        editBinding.root.visibility = VISIBLE
     }
 
     override fun displayQCMNormalTextViews() {
         val pref = PreferenceManager.getDefaultSharedPreferences(requireContext())
-        binding.option1Tv.textSize = pref.getString("font_size", "18")!!.toFloat()
-        binding.option2Tv.textSize = pref.getString("font_size", "18")!!.toFloat()
-        binding.option3Tv.textSize = pref.getString("font_size", "18")!!.toFloat()
-        binding.option4Tv.textSize = pref.getString("font_size", "18")!!.toFloat()
-        binding.option1Tv.visibility = VISIBLE
-        binding.option2Tv.visibility = VISIBLE
-        binding.option3Tv.visibility = VISIBLE
-        binding.option4Tv.visibility = VISIBLE
-        binding.option1Furi.visibility = GONE
-        binding.option2Furi.visibility = GONE
-        binding.option3Furi.visibility = GONE
-        binding.option4Furi.visibility = GONE
+        qcmBinding.option1Tv.textSize = pref.getString("font_size", "18")!!.toFloat()
+        qcmBinding.option2Tv.textSize = pref.getString("font_size", "18")!!.toFloat()
+        qcmBinding.option3Tv.textSize = pref.getString("font_size", "18")!!.toFloat()
+        qcmBinding.option4Tv.textSize = pref.getString("font_size", "18")!!.toFloat()
+        qcmBinding.option1Tv.visibility = VISIBLE
+        qcmBinding.option2Tv.visibility = VISIBLE
+        qcmBinding.option3Tv.visibility = VISIBLE
+        qcmBinding.option4Tv.visibility = VISIBLE
+        qcmBinding.option1Furi.visibility = GONE
+        qcmBinding.option2Furi.visibility = GONE
+        qcmBinding.option3Furi.visibility = GONE
+        qcmBinding.option4Furi.visibility = GONE
     }
 
     override fun displayQCMFuriTextViews() {
-        binding.option1Tv.visibility = GONE
-        binding.option2Tv.visibility = GONE
-        binding.option3Tv.visibility = GONE
-        binding.option4Tv.visibility = GONE
-        binding.option1Furi.visibility = VISIBLE
-        binding.option2Furi.visibility = VISIBLE
-        binding.option3Furi.visibility = VISIBLE
-        binding.option4Furi.visibility = VISIBLE
+        qcmBinding.option1Tv.visibility = GONE
+        qcmBinding.option2Tv.visibility = GONE
+        qcmBinding.option3Tv.visibility = GONE
+        qcmBinding.option4Tv.visibility = GONE
+        qcmBinding.option1Furi.visibility = VISIBLE
+        qcmBinding.option2Furi.visibility = VISIBLE
+        qcmBinding.option3Furi.visibility = VISIBLE
+        qcmBinding.option4Furi.visibility = VISIBLE
     }
 
     override fun displayQCMTv1(option: String, color: Int) {
-        binding.option1Tv.text = option
-        binding.option1Tv.setTextColor(ContextCompat.getColor(requireContext(), color))
+        qcmBinding.option1Tv.text = option
+        qcmBinding.option1Tv.setTextColor(ContextCompat.getColor(requireContext(), color))
     }
 
     override fun displayQCMTv2(option: String, color: Int) {
-        binding.option2Tv.text = option
-        binding.option2Tv.setTextColor(ContextCompat.getColor(requireContext(), color))
+        qcmBinding.option2Tv.text = option
+        qcmBinding.option2Tv.setTextColor(ContextCompat.getColor(requireContext(), color))
     }
 
     override fun displayQCMTv3(option: String, color: Int) {
-        binding.option3Tv.text = option
-        binding.option3Tv.setTextColor(ContextCompat.getColor(requireContext(), color))
+        qcmBinding.option3Tv.text = option
+        qcmBinding.option3Tv.setTextColor(ContextCompat.getColor(requireContext(), color))
     }
 
     override fun displayQCMTv4(option: String, color: Int) {
-        binding.option4Tv.text = option
-        binding.option4Tv.setTextColor(ContextCompat.getColor(requireContext(), color))
+        qcmBinding.option4Tv.text = option
+        qcmBinding.option4Tv.setTextColor(ContextCompat.getColor(requireContext(), color))
     }
 
     override fun displayQCMFuri1(optionFuri: String, start: Int, end: Int, color: Int) {
-        binding.option1Furi.text_set(optionFuri, start, end, color)
+        qcmBinding.option1Furi.text_set(optionFuri, start, end, color)
     }
 
     override fun displayQCMFuri2(optionFuri: String, start: Int, end: Int, color: Int) {
-        binding.option2Furi.text_set(optionFuri, start, end, color)
+        qcmBinding.option2Furi.text_set(optionFuri, start, end, color)
     }
 
     override fun displayQCMFuri3(optionFuri: String, start: Int, end: Int, color: Int) {
-        binding.option3Furi.text_set(optionFuri, start, end, color)
+        qcmBinding.option3Furi.text_set(optionFuri, start, end, color)
     }
 
     override fun displayQCMFuri4(optionFuri: String, start: Int, end: Int, color: Int) {
-        binding.option4Furi.text_set(optionFuri, start, end, color)
+        qcmBinding.option4Furi.text_set(optionFuri, start, end, color)
     }
 
     fun setOptionsFontSize(fontSize: Float) {
-        binding.option1Tv.textSize = fontSize
-        binding.option2Tv.textSize = fontSize
-        binding.option3Tv.textSize = fontSize
-        binding.option4Tv.textSize = fontSize
+        qcmBinding.option1Tv.textSize = fontSize
+        qcmBinding.option2Tv.textSize = fontSize
+        qcmBinding.option3Tv.textSize = fontSize
+        qcmBinding.option4Tv.textSize = fontSize
     }
 
     fun closeTTSSettings() {
@@ -601,13 +605,13 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
 
     override fun showKeyboard() {
         val inputMethodManager = requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-        inputMethodManager.showSoftInput(binding.hiraganaEdit, InputMethodManager.SHOW_IMPLICIT)
-        binding.hiraganaEdit.requestFocus()
+        inputMethodManager.showSoftInput(editBinding.hiraganaEdit, InputMethodManager.SHOW_IMPLICIT)
+        editBinding.hiraganaEdit.requestFocus()
     }
 
     override fun hideKeyboard() {
         val inputMethodManager = requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-        inputMethodManager.hideSoftInputFromWindow(binding.hiraganaEdit.windowToken, 0)
+        inputMethodManager.hideSoftInputFromWindow(editBinding.hiraganaEdit.windowToken, 0)
     }
 
     override fun animateColor(position: Int, word: Word, sentence: Sentence, quizType: QuizType, fromLevel: Int, toLevel: Int, fromPoints: Int, toPoints: Int) {
@@ -746,7 +750,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
      */
 
     override fun setHiraganaConversion(enabled: Boolean) {
-        binding.hiraganaEdit.isEnableConversion = enabled
+        editBinding.hiraganaEdit.isEnableConversion = enabled
     }
 
     override fun finishQuiz() {
