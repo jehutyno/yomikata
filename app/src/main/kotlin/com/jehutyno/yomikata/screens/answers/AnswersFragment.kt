@@ -2,6 +2,7 @@ package com.jehutyno.yomikata.screens.answers
 
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
+import android.util.Log
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.appcompat.widget.PopupMenu
@@ -10,32 +11,34 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.FrameLayout
-import com.github.salomonbrys.kodein.Kodein
-import com.github.salomonbrys.kodein.KodeinInjector
-import com.github.salomonbrys.kodein.android.appKodein
-import com.github.salomonbrys.kodein.instance
-import com.github.salomonbrys.kodein.singleton
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.databinding.FragmentContentBinding
 import com.jehutyno.yomikata.managers.VoicesManager
 import com.jehutyno.yomikata.model.Answer
 import com.jehutyno.yomikata.model.Quiz
 import com.jehutyno.yomikata.util.*
+import org.kodein.di.*
 import splitties.alertdialog.appcompat.alertDialog
 import splitties.alertdialog.appcompat.cancelButton
 import splitties.alertdialog.appcompat.okButton
 import splitties.alertdialog.appcompat.titleResource
 import java.util.*
+import kotlin.collections.ArrayList
 
 
 /**
  * Created by valentin on 25/10/2016.
  */
-class AnswersFragment : Fragment(), AnswersContract.View, AnswersAdapter.Callback, TextToSpeech.OnInitListener {
+class AnswersFragment(private val di: DI) : Fragment(), AnswersContract.View, AnswersAdapter.Callback, TextToSpeech.OnInitListener {
 
-    private val injector = KodeinInjector()
+    // kodein
+    private val subDI by DI.lazy {
+        extend(di)
+        bind<VoicesManager>() with singleton { VoicesManager(requireActivity()) }
+    }
     @Suppress("unused")
-    private val voicesManager: VoicesManager by injector.instance()
+    private val voicesManager: VoicesManager by subDI.instance()
+
     private lateinit var presenter: AnswersContract.Presenter
     private lateinit var layoutManager: LinearLayoutManager
     private lateinit var adapter: AnswersAdapter
@@ -60,7 +63,13 @@ class AnswersFragment : Fragment(), AnswersContract.View, AnswersAdapter.Callbac
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         tts = TextToSpeech(activity, this)
-        val answers = LocalPersistence.readObjectFromFile(context, "answers") as ArrayList<Answer>
+
+        val answersListRaw = LocalPersistence.readObjectFromFile(context, "answers")
+        val answersList = answersListRaw as ArrayList<*>
+        val answers = answersListRaw.filterIsInstance<Answer>()
+        if (answers.size != answersList.size) {
+            Log.e("Failed cast", "Some items in the read list of answers were not of the type Answer")
+        }
         adapter = AnswersAdapter(requireActivity(), this)
         layoutManager = LinearLayoutManager(activity)
         adapter.replaceData(presenter.getAnswersWordsSentences(answers))
@@ -73,11 +82,6 @@ class AnswersFragment : Fragment(), AnswersContract.View, AnswersAdapter.Callbac
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        injector.inject(Kodein {
-            extend(appKodein())
-            bind<VoicesManager>() with singleton { VoicesManager(requireActivity()) }
-        })
 
         binding.recyclerviewContent.let {
             it.adapter = adapter
@@ -178,7 +182,4 @@ class AnswersFragment : Fragment(), AnswersContract.View, AnswersAdapter.Callbac
         _binding = null
     }
 
-    fun unlockFullVersion() {
-        adapter.notifyDataSetChanged()
-    }
 }

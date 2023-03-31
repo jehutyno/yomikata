@@ -21,18 +21,13 @@ class ItemHolder extends RecyclerView.ViewHolder {
 
         this.itemClickListener = itemClickListener;
 
-        ivItemIcon = (ImageView) itemView.findViewById(R.id.item_icon_imageview);
-        tvItemName = (TextView) itemView.findViewById(R.id.item_name_textview);
+        ivItemIcon = itemView.findViewById(R.id.item_icon_imageview);
+        tvItemName = itemView.findViewById(R.id.item_name_textview);
     }
 
     void bind(final Item item) {
         tvItemName.setText(item.getName());
         ivItemIcon.setImageDrawable(item.getIcon());
-        itemView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                itemClickListener.onItemClick(item);
-            }
-        });
+        itemView.setOnClickListener(view -> itemClickListener.onItemClick(item));
     }
 }

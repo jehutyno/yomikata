@@ -21,11 +21,11 @@ import android.widget.TextView;
 import com.jehutyno.yomikata.R;
 
 import java.io.File;
-import java.io.FileFilter;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 public class FileChooserDialog extends AppCompatDialogFragment implements ItemHolder.OnItemClickListener, View.OnClickListener {
     private final static String KEY_CHOOSER_TYPE = "chooserType";
@@ -274,7 +274,7 @@ public class FileChooserDialog extends AppCompatDialogFragment implements ItemHo
         View view = inflater.inflate(R.layout.fragment_chooser, container, false);
         findViews(view);
         setListeners();
-        getDialog().setTitle(title);
+        Objects.requireNonNull(getDialog()).setTitle(title);
 
         if (chooserType == ChooserType.DIRECTORY_CHOOSER) {
             btnSelectDirectory.setVisibility(View.VISIBLE);
@@ -327,31 +327,29 @@ public class FileChooserDialog extends AppCompatDialogFragment implements ItemHo
         String currentDir = path.substring(path.lastIndexOf(File.separator) + 1);
         tvCurrentDirectory.setText(currentDir);
 
-        File[] files = new File(path).listFiles(new FileFilter() {
-            @Override
-            public boolean accept(File file) {
-                if (file.canRead()) {
-                    if (chooserType == ChooserType.FILE_CHOOSER && file.isFile()) {
-                        if (fileFormats != null && fileFormats.length > 0) {
-                            for (String fileFormat : fileFormats) {
-                                if (file.getName().endsWith(fileFormat)) {
-                                    return true;
-                                }
+        File[] files = new File(path).listFiles(file -> {
+            if (file.canRead()) {
+                if (chooserType == ChooserType.FILE_CHOOSER && file.isFile()) {
+                    if (fileFormats != null && fileFormats.length > 0) {
+                        for (String fileFormat : fileFormats) {
+                            if (file.getName().endsWith(fileFormat)) {
+                                return true;
                             }
-                            return false;
                         }
-                        return true;
+                        return false;
                     }
-                    return file.isDirectory();
+                    return true;
                 }
-                return false;
+                return file.isDirectory();
             }
+            return false;
         });
 
         List<Item> items = new ArrayList<>();
+        assert files != null;
         for (File f : files) {
             int drawableId = f.isFile() ? fileIconId : directoryIconId;
-            Drawable drawable = ContextCompat.getDrawable(getActivity().getApplicationContext(), drawableId);
+            Drawable drawable = ContextCompat.getDrawable(requireActivity().getApplicationContext(), drawableId);
             items.add(new Item(f.getPath(), drawable));
         }
         Collections.sort(items);
@@ -361,6 +359,7 @@ public class FileChooserDialog extends AppCompatDialogFragment implements ItemHo
 
     private void getGivenArguments() {
         Bundle args = getArguments();
+        assert args != null;
         chooserType = (ChooserType) args.getSerializable(KEY_CHOOSER_TYPE);
         chooserListener = (ChooserListener) args.getSerializable(KEY_CHOOSER_LISTENER);
         title = args.getString(KEY_TITLE);

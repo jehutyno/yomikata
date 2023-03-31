@@ -75,7 +75,7 @@ fun Activity.migrateFromYomikata() {
                     wordTable.forEach { word ->
                         val source = WordSource(context)
                         if (word.counterTry > 0 || word.priority > 0)
-                            source.restoreWord(word.word, word.prononciation, word)
+                            source.restoreWord(word.word, word.pronunciation, word)
                     }
                 }
                 File(toPath + toName).delete()

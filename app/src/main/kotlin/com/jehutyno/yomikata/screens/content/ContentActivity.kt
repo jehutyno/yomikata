@@ -3,19 +3,17 @@ package com.jehutyno.yomikata.screens.content
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
+import android.os.Build
 import android.os.Bundle
-import androidx.viewpager.widget.ViewPager
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import android.view.MenuItem
 import android.view.View.GONE
 import android.view.View.VISIBLE
+import android.window.OnBackInvokedDispatcher
+import androidx.activity.addCallback
 import androidx.preference.PreferenceManager
-import com.github.salomonbrys.kodein.Kodein
-import com.github.salomonbrys.kodein.KodeinInjector
-import com.github.salomonbrys.kodein.android.appKodein
-import com.github.salomonbrys.kodein.instance
-import com.github.salomonbrys.kodein.provider
+import androidx.viewpager2.widget.ViewPager2
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.databinding.ActivityContentBinding
 import com.jehutyno.yomikata.model.Quiz
@@ -30,10 +28,12 @@ import com.jehutyno.yomikata.util.Extras.EXTRA_QUIZ_IDS
 import com.jehutyno.yomikata.util.Extras.EXTRA_QUIZ_TITLE
 import io.github.inflationx.viewpump.ViewPumpContextWrapper
 import mu.KLogging
+import org.kodein.di.*
+import org.kodein.di.android.di
 import java.util.*
 
 
-class ContentActivity : AppCompatActivity() {
+class ContentActivity : AppCompatActivity(), DIAware {
 
     companion object : KLogging()
 
@@ -43,12 +43,22 @@ class ContentActivity : AppCompatActivity() {
     private var category: Int = -1
     private var level: Int = -1
 
-    private lateinit var statsRepository: StatsSource
-
     private var contentLevelFragment: ContentFragment? = null
-    private val injector = KodeinInjector()
+
+    // kodein
+    override val di by di()
+    private val subDI by DI.lazy {
+        extend(di)
+        import(contentPresenterModule(contentLevelFragment!!))
+        bind<ContentContract.Presenter>() with provider {
+            ContentPresenter(instance(), instance(), instance())
+        }
+    }
+    private lateinit var statsRepository: StatsSource
+    // use trigger because contentLevelFragment may not be set yet
+    private val trigger = DITrigger()
     @Suppress("unused")
-    private val contentPresenter: ContentContract.Presenter by injector.instance()
+    private val contentPresenter: ContentContract.Presenter by subDI.on(trigger = trigger).instance()
 
     private var contentPagerAdapter: ContentPagerAdapter? = null
 
@@ -69,8 +79,7 @@ class ContentActivity : AppCompatActivity() {
         val view = binding.root
         setContentView(view)
 
-
-        statsRepository = StatsSource(appKodein.invoke().instance())
+        statsRepository = di.direct.newInstance { StatsSource(instance()) }
 
         if (resources.getBoolean(R.bool.portrait_only)) {
             requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
@@ -88,8 +97,7 @@ class ContentActivity : AppCompatActivity() {
             setDisplayHomeAsUpEnabled(true)
         }
 
-        val quizSource: QuizRepository = appKodein.invoke().instance()
-
+        val quizSource: QuizRepository by instance()
 
         quizSource.getQuiz(category, object : QuizRepository.LoadQuizCallback {
             override fun onQuizLoaded(quizzes: List<Quiz>) {
@@ -111,33 +119,22 @@ class ContentActivity : AppCompatActivity() {
                         bundle.putLongArray(EXTRA_QUIZ_IDS, ids.toLongArray())
                         bundle.putString(EXTRA_QUIZ_TITLE, title as String)
                         bundle.putInt(EXTRA_LEVEL, level)
-                        contentLevelFragment = ContentFragment()
+                        contentLevelFragment = ContentFragment(di)
                         contentLevelFragment!!.arguments = bundle
                         quizIds = ids.toLongArray()
                     }
                     addOrReplaceFragment(R.id.fragment_container, contentLevelFragment!!)
-                    injector.inject(Kodein {
-                        extend(appKodein())
-                        import(contentPresenterModule(contentLevelFragment!!))
-                        bind<ContentContract.Presenter>() with provider {
-                            ContentPresenter(instance(), instance(), instance())
-                        }
-                    })
+                    // contentLevelFragment is set now, so safely pull trigger
+                    trigger.trigger()
+
                 } else {
-                    contentPagerAdapter = ContentPagerAdapter(this@ContentActivity, supportFragmentManager, quizzes)
+                    contentPagerAdapter = ContentPagerAdapter(this@ContentActivity, quizzes, di)
                     binding.pagerContent.adapter = contentPagerAdapter
                     val quizTitle = quizzes[quizPosition].getName().split("%")[0]
                     quizIds = longArrayOf(quizzes[quizPosition].id)
                     title = quizTitle
                     binding.pagerContent.currentItem = quizPosition
-                    binding.pagerContent.addOnPageChangeListener(object : ViewPager.OnPageChangeListener {
-                        override fun onPageScrollStateChanged(state: Int) {
-
-                        }
-
-                        override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) {
-
-                        }
+                    binding.pagerContent.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
 
                         override fun onPageSelected(position: Int) {
                             val newQuizTitle = quizzes[position].getName().split("%")[0]
@@ -178,6 +175,32 @@ class ContentActivity : AppCompatActivity() {
                 else -> launchQuiz(QuizStrategy.SHUFFLE)
             }
         }
+
+        /**
+         * Collapse or quit
+         * If action button is expanded -> collapse it
+         * Otherwise -> finish this activity
+         */
+        fun collapseOrQuit() {
+            if (binding.multipleActions.isExpanded)
+                binding.multipleActions.collapse()
+            else
+                finish()
+        }
+
+        // set back button to close floating actions menu
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            onBackInvokedDispatcher.registerOnBackInvokedCallback(
+                    OnBackInvokedDispatcher.PRIORITY_DEFAULT
+            ) {
+                collapseOrQuit()
+            }
+        } else {
+            onBackPressedDispatcher.addCallback(this) {
+                collapseOrQuit()
+            }
+        }
+
     }
 
     private fun launchQuiz(strategy: QuizStrategy) {
@@ -215,17 +238,6 @@ class ContentActivity : AppCompatActivity() {
             }
         }
         return super.onOptionsItemSelected(item)
-    }
-
-    override fun onBackPressed() {
-        if (binding.multipleActions.isExpanded)
-            binding.multipleActions.collapse()
-        else
-            super.onBackPressed()
-    }
-
-    fun unlockFullVersion() {
-        finish()
     }
 
 }

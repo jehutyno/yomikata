@@ -1,11 +1,11 @@
 package com.jehutyno.yomikata.screens
 
 import android.Manifest
-import android.app.ProgressDialog
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
+import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -227,28 +227,33 @@ class PrefsActivity : AppCompatActivity(), FileChooserDialog.ChooserListener {
             val migrationSource = MigrationSource(this, DatabaseHelper.getInstance(this, toName, toPath))
             val wordTables = MigrationTable.allTables(MigrationTables.values())
 
-            val progressDialog: ProgressDialog = ProgressDialog(this)
-            progressDialog.max = wordTables.count()
-            progressDialog.setTitle(getString(R.string.progress_import_title))
-            progressDialog.setMessage(getString(R.string.progress_import_message_y))
-            progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL)
-            progressDialog.setCancelable(false)
-            progressDialog.show()
+
+            val progressBar = ProgressBar(this, null, android.R.style.Widget_ProgressBar_Horizontal)
+            progressBar.setPadding(40, progressBar.paddingTop, 40, progressBar.paddingBottom)
+            progressBar.max = wordTables.count()
+
+            val progressAlertDialog = alertDialog {
+                titleResource = R.string.progress_import_title
+                messageResource = R.string.progress_import_message_y
+                setCancelable(false)
+                setView(progressBar)
+            }
+            progressAlertDialog.show()
 
             MainScope().async {
                 wordTables.forEach {
-                    val wordtable = migrationSource.getWordTable(it)
-                    progressDialog.incrementProgressBy(1)
-                    wordtable.forEach {word ->
+                    val wordTable = migrationSource.getWordTable(it)
+                    progressBar.incrementProgressBy(1)
+                    wordTable.forEach { word ->
                         val source = WordSource(this@PrefsActivity)
                         if (word.counterTry > 0 || word.priority > 0)
-                            source.restoreWord(word.word, word.prononciation, word)
+                            source.restoreWord(word.word, word.pronunciation, word)
                     }
                 }
                 File(toPath + toName).delete()
 
                 withContext(Main) {
-                    progressDialog.dismiss()
+                    progressAlertDialog.dismiss()
                     alertDialog {
                         titleResource = R.string.restore_success
                         messageResource = R.string.restore_success_message

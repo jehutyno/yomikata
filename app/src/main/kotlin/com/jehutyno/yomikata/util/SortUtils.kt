@@ -1,6 +1,7 @@
 package com.jehutyno.yomikata.util
 
 import java.util.*
+import kotlin.math.roundToInt
 
 /**
  * Created by valentin on 21/10/2016.
@@ -38,6 +39,6 @@ fun <T>shuffle(items:MutableList<T>):List<T>{
  * @param maxValue
  */
 fun randomNumericArray(length: Int, maxValue : Int = 10) : Array<Int>{
-    return Array<Int>(length, {i -> Math.round(maxValue * Math.random()).toInt() })
+    return Array(length) { (maxValue * Math.random()).roundToInt() }
 }
 

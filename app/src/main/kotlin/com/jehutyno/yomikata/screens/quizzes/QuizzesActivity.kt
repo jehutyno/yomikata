@@ -3,20 +3,21 @@ package com.jehutyno.yomikata.screens.quizzes
 import android.R.id.home
 import android.annotation.SuppressLint
 import android.app.Activity
-import android.app.ProgressDialog
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.ActivityInfo
+import android.content.pm.PackageManager
 import android.graphics.drawable.ColorDrawable
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
+import android.os.Looper
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.navigation.NavigationView
 import androidx.core.content.ContextCompat
 import androidx.core.view.GravityCompat
-import androidx.viewpager.widget.ViewPager
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
@@ -30,8 +31,14 @@ import android.view.View.GONE
 import android.view.View.VISIBLE
 import android.widget.ImageButton
 import android.widget.ImageView
+import android.widget.ProgressBar
 import android.widget.TextView
+import android.window.OnBackInvokedDispatcher
+import androidx.activity.addCallback
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.preference.PreferenceManager
+import androidx.viewpager2.widget.ViewPager2
 import com.flaviofaria.kenburnsview.KenBurnsView
 import com.getbase.floatingactionbutton.FloatingActionButton
 import com.getbase.floatingactionbutton.FloatingActionsMenu
@@ -39,18 +46,21 @@ import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.databinding.ActivityQuizzesBinding
 import com.jehutyno.yomikata.screens.PrefsActivity
 import com.jehutyno.yomikata.screens.content.QuizzesPagerAdapter
-import com.jehutyno.yomikata.screens.home.HomeFragment
 import com.jehutyno.yomikata.screens.search.SearchResultActivity
 import com.jehutyno.yomikata.util.*
-import com.jehutyno.yomikata.util.Extras.REQUEST_PREFS
 import com.jehutyno.yomikata.view.AppBarStateChangeListener
 import com.wooplr.spotlight.utils.SpotlightListener
 import mu.KLogging
+import org.kodein.di.DIAware
+import org.kodein.di.DI
+import org.kodein.di.android.di
 import splitties.alertdialog.appcompat.*
 import java.util.*
 
 
-class QuizzesActivity : AppCompatActivity() {
+class QuizzesActivity : AppCompatActivity(), DIAware {
+
+    override val di: DI by di()
 
     companion object : KLogging() {
         val UPDATE_INTENT = "update_intent"
@@ -62,13 +72,16 @@ class QuizzesActivity : AppCompatActivity() {
     private var selectedCategory: Int = 0
     private lateinit var toolbar: Toolbar
     lateinit var fabMenu: FloatingActionsMenu
-    lateinit var progressive: FloatingActionButton
     private var recreate = false
     lateinit var quizzesAdapter: QuizzesPagerAdapter
     private lateinit var kenburns: KenBurnsView
     private var menu: Menu? = null
-    var progressDialog: ProgressDialog? = null
-    val handler = Handler()
+
+    // alertDialog for progressBar
+    private var progressAlertDialog: AlertDialog? = null
+    private lateinit var progressBar: ProgressBar
+
+    val handler = Handler(Looper.getMainLooper())
     val runnable = object : Runnable {
         override fun run() {
             setImageRandom()
@@ -80,26 +93,27 @@ class QuizzesActivity : AppCompatActivity() {
         R.drawable.pic_07, R.drawable.pic_08, R.drawable.pic_21, R.drawable.pic_22,
         R.drawable.pic_23, R.drawable.pic_24, R.drawable.pic_25)
 
-    private val mHandler = Handler()
+    private val mHandler = Handler(Looper.getMainLooper())
     private var receiversRegistered = false
     private val updateReceiver = object : BroadcastReceiver() {
 
         override fun onReceive(context: Context, intent: Intent) {
             if (intent.action == UPDATE_INTENT) {
-                if (progressDialog == null) {
-                    progressDialog = ProgressDialog(this@QuizzesActivity)
-                    progressDialog!!.max = intent.getIntExtra(UPDATE_COUNT, 0)
-                    progressDialog!!.setTitle(getString(R.string.progress_bdd_update_title))
-                    progressDialog!!.setMessage(getString(R.string.progress_bdd_update_message))
-                    progressDialog!!.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL)
-                    progressDialog!!.setCancelable(false)
-                    progressDialog!!.show()
+                if (progressAlertDialog == null) {
+                    progressBar.max = intent.getIntExtra(UPDATE_COUNT, 0)
 
+                    progressAlertDialog = alertDialog {
+                        titleResource = R.string.progress_bdd_update_title
+                        messageResource = R.string.progress_bdd_update_message
+                        setCancelable(false)
+                        setView(progressBar)
+                    }
+                    progressAlertDialog!!.show()
                 }
-                progressDialog!!.progress = intent.getIntExtra(UPDATE_PROGRESS, 0)
+                progressBar.progress = intent.getIntExtra(UPDATE_PROGRESS, 0)
                 if (intent.getBooleanExtra(UPDATE_FINISHED, false)) {
-                    progressDialog!!.dismiss()
-                    progressDialog = null
+                    progressAlertDialog!!.dismiss()
+                    progressAlertDialog = null
                     alertDialog {
                         titleResource = R.string.update_success_title
                         okButton { }
@@ -118,8 +132,11 @@ class QuizzesActivity : AppCompatActivity() {
     private lateinit var binding: ActivityQuizzesBinding
 
 
-    fun voicesDownload(level: Int) {
-        launchVoicesDownload(this, level) {quizzesAdapter.notifyDataSetChanged()}
+    fun voicesDownload(level: Int, onSuccess: () -> Unit) {
+        launchVoicesDownload(this, level) {
+            quizzesAdapter.notifyDataSetChanged()
+            onSuccess()
+        }
     }
 
     @SuppressLint("MissingSuperCall")
@@ -136,7 +153,11 @@ class QuizzesActivity : AppCompatActivity() {
         val view = binding.root
         setContentView(view)
 
-        // Register Sync Recievers
+        // progressBar for database update
+        progressBar = ProgressBar(this, null, android.R.style.Widget_ProgressBar_Horizontal)
+        progressBar.setPadding(40, progressBar.paddingTop, 40, progressBar.paddingBottom)
+
+        // Register Sync Receivers
         if (!receiversRegistered) {
             val intentToReceiveFilter = IntentFilter()
             intentToReceiveFilter.addAction(UPDATE_INTENT)
@@ -159,7 +180,7 @@ class QuizzesActivity : AppCompatActivity() {
         }
 
         binding.appbar.addOnOffsetChangedListener(object : AppBarStateChangeListener() {
-            override fun onStateChanged(appBarLayout: AppBarLayout, state: AppBarStateChangeListener.State) {
+            override fun onStateChanged(appBarLayout: AppBarLayout, state: State) {
                 when (state) {
                     State.COLLAPSED -> {
                         supportActionBar?.setBackgroundDrawable(ColorDrawable(ContextCompat.getColor(this@QuizzesActivity, R.color.toolbarColor)))
@@ -179,33 +200,22 @@ class QuizzesActivity : AppCompatActivity() {
         binding.drawerLayout.setStatusBarBackground(R.color.colorPrimaryDark)
         setupDrawerContent(binding.navView)
 
-        quizzesAdapter = QuizzesPagerAdapter(this, supportFragmentManager)
+        // keep all fragments loaded for performance reasons
+//        binding.pagerQuizzes.offscreenPageLimit = 10
+
+        quizzesAdapter = QuizzesPagerAdapter(this, di)
         binding.pagerQuizzes.adapter = quizzesAdapter
         binding.pagerQuizzes.currentItem = quizzesAdapter.positionFromCategory(selectedCategory)
-        progressive = binding.progressivePlay
-        binding.pagerQuizzes.addOnPageChangeListener(object : ViewPager.OnPageChangeListener {
-            override fun onPageScrollStateChanged(state: Int) {
-
-            }
-
-            override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) {
-
-            }
+        binding.pagerQuizzes.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
 
             override fun onPageSelected(position: Int) {
-                selectedCategory = quizzesAdapter.categoryFromPosition(position)
+                super.onPageSelected(position)
+                selectedCategory = quizzesAdapter.categories[position]
                 if (selectedCategory == Categories.HOME) {
                     binding.multipleActions.visibility = GONE
-                    if (quizzesAdapter.registered[position] != null)
-                        (quizzesAdapter.registered[position] as HomeFragment).displayLatestCategories()
-                } else if (selectedCategory == Categories.CATEGORY_SELECTIONS) {
-                        binding.multipleActions.visibility = View.VISIBLE
                 } else {
                     binding.multipleActions.visibility = VISIBLE
-                    if (selectedCategory != Categories.CATEGORY_SELECTIONS)
-                        (quizzesAdapter.registered[binding.pagerQuizzes.currentItem] as QuizzesFragment).tutos()
                 }
-
                 pref.edit().putInt(Prefs.SELECTED_CATEGORY.pref, selectedCategory).apply()
                 displayCategoryTitle(selectedCategory)
                 binding.navView.setCheckedItem(quizzesAdapter.getMenuItemFromPosition(position))
@@ -213,32 +223,23 @@ class QuizzesActivity : AppCompatActivity() {
 
         })
 
-        progressive = binding.progressivePlay
+        // set onClick for quiz strategies in floating action button
+        fun FloatingActionButton.setLaunchQuizOnClickListener(quizStrategy: QuizStrategy) {
+            this.setOnClickListener {
+                // Hacky way of finding selected fragment:
+                // Viewpager2 uses the tag: "f" + position to store its fragments
+                val fragment = supportFragmentManager.findFragmentByTag("f${binding.pagerQuizzes.currentItem}")
+                if (fragment is QuizzesFragment) {
+                    fragment.launchQuizClick(quizStrategy, binding.textTitle.text.toString())
+                    binding.multipleActions.collapseImmediately()
+                }
+            }
+        }
+        binding.progressivePlay.setLaunchQuizOnClickListener(QuizStrategy.PROGRESSIVE)
+        binding.normalPlay.setLaunchQuizOnClickListener(QuizStrategy.STRAIGHT)
+        binding.shufflePlay.setLaunchQuizOnClickListener(QuizStrategy.SHUFFLE)
 
-        progressive.setOnClickListener {
-
-            val fragment = quizzesAdapter.registered[binding.pagerQuizzes.currentItem]
-            if (fragment is QuizzesFragment) {
-                fragment.launchQuizClick(QuizStrategy.PROGRESSIVE, binding.textTitle.text.toString())
-                binding.multipleActions.collapseImmediately()
-            }
-        }
-        binding.normalPlay.setOnClickListener {
-            val fragment = quizzesAdapter.registered[binding.pagerQuizzes.currentItem]
-            if (fragment is QuizzesFragment) {
-                fragment.launchQuizClick(QuizStrategy.STRAIGHT, binding.textTitle.text.toString())
-                binding.multipleActions.collapseImmediately()
-            }
-        }
-        binding.shufflePlay.setOnClickListener {
-            val fragment = quizzesAdapter.registered[binding.pagerQuizzes.currentItem]
-            if (fragment is QuizzesFragment) {
-                fragment.launchQuizClick(QuizStrategy.SHUFFLE, binding.textTitle.text.toString())
-                binding.multipleActions.collapse()
-            }
-        }
         fabMenu = binding.multipleActions
-
 
         binding.anchor.postDelayed({ tutos() }, 500)
 
@@ -264,6 +265,35 @@ class QuizzesActivity : AppCompatActivity() {
 
         })
 
+        fun collapseOrQuit() {
+            if (binding.multipleActions.isExpanded)
+                binding.multipleActions.collapse()
+            else
+                alertDialog {
+                    titleResource = R.string.app_quit
+                    okButton { finishAffinity() }
+                    cancelButton()
+                    setOnKeyListener { _, keyCode, _ ->
+                        if (keyCode == KeyEvent.KEYCODE_BACK)
+                            finishAffinity()
+                        true
+                    }
+                }.show()
+        }
+
+        // set back button to close floating actions menu or show alertDialog
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            onBackInvokedDispatcher.registerOnBackInvokedCallback(
+                    OnBackInvokedDispatcher.PRIORITY_DEFAULT
+            ) {
+                collapseOrQuit()
+            }
+        } else {
+            onBackPressedDispatcher.addCallback(this) {
+                collapseOrQuit()
+            }
+        }
+
     }
 
     private fun tutos() {
@@ -281,7 +311,12 @@ class QuizzesActivity : AppCompatActivity() {
     }
 
     private fun setupDrawerContent(navigationView: NavigationView) {
-        navigationView.getHeaderView(0).findViewById<TextView>(R.id.version).text = getString(R.string.yomiakataz_drawer, packageManager.getPackageInfo(packageName, 0).versionName)
+        val packageInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            packageManager.getPackageInfo(packageName, PackageManager.PackageInfoFlags.of(0))
+        } else {
+            @Suppress("DEPRECATION") packageManager.getPackageInfo(packageName, 0)
+        }
+        navigationView.getHeaderView(0).findViewById<TextView>(R.id.version).text = getString(R.string.yomiakataz_drawer, packageInfo.versionName)
         navigationView.getHeaderView(0).findViewById<ImageView>(R.id.facebook).setOnClickListener { contactFacebook(this) }
         navigationView.getHeaderView(0).findViewById<ImageView>(R.id.discord).setOnClickListener { contactDiscord(this) }
         navigationView.getHeaderView(0).findViewById<ImageView>(R.id.play_store).setOnClickListener { contactPlayStore(this) }
@@ -289,50 +324,51 @@ class QuizzesActivity : AppCompatActivity() {
 
         navigationView.setNavigationItemSelectedListener { menuItem ->
             binding.multipleActions.collapse()
+            // set smoothScroll to false because scrolling through all of the pages can be bad for performance
             when (menuItem.itemId) {
                 R.id.home -> {
                     menuItem.isChecked = true
-                    binding.pagerQuizzes.currentItem = quizzesAdapter.positionFromCategory(Categories.HOME)
+                    binding.pagerQuizzes.setCurrentItem(quizzesAdapter.positionFromCategory(Categories.HOME), false)
                 }
                 R.id.your_selections_item -> {
                     menuItem.isChecked = true
-                    binding.pagerQuizzes.currentItem = quizzesAdapter.positionFromCategory(Categories.CATEGORY_SELECTIONS)
+                    binding.pagerQuizzes.setCurrentItem(quizzesAdapter.positionFromCategory(Categories.CATEGORY_SELECTIONS), false)
                 }
                 R.id.hiragana_item -> {
                     menuItem.isChecked = true
-                    binding.pagerQuizzes.currentItem = quizzesAdapter.positionFromCategory(Categories.CATEGORY_HIRAGANA)
+                    binding.pagerQuizzes.setCurrentItem(quizzesAdapter.positionFromCategory(Categories.CATEGORY_HIRAGANA), false)
                 }
                 R.id.katakana_item -> {
                     menuItem.isChecked = true
-                    binding.pagerQuizzes.currentItem = quizzesAdapter.positionFromCategory(Categories.CATEGORY_KATAKANA)
+                    binding.pagerQuizzes.setCurrentItem(quizzesAdapter.positionFromCategory(Categories.CATEGORY_KATAKANA), false)
                 }
                 R.id.kanji_item -> {
                     menuItem.isChecked = true
-                    binding.pagerQuizzes.currentItem = quizzesAdapter.positionFromCategory(Categories.CATEGORY_KANJI)
+                    binding.pagerQuizzes.setCurrentItem(quizzesAdapter.positionFromCategory(Categories.CATEGORY_KANJI), false)
                 }
                 R.id.counters_item -> {
                     menuItem.isChecked = true
-                    binding.pagerQuizzes.currentItem = quizzesAdapter.positionFromCategory(Categories.CATEGORY_COUNTERS)
+                    binding.pagerQuizzes.setCurrentItem(quizzesAdapter.positionFromCategory(Categories.CATEGORY_COUNTERS), false)
                 }
                 R.id.jlpt1_item -> {
                     menuItem.isChecked = true
-                    binding.pagerQuizzes.currentItem = quizzesAdapter.positionFromCategory(Categories.CATEGORY_JLPT_1)
+                    binding.pagerQuizzes.setCurrentItem(quizzesAdapter.positionFromCategory(Categories.CATEGORY_JLPT_1), false)
                 }
                 R.id.jlpt2_item -> {
                     menuItem.isChecked = true
-                    binding.pagerQuizzes.currentItem = quizzesAdapter.positionFromCategory(Categories.CATEGORY_JLPT_2)
+                    binding.pagerQuizzes.setCurrentItem(quizzesAdapter.positionFromCategory(Categories.CATEGORY_JLPT_2), false)
                 }
                 R.id.jlpt3_item -> {
                     menuItem.isChecked = true
-                    binding.pagerQuizzes.currentItem = quizzesAdapter.positionFromCategory(Categories.CATEGORY_JLPT_3)
+                    binding.pagerQuizzes.setCurrentItem(quizzesAdapter.positionFromCategory(Categories.CATEGORY_JLPT_3), false)
                 }
                 R.id.jlpt4_item -> {
                     menuItem.isChecked = true
-                    binding.pagerQuizzes.currentItem = quizzesAdapter.positionFromCategory(Categories.CATEGORY_JLPT_4)
+                    binding.pagerQuizzes.setCurrentItem(quizzesAdapter.positionFromCategory(Categories.CATEGORY_JLPT_4), false)
                 }
                 R.id.jlpt5_item -> {
                     menuItem.isChecked = true
-                    binding.pagerQuizzes.currentItem = quizzesAdapter.positionFromCategory(Categories.CATEGORY_JLPT_5)
+                    binding.pagerQuizzes.setCurrentItem(quizzesAdapter.positionFromCategory(Categories.CATEGORY_JLPT_5), false)
                 }
                 R.id.day_night_item -> {
                     menuItem.isChecked = !menuItem.isChecked
@@ -341,7 +377,7 @@ class QuizzesActivity : AppCompatActivity() {
                 R.id.settings -> {
                     menuItem.isChecked = false
                     val intent = Intent(this, PrefsActivity::class.java)
-                    startActivityForResult(intent, REQUEST_PREFS)
+                    getResult.launch(intent)
                 }
                 else -> {
                 }
@@ -353,7 +389,7 @@ class QuizzesActivity : AppCompatActivity() {
         navigationView.menu.findItem(R.id.day_night_item).actionView?.findViewById<SwitchCompat>(R.id.my_switch)?.isChecked = AppCompatDelegate.getDefaultNightMode() == AppCompatDelegate.MODE_NIGHT_YES
         navigationView.menu.findItem(R.id.day_night_item).isChecked = AppCompatDelegate.getDefaultNightMode() == AppCompatDelegate.MODE_NIGHT_YES
         navigationView.menu.findItem(R.id.day_night_item).actionView?.findViewById<SwitchCompat>(R.id.my_switch)?.setOnCheckedChangeListener {
-            switch, isChecked ->
+            _, isChecked ->
             navigationView.menu.findItem(R.id.day_night_item).isChecked = isChecked
             val pref = PreferenceManager.getDefaultSharedPreferences(this)
             if (isChecked) {
@@ -479,22 +515,6 @@ class QuizzesActivity : AppCompatActivity() {
         return super.onOptionsItemSelected(item)
     }
 
-    override fun onBackPressed() {
-        if (binding.multipleActions.isExpanded)
-            binding.multipleActions.collapse()
-        else
-            alertDialog {
-                titleResource = R.string.app_quit
-                okButton { finishAffinity() }
-                cancelButton()
-                setOnKeyListener { _, keyCode, _ ->
-                    if (keyCode == KeyEvent.KEYCODE_BACK)
-                        finishAffinity()
-                    true
-                }
-            }.show()
-    }
-
     fun gotoCategory(category: Int) {
         binding.pagerQuizzes.currentItem = quizzesAdapter.positionFromCategory(category)
     }
@@ -505,12 +525,13 @@ class QuizzesActivity : AppCompatActivity() {
         quizzesAdapter.notifyDataSetChanged()
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        when (requestCode) {
-            REQUEST_PREFS -> if (resultCode == Activity.RESULT_OK) tutos()
-        }
-    }
+    private val getResult =
+            registerForActivityResult(
+                    ActivityResultContracts.StartActivityForResult()
+            ) {
+                if (it.resultCode == Activity.RESULT_OK)
+                    tutos()
+            }
 
     override fun onPause() {
         super.onPause()

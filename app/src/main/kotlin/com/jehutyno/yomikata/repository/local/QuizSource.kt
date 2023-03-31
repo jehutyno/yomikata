@@ -17,7 +17,7 @@ class QuizSource(var context: Context) : QuizRepository {
     override fun getQuiz(category: Int, callback: QuizRepository.LoadQuizCallback) {
         context.database.use {
             select(SQLiteTables.QUIZ.tableName, *SQLiteTable.allColumns(SQLiteQuiz.values()))
-                .where("${SQLiteQuiz.CATEGORY.column} = $category")
+                .whereArgs("${SQLiteQuiz.CATEGORY.column} = $category")
                 .exec {
                     val rowParser = rowParser(::Quiz)
                     if (count > 0)
@@ -31,7 +31,7 @@ class QuizSource(var context: Context) : QuizRepository {
     override fun getQuiz(quizId: Long, callback: QuizRepository.GetQuizCallback) {
         context.database.use {
             select(SQLiteTables.QUIZ.tableName, *SQLiteTable.allColumns(SQLiteQuiz.values()))
-                .where("${SQLiteQuiz.ID.column} = $quizId").limit(1)
+                .whereArgs("${SQLiteQuiz.ID.column} = $quizId").limit(1)
                 .exec {
                     val rowParser = rowParser(::Quiz)
                     if (count > 0)
@@ -46,7 +46,7 @@ class QuizSource(var context: Context) : QuizRepository {
         var quiz : Quiz? = null
         context.database.use {
             select(SQLiteTables.QUIZ.tableName, *SQLiteTable.allColumns(SQLiteQuiz.values()))
-                .where("${SQLiteQuiz.ID.column} = $quizId").limit(1)
+                .whereArgs("${SQLiteQuiz.ID.column} = $quizId").limit(1)
                 .exec {
                     val rowParser = rowParser(::Quiz)
                     if (count > 0)
@@ -117,7 +117,7 @@ class QuizSource(var context: Context) : QuizRepository {
 
     override fun countWordsForLevel(quizIds: LongArray, level: Int): Int {
         var count = 0
-        var query = "select ${SQLiteTables.WORDS.tableName}.${SQLiteTable.allColumns(SQLiteWord.values()).joinToString(",")} " +
+        val query = "select ${SQLiteTables.WORDS.tableName}.${SQLiteTable.allColumns(SQLiteWord.values()).joinToString(",")} " +
             "from ${SQLiteTables.WORDS.tableName} join ${SQLiteTables.QUIZ_WORD.tableName} " +
             "ON ${SQLiteQuizWord.WORD_ID.column} = ${SQLiteTables.WORDS.tableName}.${SQLiteWord.ID.column} " +
             "and ${SQLiteQuizWord.QUIZ_ID.column} in (${quizIds.joinToString(",")}) " +
@@ -134,7 +134,7 @@ class QuizSource(var context: Context) : QuizRepository {
 
     override fun countWordsForQuizzes(quizIds: LongArray): Int {
         var count = 0
-        var query = "select ${SQLiteTables.WORDS.tableName}.${SQLiteTable.allColumns(SQLiteWord.values()).joinToString(",")} " +
+        val query = "select ${SQLiteTables.WORDS.tableName}.${SQLiteTable.allColumns(SQLiteWord.values()).joinToString(",")} " +
             "from ${SQLiteTables.WORDS.tableName} join ${SQLiteTables.QUIZ_WORD.tableName} " +
             "ON ${SQLiteQuizWord.WORD_ID.column} = ${SQLiteTables.WORDS.tableName}.${SQLiteWord.ID.column} " +
             "and ${SQLiteQuizWord.QUIZ_ID.column} in (${quizIds.joinToString(",")})"

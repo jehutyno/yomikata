@@ -12,7 +12,7 @@ import java.util.*
 class MigrationSource(var context: Context, val database: DatabaseHelper) {
 
     fun getWordTable(tableName: String) : ArrayList<WordTable> {
-        var wordTables = arrayListOf<WordTable>()
+        val wordTables = arrayListOf<WordTable>()
         database.use {
             select(tableName, *MigrationTable.allColumns(MigrationWordTable.values()))
                 .exec {

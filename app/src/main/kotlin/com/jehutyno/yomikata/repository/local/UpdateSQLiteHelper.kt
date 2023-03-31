@@ -16,7 +16,7 @@ import java.io.IOException
  */
 class UpdateSQLiteHelper(var context: Context, val filePath: String) : ManagedSQLiteOpenHelper(context, UpdateSQLiteHelper.UPDATE_DATABASE_NAME, null, DATABASE_VERSION) {
 
-    lateinit private var database: SQLiteDatabase
+    private lateinit var database: SQLiteDatabase
     private var flag: Boolean = false
 
     companion object {
@@ -79,9 +79,7 @@ class UpdateSQLiteHelper(var context: Context, val filePath: String) : ManagedSQ
         } catch (e: SQLiteException) {
             e.printStackTrace()
         }
-        if (checkDB != null) {
-            checkDB.close()
-        }
+        checkDB?.close()
 
         return checkDB != null
     }
@@ -94,7 +92,7 @@ class UpdateSQLiteHelper(var context: Context, val filePath: String) : ManagedSQ
     @Throws(IOException::class)
     private fun copyDataBase() {
         // Open your local db as the input stream
-        val myInput = if (!filePath.isEmpty())
+        val myInput = if (filePath.isNotEmpty())
             File(filePath).inputStream()
         else
             context.assets.open(SQLiteHelper.DATABASE_NAME)

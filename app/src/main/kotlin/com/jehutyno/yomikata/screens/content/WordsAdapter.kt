@@ -1,13 +1,14 @@
 package com.jehutyno.yomikata.screens.content
 
 import android.content.Context
-import android.graphics.PorterDuff
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View.GONE
 import android.view.View.VISIBLE
 import android.view.ViewGroup
+import androidx.core.graphics.BlendModeColorFilterCompat
+import androidx.core.graphics.BlendModeCompat
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.databinding.VhWordShortBinding
 import com.jehutyno.yomikata.model.Word
@@ -36,7 +37,10 @@ class WordsAdapter(private val context: Context, private val callback: Callback)
         holder.wordName.text = word.japanese
         holder.wordName.setTextColor(getWordColor(context, word.level, word.points))
         holder.categoryIcon.setImageResource(getCategoryIcon(word.baseCategory))
-        holder.categoryIcon.drawable?.setColorFilter(ContextCompat.getColor(context, R.color.content_icon_color), PorterDuff.Mode.SRC_ATOP)
+
+        val color = ContextCompat.getColor(context, R.color.content_icon_color)
+        holder.categoryIcon.drawable?.colorFilter = BlendModeColorFilterCompat.createBlendModeColorFilterCompat(color, BlendModeCompat.SRC_ATOP)
+
         flag = true
         holder.checkBox.isChecked = word.isSelected == 1
         flag = false
@@ -57,7 +61,7 @@ class WordsAdapter(private val context: Context, private val callback: Callback)
             setOnClickListener {
                 checkMode = true
                 word.isSelected = 1
-                notifyDataSetChanged()
+                notifyItemRangeChanged(0, items.size)
                 callback.onCategoryIconClick(position)
             }
         }
@@ -82,6 +86,7 @@ class WordsAdapter(private val context: Context, private val callback: Callback)
     fun replaceData(list: List<Word>) {
         items.clear()
         items.addAll(list)
+        @Suppress("notifyDataSetChanged")
         notifyDataSetChanged()
     }
 
@@ -98,8 +103,9 @@ class WordsAdapter(private val context: Context, private val callback: Callback)
     }
 
     fun clearData() {
+        val size = items.size
         items.clear()
-        notifyDataSetChanged()
+        notifyItemRangeRemoved(0, size)
     }
 
 }

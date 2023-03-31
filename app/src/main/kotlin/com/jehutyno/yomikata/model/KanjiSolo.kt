@@ -9,10 +9,10 @@ open class KanjiSolo(val id: Long, val kanji: String, val strokes: Int, val en: 
                      val kunyomi: String, val onyomi: String, val radical: String) {
 
     fun getTrad(): String {
-        if (Locale.getDefault().language == "fr")
-            return fr
+        return if (Locale.getDefault().language == "fr")
+            fr
         else
-            return en
+            en
     }
 
 }

@@ -2,6 +2,7 @@ package com.jehutyno.yomikata.screens.quiz
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.os.Build
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
 import android.util.Log
@@ -80,17 +81,46 @@ class QuizPresenter(
     override fun onRestoreInstanceState(savedInstanceState: Bundle) {
         quizView.reInitUI()
         hasMistaken = savedInstanceState.getBoolean("hasMistaken")
-        answers = savedInstanceState.getParcelableArrayList("errors")!!
-        val random0 : Word? = savedInstanceState.getParcelable("random0")
-        val random1 : Word? = savedInstanceState.getParcelable("random1")
-        val random2 : Word? = savedInstanceState.getParcelable("random2")
-        val random3 : Word? = savedInstanceState.getParcelable("random3")
+
+        val random0: Word?
+        val random1: Word?
+        val random2: Word?
+        val random3: Word?
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            answers = savedInstanceState.getParcelableArrayList("errors", Answer::class.java)!!
+            random0 = savedInstanceState.getParcelable("random0", Word::class.java)
+            random1 = savedInstanceState.getParcelable("random1", Word::class.java)
+            random2 = savedInstanceState.getParcelable("random2", Word::class.java)
+            random3 = savedInstanceState.getParcelable("random3", Word::class.java)
+        } else {
+            @Suppress("DEPRECATION")
+            answers = savedInstanceState.getParcelableArrayList("errors")!!
+            @Suppress("DEPRECATION")
+            random0 = savedInstanceState.getParcelable("random0")
+            @Suppress("DEPRECATION")
+            random1 = savedInstanceState.getParcelable("random1")
+            @Suppress("DEPRECATION")
+            random2 = savedInstanceState.getParcelable("random2")
+            @Suppress("DEPRECATION")
+            random3 = savedInstanceState.getParcelable("random3")
+        }
         if (random0 != null) randoms.add(Pair(random0, savedInstanceState.getInt("random0_color")))
         if (random1 != null) randoms.add(Pair(random1, savedInstanceState.getInt("random1_color")))
         if (random2 != null) randoms.add(Pair(random2, savedInstanceState.getInt("random2_color")))
         if (random3 != null) randoms.add(Pair(random3, savedInstanceState.getInt("random3_color")))
-        val words = LocalPersistence.readObjectFromFile(context, "words") as ArrayList<Word>
-        val types = LocalPersistence.readObjectFromFile(context, "types") as ArrayList<QuizType>
+
+        val wordsListRaw = LocalPersistence.readObjectFromFile(context, "words")
+        val wordsList = wordsListRaw as ArrayList<*>
+        val words = wordsListRaw.filterIsInstance<Word>()
+        if (words.size != wordsList.size) {
+            Log.e("Failed cast", "Some items in the read list of words were not of the type Word")
+        }
+        val typesListRaw = LocalPersistence.readObjectFromFile(context, "types")
+        val typesList = typesListRaw as ArrayList<*>
+        val types = typesListRaw.filterIsInstance<QuizType>()
+        if (types.size != typesList.size) {
+            Log.e("Failed cast", "Some items in the read list of quiz types were not of the type QuizType")
+        }
 
         quizWords = (0..words.size - 1).map { Pair(words[it], types[it]) }
         quizView.displayWords(quizWords)
@@ -317,31 +347,26 @@ class QuizPresenter(
         val returnTypes: IntArray
         if (quizTypes.contains(QuizType.TYPE_AUTO.type)) {
             val autoTypes = arrayListOf<Int>()
-            if (defaultSharedPreferences.getBoolean(Prefs.FULL_VERSION.pref, false)) {
-                when (word.level) {
-                    0 -> {
-                        autoTypes.add(QuizType.TYPE_PRONUNCIATION_QCM.type)
-                        autoTypes.add(QuizType.TYPE_JAP_EN.type)
-                    }
-                    1 -> {
-                        autoTypes.add(QuizType.TYPE_PRONUNCIATION_QCM.type)
-                        autoTypes.add(QuizType.TYPE_JAP_EN.type)
-                        autoTypes.add(QuizType.TYPE_EN_JAP.type)
-                        if (ttsSupported != TextToSpeech.LANG_MISSING_DATA && ttsSupported != TextToSpeech.LANG_NOT_SUPPORTED)
-                            autoTypes.add(QuizType.TYPE_AUDIO.type)
-                    }
-                    else -> {
-                        autoTypes.add(QuizType.TYPE_PRONUNCIATION_QCM.type)
-                        autoTypes.add(QuizType.TYPE_JAP_EN.type)
-                        autoTypes.add(QuizType.TYPE_EN_JAP.type)
-                        autoTypes.add(QuizType.TYPE_PRONUNCIATION.type)
-                        if (ttsSupported != TextToSpeech.LANG_MISSING_DATA && ttsSupported != TextToSpeech.LANG_NOT_SUPPORTED)
-                            autoTypes.add(QuizType.TYPE_AUDIO.type)
-                    }
+            when (word.level) {
+                0 -> {
+                    autoTypes.add(QuizType.TYPE_PRONUNCIATION_QCM.type)
+                    autoTypes.add(QuizType.TYPE_JAP_EN.type)
                 }
-            } else {
-                autoTypes.add(QuizType.TYPE_PRONUNCIATION_QCM.type)
-                autoTypes.add(QuizType.TYPE_PRONUNCIATION.type)
+                1 -> {
+                    autoTypes.add(QuizType.TYPE_PRONUNCIATION_QCM.type)
+                    autoTypes.add(QuizType.TYPE_JAP_EN.type)
+                    autoTypes.add(QuizType.TYPE_EN_JAP.type)
+                    if (ttsSupported != TextToSpeech.LANG_MISSING_DATA && ttsSupported != TextToSpeech.LANG_NOT_SUPPORTED)
+                        autoTypes.add(QuizType.TYPE_AUDIO.type)
+                }
+                else -> {
+                    autoTypes.add(QuizType.TYPE_PRONUNCIATION_QCM.type)
+                    autoTypes.add(QuizType.TYPE_JAP_EN.type)
+                    autoTypes.add(QuizType.TYPE_EN_JAP.type)
+                    autoTypes.add(QuizType.TYPE_PRONUNCIATION.type)
+                    if (ttsSupported != TextToSpeech.LANG_MISSING_DATA && ttsSupported != TextToSpeech.LANG_NOT_SUPPORTED)
+                        autoTypes.add(QuizType.TYPE_AUDIO.type)
+                }
             }
             returnTypes = autoTypes.toIntArray()
         } else {

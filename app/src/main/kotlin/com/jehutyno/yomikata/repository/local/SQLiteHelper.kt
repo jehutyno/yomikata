@@ -15,7 +15,7 @@ import java.io.IOException
  */
 class SQLiteHelper(var context: Context) : ManagedSQLiteOpenHelper(context, SQLiteHelper.DATABASE_NAME, null, SQLiteHelper.DATABASE_VERSION) {
 
-    lateinit private var database: SQLiteDatabase
+    private lateinit var database: SQLiteDatabase
     private var flag: Boolean = false
 
     companion object {
@@ -78,9 +78,7 @@ class SQLiteHelper(var context: Context) : ManagedSQLiteOpenHelper(context, SQLi
         } catch (e: SQLiteException) {
             e.printStackTrace()
         }
-        if (checkDB != null) {
-            checkDB.close()
-        }
+        checkDB?.close()
 
         return checkDB != null
     }

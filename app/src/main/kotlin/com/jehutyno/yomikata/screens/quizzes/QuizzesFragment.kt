@@ -15,8 +15,6 @@ import android.widget.FrameLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.preference.PreferenceManager
-import com.github.salomonbrys.kodein.android.appKodein
-import com.github.salomonbrys.kodein.instance
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.databinding.FragmentQuizzesBinding
 import com.jehutyno.yomikata.model.Quiz
@@ -29,6 +27,9 @@ import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.withContext
+import org.kodein.di.DI
+import org.kodein.di.instance
+import org.kodein.di.newInstance
 import splitties.alertdialog.appcompat.*
 import java.lang.Thread.sleep
 
@@ -36,14 +37,21 @@ import java.lang.Thread.sleep
 /**
  * Created by valentin on 30/09/2016.
  */
-class QuizzesFragment : Fragment(), QuizzesContract.View, QuizzesAdapter.Callback, TextToSpeech.OnInitListener {
+class QuizzesFragment(di: DI) : Fragment(), QuizzesContract.View, QuizzesAdapter.Callback, TextToSpeech.OnInitListener {
+
+    // kodein
+    private val mpresenter: QuizzesContract.Presenter by di.newInstance {
+        QuizzesPresenter(instance(), instance(), instance(), this@QuizzesFragment)
+    }
 
     val REQUEST_TUTO: Int = 55
-    private var mpresenter: QuizzesContract.Presenter? = null
     private lateinit var adapter: QuizzesAdapter
     private var selectedCategory: Int = 0
     private var tts: TextToSpeech? = null
     private var ttsSupported: Int = TextToSpeech.LANG_NOT_SUPPORTED
+
+    // seekBars
+    private lateinit var seekBars : SeekBarsManager
 
     // View Binding
     private var _binding: FragmentQuizzesBinding? = null
@@ -51,7 +59,11 @@ class QuizzesFragment : Fragment(), QuizzesContract.View, QuizzesAdapter.Callbac
 
 
     override fun setPresenter(presenter: QuizzesContract.Presenter) {
-        mpresenter = presenter
+        // no need in this case since this is only used to set a reference to the mpresenter
+        // that is explicitly created in this class already.
+        // if this method is ever called because QuizzesPresenter was initialized from some
+        // other activity/fragment, then this should be set (see ContentFragment for an example)
+//        mpresenter = presenter
     }
 
     override fun onInit(status: Int) {
@@ -65,12 +77,37 @@ class QuizzesFragment : Fragment(), QuizzesContract.View, QuizzesAdapter.Callbac
         adapter = QuizzesAdapter(requireActivity(), selectedCategory, this, selectedCategory == Categories.CATEGORY_SELECTIONS)
     }
 
+    override fun onStart() {
+        // use onStart so that viewPager2 can set everything up before the page becomes visible
+        super.onStart()
+        mpresenter.start()
+        mpresenter.loadQuizzes(selectedCategory)
+    }
+
     override fun onResume() {
         super.onResume()
         val position = (binding.recyclerview.layoutManager as LinearLayoutManager).findFirstVisibleItemPosition()
-        mpresenter!!.start()
-        mpresenter!!.loadQuizzes(selectedCategory)
+        mpresenter.start()
+        mpresenter.loadQuizzes(selectedCategory)
+        seekBars.animateAll()    // call this after loadQuizzes, since seekBars variables are set there
         binding.recyclerview.scrollToPosition(position)
+        tutos()
+
+        // check if voices downloads have changed (e.g. voices files have been deleted in preferences)
+        updateVoicesDownloadVisibility()
+    }
+
+    override fun onPause() {
+        super.onPause()
+
+        // cancel animation in case it is currently running
+        seekBars.cancelAll()
+
+        // set all to zero to prepare for the next animation when the page resumes again
+        binding.seekLow.progress = 0
+        binding.seekMedium.progress = 0
+        binding.seekHigh.progress = 0
+        binding.seekMaster.progress = 0
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -86,36 +123,33 @@ class QuizzesFragment : Fragment(), QuizzesContract.View, QuizzesAdapter.Callbac
             it.layoutManager = LinearLayoutManager(context)
         }
 
-        if (mpresenter == null)
-            mpresenter = QuizzesPresenter(requireActivity().appKodein.invoke().instance(), requireContext().appKodein.invoke().instance(), requireContext().appKodein.invoke().instance(), this)
-        mpresenter!!.initQuizTypes()
+        mpresenter.initQuizTypes()
 
         binding.btnPronunciationQcmSwitch.setOnClickListener {
-            mpresenter!!.pronunciationQcmSwitch()
+            mpresenter.pronunciationQcmSwitch()
             spotlightTuto(requireActivity(), binding.btnPronunciationQcmSwitch, getString(R.string.tutos_pronunciation_mcq), getString(R.string.tutos_pronunciation_mcq_message), SpotlightListener { })
         }
         binding.btnPronunciationSwitch.setOnClickListener {
-            mpresenter!!.pronunciationSwitch()
+            mpresenter.pronunciationSwitch()
             spotlightTuto(requireActivity(), binding.btnPronunciationSwitch, getString(R.string.tutos_pronunciation_quiz), getString(R.string.tutos_pronunciation_quiz_message), SpotlightListener { })
         }
         binding.btnAudioSwitch.setOnClickListener {
             spotlightTuto(requireActivity(), binding.btnAudioSwitch, getString(R.string.tutos_audio_quiz), getString(R.string.tutos_audio_quiz_message), SpotlightListener { })
-            val speechAvailability = checkSpeechAvailability(requireActivity(), ttsSupported, getCategoryLevel(selectedCategory))
-            when (speechAvailability) {
-                SpeechAvailability.NOT_AVAILABLE -> speechNotSupportedAlert(requireActivity(), getCategoryLevel(selectedCategory), { (activity as QuizzesActivity).quizzesAdapter.notifyDataSetChanged() })
-                else -> mpresenter!!.audioSwitch()
+            when (checkSpeechAvailability(requireActivity(), ttsSupported, getCategoryLevel(selectedCategory))) {
+                SpeechAvailability.NOT_AVAILABLE -> speechNotSupportedAlert(requireActivity(), getCategoryLevel(selectedCategory)) { (activity as QuizzesActivity).quizzesAdapter.notifyDataSetChanged() }
+                else -> mpresenter.audioSwitch()
             }
         }
         binding.btnEnJapSwitch.setOnClickListener {
-            mpresenter!!.enJapSwitch()
+            mpresenter.enJapSwitch()
             spotlightTuto(requireActivity(), binding.btnEnJapSwitch, getString(R.string.tutos_en_jp), getString(R.string.tutos_en_jp_message), SpotlightListener { })
         }
         binding.btnJapEnSwitch.setOnClickListener {
-            mpresenter!!.japEnSwitch()
+            mpresenter.japEnSwitch()
             spotlightTuto(requireActivity(), binding.btnJapEnSwitch, getString(R.string.tutos_jp_en), getString(R.string.tutos_jp_en_message), SpotlightListener { })
         }
         binding.btnAutoSwitch.setOnClickListener {
-            mpresenter!!.autoSwitch()
+            mpresenter.autoSwitch()
             spotlightTuto(requireActivity(), binding.btnAutoSwitch, getString(R.string.tutos_auto_quiz), getString(R.string.tutos_auto_quiz_message), SpotlightListener { })
         }
 
@@ -132,19 +166,7 @@ class QuizzesFragment : Fragment(), QuizzesContract.View, QuizzesAdapter.Callbac
             openContent(selectedCategory, 3)
         }
 
-        val pref = PreferenceManager.getDefaultSharedPreferences(context)
-        if (selectedCategory == -1 || selectedCategory == 8
-            || pref.getBoolean(Prefs.VOICE_DOWNLOADED_LEVEL_V.pref +
-            "${getLevelDownloadVersion(getCategoryLevel(selectedCategory))}_${getCategoryLevel(selectedCategory)}", false)) {
-            binding.download.visibility = GONE
-        } else {
-            binding.download.visibility = VISIBLE
-            if (getLevelDownloadVersion(getCategoryLevel(selectedCategory)) > 0 && previousVoicesDownloaded(getLevelDownloadVersion(getCategoryLevel(selectedCategory)))) {
-                binding.download.text = getString(R.string.update_voices, getLevelDownloadSize(getCategoryLevel(selectedCategory)))
-            } else {
-                binding.download.text = getString(R.string.download_voices, getLevelDownloadSize(getCategoryLevel(selectedCategory)))
-            }
-        }
+        updateVoicesDownloadVisibility()
 
         binding.download.setOnClickListener {
             requireContext().alertDialog {
@@ -155,14 +177,37 @@ class QuizzesFragment : Fragment(), QuizzesContract.View, QuizzesAdapter.Callbac
                     titleResource = R.string.download_voices_alert
                     message = getString(R.string.download_voices_alert_message, getLevelDownloadSize(getCategoryLevel(selectedCategory)))
                 }
-                okButton { (activity as QuizzesActivity).voicesDownload(getCategoryLevel(selectedCategory)) }
+                okButton {
+                    (activity as QuizzesActivity).voicesDownload(getCategoryLevel(selectedCategory)) {
+                        binding.download.visibility = GONE
+                    }
+                }
                 cancelButton { }
             }.show()
         }
+
+        // initialize seekBarsManager
+        seekBars = SeekBarsManager(binding.seekLow, binding.seekMedium, binding.seekHigh, binding.seekMaster)
     }
 
-    fun previousVoicesDownloaded(downloadVersion: Int): Boolean {
-        val pref = PreferenceManager.getDefaultSharedPreferences(context)
+    private fun updateVoicesDownloadVisibility() {
+        val pref = PreferenceManager.getDefaultSharedPreferences(requireContext())
+        if (selectedCategory == -1 || selectedCategory == 8
+                || pref.getBoolean(Prefs.VOICE_DOWNLOADED_LEVEL_V.pref +
+                        "${getLevelDownloadVersion(getCategoryLevel(selectedCategory))}_${getCategoryLevel(selectedCategory)}", false)) {
+            binding.download.visibility = GONE
+        } else {
+            binding.download.visibility = VISIBLE
+            if (getLevelDownloadVersion(getCategoryLevel(selectedCategory)) > 0 && previousVoicesDownloaded(getLevelDownloadVersion(getCategoryLevel(selectedCategory)))) {
+                binding.download.text = getString(R.string.update_voices, getLevelDownloadSize(getCategoryLevel(selectedCategory)))
+            } else {
+                binding.download.text = getString(R.string.download_voices, getLevelDownloadSize(getCategoryLevel(selectedCategory)))
+            }
+        }
+    }
+
+    private fun previousVoicesDownloaded(downloadVersion: Int): Boolean {
+        val pref = PreferenceManager.getDefaultSharedPreferences(requireContext())
         return (0 until downloadVersion).any {
             pref.getBoolean("${Prefs.VOICE_DOWNLOADED_LEVEL_V.pref}${it}_${getCategoryLevel(selectedCategory)}", false)
         }
@@ -209,7 +254,7 @@ class QuizzesFragment : Fragment(), QuizzesContract.View, QuizzesAdapter.Callbac
         }
 
         // No quiz to launch
-        if (ids.size == 0 || mpresenter!!.countQuiz(ids.toLongArray()) <= 0) {
+        if (ids.size == 0 || mpresenter.countQuiz(ids.toLongArray()) <= 0) {
             val toast = Toast.makeText(context, R.string.error_no_quiz_no_word, Toast.LENGTH_SHORT)
             toast.show()
             return
@@ -225,7 +270,7 @@ class QuizzesFragment : Fragment(), QuizzesContract.View, QuizzesAdapter.Callbac
     }
 
     fun launchQuizClick(strategy: QuizStrategy, title: String) {
-        mpresenter!!.launchQuizClick(strategy, title, selectedCategory)
+        mpresenter.launchQuizClick(strategy, title, selectedCategory)
     }
 
     override fun displayQuizzes(quizzes: List<Quiz>) {
@@ -238,27 +283,24 @@ class QuizzesFragment : Fragment(), QuizzesContract.View, QuizzesAdapter.Callbac
             ids.add(it.id)
         }
 
-        val count = mpresenter!!.countQuiz(ids.toLongArray())
-        val low = mpresenter!!.countLow(ids.toLongArray())
-        val medium = mpresenter!!.countMedium(ids.toLongArray())
-        val high = mpresenter!!.countHigh(ids.toLongArray())
-        val master = mpresenter!!.countMaster(ids.toLongArray())
-        animateSeekBar(binding.seekLow, 0, low, count)
-        binding.textLow.text = low.toString()
-        animateSeekBar(binding.seekMedium, 0, medium, count)
-        binding.textMedium.text = medium.toString()
-        animateSeekBar(binding.seekHigh, 0, high, count)
-        binding.textHigh.text = high.toString()
-        animateSeekBar(binding.seekMaster, 0, master, count)
-        binding.textMaster.text = master.toString()
+        seekBars.count = mpresenter.countQuiz(ids.toLongArray())
+        seekBars.low = mpresenter.countLow(ids.toLongArray())
+        seekBars.medium = mpresenter.countMedium(ids.toLongArray())
+        seekBars.high = mpresenter.countHigh(ids.toLongArray())
+        seekBars.master = mpresenter.countMaster(ids.toLongArray())
 
-        binding.playLow.visibility = if (low > 0) VISIBLE else INVISIBLE
-        binding.playMedium.visibility = if (medium > 0) VISIBLE else INVISIBLE
-        binding.playHigh.visibility = if (high > 0) VISIBLE else INVISIBLE
-        binding.playMaster.visibility = if (master > 0) VISIBLE else INVISIBLE
+        binding.textLow.text = seekBars.low.toString()
+        binding.textMedium.text = seekBars.medium.toString()
+        binding.textHigh.text = seekBars.high.toString()
+        binding.textMaster.text = seekBars.master.toString()
+
+        binding.playLow.visibility = if (seekBars.low > 0) VISIBLE else INVISIBLE
+        binding.playMedium.visibility = if (seekBars.medium > 0) VISIBLE else INVISIBLE
+        binding.playHigh.visibility = if (seekBars.high > 0) VISIBLE else INVISIBLE
+        binding.playMaster.visibility = if (seekBars.master > 0) VISIBLE else INVISIBLE
     }
 
-    fun openContent(position: Int, level: Int) {
+    private fun openContent(position: Int, level: Int) {
         if ((selectedCategory == Categories.CATEGORY_SELECTIONS)) {
             // TODO: ?
         } else {
@@ -267,7 +309,7 @@ class QuizzesFragment : Fragment(), QuizzesContract.View, QuizzesAdapter.Callbac
         val intent = Intent(context, ContentActivity::class.java).apply {
             putExtra(Extras.EXTRA_CATEGORY, selectedCategory)
             putExtra(Extras.EXTRA_QUIZ_POSITION, position)
-            putExtra(Extras.EXTRA_QUIZ_TYPES, mpresenter!!.getSelectedTypes())
+            putExtra(Extras.EXTRA_QUIZ_TYPES, mpresenter.getSelectedTypes())
             putExtra(Extras.EXTRA_LEVEL, level)
         }
         startActivity(intent)
@@ -287,7 +329,7 @@ class QuizzesFragment : Fragment(), QuizzesContract.View, QuizzesAdapter.Callbac
 
     override fun onMenuItemClick(category: Int) {
         selectedCategory = category
-        mpresenter!!.loadQuizzes(selectedCategory)
+        mpresenter.loadQuizzes(selectedCategory)
     }
 
     override fun onItemClick(position: Int) {
@@ -295,7 +337,7 @@ class QuizzesFragment : Fragment(), QuizzesContract.View, QuizzesAdapter.Callbac
     }
 
     override fun onItemChecked(position: Int, checked: Boolean) {
-        mpresenter!!.updateQuizCheck(adapter.items[position].id, checked)
+        mpresenter.updateQuizCheck(adapter.items[position].id, checked)
 
     }
 
@@ -333,7 +375,7 @@ class QuizzesFragment : Fragment(), QuizzesContract.View, QuizzesAdapter.Callbac
                 requireContext().alertDialog {
                     titleResource = R.string.selection_delete_sure
                     okButton {
-                        mpresenter!!.deleteQuiz(adapter.items[position].id)
+                        mpresenter.deleteQuiz(adapter.items[position].id)
                         adapter.deleteItem(position)
                     }
                     cancelButton { }
@@ -341,7 +383,7 @@ class QuizzesFragment : Fragment(), QuizzesContract.View, QuizzesAdapter.Callbac
             }
             okButton {
                 if (adapter.items[position].getName() != input.text.toString() && input.error == null) {
-                    mpresenter!!.updateQuizName(adapter.items[position].id, input.text.toString())
+                    mpresenter.updateQuizName(adapter.items[position].id, input.text.toString())
                     adapter.items[position].nameFr = input.text.toString()
                     adapter.items[position].nameEn = input.text.toString()
                     adapter.notifyItemChanged(position)
@@ -381,8 +423,8 @@ class QuizzesFragment : Fragment(), QuizzesContract.View, QuizzesAdapter.Callbac
 
             okButton {
                 if (input.error == null) {
-                    mpresenter!!.createQuiz(input.text.toString())
-                    mpresenter!!.loadQuizzes(selectedCategory)
+                    mpresenter.createQuiz(input.text.toString())
+                    mpresenter.loadQuizzes(selectedCategory)
                 }
             }
             cancelButton { }
@@ -400,7 +442,7 @@ class QuizzesFragment : Fragment(), QuizzesContract.View, QuizzesAdapter.Callbac
         _binding = null
     }
 
-    fun tutos() {
+    private fun tutos() {
         MainScope().async {
             withContext(IO) {
                 sleep(500)

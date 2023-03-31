@@ -8,10 +8,10 @@ import java.util.*
 open class Quiz(val id: Long, var nameEn: String, var nameFr: String, val category: Int, var isSelected: Int) {
 
     fun getName(): String {
-        if (Locale.getDefault().language == "fr")
-            return nameFr
+        return if (Locale.getDefault().language == "fr")
+            nameFr
         else
-            return nameEn
+            nameEn
     }
 
 }

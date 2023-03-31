@@ -1,10 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          xmlns:tools="http://schemas.android.com/tools"
-          package="com.jehutyno.yomikata">
+          xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+
+    <queries>
+        <package android:name="com.google.android.tts" />
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+        </intent>
+<!--        <provider android:authorities="..." />-->
+    </queries>
 
     <application
         android:name="com.jehutyno.yomikata.YomikataZKApplication"

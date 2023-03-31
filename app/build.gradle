@@ -5,12 +5,9 @@ plugins {
 }
 
 android {
-    compileSdkVersion 33
-    buildToolsVersion '29.0.3'
+    namespace 'com.jehutyno.yomikata'
 
-    dexOptions {
-        jumboMode = true
-    }
+    compileSdkVersion 33
 
     defaultConfig {
         applicationId "com.jehutyno.yomikata"
@@ -64,8 +61,8 @@ dependencies {
     implementation 'io.github.microutils:kotlin-logging:1.3.3'
     implementation group: 'org.slf4j', name: 'slf4j-android', version: '1.7.21'
 
-    //Kodein dependencies
-    implementation 'com.github.salomonbrys.kodein:kodein-android:3.1.0'
+    //Kodein dependencies   - note for 7.3.0 or higher: minSDK = 21
+    implementation 'org.kodein.di:kodein-di-framework-android-x:7.2.0'
 
     //Graphic libraries
     implementation 'com.flaviofaria:kenburnsview:1.0.7'
@@ -79,9 +76,10 @@ dependencies {
     implementation 'com.ms-square:expandableTextView:0.1.4'
     implementation 'io.github.inflationx:calligraphy3:3.1.1'
     implementation 'io.github.inflationx:viewpump:2.0.3'
+    implementation("androidx.viewpager2:viewpager2:1.1.0-beta01")
 
     // preference
-    implementation("androidx.preference:preference-ktx:1.1.0")
+    implementation("androidx.preference:preference-ktx:1.2.0")
 
     // coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4")
@@ -90,7 +88,7 @@ dependencies {
     implementation 'org.jetbrains.anko:anko-sqlite:0.10.6'
 
     // Splitties
-    implementation("com.louiscad.splitties:splitties-fun-pack-android-appcompat:3.0.0")
+    implementation("com.louiscad.splitties:splitties-alertdialog-appcompat:3.0.0")
 
     //firebase
     implementation platform('com.google.firebase:firebase-bom:31.2.3')

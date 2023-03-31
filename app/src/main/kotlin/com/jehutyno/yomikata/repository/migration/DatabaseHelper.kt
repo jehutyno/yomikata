@@ -10,7 +10,7 @@ import org.jetbrains.anko.db.ManagedSQLiteOpenHelper
  */
 class DatabaseHelper(var context: Context, val dbName: String, val path: String) : ManagedSQLiteOpenHelper(context, dbName, null, Companion.DATABASE_VERSION) {
 
-    lateinit private var database: SQLiteDatabase
+    private lateinit var database: SQLiteDatabase
     private var flag: Boolean = false
 
     companion object {

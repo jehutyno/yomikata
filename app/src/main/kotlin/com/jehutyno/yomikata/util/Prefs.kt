@@ -14,7 +14,6 @@ enum class Prefs(val pref: String) {
     TTS_RATE("tts_rate"),
     LATEST_CATEGORY_1("latest_category_1"),
     LATEST_CATEGORY_2("latest_category_2"),
-    FULL_VERSION("full_version"),
     DB_UPDATE_ONGOING("db_update_ongoing"),
     DB_UPDATE_FILE("db_update_file"),
     DB_UPDATE_OLD_VERSION("db_update_old_version"),

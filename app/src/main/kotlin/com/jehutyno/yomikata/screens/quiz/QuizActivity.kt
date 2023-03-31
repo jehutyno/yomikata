@@ -2,17 +2,15 @@ package com.jehutyno.yomikata.screens.quiz
 
 import android.content.Context
 import android.content.pm.ActivityInfo
+import android.os.Build
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import android.view.KeyEvent
 import android.view.MenuItem
+import android.window.OnBackInvokedDispatcher
+import androidx.activity.addCallback
 import androidx.preference.PreferenceManager
-import com.github.salomonbrys.kodein.Kodein
-import com.github.salomonbrys.kodein.KodeinInjector
-import com.github.salomonbrys.kodein.android.appKodein
-import com.github.salomonbrys.kodein.instance
-import com.github.salomonbrys.kodein.provider
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.util.Extras
 import com.jehutyno.yomikata.util.Prefs
@@ -20,18 +18,31 @@ import com.jehutyno.yomikata.util.QuizStrategy
 import com.jehutyno.yomikata.util.addOrReplaceFragment
 import io.github.inflationx.viewpump.ViewPumpContextWrapper
 import mu.KLogging
+import org.kodein.di.*
+import org.kodein.di.android.di
 import splitties.alertdialog.appcompat.alertDialog
 import splitties.alertdialog.appcompat.cancelButton
 import splitties.alertdialog.appcompat.okButton
 import splitties.alertdialog.appcompat.titleResource
 
-class QuizActivity : AppCompatActivity() {
+class QuizActivity : AppCompatActivity(), DIAware {
 
     companion object : KLogging()
 
-    private val injector = KodeinInjector()
+    // kodein
+    override val di by di()
+    private val subDI by DI.lazy {
+        extend(di)
+        import(quizPresenterModule(quizFragment))
+        bind<QuizContract.Presenter>() with provider {
+            QuizPresenter(instance(), instance(), instance(), instance(), instance(), instance(), quizIds, quizStrategy, quizTypes)
+        }
+    }
+    // trigger when quizFragment is set (see subDI)
+    private val trigger = DITrigger()
     @Suppress("unused")
-    private val quizPresenter: QuizContract.Presenter by injector.instance()
+    private val quizPresenter: QuizContract.Presenter by subDI.on(trigger = trigger).instance()
+
     private lateinit var quizFragment: QuizFragment
 
     private lateinit var quizIds: LongArray
@@ -62,11 +73,27 @@ class QuizActivity : AppCompatActivity() {
             //Restore the fragment's instance
             quizFragment = supportFragmentManager.getFragment(savedInstanceState, "quizFragment") as QuizFragment
             quizIds = savedInstanceState.getLongArray("quiz_ids")?: longArrayOf()
-            quizStrategy = savedInstanceState.getSerializable("quiz_strategy") as QuizStrategy
+
+            quizStrategy = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                savedInstanceState.getSerializable("quiz_strategy", QuizStrategy::class.java)!!
+            }
+            else {
+                @Suppress("DEPRECATION")
+                savedInstanceState.getSerializable("quiz_strategy") as QuizStrategy
+            }
+
             quizTypes = savedInstanceState.getIntArray("quiz_types")?: intArrayOf()
         } else {
             quizIds = intent.getLongArrayExtra(Extras.EXTRA_QUIZ_IDS) ?: longArrayOf()
-            quizStrategy = intent.getSerializableExtra(Extras.EXTRA_QUIZ_STRATEGY) as QuizStrategy
+
+            quizStrategy = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                intent.getSerializableExtra(Extras.EXTRA_QUIZ_STRATEGY, QuizStrategy::class.java)!!
+            }
+            else {
+                @Suppress("DEPRECATION")
+                intent.getSerializableExtra(Extras.EXTRA_QUIZ_STRATEGY) as QuizStrategy
+            }
+
             quizTypes = intent.getIntArrayExtra(Extras.EXTRA_QUIZ_TYPES) ?: intArrayOf()
 
             val bundle = Bundle()
@@ -74,18 +101,39 @@ class QuizActivity : AppCompatActivity() {
             bundle.putSerializable(Extras.EXTRA_QUIZ_STRATEGY, quizStrategy)
             bundle.putIntArray(Extras.EXTRA_QUIZ_TYPES, quizTypes)
 
-            quizFragment = QuizFragment()
+            quizFragment = QuizFragment(di)
             quizFragment.arguments = bundle
         }
         addOrReplaceFragment(R.id.container_content, quizFragment)
 
-        injector.inject(Kodein {
-            extend(appKodein())
-            import(quizPresenterModule(quizFragment))
-            bind<QuizContract.Presenter>() with provider {
-                QuizPresenter(instance(), instance(), instance(), instance(), instance(), instance(), quizIds, quizStrategy, quizTypes)
+        // quizFragment has been set so trigger injection
+        trigger.trigger()
+
+        fun askToQuitSession() {
+            alertDialog(getString(R.string.quit_quiz)) {
+                okButton { finish() }
+                cancelButton()
+                setOnKeyListener { _, keyCode, _ ->
+                    if (keyCode == KeyEvent.KEYCODE_BACK)
+                        finish()
+                    true
+                }
+            }.show()
+        }
+
+        // set back button: ask if user wants to quit out of session
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            onBackInvokedDispatcher.registerOnBackInvokedCallback(
+                    OnBackInvokedDispatcher.PRIORITY_DEFAULT
+            ) {
+                askToQuitSession()
             }
-        })
+        } else {
+            onBackPressedDispatcher.addCallback(this /* lifecycle owner */) {
+                askToQuitSession()
+            }
+        }
+
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -112,19 +160,4 @@ class QuizActivity : AppCompatActivity() {
         return super.onOptionsItemSelected(item)
     }
 
-    override fun onBackPressed() {
-        alertDialog(getString(R.string.quit_quiz)) {
-            okButton { finish() }
-            cancelButton()
-            setOnKeyListener { _, keyCode, _ ->
-                if (keyCode == KeyEvent.KEYCODE_BACK)
-                    finish()
-                true
-            }
-        }.show()
-    }
-
-    fun unlockFullVersion() {
-        quizFragment.unlockFullVersion()
-    }
 }

@@ -19,13 +19,14 @@ import com.jehutyno.yomikata.screens.content.WordsAdapter
 import com.jehutyno.yomikata.screens.content.word.WordDetailDialogFragment
 import com.jehutyno.yomikata.util.DimensionHelper
 import com.jehutyno.yomikata.util.Extras
+import org.kodein.di.DI
 import splitties.alertdialog.appcompat.*
 import java.util.*
 
 /**
  * Created by valentin on 13/10/2016.
  */
-class SearchResultFragment : Fragment(), SearchResultContract.View, WordsAdapter.Callback {
+class SearchResultFragment(private val di: DI) : Fragment(), SearchResultContract.View, WordsAdapter.Callback {
     private lateinit var searchResultPresenter : SearchResultContract.Presenter
     private lateinit var adapter: WordsAdapter
     private lateinit var layoutManager: LinearLayoutManager
@@ -127,7 +128,7 @@ class SearchResultFragment : Fragment(), SearchResultContract.View, WordsAdapter
         bundle.putInt(Extras.EXTRA_WORD_POSITION, position)
         bundle.putString(Extras.EXTRA_SEARCH_STRING, searchString)
 
-        val dialog = WordDetailDialogFragment()
+        val dialog = WordDetailDialogFragment(di)
         dialog.arguments = bundle
         dialog.show(childFragmentManager, "")
         dialog.isCancelable = true
@@ -142,25 +143,22 @@ class SearchResultFragment : Fragment(), SearchResultContract.View, WordsAdapter
         searchResultPresenter.updateWordCheck(adapter.items[position].id, check)
     }
 
-    val actionModeCallback = object : ActionMode.Callback {
+    private val actionModeCallback = object : ActionMode.Callback {
         override fun onPrepareActionMode(mode: ActionMode, menu: Menu): Boolean {
             adapter.checkMode = true
-            adapter.notifyDataSetChanged()
+            adapter.notifyItemRangeChanged(0, adapter.items.size)
             return false
         }
 
+        private val ADD_TO_SELECTIONS = 1
+        private val REMOVE_FROM_SELECTIONS = 2
+        private val SELECT_ALL = 3
+        private val UNSELECT_ALL = 4
+
         override fun onActionItemClicked(mode: ActionMode, item: MenuItem): Boolean {
             when (item.itemId) {
-                3 -> {
-                    adapter.items.forEach { it.isSelected = 1 }
-                    adapter.notifyDataSetChanged()
-                }
-                4 -> {
-                    adapter.items.forEach { it.isSelected = 0 }
-                    adapter.notifyDataSetChanged()
-                }
-                1 -> {
-                    val popup = PopupMenu(activity!!, activity!!.findViewById(1))
+                ADD_TO_SELECTIONS -> {
+                    val popup = PopupMenu(activity!!, activity!!.findViewById(item.itemId))
                     popup.menuInflater.inflate(R.menu.popup_selections, popup.menu)
                     for ((i, selection) in selections.withIndex()) {
                         popup.menu.add(1, i, i, selection.getName()).isChecked = false
@@ -182,10 +180,9 @@ class SearchResultFragment : Fragment(), SearchResultContract.View, WordsAdapter
                         true
                     }
                     popup.show()
-
                 }
-                2 -> {
-                    val popup = PopupMenu(activity!!, activity!!.findViewById(2))
+                REMOVE_FROM_SELECTIONS -> {
+                    val popup = PopupMenu(activity!!, activity!!.findViewById(item.itemId))
                     for ((i, selection) in selections.withIndex()) {
                         popup.menu.add(1, i, i, selection.getName()).isChecked = false
                     }
@@ -205,7 +202,14 @@ class SearchResultFragment : Fragment(), SearchResultContract.View, WordsAdapter
                         true
                     }
                     popup.show()
-
+                }
+                SELECT_ALL -> {
+                    adapter.items.forEach { it.isSelected = 1 }
+                    adapter.notifyItemRangeChanged(0, adapter.items.size)
+                }
+                UNSELECT_ALL -> {
+                    adapter.items.forEach { it.isSelected = 0 }
+                    adapter.notifyItemRangeChanged(0, adapter.items.size)
                 }
             }
             return false
@@ -241,20 +245,20 @@ class SearchResultFragment : Fragment(), SearchResultContract.View, WordsAdapter
 
         override fun onCreateActionMode(mode: ActionMode, menu: Menu): Boolean {
             mode.title = null
-            menu.add(0, 1, 0, getString(R.string.add_to_selections)).setIcon(R.drawable.ic_selections_selected)
+            menu.add(0, ADD_TO_SELECTIONS, 0, getString(R.string.add_to_selections)).setIcon(R.drawable.ic_selections_selected)
                 .setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
-            menu.add(0, 2, 0, getString(R.string.remove_from_selection)).setIcon(R.drawable.ic_unselect)
+            menu.add(0, REMOVE_FROM_SELECTIONS, 0, getString(R.string.remove_from_selection)).setIcon(R.drawable.ic_unselect)
                 .setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
-            menu.add(0, 3, 0, getString(R.string.select_all)).setIcon(R.drawable.ic_select_multiple)
+            menu.add(0, SELECT_ALL, 0, getString(R.string.select_all)).setIcon(R.drawable.ic_select_multiple)
                 .setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
-            menu.add(0, 4, 0, getString(R.string.unselect_all)).setIcon(R.drawable.ic_unselect_multiple)
+            menu.add(0, UNSELECT_ALL, 0, getString(R.string.unselect_all)).setIcon(R.drawable.ic_unselect_multiple)
                 .setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
             return true
         }
 
         override fun onDestroyActionMode(mode: ActionMode?) {
             adapter.checkMode = false
-            adapter.notifyDataSetChanged()
+            adapter.notifyItemRangeChanged(0, adapter.items.size)
         }
     }
 

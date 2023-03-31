@@ -2,6 +2,7 @@ package com.jehutyno.yomikata.screens.content.word
 
 import android.app.Dialog
 import android.content.DialogInterface
+import android.os.Build
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
 import android.view.View
@@ -12,8 +13,6 @@ import android.widget.ImageView
 import androidx.appcompat.widget.PopupMenu
 import androidx.fragment.app.DialogFragment
 import androidx.viewpager.widget.ViewPager
-import com.github.salomonbrys.kodein.*
-import com.github.salomonbrys.kodein.android.appKodein
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.managers.VoicesManager
 import com.jehutyno.yomikata.model.KanjiSoloRadical
@@ -25,19 +24,28 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.withContext
+import org.kodein.di.*
 import splitties.alertdialog.appcompat.*
 
 
 /**
  * Created by jehutyno on 08/10/2016.
  */
-class WordDetailDialogFragment : DialogFragment(), WordContract.View, WordPagerAdapter.Callback, TextToSpeech.OnInitListener {
+class WordDetailDialogFragment(private val di: DI) : DialogFragment(), WordContract.View, WordPagerAdapter.Callback, TextToSpeech.OnInitListener {
 
-    private val injector = KodeinInjector()
+    // kodein
+    private val subDI = DI.lazy {
+        extend(di)
+        import(wordPresenterModule(this@WordDetailDialogFragment))
+//            import(voicesManagerModule(activity))
+        bind<WordContract.Presenter>() with provider { WordPresenter(instance(), instance(), instance(), instance(), instance()) }
+        bind<VoicesManager>() with singleton { VoicesManager(requireActivity()) }
+    }
     @Suppress("unused")
-    private val wordPresenter: WordContract.Presenter by injector.instance()
+    private val wordPresenter: WordContract.Presenter by subDI.instance()
     @Suppress("unused")
-    private val voicesManager: VoicesManager by injector.instance()
+    private val voicesManager: VoicesManager by subDI.instance()
+
     private lateinit var adapter: WordPagerAdapter
     private var wordId: Long = -1
     private var quizIds: LongArray? = null
@@ -79,7 +87,15 @@ class WordDetailDialogFragment : DialogFragment(), WordContract.View, WordPagerA
         tts = TextToSpeech(activity, this)
         if (arguments != null) {
             wordId = requireArguments().getLong(Extras.EXTRA_WORD_ID, -1L)
-            quizType = requireArguments().getSerializable(Extras.EXTRA_QUIZ_TYPE) as QuizType?
+
+            quizType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                requireArguments().getSerializable(Extras.EXTRA_QUIZ_TYPE, QuizType::class.java)
+            }
+            else {
+                @Suppress("DEPRECATION")
+                requireArguments().getSerializable(Extras.EXTRA_QUIZ_TYPE) as QuizType?
+            }
+
             quizIds = requireArguments().getLongArray(Extras.EXTRA_QUIZ_IDS)
             quizTitle = requireArguments().getString(Extras.EXTRA_QUIZ_TITLE)
             wordPosition = requireArguments().getInt(Extras.EXTRA_WORD_POSITION)
@@ -116,14 +132,6 @@ class WordDetailDialogFragment : DialogFragment(), WordContract.View, WordPagerA
 
         arrowLeft.setOnClickListener { viewPager.setCurrentItem(viewPager.currentItem - 1, true) }
         arrowRight.setOnClickListener { viewPager.setCurrentItem(viewPager.currentItem + 1, true) }
-
-        injector.inject(Kodein {
-            extend(appKodein())
-            import(wordPresenterModule(this@WordDetailDialogFragment))
-//            import(voicesManagerModule(activity))
-            bind<WordContract.Presenter>() with provider { WordPresenter(instance(), instance(), instance(), instance(), instance()) }
-            bind<VoicesManager>() with singleton { VoicesManager(requireActivity()) }
-        })
 
         return dialog
     }

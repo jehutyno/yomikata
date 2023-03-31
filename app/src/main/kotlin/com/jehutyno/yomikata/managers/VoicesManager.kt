@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Context
 import android.media.AudioManager
 import android.net.Uri
+import android.os.Build
 import android.speech.tts.TextToSpeech
 import android.widget.Toast
 import com.jehutyno.yomikata.R
@@ -18,7 +19,7 @@ import component.ExoPlayerAudio
  */
 class VoicesManager(val context: Activity) {
 
-    val exoPlayerAudio: ExoPlayerAudio = ExoPlayerAudio(context)
+    private val exoPlayerAudio: ExoPlayerAudio = ExoPlayerAudio(context)
     private val exoPlayer = exoPlayerAudio.exoPlayer
 
     fun speakSentence(sentence: Sentence, ttsSupported: Int, tts: TextToSpeech?) {
@@ -27,21 +28,24 @@ class VoicesManager(val context: Activity) {
             val toast = Toast.makeText(context, R.string.message_adjuste_volume, Toast.LENGTH_LONG)
             toast.show()
         }
-        val speechAvailability = checkSpeechAvailability(context, ttsSupported, sentence.level)
-        when (speechAvailability) {
+        when (checkSpeechAvailability(context, ttsSupported, sentence.level)) {
             SpeechAvailability.VOICES_AVAILABLE -> {
                 try {
                     exoPlayer.prepare(exoPlayerAudio.extractorMediaSource(Uri.parse("${FileUtils.getDataDir(context, "Voices").absolutePath}/s_${sentence.id}.mp3")))
                     exoPlayer.playWhenReady = true
                 } catch (e: Exception) {
-                    if (speechAvailability == SpeechAvailability.TTS_AVAILABLE)
-                        tts?.speak(sentenceNoFuri(sentence), TextToSpeech.QUEUE_FLUSH, null)
-                    else
-                        speechNotSupportedAlert(context, sentence.level, {})
+                    speechNotSupportedAlert(context, sentence.level) {}
                 }
             }
-            SpeechAvailability.TTS_AVAILABLE -> tts?.speak(sentenceNoFuri(sentence), TextToSpeech.QUEUE_FLUSH, null)
-            else -> speechNotSupportedAlert(context, sentence.level, {})
+            SpeechAvailability.TTS_AVAILABLE -> {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    tts?.speak(sentenceNoFuri(sentence), TextToSpeech.QUEUE_FLUSH, null, null)
+                } else {    // remove this if minBuildVersion >= 21 (LOLLIPOP)
+                    @Suppress("DEPRECATION")
+                    tts?.speak(sentenceNoFuri(sentence), TextToSpeech.QUEUE_FLUSH, null)
+                }
+            }
+            else -> speechNotSupportedAlert(context, sentence.level) {}
         }
     }
 
@@ -52,34 +56,33 @@ class VoicesManager(val context: Activity) {
             toast.show()
         }
         val level = getCategoryLevel(word.baseCategory)
-        val speechAvailability = checkSpeechAvailability(context, ttsSupported, level)
 
-        when (speechAvailability) {
+        when (checkSpeechAvailability(context, ttsSupported, level)) {
             SpeechAvailability.VOICES_AVAILABLE -> {
                 try {
                     exoPlayer.prepare(exoPlayerAudio.extractorMediaSource(Uri.parse("${FileUtils.getDataDir(context, "Voices").absolutePath}/w_${word.id}.mp3")))
                     exoPlayer.playWhenReady = true
                 } catch (e: Exception) {
-                    if (speechAvailability == SpeechAvailability.TTS_AVAILABLE) {
-                        tts?.speak(
-                            if (word.isKana >= 1)
-                                word.japanese.split("/")[0].split(";")[0]
-                            else
-                                word.reading.split("/")[0].split(";")[0],
-                            TextToSpeech.QUEUE_FLUSH, null)
-                    } else
-                        speechNotSupportedAlert(context, level, {})
+                    speechNotSupportedAlert(context, level) {}
                 }
             }
             SpeechAvailability.TTS_AVAILABLE -> {
-                tts?.speak(
-                    if (word.isKana >= 1)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    tts?.speak(if (word.isKana >= 1)
                         word.japanese.split("/")[0].split(";")[0]
                     else
                         word.reading.split("/")[0].split(";")[0],
-                    TextToSpeech.QUEUE_FLUSH, null)
+                            TextToSpeech.QUEUE_FLUSH, null,null)
+                } else {    // remove this if minBuildVersion >= 21 (LOLLIPOP)
+                    @Suppress("DEPRECATION")
+                    tts?.speak(if (word.isKana >= 1)
+                        word.japanese.split("/")[0].split(";")[0]
+                    else
+                        word.reading.split("/")[0].split(";")[0],
+                            TextToSpeech.QUEUE_FLUSH, null)
+                }
             }
-            else -> speechNotSupportedAlert(context, level, {})
+            else -> speechNotSupportedAlert(context, level) {}
         }
     }
 

@@ -45,7 +45,7 @@ class WordPagerAdapter(val activity: Activity, var quizType: QuizType?, var call
         binding.levelUp.visibility = if (quizType != null) GONE else VISIBLE
         wordDisplay.let { binding.furiWord.text_set(wordDisplay, 0, it.length, getWordColor(container.context, word.first.level, word.first.points)) }
         binding.textTraduction.text = word.first.getTrad()
-        val sentenceNoFuri = sentenceNoFuri(word.third)
+//        val sentenceNoFuri = sentenceNoFuri(word.third)
         val wordTruePosition = word.third.jap.let { getWordPositionInFuriSentence(it, word.first) }
         wordTruePosition.let {
             binding.furiSentence.text_set(

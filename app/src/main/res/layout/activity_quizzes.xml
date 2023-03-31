@@ -116,7 +116,7 @@
                         android:layout_marginLeft="-15dp"
                         android:layout_marginStart="-15dp"/>
 
-                    <androidx.viewpager.widget.ViewPager
+                    <androidx.viewpager2.widget.ViewPager2
                         android:id="@+id/pager_quizzes"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"

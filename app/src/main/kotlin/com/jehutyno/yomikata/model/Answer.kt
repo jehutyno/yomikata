@@ -1,5 +1,6 @@
 package com.jehutyno.yomikata.model
 
+import android.os.Build
 import android.os.Parcel
 import android.os.Parcelable
 import com.jehutyno.yomikata.util.QuizType
@@ -8,9 +9,16 @@ import java.io.Serializable
 /**
  * Created by valentin on 25/10/2016.
  */
-open class Answer(val result: Int, var answer: String, val wordId: Long, val sentenceId: Long, val quizType: QuizType ) : Parcelable, Serializable {
+open class Answer(val result: Int, var answer: String, val wordId: Long, val sentenceId: Long, val quizType: QuizType) : Parcelable, Serializable {
 
-    constructor(source: Parcel): this(source.readInt(), source.readString()!!, source.readLong(), source.readLong(), source.readParcelable(QuizType::class.java.classLoader)!!)
+    constructor(source: Parcel) : this(source.readInt(), source.readString()!!, source.readLong(), source.readLong(),
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                source.readParcelable(QuizType::class.java.classLoader, QuizType::class.java)!!
+            }
+            else {
+                @Suppress("DEPRECATION")
+                source.readParcelable(QuizType::class.java.classLoader)!!
+            })
 
     override fun writeToParcel(dest: Parcel, flags: Int) {
         dest.writeInt(result)
@@ -25,6 +33,7 @@ open class Answer(val result: Int, var answer: String, val wordId: Long, val sen
     }
 
     companion object {
+        @Suppress("UNUSED")
         @JvmField val CREATOR: Parcelable.Creator<Answer> = object : Parcelable.Creator<Answer> {
             override fun createFromParcel(source: Parcel): Answer {
                 return Answer(source)

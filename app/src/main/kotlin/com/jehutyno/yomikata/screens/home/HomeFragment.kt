@@ -9,8 +9,6 @@ import android.view.View.VISIBLE
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.preference.PreferenceManager
-import com.github.salomonbrys.kodein.android.appKodein
-import com.github.salomonbrys.kodein.instance
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
@@ -22,6 +20,7 @@ import com.jehutyno.yomikata.model.StatEntry
 import com.jehutyno.yomikata.model.StatResult
 import com.jehutyno.yomikata.screens.quizzes.QuizzesActivity
 import com.jehutyno.yomikata.util.*
+import org.kodein.di.*
 
 import java.util.*
 
@@ -29,9 +28,12 @@ import java.util.*
 /**
  * Created by valentin on 26/12/2016.
  */
-class HomeFragment : Fragment(), HomeContract.View {
+class HomeFragment(di: DI) : Fragment(), HomeContract.View {
 
-    private var mpresenter: HomeContract.Presenter? = null
+    // kodein
+    private val mpresenter: HomeContract.Presenter by di.newInstance {
+        HomePresenter(instance(), instance(), this@HomeFragment)
+    }
 
     // View Binding
     private var _binding: FragmentHomeBinding? = null
@@ -43,17 +45,22 @@ class HomeFragment : Fragment(), HomeContract.View {
     }
 
     override fun setPresenter(presenter: HomeContract.Presenter) {
-        mpresenter = presenter
+        // no need: see QuizzesFragment setPresenter for explanation
+//        mpresenter = presenter
     }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+    override fun onStart() {
+        // preload for viewPager2
+        super.onStart()
+        mpresenter.start()
+        mpresenter.loadAllStats()
+        displayLatestCategories()
     }
 
     override fun onResume() {
         super.onResume()
-        mpresenter!!.start()
-        mpresenter!!.loadAllStats()
+        mpresenter.start()
+        mpresenter.loadAllStats()
         displayLatestCategories()
     }
 
@@ -64,10 +71,6 @@ class HomeFragment : Fragment(), HomeContract.View {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        if (mpresenter == null) {
-            mpresenter = HomePresenter(activity!!.appKodein.invoke().instance(), context!!.appKodein.invoke().instance(), this)
-        }
 
         val database = FirebaseDatabase.getInstance()
         val newsRef = if (Locale.getDefault().language == "fr")
@@ -88,10 +91,10 @@ class HomeFragment : Fragment(), HomeContract.View {
             }
         })
 
-        binding.share.setOnClickListener { shareApp(activity!!) }
+        binding.share.setOnClickListener { shareApp(requireActivity()) }
         binding.facebook.setOnClickListener { contactFacebook(activity) }
-        binding.playStore.setOnClickListener { contactPlayStore(activity!!) }
-        binding.discord.setOnClickListener { contactDiscord(activity!!) }
+        binding.playStore.setOnClickListener { contactPlayStore(requireActivity()) }
+        binding.discord.setOnClickListener { contactDiscord(requireActivity()) }
 
     }
 
@@ -111,11 +114,11 @@ class HomeFragment : Fragment(), HomeContract.View {
         displayStat(stats, binding.totalQuizLaunch, binding.totalWordsSeen, binding.totalGoodAnswer, binding.totalWrongAnswer)
     }
 
-    fun displayStat(stats: List<StatEntry>, vararg textViews: TextView) {
-        val quizLaunched = stats.filter { it.action == StatAction.LAUNCH_QUIZ_FROM_CATEGORY.value }.count()
-        val wordsSeen = stats.filter { it.action == StatAction.WORD_SEEN.value }.count()
-        val goodAnswer = stats.filter { it.action == StatAction.ANSWER_QUESTION.value && it.result == StatResult.SUCCESS.value }.count()
-        val wrongAnswer = stats.filter { it.action == StatAction.ANSWER_QUESTION.value && it.result == StatResult.FAIL.value }.count()
+    private fun displayStat(stats: List<StatEntry>, vararg textViews: TextView) {
+        val quizLaunched = stats.count { it.action == StatAction.LAUNCH_QUIZ_FROM_CATEGORY.value }
+        val wordsSeen = stats.count { it.action == StatAction.WORD_SEEN.value }
+        val goodAnswer = stats.count { it.action == StatAction.ANSWER_QUESTION.value && it.result == StatResult.SUCCESS.value }
+        val wrongAnswer = stats.count { it.action == StatAction.ANSWER_QUESTION.value && it.result == StatResult.FAIL.value }
 
         textViews[0].text = getString(R.string.quiz_launched, quizLaunched)
         textViews[1].text = getString(R.string.words_seen, wordsSeen)
@@ -123,8 +126,8 @@ class HomeFragment : Fragment(), HomeContract.View {
         textViews[3].text = getString(R.string.wrong_answers, wrongAnswer)
     }
 
-    fun displayLatestCategories() {
-        val pref = PreferenceManager.getDefaultSharedPreferences(context)
+    private fun displayLatestCategories() {
+        val pref = PreferenceManager.getDefaultSharedPreferences(requireContext())
         val cat1 = pref.getInt(Prefs.LATEST_CATEGORY_1.pref, -1)
         val cat2 = pref.getInt(Prefs.LATEST_CATEGORY_2.pref, -1)
 
@@ -150,7 +153,7 @@ class HomeFragment : Fragment(), HomeContract.View {
         binding.noCategories.visibility = if (cat1 == -1 && cat2 == -1) VISIBLE else GONE
     }
 
-    fun getCategoryResId(category: Int): Int {
+    private fun getCategoryResId(category: Int): Int {
         return when (category) {
             Categories.CATEGORY_HIRAGANA -> {
                 R.drawable.ic_hiragana_big

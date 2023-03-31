@@ -11,8 +11,6 @@ import android.view.View.GONE
 import android.view.View.VISIBLE
 import android.widget.EditText
 import android.widget.FrameLayout
-import com.github.salomonbrys.kodein.android.appKodein
-import com.github.salomonbrys.kodein.instance
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.databinding.FragmentContentGraphBinding
 import com.jehutyno.yomikata.model.Quiz
@@ -20,7 +18,8 @@ import com.jehutyno.yomikata.model.Word
 import com.jehutyno.yomikata.screens.content.word.WordDetailDialogFragment
 import com.jehutyno.yomikata.util.DimensionHelper
 import com.jehutyno.yomikata.util.Extras
-import com.jehutyno.yomikata.util.animateSeekBar
+import com.jehutyno.yomikata.util.SeekBarsManager
+import org.kodein.di.*
 import splitties.alertdialog.appcompat.*
 import java.util.*
 
@@ -28,7 +27,8 @@ import java.util.*
 /**
  * Created by valentin on 30/09/2016.
  */
-class ContentFragment : Fragment(), ContentContract.View, WordsAdapter.Callback, DialogInterface.OnDismissListener {
+class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, WordsAdapter.Callback, DialogInterface.OnDismissListener {
+
     private var mpresenter: ContentContract.Presenter? = null
     private lateinit var adapter: WordsAdapter
     private lateinit var quizIds: LongArray
@@ -36,6 +36,9 @@ class ContentFragment : Fragment(), ContentContract.View, WordsAdapter.Callback,
     private var level = -1
     private var lastPosition = -1
     private lateinit var selections: List<Quiz>
+
+    // seekBars
+    private lateinit var seekBars : SeekBarsManager
 
     // View Binding
     private var _binding: FragmentContentGraphBinding? = null
@@ -68,6 +71,15 @@ class ContentFragment : Fragment(), ContentContract.View, WordsAdapter.Callback,
         setHasOptionsMenu(true)
     }
 
+    override fun onStart() {
+        super.onStart()
+        mpresenter?.start()
+        mpresenter?.loadWords(quizIds, level)
+        mpresenter?.loadSelections()
+
+        displayStats()
+    }
+
     override fun onResume() {
         super.onResume()
         val position =
@@ -80,28 +92,38 @@ class ContentFragment : Fragment(), ContentContract.View, WordsAdapter.Callback,
         mpresenter?.loadSelections()
 
         displayStats()
+        seekBars.animateAll()
+    }
+
+    override fun onPause() {
+        super.onPause()
+
+        // cancel animation in case it is currently running
+        seekBars.cancelAll()
+
+        // set all to zero to prepare for the next animation when the page resumes again
+        binding.seekLow.progress = 0
+        binding.seekMedium.progress = 0
+        binding.seekHigh.progress = 0
+        binding.seekMaster.progress = 0
     }
 
     override fun displayStats() {
-        val count = mpresenter!!.countQuiz(quizIds)
-        val low = mpresenter!!.countLow(quizIds)
-        val medium = mpresenter!!.countMedium(quizIds)
-        val high = mpresenter!!.countHigh(quizIds)
-        val master = mpresenter!!.countMaster(quizIds)
+        seekBars.count = mpresenter!!.countQuiz(quizIds)
+        seekBars.low = mpresenter!!.countLow(quizIds)
+        seekBars.medium = mpresenter!!.countMedium(quizIds)
+        seekBars.high = mpresenter!!.countHigh(quizIds)
+        seekBars.master = mpresenter!!.countMaster(quizIds)
         if (level > -1) {
             binding.seekLowContainer.visibility = if (level == 0) VISIBLE else GONE
             binding.seekMediumContainer.visibility = if (level == 1) VISIBLE else GONE
             binding.seekHighContainer.visibility = if (level == 2) VISIBLE else GONE
             binding.seekMasterContainer.visibility = if (level == 3) VISIBLE else GONE
         }
-        animateSeekBar(binding.seekLow, 0, low, count)
-        binding.textLow.text = low.toString()
-        animateSeekBar(binding.seekMedium, 0, medium, count)
-        binding.textMedium.text = medium.toString()
-        animateSeekBar(binding.seekHigh, 0, high, count)
-        binding.textHigh.text = high.toString()
-        animateSeekBar(binding.seekMaster, 0, master, count)
-        binding.textMaster.text = master.toString()
+        binding.textLow.text = seekBars.low.toString()
+        binding.textMedium.text = seekBars.medium.toString()
+        binding.textHigh.text = seekBars.high.toString()
+        binding.textMaster.text = seekBars.master.toString()
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -112,13 +134,17 @@ class ContentFragment : Fragment(), ContentContract.View, WordsAdapter.Callback,
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        if (mpresenter == null)
-            mpresenter = ContentPresenter(requireContext().appKodein.invoke().instance(), requireContext().appKodein.invoke().instance(), this)
+        if (mpresenter == null) {
+            mpresenter = ContentPresenter(di.direct.instance(), di.direct.instance(), this@ContentFragment)
+        }
 
         binding.recyclerviewContent.let {
             it.adapter = adapter
             it.layoutManager = GridLayoutManager(context, 2)
         }
+
+        // initialize seekBarsManager
+        seekBars = SeekBarsManager(binding.seekLow, binding.seekMedium, binding.seekHigh, binding.seekMaster)
     }
 
     override fun displayWords(words: List<Word>) {
@@ -134,7 +160,7 @@ class ContentFragment : Fragment(), ContentContract.View, WordsAdapter.Callback,
         bundle.putInt(Extras.EXTRA_WORD_POSITION, position)
         bundle.putString(Extras.EXTRA_SEARCH_STRING, "")
 
-        val dialog = WordDetailDialogFragment()
+        val dialog = WordDetailDialogFragment(di)
         dialog.arguments = bundle
         dialog.show(childFragmentManager, "")
         dialog.isCancelable = true
@@ -171,22 +197,19 @@ class ContentFragment : Fragment(), ContentContract.View, WordsAdapter.Callback,
     private val actionModeCallback = object : ActionMode.Callback {
         override fun onPrepareActionMode(mode: ActionMode, menu: Menu): Boolean {
             adapter.checkMode = true
-            adapter.notifyDataSetChanged()
+            adapter.notifyItemRangeChanged(0, adapter.items.size)
             return false
         }
 
+        private val ADD_TO_SELECTIONS = 1
+        private val REMOVE_FROM_SELECTIONS = 2
+        private val SELECT_ALL = 3
+        private val UNSELECT_ALL = 4
+
         override fun onActionItemClicked(mode: ActionMode, item: MenuItem): Boolean {
             when (item.itemId) {
-                3 -> {
-                    adapter.items.forEach { it.isSelected = 1 }
-                    adapter.notifyDataSetChanged()
-                }
-                4 -> {
-                    adapter.items.forEach { it.isSelected = 0 }
-                    adapter.notifyDataSetChanged()
-                }
-                1 -> {
-                    val popup = PopupMenu(activity!!, activity!!.findViewById(1))
+                ADD_TO_SELECTIONS -> {
+                    val popup = PopupMenu(activity!!, activity!!.findViewById(item.itemId))
                     popup.menuInflater.inflate(R.menu.popup_selections, popup.menu)
                     for ((i, selection) in selections.withIndex()) {
                         popup.menu.add(1, i, i, selection.getName()).isChecked = false
@@ -209,8 +232,8 @@ class ContentFragment : Fragment(), ContentContract.View, WordsAdapter.Callback,
                     }
                     popup.show()
                 }
-                2 -> {
-                    val popup = PopupMenu(activity!!, activity!!.findViewById(2))
+                REMOVE_FROM_SELECTIONS -> {
+                    val popup = PopupMenu(activity!!, activity!!.findViewById(item.itemId))
                     for ((i, selection) in selections.withIndex()) {
                         popup.menu.add(1, i, i, selection.getName()).isChecked = false
                     }
@@ -231,6 +254,14 @@ class ContentFragment : Fragment(), ContentContract.View, WordsAdapter.Callback,
                     }
                     popup.show()
 
+                }
+                SELECT_ALL -> {
+                    adapter.items.forEach { it.isSelected = 1 }
+                    adapter.notifyItemRangeChanged(0, adapter.items.size)
+                }
+                UNSELECT_ALL -> {
+                    adapter.items.forEach { it.isSelected = 0 }
+                    adapter.notifyItemRangeChanged(0, adapter.items.size)
                 }
             }
             return false
@@ -263,23 +294,22 @@ class ContentFragment : Fragment(), ContentContract.View, WordsAdapter.Callback,
             }.show()
         }
 
-
         override fun onCreateActionMode(mode: ActionMode, menu: Menu): Boolean {
             mode.title = null
-            menu.add(0, 1, 0, getString(R.string.add_to_selections)).setIcon(R.drawable.ic_selections_selected)
+            menu.add(0, ADD_TO_SELECTIONS, 0, getString(R.string.add_to_selections)).setIcon(R.drawable.ic_selections_selected)
                     .setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
-            menu.add(0, 2, 0, getString(R.string.remove_from_selection)).setIcon(R.drawable.ic_unselect)
+            menu.add(0, REMOVE_FROM_SELECTIONS, 0, getString(R.string.remove_from_selection)).setIcon(R.drawable.ic_unselect)
                     .setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
-            menu.add(0, 3, 0, getString(R.string.select_all)).setIcon(R.drawable.ic_select_multiple)
+            menu.add(0, SELECT_ALL, 0, getString(R.string.select_all)).setIcon(R.drawable.ic_select_multiple)
                     .setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
-            menu.add(0, 4, 0, getString(R.string.unselect_all)).setIcon(R.drawable.ic_unselect_multiple)
+            menu.add(0, UNSELECT_ALL, 0, getString(R.string.unselect_all)).setIcon(R.drawable.ic_unselect_multiple)
                     .setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
             return true
         }
 
         override fun onDestroyActionMode(mode: ActionMode?) {
             adapter.checkMode = false
-            adapter.notifyDataSetChanged()
+            adapter.notifyItemRangeChanged(0, adapter.items.size)
         }
     }
 
@@ -294,10 +324,6 @@ class ContentFragment : Fragment(), ContentContract.View, WordsAdapter.Callback,
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
-    }
-
-    fun unlockFullVersion() {
-        adapter.notifyDataSetChanged()
     }
 
 }

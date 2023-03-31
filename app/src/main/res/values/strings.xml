@@ -185,9 +185,6 @@
     <string name="orange_review">Orange review</string>
     <string name="yellow_review">Yellow review</string>
     <string name="green_review">Green review</string>
-    <string name="action_unlock">Unlock full version</string>
-    <string name="selection_unlock_full_version">To create your own selections, please unlock the full version from the Home screen</string>
-    <string name="purchase_unlock">Unlock</string>
     <string name="unlock_caps">UNLOCK</string>
     <string name="cancel_caps">CANCEL</string>
     <string name="error_billing">Oops !  Please check that you are online or that your device support the Google Play Services </string>

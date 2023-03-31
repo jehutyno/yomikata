@@ -45,6 +45,7 @@ open class Word(var id: Long, var japanese: String, var english: String, var fre
     }
 
     companion object {
+        @Suppress("UNUSED")
         @JvmField val CREATOR: Parcelable.Creator<Word> = object : Parcelable.Creator<Word> {
             override fun createFromParcel(source: Parcel): Word{
                 return Word(source)
@@ -57,10 +58,10 @@ open class Word(var id: Long, var japanese: String, var english: String, var fre
     }
 
     fun getTrad(): String {
-        if (Locale.getDefault().language == "fr")
-            return french
+        return if (Locale.getDefault().language == "fr")
+            french
         else
-            return english
+            english
     }
 }
 
