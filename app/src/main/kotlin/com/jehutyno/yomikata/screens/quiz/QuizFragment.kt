@@ -335,6 +335,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
     private fun initAnswersButtons() {
         binding.quizContainer.setOnClickListener { if (isSettingsOpen) closeTTSSettings() }
         binding.answerContainer.setOnClickListener { if (isSettingsOpen) closeTTSSettings() }
+        binding.quizAnswerType.visibility = GONE
         binding.tapToReveal.setOnClickListener { it.visibility = GONE }
         binding.tapToReveal.visibility = GONE
         qcmBinding.option1Container.setOnClickListener {
@@ -509,19 +510,24 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
         editBinding.editAction.setColorFilter(ContextCompat.getColor(requireActivity(), R.color.level_master_4))
     }
 
-    override fun displayQCMMode() {
+    override fun displayQCMMode(hintText: String?) {
         qcmBinding.root.visibility = VISIBLE
         editBinding.root.visibility = GONE
         val pref = PreferenceManager.getDefaultSharedPreferences(requireContext())
         if (pref.getBoolean("tap_to_reveal", false)) {
             binding.tapToReveal.visibility = VISIBLE
+            binding.quizAnswerType.visibility = VISIBLE
+            // say what type of answer should be found
+            if (hintText != null)
+                binding.quizAnswerType.text = hintText
         } else {
             binding.tapToReveal.visibility = GONE
+            binding.quizAnswerType.visibility = GONE
         }
     }
 
     override fun displayEditMode() {
-
+        binding.quizAnswerType.visibility = GONE
         qcmBinding.root.visibility = GONE
         editBinding.root.visibility = VISIBLE
     }
