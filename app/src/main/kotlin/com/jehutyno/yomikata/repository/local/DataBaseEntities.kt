@@ -6,7 +6,7 @@ import androidx.room.PrimaryKey
 
 
 @Entity
-data class RoomTables(
+data class RoomTables (
     @ColumnInfo val quiz: RoomQuiz,
     @ColumnInfo val words: RoomWords,
     @ColumnInfo val quiz_word: RoomQuizWord,
