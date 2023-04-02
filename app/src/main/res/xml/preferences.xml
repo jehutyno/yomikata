@@ -39,7 +39,7 @@
 
         <CheckBoxPreference
             android:defaultValue="false"
-            android:icon="@drawable/ic_quiz"
+            android:icon="@drawable/ic_visibility_black_24dp"
             android:key="tap_to_reveal"
             android:summary="@string/tap_to_reveal_choices_summary"
             android:title="@string/tap_to_reveal_choices"/>
