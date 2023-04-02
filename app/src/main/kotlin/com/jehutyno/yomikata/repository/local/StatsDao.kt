@@ -1,7 +1,6 @@
 package com.jehutyno.yomikata.repository.local
 
 import androidx.room.Dao
-import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
 
@@ -13,10 +12,10 @@ interface StatsDao {
 
     @Query("SELECT * FROM RoomStatEntry" +
            "WHERE data > :start AND date < :end")
-    fun getStatEntriesOfTimeInterval(start: Long, end: Long): RoomStatEntry
+    fun getStatEntriesOfTimeInterval(start: Long, end: Long): List<RoomStatEntry>
 
     @Query("SELECT * FROM RoomStatEntry")
-    fun getAllStatEntries(): RoomSentences
+    fun getAllStatEntries(): List<RoomStatEntry>
 
     @Query("DELETE FROM RoomStatEntry")
     fun removeAllStats()

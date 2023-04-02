@@ -7,7 +7,7 @@ import com.jehutyno.yomikata.model.Word
 import com.jehutyno.yomikata.repository.QuizRepository
 import com.jehutyno.yomikata.repository.SentenceRepository
 import com.jehutyno.yomikata.repository.WordRepository
-import com.jehutyno.yomikata.repository.local.KanjiSoloRepository
+import com.jehutyno.yomikata.repository.KanjiSoloRepository
 import com.jehutyno.yomikata.util.Categories
 import mu.KLogging
 import java.util.*

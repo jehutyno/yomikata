@@ -6,6 +6,7 @@ import org.kodein.di.bind
 import org.kodein.di.instance
 import org.kodein.di.singleton
 
+
 fun repositoryModule() = DI.Module("repositoryModule") {
     bind<QuizRepository>("Local") with singleton { QuizSource(instance()) }
     bind<WordRepository>("Local") with singleton { WordSource(instance()) }

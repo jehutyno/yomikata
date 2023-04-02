@@ -17,10 +17,8 @@ import androidx.preference.PreferenceFragmentCompat
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.filechooser.FileChooserDialog
 import com.jehutyno.yomikata.repository.local.WordSource
-import com.jehutyno.yomikata.repository.migration.DatabaseHelper
-import com.jehutyno.yomikata.repository.migration.MigrationSource
-import com.jehutyno.yomikata.repository.migration.MigrationTable
-import com.jehutyno.yomikata.repository.migration.MigrationTables
+import com.jehutyno.yomikata.repository.local.YomikataDataBase
+import com.jehutyno.yomikata.repository.migration.*
 import com.jehutyno.yomikata.util.*
 import com.jehutyno.yomikata.util.Extras.PERMISSIONS_STORAGE
 import com.jehutyno.yomikata.util.Extras.REQUEST_EXTERNAL_STORAGE_BACKUP
@@ -245,7 +243,8 @@ class PrefsActivity : AppCompatActivity(), FileChooserDialog.ChooserListener {
                     val wordTable = migrationSource.getWordTable(it)
                     progressBar.incrementProgressBy(1)
                     wordTable.forEach { word ->
-                        val source = WordSource(this@PrefsActivity)
+                        val wordDao = YomikataDataBase.getDatabase(this@PrefsActivity).wordDao()
+                        val source = WordSource(wordDao)
                         if (word.counterTry > 0 || word.priority > 0)
                             source.restoreWord(word.word, word.pronunciation, word)
                     }

@@ -2,29 +2,28 @@ package com.jehutyno.yomikata.repository.local
 
 import androidx.room.Dao
 import androidx.room.Query
-import com.jehutyno.yomikata.model.*
 
 
 @Dao
 interface UpdateDao {
     @Query("SELECT * FROM RoomWords")
-    fun getAllWords(): List<Word>
+    fun getAllWords(): List<RoomWords>
 
     @Query("SELECT * FROM RoomStatEntry")
-    fun getAllStatEntries(): List<StatEntry>
+    fun getAllStatEntries(): List<RoomStatEntry>
 
     @Query("SELECT * FROM RoomQuizWord WHERE _id > :defaultSize")
-    fun getAddedQuizWords(defaultSize: Long): List<QuizWord>
+    fun getAddedQuizWords(defaultSize: Long): List<RoomQuizWord>
 
     @Query("SELECT * FROM RoomQuiz WHERE _id > :defaultSize")
-    fun getAddedQuizzes(defaultSize: Long): List<Quiz>
+    fun getAddedQuizzes(defaultSize: Long): List<RoomQuiz>
 
     @Query("SELECT * FROM RoomKanjiSolo")
-    fun getAllKanjiSolo(): List<KanjiSolo>
+    fun getAllKanjiSolo(): List<RoomKanjiSolo>
 
     @Query("SELECT * FROM RoomRadicals")
-    fun getAllRadicals(): List<Radical>
+    fun getAllRadicals(): List<RoomRadicals>
 
     @Query("SELECT * FROM RoomSentences")
-    fun getAllSentences(): List<Sentence>
+    fun getAllSentences(): List<RoomSentences>
 }

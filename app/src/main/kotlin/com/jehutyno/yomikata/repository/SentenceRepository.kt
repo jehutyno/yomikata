@@ -4,6 +4,7 @@ import android.database.sqlite.SQLiteDatabase
 import com.jehutyno.yomikata.model.Sentence
 import com.jehutyno.yomikata.model.Word
 
+
 /**
  * Created by valentin on 27/09/2016.
  */

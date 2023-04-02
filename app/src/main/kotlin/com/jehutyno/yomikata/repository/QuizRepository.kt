@@ -24,7 +24,7 @@ interface QuizRepository {
     fun updateQuizName(quizId: Long, quizName: String)
     fun updateQuizSelected(quizId: Long, isSelected: Boolean)
     fun addWordToQuiz(wordId: Long, quizId: Long)
-    fun deleteWordFromQuiz(wordId: Long, selectionId: Long)
+    fun deleteWordFromQuiz(wordId: Long, quizId: Long)
     fun countWordsForLevel(quizIds: LongArray, level: Int): Int
     fun countWordsForQuizzes(quizIds: LongArray): Int
 }

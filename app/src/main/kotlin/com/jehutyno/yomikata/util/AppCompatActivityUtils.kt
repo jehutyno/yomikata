@@ -15,10 +15,7 @@ import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.model.Sentence
 import com.jehutyno.yomikata.model.Word
 import com.jehutyno.yomikata.repository.local.*
-import com.jehutyno.yomikata.repository.migration.DatabaseHelper
-import com.jehutyno.yomikata.repository.migration.MigrationSource
-import com.jehutyno.yomikata.repository.migration.MigrationTable
-import com.jehutyno.yomikata.repository.migration.MigrationTables
+import com.jehutyno.yomikata.repository.migration.*
 import com.jehutyno.yomikata.screens.quizzes.QuizzesActivity
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.async
@@ -149,7 +146,7 @@ fun Context.updateBDD(db: SQLiteDatabase?, filePathEncrypted: String, oldVersion
             if (filePath.isEmpty())
                 wordSource.updateWord(it, word)
             else
-                wordSource.updateWordProgression(it, word)
+                if (word != null) wordSource.updateWordProgression(it, word)
             i++
             if (i % 100 == 0) {
                 intent.putExtra(QuizzesActivity.UPDATE_PROGRESS, i)
@@ -184,7 +181,7 @@ fun Context.updateBDD(db: SQLiteDatabase?, filePathEncrypted: String, oldVersion
         }
 
         updateQuizwords.forEach {
-            if (wordSource.getQuizWordFromIds(it.quizId, it.wordId) == null) {
+            if (wordSource.getQuizWordFromId(it.quizId, it.wordId) == null) {
                 if (it.quizId > 96) {
                     wordSource.addQuizWord(quizIdsMap[it.quizId]!!, it.wordId)
                 } else {

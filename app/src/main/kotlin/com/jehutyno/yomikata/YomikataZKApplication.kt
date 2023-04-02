@@ -26,11 +26,12 @@ class YomikataZKApplication : MultiDexApplication(), DIAware {
     override val di: DI by DI.lazy {
         import(repositoryModule())
         import(applicationModule(this@YomikataZKApplication))
-        bind<QuizRepository>() with singleton { QuizSource(instance()) }
-        bind<WordRepository>() with singleton { WordSource(instance()) }
-        bind<StatsRepository>() with singleton { StatsSource(instance()) }
-        bind<KanjiSoloRepository>() with singleton { KanjiSoloSource(instance()) }
-        bind<SentenceRepository>() with singleton { SentenceSource(instance()) }
+        import(databaseModule(this@YomikataZKApplication))
+        bind<QuizRepository>() with singleton { QuizSource(instance<YomikataDataBase>().quizDao()) }
+        bind<WordRepository>() with singleton { WordSource(instance<YomikataDataBase>().wordDao()) }
+        bind<StatsRepository>() with singleton { StatsSource(instance<YomikataDataBase>().statsDao()) }
+        bind<KanjiSoloRepository>() with singleton { KanjiSoloSource(instance<YomikataDataBase>().kanjiSoloDao()) }
+        bind<SentenceRepository>() with singleton { SentenceSource(instance<YomikataDataBase>().sentenceDao()) }
     }
 
     override fun onCreate() {
