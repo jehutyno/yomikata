@@ -10,7 +10,8 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(entities = [KanjiSoloDao::class, QuizDao::class, SentenceDao::class,
                       QuizDao::class, SentenceDao::class, StatsDao::class,
-                      UpdateDao::class, WordDao::class], version = 13)
+                      UpdateDao::class, WordDao::class],
+          version = 13, exportSchema = true)
 abstract class YomikataDataBase : RoomDatabase() {
     abstract fun kanjiSoloDao(): KanjiSoloDao
     abstract fun quizDao(): QuizDao
@@ -25,7 +26,7 @@ abstract class YomikataDataBase : RoomDatabase() {
             if (INSTANCE == null) {
                 synchronized(this) {
                     INSTANCE =
-                        Room.databaseBuilder(context,YomikataDataBase::class.java, "yomikataz")
+                        Room.databaseBuilder(context, YomikataDataBase::class.java, "yomikataz")
                             .addMigrations(MIGRATION_12_13)
                             .build()
                 }
@@ -34,7 +35,7 @@ abstract class YomikataDataBase : RoomDatabase() {
         }
 
         // migrate from anko sqlite to room
-        val MIGRATION_12_13 = object : Migration(12, 13) {
+        private val MIGRATION_12_13 = object : Migration(12, 13) {
             override fun migrate(database: SupportSQLiteDatabase) {
                 // Empty implementation, because the schema isn't changing.
             }

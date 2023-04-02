@@ -109,6 +109,4 @@ class ContentPresenter(
         quizRepository.deleteWordFromQuiz(wordId, selectionId)
     }
 
-
-
 }

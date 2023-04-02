@@ -4,6 +4,24 @@ plugins {
     id("com.google.gms.google-services")
 }
 
+class RoomSchemaArgProvider implements CommandLineArgumentProvider {
+
+    @InputDirectory
+    @PathSensitive(PathSensitivity.RELATIVE)
+    File schemaDir
+
+    RoomSchemaArgProvider(File schemaDir) {
+        this.schemaDir = schemaDir
+    }
+
+    @Override
+    Iterable<String> asArguments() {
+        // Note: If you're using KSP, you should change the line below to return
+        // ["room.schemaLocation=${schemaDir.path}"]
+        return ["-Aroom.schemaLocation=${schemaDir.path}"]
+    }
+}
+
 android {
     namespace 'com.jehutyno.yomikata'
 
@@ -18,6 +36,14 @@ android {
         archivesBaseName = "Yomikata-Z-$versionName"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         multiDexEnabled true
+        // for Room
+        javaCompileOptions {
+            annotationProcessorOptions {
+                compilerArgumentProviders(
+                    new RoomSchemaArgProvider(new File(projectDir, "schemas"))
+                )
+            }
+        }
     }
 
     buildFeatures {
