@@ -222,7 +222,9 @@ class PrefsActivity : AppCompatActivity(), FileChooserDialog.ChooserListener {
         try {
             CopyUtils.reinitDataBase(this)
             CopyUtils.restoreEncryptedBdd(File(path), toPath + toName)
-            val migrationSource = MigrationSource(this, DatabaseHelper.getInstance(this, toName, toPath))
+            val oldDatabase = OldDataBase.getDatabase(this)
+            val migrationDao = oldDatabase.migrationDao()
+            val migrationSource = MigrationSource(migrationDao)
             val wordTables = MigrationTable.allTables(MigrationTables.values())
 
 

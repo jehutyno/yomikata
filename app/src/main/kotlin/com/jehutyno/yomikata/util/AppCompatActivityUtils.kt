@@ -63,14 +63,16 @@ fun Activity.migrateFromYomikata() {
     if (file.exists()) {
         try {
             CopyUtils.reinitDataBase(this)
-            val migrationSource = MigrationSource(this, DatabaseHelper.getInstance(this, toName, toPath))
+            val migrationDao = OldDataBase.getDatabase(this).migrationDao()
+            val migrationSource = MigrationSource(migrationDao)
             val wordTables = MigrationTable.allTables(MigrationTables.values())
 
             MainScope().async {
                 wordTables.forEach {
                     val wordTable = migrationSource.getWordTable(it)
                     wordTable.forEach { word ->
-                        val source = WordSource(context)
+                        val wordDao = YomikataDataBase.getDatabase(this@migrateFromYomikata).wordDao()
+                        val source = WordSource(wordDao)
                         if (word.counterTry > 0 || word.priority > 0)
                             source.restoreWord(word.word, word.pronunciation, word)
                     }
