@@ -197,9 +197,9 @@
     <string name="dont_ask_voices">Ne plus demander</string>
     <string name="voices_reinit_done">Fichiers de voix supprimés</string>
     <string name="tap_to_reveal_choices">Appuyez pour révéler les choix</string>
-    <string name="tap_to_reveal_choices_summary">Masquez les options de choix multiples jusqu\'au moment où vous touchez l\'écran</string>
+    <string name="tap_to_reveal_choices_summary">Les choix sont cachés jusqu\'à ce que vous touchiez l\'écran</string>
     <string name="give_hiragana_reading_hint">Donnez la lecture en hiragana</string>
-    <string name="give_romaji_hint">Donnez le rōmaji</string>
+    <string name="give_romaji_hint">Donnez la lecture en rōmaji</string>
     <string name="give_word_or_kanji_hint">Donnez le mot ou le kanji</string>
     <string name="translate_to_japanese_hint">Traduisez en Japonais</string>
     <string name="translate_to_english_hint">Traduisez en Français</string>
