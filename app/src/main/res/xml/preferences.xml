@@ -39,6 +39,13 @@
 
         <CheckBoxPreference
             android:defaultValue="false"
+            android:icon="@drawable/ic_visibility_black_24dp"
+            android:key="tap_to_reveal"
+            android:summary="@string/tap_to_reveal_choices_summary"
+            android:title="@string/tap_to_reveal_choices"/>
+
+        <CheckBoxPreference
+            android:defaultValue="false"
             android:icon="@drawable/ic_ray_start"
             android:key="play_start"
             android:summary="@string/settings_play_start_summary"

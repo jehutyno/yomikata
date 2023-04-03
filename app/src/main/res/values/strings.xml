@@ -223,4 +223,11 @@
     <string name="delete_voices_files">Delete voices files</string>
     <string name="dont_ask_voices">Don\'t ask again</string>
     <string name="voices_reinit_done">Voice files have been deleted</string>
+    <string name="tap_to_reveal_choices">Tap to reveal choices</string>
+    <string name="tap_to_reveal_choices_summary">Hide multiple choice options until you tap the screen</string>
+    <string name="give_hiragana_reading_hint">Give hiragana reading</string>
+    <string name="give_romaji_hint">Give rōmaji</string>
+    <string name="give_word_or_kanji_hint">Give word or kanji</string>
+    <string name="translate_to_japanese_hint">Translate to Japanese</string>
+    <string name="translate_to_english_hint">Translate to English</string>
 </resources>
