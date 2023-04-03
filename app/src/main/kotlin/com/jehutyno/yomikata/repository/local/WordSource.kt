@@ -81,7 +81,7 @@ class WordSource(private val wordDao: WordDao) : WordRepository {
             else -> "${SQLiteTables.WORDS.tableName}.${SQLiteWord.JAPANESE.column}"
         }
 
-        val roomWordsList = wordDao.getRandomWords(wordId, answer, wordSize, column, 97, limit)
+        val roomWordsList = wordDao.getRandomWords(wordId, answer, wordSize, column, 96, limit)
 
         if (roomWordsList.size < limit) {
             val extraRoomWordsList = wordDao.getRandomWords(
@@ -89,7 +89,7 @@ class WordSource(private val wordDao: WordDao) : WordRepository {
                 answer,
                 wordSize,
                 column,
-                97,
+                96,
                 limit - roomWordsList.size
             )
             roomWordsList += extraRoomWordsList
