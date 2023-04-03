@@ -8,7 +8,7 @@ import com.jehutyno.yomikata.model.*
 
 @Entity(tableName = "quiz")
 data class RoomQuiz (
-    @PrimaryKey val _id: Long,
+    @PrimaryKey(autoGenerate = true) val _id: Long,
     @ColumnInfo val name_en: String,
     @ColumnInfo val name_fr: String,
     @ColumnInfo val category: Int,
@@ -28,7 +28,7 @@ data class RoomQuiz (
 
 @Entity(tableName = "words")
 data class RoomWords (
-    @PrimaryKey val _id: Long,
+    @PrimaryKey(autoGenerate = true) val _id: Long,
     @ColumnInfo val japanese: String,
     @ColumnInfo val english: String,
     @ColumnInfo val french: String,
@@ -62,7 +62,7 @@ data class RoomWords (
 
 @Entity(tableName = "quiz_word")
 data class RoomQuizWord (
-    @PrimaryKey val _id: Long,
+    @PrimaryKey(autoGenerate = true) val _id: Long,
     @ColumnInfo val quiz_id: Long,
     @ColumnInfo val word_id: Long,
 ) {
@@ -80,7 +80,7 @@ data class RoomQuizWord (
 
 @Entity(tableName = "stat_entry")
 data class RoomStatEntry (
-    @PrimaryKey val _id: Long,
+    @PrimaryKey(autoGenerate = true) val _id: Long,
     @ColumnInfo val action: Int,
     @ColumnInfo val associatedId: Long,
     @ColumnInfo val date: Long,
@@ -101,7 +101,7 @@ data class RoomStatEntry (
 
 @Entity(tableName = "kanji_solo")
 data class RoomKanjiSolo (
-    @PrimaryKey val _id: Long,
+    @PrimaryKey(autoGenerate = true) val _id: Long,
     @ColumnInfo val kanji: String?,
     @ColumnInfo val strokes: Int,
     @ColumnInfo val en: String?,
@@ -125,7 +125,7 @@ data class RoomKanjiSolo (
 
 @Entity(tableName = "radicals")
 data class RoomRadicals (
-    @PrimaryKey val _id: Long,
+    @PrimaryKey(autoGenerate = true) val _id: Long,
     @ColumnInfo val strokes: Int,
     @ColumnInfo val radical: String?,
     @ColumnInfo val reading: String?,
@@ -147,7 +147,7 @@ data class RoomRadicals (
 
 @Entity(tableName = "sentences")
 data class RoomSentences (
-    @PrimaryKey val _id: Long,
+    @PrimaryKey(autoGenerate = true) val _id: Long,
     @ColumnInfo val jap: String?,
     @ColumnInfo val en: String?,
     @ColumnInfo val fr: String?,

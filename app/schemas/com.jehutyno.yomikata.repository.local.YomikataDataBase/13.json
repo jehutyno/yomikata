@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 13,
-    "identityHash": "2c32a926efe85a1416b33e36820fcc3c",
+    "identityHash": "39b116a0b54ae6e88674a9ddad6dde07",
     "entities": [
       {
         "tableName": "kanji_solo",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER NOT NULL, `kanji` TEXT, `strokes` INTEGER NOT NULL, `en` TEXT, `fr` TEXT, `kunyomi` TEXT, `onyomi` TEXT, `radical` TEXT, PRIMARY KEY(`_id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `kanji` TEXT, `strokes` INTEGER NOT NULL, `en` TEXT, `fr` TEXT, `kunyomi` TEXT, `onyomi` TEXT, `radical` TEXT)",
         "fields": [
           {
             "fieldPath": "_id",
@@ -58,7 +58,7 @@
           }
         ],
         "primaryKey": {
-          "autoGenerate": false,
+          "autoGenerate": true,
           "columnNames": [
             "_id"
           ]
@@ -68,7 +68,7 @@
       },
       {
         "tableName": "quiz",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER NOT NULL, `name_en` TEXT NOT NULL, `name_fr` TEXT NOT NULL, `category` INTEGER NOT NULL, `isSelected` INTEGER NOT NULL, PRIMARY KEY(`_id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name_en` TEXT NOT NULL, `name_fr` TEXT NOT NULL, `category` INTEGER NOT NULL, `isSelected` INTEGER NOT NULL)",
         "fields": [
           {
             "fieldPath": "_id",
@@ -102,7 +102,7 @@
           }
         ],
         "primaryKey": {
-          "autoGenerate": false,
+          "autoGenerate": true,
           "columnNames": [
             "_id"
           ]
@@ -112,7 +112,7 @@
       },
       {
         "tableName": "sentences",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER NOT NULL, `jap` TEXT, `en` TEXT, `fr` TEXT, `level` INTEGER NOT NULL, PRIMARY KEY(`_id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `jap` TEXT, `en` TEXT, `fr` TEXT, `level` INTEGER NOT NULL)",
         "fields": [
           {
             "fieldPath": "_id",
@@ -146,7 +146,7 @@
           }
         ],
         "primaryKey": {
-          "autoGenerate": false,
+          "autoGenerate": true,
           "columnNames": [
             "_id"
           ]
@@ -156,7 +156,7 @@
       },
       {
         "tableName": "stat_entry",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER NOT NULL, `action` INTEGER NOT NULL, `associatedId` INTEGER NOT NULL, `date` INTEGER NOT NULL, `result` INTEGER NOT NULL, PRIMARY KEY(`_id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `action` INTEGER NOT NULL, `associatedId` INTEGER NOT NULL, `date` INTEGER NOT NULL, `result` INTEGER NOT NULL)",
         "fields": [
           {
             "fieldPath": "_id",
@@ -190,7 +190,7 @@
           }
         ],
         "primaryKey": {
-          "autoGenerate": false,
+          "autoGenerate": true,
           "columnNames": [
             "_id"
           ]
@@ -200,7 +200,7 @@
       },
       {
         "tableName": "words",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER NOT NULL, `japanese` TEXT NOT NULL, `english` TEXT NOT NULL, `french` TEXT NOT NULL, `reading` TEXT NOT NULL, `level` INTEGER NOT NULL, `count_try` INTEGER NOT NULL, `count_success` INTEGER NOT NULL, `count_fail` INTEGER NOT NULL, `is_kana` INTEGER NOT NULL, `repetition` INTEGER NOT NULL, `points` INTEGER NOT NULL, `base_category` INTEGER NOT NULL, `isSelected` INTEGER NOT NULL, `sentence_id` INTEGER NOT NULL, PRIMARY KEY(`_id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `japanese` TEXT NOT NULL, `english` TEXT NOT NULL, `french` TEXT NOT NULL, `reading` TEXT NOT NULL, `level` INTEGER NOT NULL, `count_try` INTEGER NOT NULL, `count_success` INTEGER NOT NULL, `count_fail` INTEGER NOT NULL, `is_kana` INTEGER NOT NULL, `repetition` INTEGER NOT NULL, `points` INTEGER NOT NULL, `base_category` INTEGER NOT NULL, `isSelected` INTEGER NOT NULL, `sentence_id` INTEGER NOT NULL)",
         "fields": [
           {
             "fieldPath": "_id",
@@ -294,7 +294,7 @@
           }
         ],
         "primaryKey": {
-          "autoGenerate": false,
+          "autoGenerate": true,
           "columnNames": [
             "_id"
           ]
@@ -304,7 +304,7 @@
       },
       {
         "tableName": "quiz_word",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER NOT NULL, `quiz_id` INTEGER NOT NULL, `word_id` INTEGER NOT NULL, PRIMARY KEY(`_id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `quiz_id` INTEGER NOT NULL, `word_id` INTEGER NOT NULL)",
         "fields": [
           {
             "fieldPath": "_id",
@@ -326,7 +326,7 @@
           }
         ],
         "primaryKey": {
-          "autoGenerate": false,
+          "autoGenerate": true,
           "columnNames": [
             "_id"
           ]
@@ -336,7 +336,7 @@
       },
       {
         "tableName": "radicals",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER NOT NULL, `strokes` INTEGER NOT NULL, `radical` TEXT, `reading` TEXT, `en` TEXT, `fr` TEXT, PRIMARY KEY(`_id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `strokes` INTEGER NOT NULL, `radical` TEXT, `reading` TEXT, `en` TEXT, `fr` TEXT)",
         "fields": [
           {
             "fieldPath": "_id",
@@ -376,7 +376,7 @@
           }
         ],
         "primaryKey": {
-          "autoGenerate": false,
+          "autoGenerate": true,
           "columnNames": [
             "_id"
           ]
@@ -388,7 +388,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '2c32a926efe85a1416b33e36820fcc3c')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '39b116a0b54ae6e88674a9ddad6dde07')"
     ]
   }
 }
