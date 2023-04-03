@@ -73,15 +73,15 @@ class WordSource(private val wordDao: WordDao) : WordRepository {
         quizType: QuizType
     ): ArrayList<Word> {
         val column = when (quizType) {
-            QuizType.TYPE_PRONUNCIATION -> "${SQLiteTables.WORDS.tableName}.${SQLiteWord.READING.column}"
-            QuizType.TYPE_PRONUNCIATION_QCM -> "${SQLiteTables.WORDS.tableName}.${SQLiteWord.READING.column}"
-            QuizType.TYPE_AUDIO -> "${SQLiteTables.WORDS.tableName}.${SQLiteWord.JAPANESE.column}"
-            QuizType.TYPE_EN_JAP -> "${SQLiteTables.WORDS.tableName}.${SQLiteWord.JAPANESE.column}"
-            QuizType.TYPE_JAP_EN -> "${SQLiteTables.WORDS.tableName}.${SQLiteWord.JAPANESE.column}"
-            else -> "${SQLiteTables.WORDS.tableName}.${SQLiteWord.JAPANESE.column}"
+            QuizType.TYPE_PRONUNCIATION -> "${RoomWords.getTableName()}.reading"
+            QuizType.TYPE_PRONUNCIATION_QCM -> "${RoomWords.getTableName()}.reading"
+            QuizType.TYPE_AUDIO -> "${RoomWords.getTableName()}.japanese"
+            QuizType.TYPE_EN_JAP -> "${RoomWords.getTableName()}.japanese"
+            QuizType.TYPE_JAP_EN -> "${RoomWords.getTableName()}.japanese"
+            else -> "${RoomWords.getTableName()}.japanese"
         }
 
-        val roomWordsList = wordDao.getRandomWords(wordId, answer, wordSize, column, 96, limit)
+        val roomWordsList = wordDao.getRandomWords(wordId, answer, wordSize, column, 96, limit).toMutableList()
 
         if (roomWordsList.size < limit) {
             val extraRoomWordsList = wordDao.getRandomWords(

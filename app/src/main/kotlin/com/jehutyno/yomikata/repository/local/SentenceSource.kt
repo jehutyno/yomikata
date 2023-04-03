@@ -20,7 +20,7 @@ class SentenceSource(private val sentenceDao: SentenceDao) : SentenceRepository 
     }
 
     override fun getRandomSentence(word: Word, maxLevel: Int): Sentence? {
-        return sentenceDao.getRandomSentence(RoomWords.from(word), maxLevel)?.toSentence()
+        return sentenceDao.getRandomSentence(word.japanese, word.reading, maxLevel)?.toSentence()
     }
 
     override fun getSentenceById(id: Long): Sentence {

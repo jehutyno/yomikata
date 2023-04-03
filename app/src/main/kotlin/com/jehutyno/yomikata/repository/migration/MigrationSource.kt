@@ -1,5 +1,6 @@
 package com.jehutyno.yomikata.repository.migration
 
+import androidx.sqlite.db.SimpleSQLiteQuery
 import java.util.*
 
 
@@ -9,6 +10,9 @@ import java.util.*
 class MigrationSource(private val migrationDao: MigrationDao) {
 
     fun getWordTable(tableName: String) : ArrayList<WordTable> {
-        return migrationDao.getWordTable(tableName).map { it.toWordTable() } as ArrayList<WordTable>
+        val query = "SELECT * FROM $tableName"
+        val supportQuery = SimpleSQLiteQuery(query)
+        val roomWordTable = migrationDao.getWordTable(supportQuery)
+        return roomWordTable.map { it.toWordTable() } as ArrayList<WordTable>
     }
 }

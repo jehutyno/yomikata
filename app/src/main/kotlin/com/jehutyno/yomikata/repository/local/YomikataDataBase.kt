@@ -8,9 +8,9 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
 
-@Database(entities = [KanjiSoloDao::class, QuizDao::class, SentenceDao::class,
-                      QuizDao::class, SentenceDao::class, StatsDao::class,
-                      UpdateDao::class, WordDao::class],
+@Database(entities = [RoomKanjiSolo::class, RoomQuiz::class, RoomSentences::class,
+                      RoomStatEntry::class, RoomWords::class, RoomQuizWord::class,
+                      RoomRadicals::class],
           version = 13, exportSchema = true)
 abstract class YomikataDataBase : RoomDatabase() {
     abstract fun kanjiSoloDao(): KanjiSoloDao

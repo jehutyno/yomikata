@@ -2,8 +2,10 @@ plugins {
     id("com.android.application")
     id("kotlin-android")
     id("com.google.gms.google-services")
+    id("com.google.devtools.ksp")
 }
 
+// Room export schemas
 class RoomSchemaArgProvider implements CommandLineArgumentProvider {
 
     @InputDirectory
@@ -16,9 +18,7 @@ class RoomSchemaArgProvider implements CommandLineArgumentProvider {
 
     @Override
     Iterable<String> asArguments() {
-        // Note: If you're using KSP, you should change the line below to return
-        // ["room.schemaLocation=${schemaDir.path}"]
-        return ["-Aroom.schemaLocation=${schemaDir.path}"]
+        return ["room.schemaLocation=${schemaDir.path}"]
     }
 }
 
@@ -36,14 +36,12 @@ android {
         archivesBaseName = "Yomikata-Z-$versionName"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         multiDexEnabled true
-        // for Room
-        javaCompileOptions {
-            annotationProcessorOptions {
-                compilerArgumentProviders(
-                    new RoomSchemaArgProvider(new File(projectDir, "schemas"))
-                )
-            }
-        }
+    }
+
+    ksp {
+        // Room export schemas
+        arg('room.schemaLocation', "$projectDir/schemas")
+//        arg(new RoomSchemaArgProvider(new File(projectDir, "schemas")))
     }
 
     buildFeatures {
@@ -119,6 +117,9 @@ dependencies {
     // Room
     implementation("androidx.room:room-runtime:$room_version")
     annotationProcessor("androidx.room:room-compiler:$room_version")
+
+    // To use Kotlin Symbol Processing (KSP)
+    ksp("androidx.room:room-compiler:$room_version")
 
 
     // optional - Kotlin Extensions and Coroutines support for Room

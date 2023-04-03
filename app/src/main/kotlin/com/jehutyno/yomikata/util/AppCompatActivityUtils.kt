@@ -109,7 +109,10 @@ fun Context.updateBDD(db: SQLiteDatabase?, filePathEncrypted: String, oldVersion
     }
     pref.edit().putString(Prefs.DB_UPDATE_FILE.pref, filePath).apply()
     pref.edit().putInt(Prefs.DB_UPDATE_OLD_VERSION.pref, oldVersion).apply()
-    val updateSource = UpdateSource(this, filePath)
+
+    val newDataBase = YomikataDataBase.getDatabase(this)
+
+    val updateSource = UpdateSource(newDataBase.updateDao())
     val updateWords = updateSource.getAllWords().sortedBy(Word::id)
     val stats = updateSource.getAllStatEntries()
     val updateQuizzes = updateSource.getAddedQuizzes()
@@ -117,16 +120,16 @@ fun Context.updateBDD(db: SQLiteDatabase?, filePathEncrypted: String, oldVersion
     val updateRadicals = updateSource.getAllRadicals()
     val updateQuizwords = updateSource.getAddedQuizWords()
     val updateSentences = updateSource.getAllSentences()
-    val wordSource = WordSource(this)
-    val quizSource = QuizSource(this)
-    val kanjiSoloSource = KanjiSoloSource(this)
-    val sentenceSource = SentenceSource(this)
-    val statSource = StatsSource(this)
+    val wordSource = WordSource(newDataBase.wordDao())
+    val quizSource = QuizSource(newDataBase.quizDao())
+    val kanjiSoloSource = KanjiSoloSource(newDataBase.kanjiSoloDao())
+    val sentenceSource = SentenceSource(newDataBase.sentenceDao())
+    val statSource = StatsSource(newDataBase.statsDao())
     val quizIdsMap = mutableMapOf<Long, Long>()
-    kanjiSoloSource.createKanjiSoloTable(db)
-    kanjiSoloSource.createRadicalsTable(db)
-    val kanjiSoloCount = kanjiSoloSource.kanjiSoloCount(db)
-    val radCount = kanjiSoloSource.radicalsCount(db)
+//    kanjiSoloSource.createKanjiSoloTable(db)
+//    kanjiSoloSource.createRadicalsTable(db)
+    val kanjiSoloCount = kanjiSoloSource.kanjiSoloCount()
+    val radCount = kanjiSoloSource.radicalsCount()
 
     MainScope().async {
         var i = 0
@@ -139,7 +142,7 @@ fun Context.updateBDD(db: SQLiteDatabase?, filePathEncrypted: String, oldVersion
         sendBroadcast(intent)
         if (oldVersion <= 8) {
             sentenceSource.createSentencesTable()
-            wordSource.migration_8to9()
+//            wordSource.migration_8to9()
         }
         val words = wordSource.getAllWords(null).sortedBy(Word::id)
 

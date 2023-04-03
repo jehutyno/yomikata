@@ -1,12 +1,12 @@
 package com.jehutyno.yomikata.repository.migration
 
 import androidx.room.Dao
-import androidx.room.Query
-import java.util.ArrayList
+import androidx.room.RawQuery
+import androidx.sqlite.db.SupportSQLiteQuery
 
 
 @Dao
 interface MigrationDao {
-    @Query("SELECT * FROM :tableName")
-    fun getWordTable(tableName: String) : ArrayList<RoomMigrationWordTable>
+    @RawQuery(observedEntities = [RoomMigrationWordTable::class])
+    fun getWordTable(query: SupportSQLiteQuery) : List<RoomMigrationWordTable>
 }

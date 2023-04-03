@@ -7,10 +7,10 @@ import androidx.room.Query
 
 @Dao
 interface KanjiSoloDao {
-    @Query("SELECT COUNT(*) FROM RoomKanjiSolo")
+    @Query("SELECT COUNT(*) FROM kanji_solo")
     fun kanjiSoloCount(): Int
 
-    @Query("SELECT COUNT(*) FROM RoomRadicals")
+    @Query("SELECT COUNT(*) FROM radicals")
     fun radicalsCount(): Int
 
     @Insert
@@ -19,16 +19,18 @@ interface KanjiSoloDao {
     @Insert
     fun addRadical(radical: RoomRadicals)
 
-    @Query("SELECT * FROM RoomKanjiSolo WHERE kanji = :kanji LIMIT 1")
+    @Query("SELECT * FROM kanji_solo WHERE kanji = :kanji LIMIT 1")
     fun getSoloByKanji(kanji: String): RoomKanjiSolo?
 
-    @Query("SELECT RoomKanjiSolo.*, RoomRadicals.strokes, RoomRadicals.reading, RoomRadicals.en, RoomRadicals.fr" +
-           "FROM RoomKanjiSolo JOIN RoomRadicals" +
-           "ON RoomKanjiSolo.radical = RoomRadicals.radical" +
-           "WHERE RoomKanjiSolo.kanji = :kanji" +
+    @Query("SELECT kanji_solo.*, " +
+           "radicals.strokes AS radStroke, radicals.reading AS radReading, " +
+           "radicals.en AS radEn, radicals.fr AS radFr " +
+           "FROM kanji_solo JOIN radicals " +
+           "ON kanji_solo.radical = radicals.radical " +
+           "WHERE kanji_solo.kanji = :kanji " +
            "LIMIT 1")
     fun getSoloByKanjiRadical(kanji: String): RoomKanjiSoloRadical?
 
-    @Query("SELECT * FROM RoomRadicals WHERE radical = :radicalString LIMIT 1")
+    @Query("SELECT * FROM radicals WHERE radical = :radicalString LIMIT 1")
     fun getKanjiRadical(radicalString: String): RoomRadicals?
 }

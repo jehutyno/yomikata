@@ -11,16 +11,16 @@ interface SentenceDao {
     @Insert
     fun addSentence(sentence: RoomSentences)
 
-    @Query("SELECT * FROM RoomSentences" +
-           "WHERE jap LIKE '%{:word.japanese ; :word.reading}%'" +
-           "AND level <= :maxLevel" +
+    @Query("SELECT * FROM sentences " +
+           "WHERE jap LIKE '%' || :japanese || ' ; ' || :reading || '%' " +
+           "AND level <= :maxLevel " +
            "ORDER BY RANDOM() LIMIT 1")
-    fun getRandomSentence(word: RoomWords, maxLevel: Int): RoomSentences?
+    fun getRandomSentence(japanese: String, reading: String, maxLevel: Int): RoomSentences?
 
-    @Query("SELECT * FROM RoomSentences WHERE _id = :id")
+    @Query("SELECT * FROM sentences WHERE _id = :id")
     fun getSentenceById(id: Long): RoomSentences?
 
-    @Query("SELECT * FROM RoomSentences")
+    @Query("SELECT * FROM sentences")
     fun getAllSentences(): List<RoomSentences>
 
     @Update

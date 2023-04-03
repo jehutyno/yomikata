@@ -6,17 +6,6 @@ import androidx.room.PrimaryKey
 import com.jehutyno.yomikata.model.*
 
 
-@Entity
-data class RoomTables (
-    @ColumnInfo val quiz: RoomQuiz,
-    @ColumnInfo val words: RoomWords,
-    @ColumnInfo val quiz_word: RoomQuizWord,
-    @ColumnInfo val stat_entry: RoomStatEntry,
-    @ColumnInfo val kanji_solo: RoomKanjiSolo,
-    @ColumnInfo val radicals: RoomRadicals,
-    @ColumnInfo val sentences: RoomSentences
-)
-
 @Entity(tableName = "quiz")
 data class RoomQuiz (
     @PrimaryKey val _id: Long,
@@ -29,6 +18,7 @@ data class RoomQuiz (
         fun from(quiz: Quiz): RoomQuiz {
             return RoomQuiz(quiz.id, quiz.nameEn, quiz.nameFr, quiz.category, quiz.isSelected)
         }
+        fun getTableName() = RoomQuiz::class.java.getAnnotation(Entity::class.java)!!.tableName
     }
 
     fun toQuiz(): Quiz {
@@ -61,6 +51,7 @@ data class RoomWords (
                              word.countFail, word.isKana, word.repetition, word.points,
                              word.baseCategory, word.isSelected, word.sentenceId)
         }
+        fun getTableName() = RoomWords::class.java.getAnnotation(Entity::class.java)!!.tableName
     }
 
     fun toWord(): Word {
@@ -79,6 +70,7 @@ data class RoomQuizWord (
         fun from(quizWord: QuizWord): RoomQuizWord {
             return RoomQuizWord(quizWord.id, quizWord.quizId, quizWord.wordId)
         }
+        fun getTableName() = RoomQuizWord::class.java.getAnnotation(Entity::class.java)!!.tableName
     }
 
     fun toQuizWord(): QuizWord {
@@ -99,6 +91,7 @@ data class RoomStatEntry (
             return RoomStatEntry(statEntry.id, statEntry.action, statEntry.associatedId,
                                  statEntry.date, statEntry.result)
         }
+        fun getTableName() = RoomStatEntry::class.java.getAnnotation(Entity::class.java)!!.tableName
     }
 
     fun toStatEntry(): StatEntry {
@@ -122,6 +115,7 @@ data class RoomKanjiSolo (
             return RoomKanjiSolo(kanjiSolo.id, kanjiSolo.kanji, kanjiSolo.strokes, kanjiSolo.en,
                                  kanjiSolo.fr, kanjiSolo.kunyomi, kanjiSolo.onyomi, kanjiSolo.radical)
         }
+        fun getTableName() = RoomKanjiSolo::class.java.getAnnotation(Entity::class.java)!!.tableName
     }
 
     fun toKanjiSolo(): KanjiSolo {
@@ -143,6 +137,7 @@ data class RoomRadicals (
             return RoomRadicals(radical.id, radical.strokes, radical.radical,
                                 radical.reading, radical.en, radical.fr)
         }
+        fun getTableName() = RoomRadicals::class.java.getAnnotation(Entity::class.java)!!.tableName
     }
 
     fun toRadical(): Radical {
@@ -162,6 +157,7 @@ data class RoomSentences (
         fun from(sentence: Sentence): RoomSentences {
             return RoomSentences(sentence.id, sentence.jap, sentence.en, sentence.fr, sentence.level)
         }
+        fun getTableName() = RoomRadicals::class.java.getAnnotation(Entity::class.java)!!.tableName
     }
 
     fun toSentence(): Sentence {
@@ -171,18 +167,18 @@ data class RoomSentences (
 
 // not part of database
 data class RoomKanjiSoloRadical (
-    @PrimaryKey val _id: Long,
-    @ColumnInfo val kanji: String,
-    @ColumnInfo val strokes: Int,
-    @ColumnInfo val en: String,
-    @ColumnInfo val fr: String,
-    @ColumnInfo val kunyomi: String,
-    @ColumnInfo val onyomi: String,
-    @ColumnInfo val radical: String,
-    @ColumnInfo val radStroke: Int,
-    @ColumnInfo val radReading: String,
-    @ColumnInfo val radEn: String,
-    @ColumnInfo val radFr: String
+    val _id: Long,
+    val kanji: String,
+    val strokes: Int,
+    val en: String,
+    val fr: String,
+    val kunyomi: String,
+    val onyomi: String,
+    val radical: String,
+    val radStroke: Int,
+    val radReading: String,
+    val radEn: String,
+    val radFr: String
 )  {
     companion object {
         fun from(kanjiSolo: KanjiSolo, radical: Radical): RoomKanjiSoloRadical {

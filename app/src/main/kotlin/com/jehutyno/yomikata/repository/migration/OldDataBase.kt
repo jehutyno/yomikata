@@ -6,7 +6,7 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 
 
-@Database(entities = [MigrationDao::class], version = 1)
+@Database(entities = [RoomMigrationWordTable::class], version = 1, exportSchema = false)
 abstract class OldDataBase : RoomDatabase() {
     abstract fun migrationDao(): MigrationDao
 

@@ -10,13 +10,13 @@ interface StatsDao {
     @Insert
     fun addStatEntry(statEntry: RoomStatEntry)
 
-    @Query("SELECT * FROM RoomStatEntry" +
-           "WHERE data > :start AND date < :end")
+    @Query("SELECT * FROM stat_entry " +
+           "WHERE date > :start AND date < :end")
     fun getStatEntriesOfTimeInterval(start: Long, end: Long): List<RoomStatEntry>
 
-    @Query("SELECT * FROM RoomStatEntry")
+    @Query("SELECT * FROM stat_entry")
     fun getAllStatEntries(): List<RoomStatEntry>
 
-    @Query("DELETE FROM RoomStatEntry")
+    @Query("DELETE FROM stat_entry")
     fun removeAllStats()
 }
