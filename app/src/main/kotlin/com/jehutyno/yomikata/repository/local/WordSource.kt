@@ -151,7 +151,7 @@ class WordSource(private val wordDao: WordDao) : WordRepository {
     }
 
     override fun decreaseWordsRepetition(quizIds: LongArray) {
-        val idList = wordDao.getWordsWithRepetitionStrictlyGreaterThan(quizIds, 0)
+        val idList = wordDao.getWordIdsWithRepetitionStrictlyGreaterThan(quizIds, 0)
         wordDao.decreaseWordRepetitionByOne(idList)
     }
 

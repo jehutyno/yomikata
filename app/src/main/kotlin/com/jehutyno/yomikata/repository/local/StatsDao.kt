@@ -8,7 +8,7 @@ import androidx.room.Query
 @Dao
 interface StatsDao {
     @Insert
-    fun addStatEntry(statEntry: RoomStatEntry)
+    fun addStatEntry(statEntry: RoomStatEntry): Long
 
     @Query("SELECT * FROM stat_entry " +
            "WHERE date > :start AND date < :end")

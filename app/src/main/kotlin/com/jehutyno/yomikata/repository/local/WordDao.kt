@@ -31,14 +31,14 @@ interface WordDao {
     @Query("SELECT words.* FROM words JOIN quiz_word " +
            "ON quiz_word.word_id = words._id " +
            "AND quiz_word.quiz_id IN (:quizIds) " +
-           "AND words.repetition = :repetition LIMIT :limit")
+           "AND words.repetition = :repetition ORDER BY words._id LIMIT :limit")
     fun getWordsByRepetition(quizIds: LongArray, repetition: Int, limit: Int): List<RoomWords>
 
     @Query("SELECT words._id FROM words JOIN quiz_word " +
            "ON quiz_word.word_id = words._id " +
            "AND quiz_word.quiz_id IN (:quizIds) " +
            "AND words.repetition > :repetition")
-    fun getWordsWithRepetitionStrictlyGreaterThan(quizIds: LongArray, repetition: Int): LongArray
+    fun getWordIdsWithRepetitionStrictlyGreaterThan(quizIds: LongArray, repetition: Int): LongArray
 
     @Query("UPDATE words SET repetition = repetition - 1 WHERE _id IN (:wordIds)")
     fun decreaseWordRepetitionByOne(wordIds: LongArray)
@@ -46,27 +46,27 @@ interface WordDao {
     // TODO: simplify query
     @RewriteQueriesToDropUnusedColumns
     @Query("SELECT * FROM words JOIN quiz_word " +
-           "ON quiz_word.word_id = words._id " +
+           "ON quiz_word.word_id = words._id " +    // select all quiz_words of the correct word id
            "AND quiz_word.quiz_id =  " +
            "( " +
                 "SELECT quiz_id FROM quiz_word " +
-                "WHERE quiz_word.word_id = :wordId " +
-                "AND quiz_id <= :defaultSize " +
+                "WHERE quiz_word.word_id = :wordId " +      // such that the quiz_id matches
+                "AND quiz_id <= :defaultSize " +            // that of the word with id=wordId
            ") " +
            "AND LENGTH(words.japanese) = :wordSize " +
-           "AND :column != (:answer) " +
+           "AND (:column) != (:answer) " +
            "AND words._id != :wordId " +
            "GROUP BY :column ORDER BY RANDOM() LIMIT :limit")
     fun getRandomWords(wordId: Long, answer: String, wordSize: Int, column: String,
                        defaultSize: Int, limit: Int): List<RoomWords>
 
     @Query("SELECT * FROM words " +
-           "WHERE reading LIKE (:searchString) " +
-           "OR reading LIKE (:hiraganaString) " +
-           "OR japanese LIKE (:searchString) " +
-           "OR japanese LIKE (:hiraganaString) " +
-           "OR english LIKE (:searchString) " +
-           "OR french LIKE (:searchString)")
+           "WHERE reading LIKE '%' || (:searchString) || '%' " +
+           "OR reading LIKE '%' || (:hiraganaString) || '%' " +
+           "OR japanese LIKE '%' || (:searchString) || '%' " +
+           "OR japanese LIKE '%' || (:hiraganaString) || '%' " +
+           "OR english LIKE '%' || (:searchString) || '%' " +
+           "OR french LIKE '%' || (:searchString) || '%'")
     fun searchWords(searchString: String, hiraganaString: String): List<RoomWords>
 
     @Query("SELECT EXISTS ( " +
@@ -114,5 +114,8 @@ interface WordDao {
     fun getQuizWordFromId(quizId: Long, wordId: Long): RoomQuizWord?
 
     @Insert
-    fun addQuizWord(quizWord: RoomQuizWord)
+    fun addQuizWord(quizWord: RoomQuizWord): Long
+
+    @Insert
+    fun addWord(word: RoomWords): Long
 }

@@ -9,10 +9,10 @@ import androidx.room.Update
 @Dao
 interface SentenceDao {
     @Insert
-    fun addSentence(sentence: RoomSentences)
+    fun addSentence(sentence: RoomSentences): Long
 
     @Query("SELECT * FROM sentences " +
-           "WHERE jap LIKE '%' || :japanese || ' ; ' || :reading || '%' " +
+           "WHERE jap LIKE '%{' || (:japanese) || ';' || (:reading) || '}%' " +
            "AND level <= :maxLevel " +
            "ORDER BY RANDOM() LIMIT 1")
     fun getRandomSentence(japanese: String, reading: String, maxLevel: Int): RoomSentences?

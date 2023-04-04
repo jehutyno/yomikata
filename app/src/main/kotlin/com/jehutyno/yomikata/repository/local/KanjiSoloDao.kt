@@ -7,6 +7,12 @@ import androidx.room.Query
 
 @Dao
 interface KanjiSoloDao {
+    @Query("SELECT * FROM kanji_solo")
+    fun getAllKanjiSolo(): List<RoomKanjiSolo>
+
+    @Query("SELECT * FROM radicals")
+    fun getAllRadicals(): List<RoomRadicals>
+
     @Query("SELECT COUNT(*) FROM kanji_solo")
     fun kanjiSoloCount(): Int
 
@@ -14,10 +20,10 @@ interface KanjiSoloDao {
     fun radicalsCount(): Int
 
     @Insert
-    fun addKanjiSolo(kanjiSolo: RoomKanjiSolo)
+    fun addKanjiSolo(kanjiSolo: RoomKanjiSolo): Long
 
     @Insert
-    fun addRadical(radical: RoomRadicals)
+    fun addRadical(radical: RoomRadicals): Long
 
     @Query("SELECT * FROM kanji_solo WHERE kanji = :kanji LIMIT 1")
     fun getSoloByKanji(kanji: String): RoomKanjiSolo?

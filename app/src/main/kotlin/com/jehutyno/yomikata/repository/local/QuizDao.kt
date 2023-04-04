@@ -11,6 +11,9 @@ interface QuizDao {
     @Query("SELECT * FROM quiz WHERE _id = :quizId LIMIT 1")
     fun getQuizById(quizId: Long): RoomQuiz?
 
+    @Query("SELECT * FROM quiz")
+    fun getAllQuizzes(): List<RoomQuiz>
+
     @Insert
     fun addQuiz(quiz: RoomQuiz): Long
 
@@ -26,8 +29,11 @@ interface QuizDao {
            "WHERE _id = :quizId")
     fun updateQuizSelected(quizId: Long, isSelected: Boolean)
 
+    @Query("SELECT * FROM quiz_word")
+    fun getAllQuizWords(): List<RoomQuizWord>
+
     @Insert
-    fun addQuizWord(quiz_word: RoomQuizWord)
+    fun addQuizWord(quiz_word: RoomQuizWord): Long
 
     @Query("DELETE FROM quiz_word " +
            "WHERE word_id = :wordId AND quiz_id = :quizId")
