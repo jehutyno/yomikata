@@ -103,7 +103,7 @@ class KanjiSoloDaoTest {
         for (roomKanjiSolo in sampleRoomKanjiSolo) {
             val kanji = roomKanjiSolo.kanji
             val id = kanjiSoloDao.addKanjiSolo(roomKanjiSolo)
-            val retrievedKanjiSolo = kanjiSoloDao.getSoloByKanji(kanji!!)
+            val retrievedKanjiSolo = kanjiSoloDao.getSoloByKanji(kanji)
             assert (
                 roomKanjiSolo.copy(_id = id) == retrievedKanjiSolo
             )
@@ -152,7 +152,7 @@ class KanjiSoloDaoTest {
         for (roomRadical in sampleRoomRadicals) {
             val id = kanjiSoloDao.addRadical(roomRadical)
             val radicalString = roomRadical.radical
-            val retrievedRoomRadical = kanjiSoloDao.getKanjiRadical(radicalString!!)
+            val retrievedRoomRadical = kanjiSoloDao.getKanjiRadical(radicalString)
             assert (
                 roomRadical.copy(_id = id) == retrievedRoomRadical
             )

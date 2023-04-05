@@ -1,6 +1,7 @@
 package com.jehutyno.yomikata.repository.local
 
 import android.database.sqlite.SQLiteDatabase
+import androidx.sqlite.db.SimpleSQLiteQuery
 import com.jehutyno.yomikata.model.QuizWord
 import com.jehutyno.yomikata.model.Word
 import com.jehutyno.yomikata.repository.WordRepository
@@ -72,26 +73,30 @@ class WordSource(private val wordDao: WordDao) : WordRepository {
         limit: Int,
         quizType: QuizType
     ): ArrayList<Word> {
+        val wordsTableName = "words" // CHANGE THIS IF WORDS TABLE NAME IS CHANGE
         val column = when (quizType) {
-            QuizType.TYPE_PRONUNCIATION -> "${RoomWords.getTableName()}.reading"
-            QuizType.TYPE_PRONUNCIATION_QCM -> "${RoomWords.getTableName()}.reading"
-            QuizType.TYPE_AUDIO -> "${RoomWords.getTableName()}.japanese"
-            QuizType.TYPE_EN_JAP -> "${RoomWords.getTableName()}.japanese"
-            QuizType.TYPE_JAP_EN -> "${RoomWords.getTableName()}.japanese"
-            else -> "${RoomWords.getTableName()}.japanese"
+            QuizType.TYPE_PRONUNCIATION -> "${wordsTableName}.reading"
+            QuizType.TYPE_PRONUNCIATION_QCM -> "${wordsTableName}.reading"
+            QuizType.TYPE_AUDIO -> "${wordsTableName}.japanese"
+            QuizType.TYPE_EN_JAP -> "${wordsTableName}.japanese"
+            QuizType.TYPE_JAP_EN -> "${wordsTableName}.japanese"
+            else -> "${wordsTableName}.japanese"
         }
 
-        val roomWordsList = wordDao.getRandomWords(wordId, answer, wordSize, column, 96, limit).toMutableList()
+        val wordIds = wordDao.getWordsOfSizeRelatedTo(wordId, wordSize, 96)
+
+        // use @RawQuery since column names cannot be inserted in @Query by Room
+        val rawQuery = "SELECT * FROM words " +
+                       "WHERE _id IN (${wordIds.joinToString(",")}) " +
+                       "AND $column != (?) " +
+                       "GROUP BY $column ORDER BY RANDOM() LIMIT ?"
+        var supportSQLiteQuery = SimpleSQLiteQuery(rawQuery, arrayOf<Any>(answer, limit))
+
+        val roomWordsList = wordDao.getRandomWords(supportSQLiteQuery).toMutableList()
 
         if (roomWordsList.size < limit) {
-            val extraRoomWordsList = wordDao.getRandomWords(
-                wordId,
-                answer,
-                wordSize,
-                column,
-                96,
-                limit - roomWordsList.size
-            )
+            supportSQLiteQuery = SimpleSQLiteQuery(rawQuery, arrayOf<Any>(answer, limit - roomWordsList.size))
+            val extraRoomWordsList = wordDao.getRandomWords(supportSQLiteQuery)
             roomWordsList += extraRoomWordsList
         }
 

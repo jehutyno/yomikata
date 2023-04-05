@@ -1,6 +1,7 @@
 package com.jehutyno.yomikata.repository.local
 
 import androidx.room.*
+import androidx.sqlite.db.SupportSQLiteQuery
 
 
 @Dao
@@ -8,26 +9,22 @@ interface WordDao {
     @Query("SELECT * FROM words")
     fun getAllWords(): List<RoomWords>
 
-    @RewriteQueriesToDropUnusedColumns
     @Query("SELECT words.* FROM words JOIN quiz_word " +
            "ON quiz_word.word_id = words._id " +
            "AND quiz_word.quiz_id = :quizId")
     fun getWords(quizId: Long): List<RoomWords>
 
-    @RewriteQueriesToDropUnusedColumns
     @Query("SELECT words.* FROM words JOIN quiz_word " +
             "ON quiz_word.word_id = words._id " +
             "AND quiz_word.quiz_id IN (:quizIds)")
     fun getWords(quizIds: LongArray): List<RoomWords>
 
-    @RewriteQueriesToDropUnusedColumns
     @Query("SELECT words.* FROM words JOIN quiz_word " +
            "ON quiz_word.word_id = words._id " +
            "AND quiz_word.quiz_id IN (:quizIds) " +
            "AND words.level IN (:levels)")
     fun getWordsByLevels(quizIds: LongArray, levels: IntArray): List<RoomWords>
 
-    @RewriteQueriesToDropUnusedColumns
     @Query("SELECT words.* FROM words JOIN quiz_word " +
            "ON quiz_word.word_id = words._id " +
            "AND quiz_word.quiz_id IN (:quizIds) " +
@@ -43,22 +40,20 @@ interface WordDao {
     @Query("UPDATE words SET repetition = repetition - 1 WHERE _id IN (:wordIds)")
     fun decreaseWordRepetitionByOne(wordIds: LongArray)
 
-    // TODO: simplify query
-    @RewriteQueriesToDropUnusedColumns
-    @Query("SELECT * FROM words JOIN quiz_word " +
-           "ON quiz_word.word_id = words._id " +    // select all quiz_words of the correct word id
-           "AND quiz_word.quiz_id =  " +
-           "( " +
-                "SELECT quiz_id FROM quiz_word " +
-                "WHERE quiz_word.word_id = :wordId " +      // such that the quiz_id matches
-                "AND quiz_id <= :defaultSize " +            // that of the word with id=wordId
-           ") " +
-           "AND LENGTH(words.japanese) = :wordSize " +
-           "AND (:column) != (:answer) " +
-           "AND words._id != :wordId " +
-           "GROUP BY :column ORDER BY RANDOM() LIMIT :limit")
-    fun getRandomWords(wordId: Long, answer: String, wordSize: Int, column: String,
-                       defaultSize: Int, limit: Int): List<RoomWords>
+    @Query("SELECT words._id FROM words JOIN quiz_word " +
+            "ON quiz_word.word_id = words._id " +    // select all quiz_words of the correct word id
+            "AND quiz_word.quiz_id =  " +
+            "( " +
+            "SELECT quiz_id FROM quiz_word " +
+            "WHERE quiz_word.word_id = :wordId " +      // such that the quiz_id matches
+            "AND quiz_id <= :defaultSize " +            // that of the word with id=wordId
+            ") " +
+            "AND LENGTH(words.japanese) = :wordSize " +
+            "AND words._id != :wordId")
+    fun getWordsOfSizeRelatedTo(wordId: Long, wordSize: Int, defaultSize: Int): List<Long>
+
+    @RawQuery
+    fun getRandomWords(rawQuery: SupportSQLiteQuery): List<RoomWords>
 
     @Query("SELECT * FROM words " +
            "WHERE reading LIKE '%' || (:searchString) || '%' " +

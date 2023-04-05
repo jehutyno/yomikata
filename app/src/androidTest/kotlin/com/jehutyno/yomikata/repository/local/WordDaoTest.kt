@@ -124,7 +124,38 @@ class WordDaoTest {
     }
 
     @Test
+    fun getWordsOfSizeRelatedTo() {
+        val words = listOf (
+            RoomWords(1, "月", "moon; Monday", "lune; lundi", "げつ",
+                0, 0, 0, 0, 0,
+                -1, 0, 2, 0, 472),
+            RoomWords(2, "酒", "sake; alcohol", "saké; alcool", "さけ",
+                0, 0, 0, 0, 0,
+                -1, 0, 2, 0, 576),
+            RoomWords(3, "石炭", "(n) coal;(P)", "(n) charbon;houille",
+                "せきたん;いしずみ", 0, 0, 0, 0, 0,
+                -1, 0, 5, 0, 6274),
+            RoomWords(4, "式", "ceremony", "cérémonie", "しき",
+                0, 0, 0, 0, 0, -1, 0,
+                6, 0, 6488)
+        )
+        words.forEach { wordDao.addWord(it) }
+        val quizWords = listOf (
+            RoomQuizWord(1, 1, 1),
+            RoomQuizWord(2, 1, 2),
+            RoomQuizWord(3, 1, 3),
+            RoomQuizWord(4, 1, 4)
+        )
+        quizWords.forEach { wordDao.addQuizWord(it) }
+        val retrievedWordIds = wordDao.getWordsOfSizeRelatedTo(1, 1, 100)
+        assert (
+            retrievedWordIds.toSet() == setOf(words[1]._id, words[3]._id)
+        )
+    }
+
+    @Test
     fun getRandomWords() {
+
     }
 
     @Test

@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 13,
-    "identityHash": "39b116a0b54ae6e88674a9ddad6dde07",
+    "identityHash": "1fe714caafe7b04f308f176be5ca394e",
     "entities": [
       {
         "tableName": "kanji_solo",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `kanji` TEXT, `strokes` INTEGER NOT NULL, `en` TEXT, `fr` TEXT, `kunyomi` TEXT, `onyomi` TEXT, `radical` TEXT)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `kanji` TEXT NOT NULL, `strokes` INTEGER NOT NULL, `en` TEXT NOT NULL, `fr` TEXT NOT NULL, `kunyomi` TEXT NOT NULL, `onyomi` TEXT NOT NULL, `radical` TEXT NOT NULL)",
         "fields": [
           {
             "fieldPath": "_id",
@@ -18,7 +18,7 @@
             "fieldPath": "kanji",
             "columnName": "kanji",
             "affinity": "TEXT",
-            "notNull": false
+            "notNull": true
           },
           {
             "fieldPath": "strokes",
@@ -30,31 +30,31 @@
             "fieldPath": "en",
             "columnName": "en",
             "affinity": "TEXT",
-            "notNull": false
+            "notNull": true
           },
           {
             "fieldPath": "fr",
             "columnName": "fr",
             "affinity": "TEXT",
-            "notNull": false
+            "notNull": true
           },
           {
             "fieldPath": "kunyomi",
             "columnName": "kunyomi",
             "affinity": "TEXT",
-            "notNull": false
+            "notNull": true
           },
           {
             "fieldPath": "onyomi",
             "columnName": "onyomi",
             "affinity": "TEXT",
-            "notNull": false
+            "notNull": true
           },
           {
             "fieldPath": "radical",
             "columnName": "radical",
             "affinity": "TEXT",
-            "notNull": false
+            "notNull": true
           }
         ],
         "primaryKey": {
@@ -68,7 +68,7 @@
       },
       {
         "tableName": "quiz",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name_en` TEXT NOT NULL, `name_fr` TEXT NOT NULL, `category` INTEGER NOT NULL, `isSelected` INTEGER NOT NULL)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name_en` TEXT NOT NULL, `name_fr` TEXT NOT NULL, `category` INTEGER NOT NULL, `isSelected` INTEGER NOT NULL DEFAULT 0)",
         "fields": [
           {
             "fieldPath": "_id",
@@ -98,7 +98,8 @@
             "fieldPath": "isSelected",
             "columnName": "isSelected",
             "affinity": "INTEGER",
-            "notNull": true
+            "notNull": true,
+            "defaultValue": "0"
           }
         ],
         "primaryKey": {
@@ -112,7 +113,7 @@
       },
       {
         "tableName": "sentences",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `jap` TEXT, `en` TEXT, `fr` TEXT, `level` INTEGER NOT NULL)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `jap` TEXT NOT NULL, `en` TEXT NOT NULL, `fr` TEXT NOT NULL, `level` INTEGER NOT NULL)",
         "fields": [
           {
             "fieldPath": "_id",
@@ -124,19 +125,19 @@
             "fieldPath": "jap",
             "columnName": "jap",
             "affinity": "TEXT",
-            "notNull": false
+            "notNull": true
           },
           {
             "fieldPath": "en",
             "columnName": "en",
             "affinity": "TEXT",
-            "notNull": false
+            "notNull": true
           },
           {
             "fieldPath": "fr",
             "columnName": "fr",
             "affinity": "TEXT",
-            "notNull": false
+            "notNull": true
           },
           {
             "fieldPath": "level",
@@ -200,7 +201,7 @@
       },
       {
         "tableName": "words",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `japanese` TEXT NOT NULL, `english` TEXT NOT NULL, `french` TEXT NOT NULL, `reading` TEXT NOT NULL, `level` INTEGER NOT NULL, `count_try` INTEGER NOT NULL, `count_success` INTEGER NOT NULL, `count_fail` INTEGER NOT NULL, `is_kana` INTEGER NOT NULL, `repetition` INTEGER NOT NULL, `points` INTEGER NOT NULL, `base_category` INTEGER NOT NULL, `isSelected` INTEGER NOT NULL, `sentence_id` INTEGER NOT NULL)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `japanese` TEXT NOT NULL, `english` TEXT NOT NULL, `french` TEXT NOT NULL, `reading` TEXT NOT NULL, `level` INTEGER NOT NULL DEFAULT 0, `count_try` INTEGER NOT NULL DEFAULT 0, `count_success` INTEGER NOT NULL DEFAULT 0, `count_fail` INTEGER NOT NULL DEFAULT 0, `is_kana` INTEGER NOT NULL, `repetition` INTEGER NOT NULL DEFAULT -1, `points` INTEGER NOT NULL DEFAULT 0, `base_category` INTEGER NOT NULL, `isSelected` INTEGER NOT NULL DEFAULT 0, `sentence_id` INTEGER NOT NULL DEFAULT -1)",
         "fields": [
           {
             "fieldPath": "_id",
@@ -236,25 +237,29 @@
             "fieldPath": "level",
             "columnName": "level",
             "affinity": "INTEGER",
-            "notNull": true
+            "notNull": true,
+            "defaultValue": "0"
           },
           {
             "fieldPath": "count_try",
             "columnName": "count_try",
             "affinity": "INTEGER",
-            "notNull": true
+            "notNull": true,
+            "defaultValue": "0"
           },
           {
             "fieldPath": "count_success",
             "columnName": "count_success",
             "affinity": "INTEGER",
-            "notNull": true
+            "notNull": true,
+            "defaultValue": "0"
           },
           {
             "fieldPath": "count_fail",
             "columnName": "count_fail",
             "affinity": "INTEGER",
-            "notNull": true
+            "notNull": true,
+            "defaultValue": "0"
           },
           {
             "fieldPath": "is_kana",
@@ -266,13 +271,15 @@
             "fieldPath": "repetition",
             "columnName": "repetition",
             "affinity": "INTEGER",
-            "notNull": true
+            "notNull": true,
+            "defaultValue": "-1"
           },
           {
             "fieldPath": "points",
             "columnName": "points",
             "affinity": "INTEGER",
-            "notNull": true
+            "notNull": true,
+            "defaultValue": "0"
           },
           {
             "fieldPath": "base_category",
@@ -284,13 +291,15 @@
             "fieldPath": "isSelected",
             "columnName": "isSelected",
             "affinity": "INTEGER",
-            "notNull": true
+            "notNull": true,
+            "defaultValue": "0"
           },
           {
             "fieldPath": "sentence_id",
             "columnName": "sentence_id",
             "affinity": "INTEGER",
-            "notNull": true
+            "notNull": true,
+            "defaultValue": "-1"
           }
         ],
         "primaryKey": {
@@ -336,7 +345,7 @@
       },
       {
         "tableName": "radicals",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `strokes` INTEGER NOT NULL, `radical` TEXT, `reading` TEXT, `en` TEXT, `fr` TEXT)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `strokes` INTEGER NOT NULL, `radical` TEXT NOT NULL, `reading` TEXT NOT NULL, `en` TEXT NOT NULL, `fr` TEXT NOT NULL)",
         "fields": [
           {
             "fieldPath": "_id",
@@ -354,25 +363,25 @@
             "fieldPath": "radical",
             "columnName": "radical",
             "affinity": "TEXT",
-            "notNull": false
+            "notNull": true
           },
           {
             "fieldPath": "reading",
             "columnName": "reading",
             "affinity": "TEXT",
-            "notNull": false
+            "notNull": true
           },
           {
             "fieldPath": "en",
             "columnName": "en",
             "affinity": "TEXT",
-            "notNull": false
+            "notNull": true
           },
           {
             "fieldPath": "fr",
             "columnName": "fr",
             "affinity": "TEXT",
-            "notNull": false
+            "notNull": true
           }
         ],
         "primaryKey": {
@@ -388,7 +397,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '39b116a0b54ae6e88674a9ddad6dde07')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '1fe714caafe7b04f308f176be5ca394e')"
     ]
   }
 }

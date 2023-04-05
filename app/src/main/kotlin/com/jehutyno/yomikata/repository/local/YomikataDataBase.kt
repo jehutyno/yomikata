@@ -26,7 +26,8 @@ abstract class YomikataDataBase : RoomDatabase() {
             if (INSTANCE == null) {
                 synchronized(this) {
                     INSTANCE =
-                        Room.databaseBuilder(context, YomikataDataBase::class.java, "yomikataz")
+                        Room.databaseBuilder(context, YomikataDataBase::class.java, "yomikataz.db")
+                            .createFromAsset("yomikataz.db")
                             .allowMainThreadQueries()   // TODO: remove this after using coroutines/livedata
                             .addMigrations(MIGRATION_8_9(context), MIGRATION_12_13)
                             .build()
