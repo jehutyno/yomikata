@@ -130,6 +130,22 @@ class SqliteTestHelper(context: Context?, databaseName: String?) :
         dropTableQueries.forEach { query -> db.execSQL(query) }
     }
 
+    private fun insertWord(db: SQLiteDatabase, wordv12: Wordv12) {
+        db.execSQL("""
+            INSERT INTO words (
+                _id, japanese, english, french, reading, level, count_try, count_success, count_fail,
+                is_kana, repetition, points, base_category, isSelected, sentence_id
+            )
+            VALUES (
+                ${wordv12.id}, "${wordv12.japanese}", "${wordv12.english}",
+                "${wordv12.french}", "${wordv12.reading}", ${wordv12.level}, ${wordv12.countTry},
+                ${wordv12.countSuccess}, ${wordv12.countFail}, ${wordv12.isKana}, ${wordv12.repetition},
+                ${wordv12.points}, ${wordv12.baseCategory}, ${wordv12.isSelected}, ${wordv12.sentenceId}
+            )
+        """.trimIndent()
+        )
+    }
+
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
         // Not needed for test which goes from 12 to new version 13 using Room
     }
@@ -152,5 +168,19 @@ class SqliteTestHelper(context: Context?, databaseName: String?) :
             mSqliteTestHelper.clearDatabase(closeMe)
             closeMe.close()
         }
+
+        fun insertWord(mSqliteTestHelper: SqliteTestHelper, wordv12: Wordv12) {
+            val closeMe = mSqliteTestHelper.writableDatabase
+            mSqliteTestHelper.insertWord(closeMe, wordv12)
+            closeMe.close()
+        }
+
     }
 }
+
+// Version of database entries from version 12 used for testing   --- DO NOT CHANGE ---
+class Wordv12(var id: Long, var japanese: String, var english: String, var french: String,
+              var reading: String, var level: Int, var countTry: Int, var countSuccess: Int,
+              var countFail: Int, var isKana: Int, var repetition: Int, var points: Int,
+              var baseCategory: Int, var isSelected: Int, var sentenceId: Long)
+

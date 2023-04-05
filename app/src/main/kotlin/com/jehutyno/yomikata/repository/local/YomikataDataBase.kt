@@ -88,12 +88,12 @@ abstract class YomikataDataBase : RoomDatabase() {
                 )
                 database.execSQL("""
                     INSERT INTO NEW_words (
-                        japanese, english, french, reading, level, count_try,
+                        _id, japanese, english, french, reading, level, count_try,
                         count_success, count_fail, is_kana, repetition, points,
                         base_category, isSelected, sentence_id
                     )
                     SELECT 
-                        japanese, english, french, reading, level, count_try,
+                        _id, japanese, english, french, reading, level, count_try,
                         count_success, count_fail, is_kana, repetition, points,
                         base_category, isSelected, sentence_id 
                     FROM words
@@ -133,7 +133,7 @@ abstract class YomikataDataBase : RoomDatabase() {
                 )
                 database.execSQL("""
                     INSERT INTO NEW_stat_entry ( _id, "action", associatedId, date, result )
-                    SELECT                      _id, "action", associatedId, date, result
+                    SELECT                       _id, "action", associatedId, date, result
                     FROM stat_entry
                     """.trimIndent()
                 )

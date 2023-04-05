@@ -19,6 +19,9 @@ import java.io.IOException
 @LargeTest
 class MigrationTest {
 
+    // do not use Daos in tests since they only work
+    // for the latest version which may change in the future
+
     private val TEST_DB_NAME = "test_database"
 
     // Helper for creating Room databases and migrations
@@ -30,6 +33,10 @@ class MigrationTest {
 
     // Helper for creating SQLite database in version 12
     private var mSqliteTestHelper: SqliteTestHelper? = null
+
+    private val sampleWordv12 = Wordv12(65, "草", "grass", "herbe", "くさ",
+                                        0, 0, 0, 0, 0,
+                                -1, 0, 2, 0, 6647)
 
     @Before
     fun setUp() {
@@ -53,7 +60,10 @@ class MigrationTest {
     @Throws(IOException::class)
     fun migrationFrom12To13_containsCorrectData() {
         // Create the database with the version 12 schema and insert some rows
-//        SqliteDatabaseTestHelper.insertUser(1, USER.getUserName(), mSqliteTestHelper)
+
+        SqliteTestHelper.insertWord(mSqliteTestHelper!!, sampleWordv12)
+
+
         mMigrationTestHelper.runMigrationsAndValidate(
             TEST_DB_NAME, 13, true,
             YomikataDataBase.MIGRATION_12_13
@@ -62,9 +72,11 @@ class MigrationTest {
         val latestDb: YomikataDataBase = getMigratedRoomDatabase()
 
         // Check that the correct data is in the database
-//        val dbUser: User = latestDb.userDao().getUser()
-//        assertEquals(dbUser.getId(), USER.getId())
-//        assertEquals(dbUser.getUserName(), USER.getUserName())
+        val wordCusror = latestDb.query(
+            """SELECT * FROM words""", arrayOf<Any>()
+        )
+        assert ( wordCusror.moveToFirst() )
+        assert ( wordCusror.getLong(0) == sampleWordv12.id )
     }
 
     @Test
@@ -72,17 +84,31 @@ class MigrationTest {
     fun startInVersion13_containsCorrectData() {
         // Create the database with version 13
         val db = mMigrationTestHelper.createDatabase(TEST_DB_NAME, 13)
+
         // db has schema version 13. insert some data
-//        insertUser(USER, db)
+        db.execSQL("""
+            INSERT INTO words (
+                "_id", "japanese", "english", "french", "reading", "level",
+                "count_try", "count_success", "count_fail", "is_kana", "repetition", "points",
+                "base_category", "isSelected", "sentence_id"
+                )
+            VALUES (
+                '489', '安い', 'cheap; inexpensive', 'bon marché; pas cher',
+                'やすい', '0', '0', '0', '0', '0', '-1', '0', '7', '0', '6819'
+                )
+        """.trimIndent()
+        )
+
         db.close()
 
         // open the db with Room
-        val usersDatabase: YomikataDataBase = getMigratedRoomDatabase()
+        val database: YomikataDataBase = getMigratedRoomDatabase()
 
         // verify that the data is correct
-//        val dbUser: User = usersDatabase.userDao().getUser()
-//        assertEquals(dbUser.getId(), USER.getId())
-//        assertEquals(dbUser.getUserName(), USER.getUserName())
+        val wordCursor = database.query("""SELECT * FROM words""", arrayOf<Any>())
+        assert (wordCursor.moveToFirst() )
+        val l : Long = 489
+        assert ( wordCursor.getLong(0) == l )
     }
 
     private fun getMigratedRoomDatabase(): YomikataDataBase {
