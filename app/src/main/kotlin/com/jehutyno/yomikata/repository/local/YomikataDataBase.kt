@@ -40,10 +40,173 @@ abstract class YomikataDataBase : RoomDatabase() {
         // do not use values or constants that may be changed externally
 
         // migrate from anko sqlite to room
-        private val MIGRATION_12_13 = object : Migration(12, 13) {
+        val MIGRATION_12_13 = object : Migration(12, 13) {
+
+            // drop and recreate tables in order to make types more consistent
             override fun migrate(database: SupportSQLiteDatabase) {
-                // Empty implementation, because the schema isn't changing.
+                // quiz     isSelected is a boolean, but Room stores it as an INTEGER in the db
+                database.execSQL("""
+                    CREATE TABLE NEW_quiz (
+                    _id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                    name_en TEXT NOT NULL,
+                    name_fr TEXT NOT NULL,
+                    category INTEGER NOT NULL,
+                    isSelected INTEGER NOT NULL DEFAULT (0)
+                    )
+                    """.trimIndent()
+                )
+                database.execSQL("""
+                    INSERT INTO NEW_quiz ( _id, name_en, name_fr, category, isSelected )
+                    SELECT                 _id, name_en, name_fr, category, isSelected
+                    FROM quiz
+                        
+                    """.trimIndent()
+                )
+                database.execSQL("DROP TABLE quiz")
+                database.execSQL("ALTER TABLE NEW_quiz RENAME TO quiz")
+
+                // words
+                database.execSQL("""
+                    CREATE TABLE NEW_words (
+                      _id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                      japanese TEXT NOT NULL,
+                      english TEXT NOT NULL,
+                      french TEXT NOT NULL,
+                      reading TEXT NOT NULL,
+                      level INTEGER NOT NULL DEFAULT (0),
+                      count_try INTEGER NOT NULL DEFAULT (0),
+                      count_success INTEGER NOT NULL DEFAULT (0),
+                      count_fail INTEGER NOT NULL DEFAULT (0),
+                      is_kana INTEGER NOT NULL,
+                      repetition INTEGER NOT NULL DEFAULT (-1),
+                      points INTEGER NOT NULL DEFAULT (0),
+                      base_category INTEGER NOT NULL,
+                      isSelected INTEGER NOT NULL DEFAULT (0),
+                      sentence_id INTEGER NOT NULL DEFAULT (-1)
+                    )
+                    """.trimIndent()
+                )
+                database.execSQL("""
+                    INSERT INTO NEW_words (
+                        japanese, english, french, reading, level, count_try,
+                        count_success, count_fail, is_kana, repetition, points,
+                        base_category, isSelected, sentence_id
+                    )
+                    SELECT 
+                        japanese, english, french, reading, level, count_try,
+                        count_success, count_fail, is_kana, repetition, points,
+                        base_category, isSelected, sentence_id 
+                    FROM words
+                    """.trimIndent()
+                )
+                database.execSQL("DROP TABLE words")
+                database.execSQL("ALTER TABLE NEW_words RENAME TO words")
+
+                // quiz word
+                database.execSQL("""
+                    CREATE TABLE NEW_quiz_word (
+                        _id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        quiz_id INTEGER NOT NULL,
+                        word_id INTEGER NOT NULL
+                    )
+                    """.trimIndent()
+                )
+                database.execSQL("""
+                    INSERT INTO NEW_quiz_word ( _id, quiz_id, word_id )
+                    SELECT                      _id, quiz_id, word_id
+                    FROM quiz_word
+                    """.trimIndent()
+                )
+                database.execSQL("""DROP TABLE quiz_word""")
+                database.execSQL("""ALTER TABLE NEW_quiz_word RENAME TO quiz_word""")
+
+                // stat entry
+                database.execSQL("""
+                    CREATE TABLE NEW_stat_entry (
+                        _id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        "action" INTEGER NOT NULL,
+                        associatedId INTEGER NOT NULL,
+                        date INTEGER NOT NULL,
+                        result INTEGER NOT NULL
+                    )
+                    """.trimIndent()
+                )
+                database.execSQL("""
+                    INSERT INTO NEW_stat_entry ( _id, "action", associatedId, date, result )
+                    SELECT                      _id, "action", associatedId, date, result
+                    FROM stat_entry
+                    """.trimIndent()
+                )
+                database.execSQL("""DROP TABLE stat_entry""")
+                database.execSQL("""ALTER TABLE NEW_stat_entry RENAME TO stat_entry""")
+
+                // kanji solo
+                database.execSQL("""
+                    CREATE TABLE NEW_kanji_solo (
+                        _id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        kanji TEXT NOT NULL,
+                        strokes INTEGER NOT NULL,
+                        en TEXT NOT NULL,
+                        fr TEXT NOT NULL,
+                        kunyomi TEXT NOT NULL,
+                        onyomi TEXT NOT NULL,
+                        radical TEXT NOT NULL
+                    )
+                    """.trimIndent()
+                )
+                database.execSQL("""
+                    INSERT INTO NEW_kanji_solo ( 
+                                    _id, kanji, strokes, en, fr, kunyomi, onyomi, radical
+                                )
+                    SELECT          _id, kanji, strokes, en, fr, kunyomi, onyomi, radical
+                    FROM kanji_solo
+                    """.trimIndent()
+                )
+                database.execSQL("""DROP TABLE kanji_solo""")
+                database.execSQL("""ALTER TABLE NEW_kanji_solo RENAME TO kanji_solo""")
+
+                // radicals
+                database.execSQL("""
+                    CREATE TABLE NEW_radicals (
+                        _id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        strokes INTEGER NOT NULL,
+                        radical TEXT NOT NULL,
+                        reading TEXT NOT NULL,
+                        en TEXT NOT NULL,
+                        fr TEXT NOT NULL
+                    )
+                    """.trimIndent()
+                )
+                database.execSQL("""
+                    INSERT INTO NEW_radicals ( _id, strokes, radical, reading, en, fr )
+                    SELECT                     _id, strokes, radical, reading, en, fr
+                    FROM radicals
+                """.trimIndent()
+                )
+                database.execSQL("""DROP TABLE radicals""")
+                database.execSQL("""ALTER TABLE NEW_radicals RENAME TO radicals""")
+
+                // sentences
+                database.execSQL("""
+                    CREATE TABLE NEW_sentences (
+                        _id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        jap TEXT NOT NULL,
+                        en TEXT NOT NULL,
+                        fr TEXT NOT NULL,
+                        level INTEGER NOT NULL
+                    )
+                    """.trimIndent()
+                )
+                database.execSQL("""
+                    INSERT INTO NEW_sentences (_id, jap, en, fr, level )
+                    SELECT                     _id, jap, en, fr, level
+                    FROM sentences
+                """.trimIndent()
+                )
+                database.execSQL("""DROP TABLE sentences""")
+                database.execSQL("""ALTER TABLE NEW_sentences RENAME TO sentences""")
             }
+
         }
 
         @Suppress("ClassName")
