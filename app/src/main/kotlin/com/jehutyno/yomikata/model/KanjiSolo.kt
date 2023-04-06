@@ -1,6 +1,6 @@
 package com.jehutyno.yomikata.model
 
-import java.util.*
+import java.util.Locale
 
 /**
  * Created by valentin on 27/09/2016.
