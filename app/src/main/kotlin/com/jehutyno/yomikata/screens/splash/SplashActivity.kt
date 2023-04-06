@@ -10,8 +10,8 @@ import androidx.preference.PreferenceManager
 import com.jehutyno.yomikata.databinding.ActivitySplashBinding
 import com.jehutyno.yomikata.screens.quizzes.QuizzesActivity
 import com.jehutyno.yomikata.util.Prefs
+import com.jehutyno.yomikata.util.handleOldEncryptedDatabase
 import com.jehutyno.yomikata.util.migrateFromYomikata
-import com.jehutyno.yomikata.util.updateBDD
 
 
 // TODO: migrate to splashScreen https://developer.android.com/develop/ui/views/launch/splash-screen/migrate
@@ -28,12 +28,14 @@ class SplashActivity : AppCompatActivity() {
         val view = binding.root
         setContentView(view)
 
+        // If an old database is stored, make sure to decrypt it
         val pref = PreferenceManager.getDefaultSharedPreferences(this)
-        if (pref.getBoolean(Prefs.DB_UPDATE_ONGOING.pref, false))
-            pref.getString(Prefs.DB_UPDATE_FILE.pref, "")?.let {
-                updateBDD(null, it,
-                    pref.getInt(Prefs.DB_UPDATE_OLD_VERSION.pref, -1))
+        if (pref.getBoolean(Prefs.DB_UPDATE_ONGOING.pref, false)) {
+            val oldDatabaseFileName = pref.getString(Prefs.DB_UPDATE_FILE.pref, "")
+            if (oldDatabaseFileName != null) {
+                handleOldEncryptedDatabase(this, oldDatabaseFileName)
             }
+        }
 
         binding.pathView.useNaturalColors()
         binding.pathView.pathAnimator

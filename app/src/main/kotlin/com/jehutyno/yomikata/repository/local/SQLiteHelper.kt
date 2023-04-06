@@ -5,7 +5,7 @@ import android.database.SQLException
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteException
 import android.util.Log
-import com.jehutyno.yomikata.util.updateBDD
+//import com.jehutyno.yomikata.util.updateBDD
 import org.jetbrains.anko.db.ManagedSQLiteOpenHelper
 import java.io.FileOutputStream
 import java.io.IOException
@@ -154,7 +154,7 @@ class SQLiteHelper(var context: Context) : ManagedSQLiteOpenHelper(context, SQLi
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
-        context.updateBDD(db, "", oldVersion)
+//        context.updateBDD(db, "", oldVersion)
     }
 }
 

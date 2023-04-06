@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.database.sqlite.SQLiteDatabase
+import android.database.sqlite.SQLiteDatabase.OPEN_READONLY
 import android.os.Handler
 import android.os.Looper
 import androidx.fragment.app.Fragment
@@ -11,9 +12,8 @@ import androidx.fragment.app.FragmentTransaction
 import androidx.appcompat.app.AppCompatActivity
 import android.view.inputmethod.InputMethodManager
 import androidx.preference.PreferenceManager
+import androidx.sqlite.db.SupportSQLiteDatabase
 import com.jehutyno.yomikata.R
-import com.jehutyno.yomikata.model.Sentence
-import com.jehutyno.yomikata.model.Word
 import com.jehutyno.yomikata.repository.local.*
 import com.jehutyno.yomikata.repository.migration.*
 import com.jehutyno.yomikata.screens.quizzes.QuizzesActivity
@@ -56,7 +56,6 @@ fun Activity.hideSoftKeyboard() {
 }
 
 fun Activity.migrateFromYomikata() {
-    val context = this
     val toPath = getString(R.string.db_path)
     val toName = getString(R.string.db_name_yomi)
     val file = File("$toPath/$toName")
@@ -89,172 +88,170 @@ fun Activity.migrateFromYomikata() {
     }
 }
 
-fun Context.updateBDD(db: SQLiteDatabase?, filePathEncrypted: String, oldVersion: Int) {
-    val pref = PreferenceManager.getDefaultSharedPreferences(this)
-    val handler = Handler(Looper.getMainLooper())
-    handler.postDelayed(
-        {
-            pref.edit().putBoolean(Prefs.DB_UPDATE_ONGOING.pref, true).apply()
-        }, 2000)
-    var filePath = ""
-    File(getString(R.string.db_path) + UpdateSQLiteHelper.UPDATE_DATABASE_NAME).delete()
+/**
+ * Handle old encrypted database
+ *
+ * Overwrites the normal database with the decrypted version of an old encrypted database
+ * This must be called before allowing any Room calls, since Room will throw an error
+ * when receiving an encrypted database.
+ *
+ * @param context Context
+ * @param filePathEncrypted Path to old version of database which is encrypted
+ *
+ */
+fun handleOldEncryptedDatabase(context: Context, filePathEncrypted: String) {
+    val filePath = context.getDatabasePath("yomikataz.db").absolutePath
     if (filePathEncrypted.isNotEmpty()) {
         val file = File(filePathEncrypted)
-        filePath = filePathEncrypted.replace(".yomikataz", ".import")
         try {
             CopyUtils.restoreEncryptedBdd(file, filePath)
         } catch (e: Exception) {
             return
         }
     }
-    pref.edit().putString(Prefs.DB_UPDATE_FILE.pref, filePath).apply()
-    pref.edit().putInt(Prefs.DB_UPDATE_OLD_VERSION.pref, oldVersion).apply()
+}
 
-    val newDataBase = YomikataDataBase.getDatabase(this)
+/**
+ * Update old database to version 12.
+ * Databases of version <= 12 were not created with Room and therefore do not have
+ * exported schemas. Any database with version < 12 will first be updated to version 12
+ * using this function. The update happens by comparing the current database to a
+ * "checkpoint" database (see assets folder) and then merging them by keeping the
+ * current user-specific settings (word points, level, etc.) but updating it to contain
+ * the new words, sentences, etc. that may exist.
+ */
+fun updateOldDBtoVersion12(oldDatabase: SupportSQLiteDatabase, context: Context,
+                                                               filePathEncrypted: String = "") {
+    // Do not use any externally defined daos, entities, models, etc.
+    // since they may change in the future.
+    val pref = PreferenceManager.getDefaultSharedPreferences(context)
+    val handler = Handler(Looper.getMainLooper())
+    handler.postDelayed(
+        {
+            pref.edit().putBoolean(Prefs.DB_UPDATE_ONGOING.pref, true).apply()
+        }, 2000)
 
-    val updateSource = UpdateSource(newDataBase.updateDao())
-    val updateWords = updateSource.getAllWords().sortedBy(Word::id)
-    val stats = updateSource.getAllStatEntries()
-    val updateQuizzes = updateSource.getAddedQuizzes()
-    val updateKanjiSolo = updateSource.getAllKanjiSolo()
-    val updateRadicals = updateSource.getAllRadicals()
-    val updateQuizwords = updateSource.getAddedQuizWords()
-    val updateSentences = updateSource.getAllSentences()
-    val wordSource = WordSource(newDataBase.wordDao())
-    val quizSource = QuizSource(newDataBase.quizDao())
-    val kanjiSoloSource = KanjiSoloSource(newDataBase.kanjiSoloDao())
-    val sentenceSource = SentenceSource(newDataBase.sentenceDao())
-    val statSource = StatsSource(newDataBase.statsDao())
-    val quizIdsMap = mutableMapOf<Long, Long>()
-//    kanjiSoloSource.createKanjiSoloTable(db)
-//    kanjiSoloSource.createRadicalsTable(db)
-    val kanjiSoloCount = kanjiSoloSource.kanjiSoloCount()
-    val radCount = kanjiSoloSource.radicalsCount()
+//    File(context.getString(R.string.db_path) + UpdateSQLiteHelper.UPDATE_DATABASE_NAME).delete()
+
+    handleOldEncryptedDatabase(context, filePathEncrypted)
+    pref.edit().remove(Prefs.DB_UPDATE_FILE.pref).apply()
+
+    val checkPointDataBase = SQLiteDatabase.openDatabase (
+        "yomikataz_version12.db", null, OPEN_READONLY
+    )
+
+    // get new data (version 12)
+    val words = Wordv12.getAllItems(checkPointDataBase).sortedBy(Wordv12::id)
+    val quizzes = Quizv12.getAllItems(checkPointDataBase).sortedBy(Quizv12::id)
+    val kanjiSolo = KanjiSolov12.getAllItems(checkPointDataBase).sortedBy(KanjiSolov12::id)
+    val radicals = Radicalv12.getAllItems(checkPointDataBase).sortedBy(Radicalv12::id)
+    val quizWords = QuizWordv12.getAllItems(checkPointDataBase).sortedBy(QuizWordv12::id)
+    val sentences = Sentencev12.getAllItems(checkPointDataBase).sortedBy(Sentencev12::id)
+
+    // TODO: does old stats need to be updated in any way?
+//    val oldStatsCount = oldDatabase.query("""SELECT COUNT(*) FROM stat_entry""").run {
+//        this.moveToFirst()
+//        this.getInt(0)
+//    }
+//    val oldKanjiSoloCount = oldDatabase.query("""SELECT COUNT(*) FROM kanji_solo""").run {
+//        this.moveToFirst()
+//        this.getInt(0)
+//    }
+//    val oldRadCount = oldDatabase.query("""SELECT COUNT(*) FROM radicals""").run {
+//        this.moveToFirst()
+//        this.getInt(0)
+//    }
 
     MainScope().async {
-        var i = 0
+        var progress = 0
+
+        val maxProgress =    // total number of rows to update, used to display a progressBar
+                    words.size + quizWords.size + quizzes.size + kanjiSolo.size + sentences.size
+
         val intent = Intent()
         intent.action = QuizzesActivity.UPDATE_INTENT
-        val totalCount =
-            updateWords.size + (if (filePath.isEmpty()) 0 else stats.size) + updateQuizwords.size + updateQuizzes.size + (if (kanjiSoloCount < updateKanjiSolo.size) updateKanjiSolo.size else 0) + (updateSentences.size) // Update sentences
-        intent.putExtra(QuizzesActivity.UPDATE_COUNT, totalCount)
-        intent.putExtra(QuizzesActivity.UPDATE_PROGRESS, i)
-        sendBroadcast(intent)
-        if (oldVersion <= 8) {
-            sentenceSource.createSentencesTable()
-//            wordSource.migration_8to9()
-        }
-        val words = wordSource.getAllWords(null).sortedBy(Word::id)
+        intent.putExtra(QuizzesActivity.UPDATE_COUNT, maxProgress)
+        intent.putExtra(QuizzesActivity.UPDATE_PROGRESS, progress)
+        context.sendBroadcast(intent)
 
-        updateWords.forEach {
-            val word = words.getOrNull(i)
-            if (filePath.isEmpty())
-                wordSource.updateWord(it, word)
-            else
-                if (word != null) wordSource.updateWordProgression(it, word)
-            i++
-            if (i % 100 == 0) {
-                intent.putExtra(QuizzesActivity.UPDATE_PROGRESS, i)
-                sendBroadcast(intent)
-            }
-        }
-        if (filePath.isNotEmpty()) {
-            statSource.removeAllStats()
-            stats.forEach {
-                statSource.addStatEntry(it)
-                i++
-                if (i % 100 == 0) {
-                    intent.putExtra(QuizzesActivity.UPDATE_PROGRESS, i)
-                    sendBroadcast(intent)
-                }
+        fun updateProgress() {  // call each time an item is updated to synchronize progressBar
+            progress++
+            if (progress % 100 == 0) {
+                intent.putExtra(QuizzesActivity.UPDATE_PROGRESS, progress)
+                context.sendBroadcast(intent)
             }
         }
 
-        updateQuizzes.forEach {
-            val quiz = quizSource.getQuiz(it.id)
-            if (quiz == null) {
-                val id = quizSource.saveQuiz(it.getName(), it.category)
-                quizIdsMap[id] = it.id
+        // -- update method --
+        // loop through newest list:
+        //      if element exist in old list: update the non user-specific fields
+        //      else (element does not exist in old list): add it
+
+        val oldWords = Wordv12.getAllItems(oldDatabase).sortedBy(Wordv12::id)
+        words.forEach { word ->
+            val oldWord = oldWords.firstOrNull { it.id == word.id }
+            if (oldWord == null) {
+                Wordv12.insertWord(oldDatabase, word, false)
             } else {
-                quizIdsMap[quiz.id] = it.id
+                Wordv12.updateWord(oldDatabase, oldWord.id, word)
             }
-            i++
-            if (i % 100 == 0) {
-                intent.putExtra(QuizzesActivity.UPDATE_PROGRESS, i)
-                sendBroadcast(intent)
-            }
+
+            updateProgress()
         }
 
-        updateQuizwords.forEach {
-            if (wordSource.getQuizWordFromId(it.quizId, it.wordId) == null) {
-                if (it.quizId > 96) {
-                    wordSource.addQuizWord(quizIdsMap[it.quizId]!!, it.wordId)
-                } else {
-                    wordSource.addQuizWord(it.quizId, it.wordId)
-                }
+        val quizIdsMap = mutableMapOf<Long, Long>() // store new indices, since they are coupled to
+                                                    // words via quiz_words
+        val oldQuizzes = Quizv12.getAllItems(oldDatabase).sortedBy(Quizv12::id)
+        quizzes.forEach { quiz ->
+            val matchOldQuiz = oldQuizzes.firstOrNull { it.id == quiz.id }
+            if (matchOldQuiz == null) { // did not find in old quiz -> insert
+                val insertId = Quizv12.insertQuiz(oldDatabase, quiz, false)
+                quizIdsMap[quiz.id] = insertId
+            } else {
+                quizIdsMap[quiz.id] = quiz.id
             }
-            i++
-            if (i % 100 == 0) {
-                intent.putExtra(QuizzesActivity.UPDATE_PROGRESS, i)
-                sendBroadcast(intent)
-            }
+
+            updateProgress()
         }
 
-        if (kanjiSoloCount < updateKanjiSolo.size) {
-            updateKanjiSolo.forEach {
-                kanjiSoloSource.addKanjiSolo(it)
-                i++
-                if (i % 100 == 0) {
-                    intent.putExtra(QuizzesActivity.UPDATE_PROGRESS, i)
-                    sendBroadcast(intent)
-                }
+        // Assuming all old words and quizzes keep their original id -> no problem
+        // Any new ids or ids that changed must be handled here
+        quizWords.forEach {
+            if (QuizWordv12.quizWordExists(oldDatabase, it.quizId, it.wordId)) {
+                QuizWordv12.addQuizWord(oldDatabase, quizIdsMap[it.quizId]!!, it.wordId)
             }
+
+            updateProgress()
         }
 
-        if (radCount < updateRadicals.size) {
-            updateRadicals.forEach {
-                kanjiSoloSource.addRadical(it)
-                i++
-                if (i % 100 == 0) {
-                    intent.putExtra(QuizzesActivity.UPDATE_PROGRESS, i)
-                    sendBroadcast(intent)
-                }
-            }
+        // fully replace, this is safe since there is no user-specific data,
+        // or any defined relations to other tables
+        KanjiSolov12.deleteAll(oldDatabase)
+        kanjiSolo.forEach {
+            KanjiSolov12.addKanjiSolo(oldDatabase, it, true)
+
+            updateProgress()
+        }
+        Radicalv12.deleteAll(oldDatabase)
+        radicals.forEach {
+            Radicalv12.addRadical(oldDatabase, it, true)
+
+            updateProgress()
+        }
+        Sentencev12.deleteAll(oldDatabase)  // sentence ids are referenced in words!
+                                            // however, since the word sentenceIds have already
+                                            // been updated, fully replacing the sentences is fine
+        sentences.forEach {
+            Sentencev12.addSentence(oldDatabase, it, true)
+
+            updateProgress()
         }
 
-        if (oldVersion <= 8) {
-            updateSentences.forEach {
-                sentenceSource.addSentence(it)
-                i++
-                if (i % 100 == 0) {
-                    intent.putExtra(QuizzesActivity.UPDATE_PROGRESS, i)
-                    sendBroadcast(intent)
-                }
-            }
-        } else if (filePath.isEmpty()) {
-            val sentences = sentenceSource.getAllSentences(null).sortedBy(Sentence::id)
-            updateSentences.forEach {
-                val sentence = sentences.getOrNull(i)
-                sentenceSource.updateSentence(it, sentence)
-                i++
-                if (i % 100 == 0) {
-                    intent.putExtra(QuizzesActivity.UPDATE_PROGRESS, i)
-                    sendBroadcast(intent)
-                }
-            }
-        }
-
-        intent.putExtra(QuizzesActivity.UPDATE_PROGRESS, totalCount + 1)
+        intent.putExtra(QuizzesActivity.UPDATE_PROGRESS, maxProgress + 1)
         intent.putExtra(QuizzesActivity.UPDATE_FINISHED, true)
-        sendBroadcast(intent)
+        context.sendBroadcast(intent)
 
         pref.edit().putBoolean(Prefs.DB_UPDATE_ONGOING.pref, false).apply()
-        pref.edit().putString(Prefs.DB_UPDATE_FILE.pref, "").apply()
-        if (filePath.isEmpty())
-            File(getString(R.string.db_path) + UpdateSQLiteHelper.UPDATE_DATABASE_NAME).delete()
-        else
-            File(filePath).delete()
     }
 
 }
-

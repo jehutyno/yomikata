@@ -294,10 +294,9 @@ class PrefsActivity : AppCompatActivity(), FileChooserDialog.ChooserListener {
 //
 //    }
 
-    private fun importYomikataZ(path: String?) {
-        updateBDD(null, path!!, -1)
+    private fun importYomikataZ(path: String) {
+        YomikataDataBase.overwriteDatabase(this, path)
         finish()
     }
-
 
 }

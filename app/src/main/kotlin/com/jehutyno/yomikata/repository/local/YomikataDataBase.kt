@@ -6,6 +6,8 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.jehutyno.yomikata.util.updateOldDBtoVersion12
+import java.io.File
 
 
 @Database(entities = [RoomKanjiSolo::class, RoomQuiz::class, RoomSentences::class,
@@ -21,19 +23,44 @@ abstract class YomikataDataBase : RoomDatabase() {
     abstract fun wordDao(): WordDao
 
     companion object {
+        private const val DATABASE_FILE_NAME = "yomikataz.db"
         private var INSTANCE: YomikataDataBase? = null
         fun getDatabase(context: Context): YomikataDataBase {
             if (INSTANCE == null) {
                 synchronized(this) {
                     INSTANCE =
-                        Room.databaseBuilder(context, YomikataDataBase::class.java, "yomikataz.db")
-                            .createFromAsset("yomikataz.db")
+                        Room.databaseBuilder(context, YomikataDataBase::class.java, DATABASE_FILE_NAME)
+                            .createFromAsset(DATABASE_FILE_NAME)
                             .allowMainThreadQueries()   // TODO: remove this after using coroutines/livedata
-                            .addMigrations(MIGRATION_8_9(context), MIGRATION_12_13)
+                            .addMigrations(MIGRATION_8_9, MIGRATION_11_12(context), MIGRATION_12_13)
                             .build()
                 }
             }
             return INSTANCE!!
+        }
+
+        /**
+         * Overwrite database
+         *
+         * Overwrites the current database with a new database
+         *
+         * @param context Context
+         * @param externalDatabasePath The absolute path to an external database which will
+         * replace the currently loaded database
+         */
+        @Synchronized
+        fun overwriteDatabase(context: Context, externalDatabasePath: String) {
+            // make sure current database is closed
+            INSTANCE!!.close()
+
+            // make backup
+            // TODO()
+
+            val externalDatabaseFile = File(externalDatabasePath)
+            val currentDatabaseFile = context.getDatabasePath(DATABASE_FILE_NAME)
+            externalDatabaseFile.copyTo(currentDatabaseFile, overwrite = true)
+
+            INSTANCE = null
         }
 
         ///////// DEFINE MIGRATIONS /////////
@@ -210,11 +237,22 @@ abstract class YomikataDataBase : RoomDatabase() {
         }
 
         @Suppress("ClassName")
-        private class MIGRATION_8_9(val context: Context) : Migration(8, 9) {
+        private class MIGRATION_11_12(val context: Context) : Migration(11, 12) {
+
+            // This performs all migrations from 1 to 12 (excluding the operations in
+            // MIGRATION_8_9. The database is synchronized with a static copy of version 12
+            override fun migrate(database: SupportSQLiteDatabase) {
+                updateOldDBtoVersion12(database, context)
+            }
+
+        }
+
+        @Suppress("ClassName")
+        private val MIGRATION_8_9 = object : Migration(8, 9) {
             // STEPS
             // 1. Add sentences table (did not exist before version 9)
-            // 2. Alter the words table: new column = sentenceId (+ redefine types??) (all others preserved)
-            // 3. Add all of the new sentences
+            // 2. Alter the words table: new column = sentenceId (all others preserved)
+            // 3. A̶d̶d̶ ̶a̶l̶l̶ ̶o̶f̶ ̶t̶h̶e̶ ̶n̶e̶w̶ ̶s̶e̶n̶t̶e̶n̶c̶e̶s̶ This is now done when migrating from 11 -> 12
             override fun migrate(database: SupportSQLiteDatabase) {
                 // STEP 1
                 val queryCreateSentencesTable = "CREATE TABLE sentences (\n" +
@@ -263,13 +301,6 @@ abstract class YomikataDataBase : RoomDatabase() {
                     it.execSQL(queryInsertOldIntoNew)
                     it.execSQL(queryDropOldTable)
                 }
-
-                // STEP 3
-                val queryInsertAllSentences = context.assets.open("InsertSentencesVersion9.sql")
-                            .bufferedReader().use {
-                                it.readText()
-                            }
-                database.execSQL(queryInsertAllSentences)
             }
         }
 
