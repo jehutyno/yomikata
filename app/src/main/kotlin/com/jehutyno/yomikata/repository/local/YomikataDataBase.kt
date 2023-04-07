@@ -8,6 +8,7 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.jehutyno.yomikata.util.updateOldDBtoVersion12
 import java.io.File
+import java.io.FileOutputStream
 
 
 @Database(entities = [RoomKanjiSolo::class, RoomQuiz::class, RoomSentences::class,
@@ -24,6 +25,7 @@ abstract class YomikataDataBase : RoomDatabase() {
 
     companion object {
         private const val DATABASE_FILE_NAME = "yomikataz.db"
+        private const val DATABASE_LOCAL_BACKUP_FILE_NAME = "yomikataz_backup.db"
         private var INSTANCE: YomikataDataBase? = null
         fun getDatabase(context: Context): YomikataDataBase {
             if (INSTANCE == null) {
@@ -32,7 +34,11 @@ abstract class YomikataDataBase : RoomDatabase() {
                         Room.databaseBuilder(context, YomikataDataBase::class.java, DATABASE_FILE_NAME)
                             .createFromAsset(DATABASE_FILE_NAME)
                             .allowMainThreadQueries()   // TODO: remove this after using coroutines/livedata
-                            .addMigrations(MIGRATION_8_9, MIGRATION_11_12(context), MIGRATION_12_13)
+                            .addMigrations(
+                                MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6,
+                                MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11,
+                                MIGRATION_11_12(context), MIGRATION_12_13
+                            )
                             .build()
                 }
             }
@@ -42,7 +48,11 @@ abstract class YomikataDataBase : RoomDatabase() {
         /**
          * Overwrite database
          *
-         * Overwrites the current database with a new database
+         * Overwrites the current database with a new database.
+         * If you want the loaded database to be instantianted and migrated immediately,
+         * you should call
+         *
+         * YomikataDataBase.getDatabase(context).openHelper.writableDatabase.close()
          *
          * @param context Context
          * @param externalDatabasePath The absolute path to an external database which will
@@ -53,14 +63,49 @@ abstract class YomikataDataBase : RoomDatabase() {
             // make sure current database is closed
             INSTANCE!!.close()
 
-            // make backup
-            // TODO()
-
-            val externalDatabaseFile = File(externalDatabasePath)
             val currentDatabaseFile = context.getDatabasePath(DATABASE_FILE_NAME)
+            createLocalBackup(context)
+
+            // overwrite current with external
+            val externalDatabaseFile = File(externalDatabasePath)
             externalDatabaseFile.copyTo(currentDatabaseFile, overwrite = true)
 
-            INSTANCE = null
+            INSTANCE = null     // set to null to instantiate db on future getDatabase calls
+        }
+
+        @Synchronized
+        fun overwriteDatabase(context: Context, data: ByteArray) {
+            // make sure current database is closed
+            INSTANCE!!.close()
+
+            val currentDatabaseFile = context.getDatabasePath(DATABASE_FILE_NAME)
+            createLocalBackup(context)
+
+            // overwrite current with external data
+            val databaseOutputStream = FileOutputStream(currentDatabaseFile)
+            databaseOutputStream.write(data)
+            databaseOutputStream.close()
+
+            INSTANCE = null     // set to null to instantiate db on future getDatabase calls
+        }
+
+        @Synchronized
+        fun createLocalBackup(context: Context) {
+            val currentDatabaseFile = context.getDatabasePath(DATABASE_FILE_NAME)
+            // make backup of current
+            val backupFile = context.getDatabasePath(DATABASE_LOCAL_BACKUP_FILE_NAME)
+            currentDatabaseFile.copyTo(backupFile, overwrite = true)
+        }
+
+        @Synchronized
+        fun restoreLocalBackup(context: Context) {
+            val currentDatabaseFile = context.getDatabasePath(DATABASE_FILE_NAME)
+            val backupFile = context.getDatabasePath(DATABASE_LOCAL_BACKUP_FILE_NAME)
+            backupFile.copyTo(currentDatabaseFile, overwrite = true)
+        }
+
+        fun getDatabaseFile(context: Context): File {
+            return context.getDatabasePath(DATABASE_FILE_NAME)
         }
 
         ///////// DEFINE MIGRATIONS /////////
@@ -236,19 +281,31 @@ abstract class YomikataDataBase : RoomDatabase() {
 
         }
 
+        @Suppress("FunctionName")
+        fun getMigration_11_12(context: Context): MIGRATION_11_12 {
+            return MIGRATION_11_12(context)
+        }
+
         @Suppress("ClassName")
-        private class MIGRATION_11_12(val context: Context) : Migration(11, 12) {
+        class MIGRATION_11_12(val context: Context) : Migration(11, 12) {
 
             // This performs all migrations from 1 to 12 (excluding the operations in
-            // MIGRATION_8_9. The database is synchronized with a static copy of version 12
+            // MIGRATION_8_9). The old database is synchronized with a static copy of version 12
             override fun migrate(database: SupportSQLiteDatabase) {
                 updateOldDBtoVersion12(database, context)
             }
 
         }
 
-        @Suppress("ClassName")
-        private val MIGRATION_8_9 = object : Migration(8, 9) {
+        val MIGRATION_10_11 = object : Migration(10, 11) {
+            override fun migrate(database: SupportSQLiteDatabase) {}
+        }
+
+        val MIGRATION_9_10 = object : Migration(9, 10) {
+            override fun migrate(database: SupportSQLiteDatabase) {}
+        }
+
+        val MIGRATION_8_9 = object : Migration(8, 9) {
             // STEPS
             // 1. Add sentences table (did not exist before version 9)
             // 2. Alter the words table: new column = sentenceId (all others preserved)
@@ -304,6 +361,33 @@ abstract class YomikataDataBase : RoomDatabase() {
             }
         }
 
+        val MIGRATION_7_8 = object : Migration(7, 8) {
+            override fun migrate(database: SupportSQLiteDatabase) {}
+        }
+
+        val MIGRATION_6_7 = object : Migration(6, 7) {
+            override fun migrate(database: SupportSQLiteDatabase) {}
+        }
+
+        val MIGRATION_5_6 = object : Migration(5, 6) {
+            override fun migrate(database: SupportSQLiteDatabase) {}
+        }
+
+        val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(database: SupportSQLiteDatabase) {}
+        }
+
+        val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(database: SupportSQLiteDatabase) {}
+        }
+
+        val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(database: SupportSQLiteDatabase) {}
+        }
+
+        val MIGRATION_1_2 = object : Migration(1, 2) {
+            override fun migrate(database: SupportSQLiteDatabase) {}
+        }
     }
 
 }
