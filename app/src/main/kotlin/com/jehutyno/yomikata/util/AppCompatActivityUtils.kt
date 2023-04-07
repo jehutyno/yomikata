@@ -24,6 +24,7 @@ import splitties.alertdialog.appcompat.messageResource
 import splitties.alertdialog.appcompat.okButton
 import splitties.alertdialog.appcompat.titleResource
 import java.io.File
+import java.io.FileOutputStream
 
 
 /**
@@ -136,9 +137,20 @@ fun updateOldDBtoVersion12(oldDatabase: SupportSQLiteDatabase, context: Context,
     handleOldEncryptedDatabase(context, filePathEncrypted)
     pref.edit().remove(Prefs.DB_UPDATE_FILE.pref).apply()
 
-    val checkPointDataBase = SQLiteDatabase.openDatabase (
-        "yomikataz_version12.db", null, OPEN_READONLY
-    )
+    val assetManager = context.assets
+    val dbName = "yomikataz_version12.db"
+    val dbPath = context.getDatabasePath(dbName).path
+
+    // copy the assets database v12 into the database folder to use it
+    if (!File(dbPath).exists()) {
+        assetManager.open(dbName).use { inputStream ->
+            FileOutputStream(dbPath).use { outputStream ->
+                inputStream.copyTo(outputStream)
+            }
+        }
+    }
+
+    val checkPointDataBase = SQLiteDatabase.openDatabase(dbPath, null, OPEN_READONLY)
 
     // get new data (version 12)
     val words = Wordv12.getAllItems(checkPointDataBase).sortedBy(Wordv12::id)
@@ -162,96 +174,96 @@ fun updateOldDBtoVersion12(oldDatabase: SupportSQLiteDatabase, context: Context,
 //        this.getInt(0)
 //    }
 
-    MainScope().async {
-        var progress = 0
+    var progress = 0
 
-        val maxProgress =    // total number of rows to update, used to display a progressBar
-                    words.size + quizWords.size + quizzes.size + kanjiSolo.size + sentences.size
+    val maxProgress =    // total number of rows to update, used to display a progressBar
+        words.size + quizWords.size + quizzes.size + kanjiSolo.size + sentences.size
 
-        val intent = Intent()
-        intent.action = QuizzesActivity.UPDATE_INTENT
-        intent.putExtra(QuizzesActivity.UPDATE_COUNT, maxProgress)
-        intent.putExtra(QuizzesActivity.UPDATE_PROGRESS, progress)
-        context.sendBroadcast(intent)
+    val intent = Intent()
+    intent.action = QuizzesActivity.UPDATE_INTENT
+    intent.putExtra(QuizzesActivity.UPDATE_COUNT, maxProgress)
+    intent.putExtra(QuizzesActivity.UPDATE_PROGRESS, progress)
+//    context.sendBroadcast(intent)
 
-        fun updateProgress() {  // call each time an item is updated to synchronize progressBar
-            progress++
-            if (progress % 100 == 0) {
-                intent.putExtra(QuizzesActivity.UPDATE_PROGRESS, progress)
-                context.sendBroadcast(intent)
-            }
+    fun updateProgress() {  // call each time an item is updated to synchronize progressBar
+        progress++
+        if (progress % 100 == 0) {
+            intent.putExtra(QuizzesActivity.UPDATE_PROGRESS, progress)
+//            context.sendBroadcast(intent)
         }
-
-        // -- update method --
-        // loop through newest list:
-        //      if element exist in old list: update the non user-specific fields
-        //      else (element does not exist in old list): add it
-
-        val oldWords = Wordv12.getAllItems(oldDatabase).sortedBy(Wordv12::id)
-        words.forEach { word ->
-            val oldWord = oldWords.firstOrNull { it.id == word.id }
-            if (oldWord == null) {
-                Wordv12.insertWord(oldDatabase, word, false)
-            } else {
-                Wordv12.updateWord(oldDatabase, oldWord.id, word)
-            }
-
-            updateProgress()
-        }
-
-        val quizIdsMap = mutableMapOf<Long, Long>() // store new indices, since they are coupled to
-                                                    // words via quiz_words
-        val oldQuizzes = Quizv12.getAllItems(oldDatabase).sortedBy(Quizv12::id)
-        quizzes.forEach { quiz ->
-            val matchOldQuiz = oldQuizzes.firstOrNull { it.id == quiz.id }
-            if (matchOldQuiz == null) { // did not find in old quiz -> insert
-                val insertId = Quizv12.insertQuiz(oldDatabase, quiz, false)
-                quizIdsMap[quiz.id] = insertId
-            } else {
-                quizIdsMap[quiz.id] = quiz.id
-            }
-
-            updateProgress()
-        }
-
-        // Assuming all old words and quizzes keep their original id -> no problem
-        // Any new ids or ids that changed must be handled here
-        quizWords.forEach {
-            if (QuizWordv12.quizWordExists(oldDatabase, it.quizId, it.wordId)) {
-                QuizWordv12.addQuizWord(oldDatabase, quizIdsMap[it.quizId]!!, it.wordId)
-            }
-
-            updateProgress()
-        }
-
-        // fully replace, this is safe since there is no user-specific data,
-        // or any defined relations to other tables
-        KanjiSolov12.deleteAll(oldDatabase)
-        kanjiSolo.forEach {
-            KanjiSolov12.addKanjiSolo(oldDatabase, it, true)
-
-            updateProgress()
-        }
-        Radicalv12.deleteAll(oldDatabase)
-        radicals.forEach {
-            Radicalv12.addRadical(oldDatabase, it, true)
-
-            updateProgress()
-        }
-        Sentencev12.deleteAll(oldDatabase)  // sentence ids are referenced in words!
-                                            // however, since the word sentenceIds have already
-                                            // been updated, fully replacing the sentences is fine
-        sentences.forEach {
-            Sentencev12.addSentence(oldDatabase, it, true)
-
-            updateProgress()
-        }
-
-        intent.putExtra(QuizzesActivity.UPDATE_PROGRESS, maxProgress + 1)
-        intent.putExtra(QuizzesActivity.UPDATE_FINISHED, true)
-        context.sendBroadcast(intent)
-
-        pref.edit().putBoolean(Prefs.DB_UPDATE_ONGOING.pref, false).apply()
     }
+
+    // -- update method --
+    // loop through newest list:
+    //      if element exist in old list: update the non user-specific fields
+    //      else (element does not exist in old list): add it
+
+    val oldWords = Wordv12.getAllItems(oldDatabase).sortedBy(Wordv12::id).toMutableList()
+    words.forEach { word ->
+        val oldWord = oldWords.firstOrNull { it.id == word.id }
+        oldWords.remove(oldWord)
+        if (oldWord == null) {
+            Wordv12.insertWord(oldDatabase, word, false)
+        } else {
+            Wordv12.updateWord(oldDatabase, oldWord.id, word)
+        }
+
+        updateProgress()
+    }
+
+    val quizIdsMap = mutableMapOf<Long, Long>() // store new indices, since they are coupled to
+    // words via quiz_words
+    val oldQuizzes = Quizv12.getAllItems(oldDatabase).sortedBy(Quizv12::id).toMutableList()
+    quizzes.forEach { quiz ->
+        val matchOldQuiz = oldQuizzes.firstOrNull { it.id == quiz.id }
+        oldQuizzes.remove(matchOldQuiz)
+        if (matchOldQuiz == null) {             // did not find in old quiz -> insert
+            val insertId = Quizv12.insertQuiz(oldDatabase, quiz, false)
+            quizIdsMap[quiz.id] = insertId
+        } else {
+            quizIdsMap[quiz.id] = quiz.id
+        }
+
+        updateProgress()
+    }
+
+    // Assuming all old words and quizzes keep their original id -> no problem
+    // Any new ids or ids that changed must be handled here
+    quizWords.forEach {
+        if (!QuizWordv12.quizWordExists(oldDatabase, it.quizId, it.wordId)) {
+            QuizWordv12.addQuizWord(oldDatabase, quizIdsMap[it.quizId]!!, it.wordId)
+        }
+
+        updateProgress()
+    }
+
+    // fully replace, this is safe since there is no user-specific data,
+    // or any defined relations to other tables
+    KanjiSolov12.deleteAll(oldDatabase)
+    kanjiSolo.forEach {
+        KanjiSolov12.addKanjiSolo(oldDatabase, it, true)
+
+        updateProgress()
+    }
+    Radicalv12.deleteAll(oldDatabase)
+    radicals.forEach {
+        Radicalv12.addRadical(oldDatabase, it, true)
+
+        updateProgress()
+    }
+    Sentencev12.deleteAll(oldDatabase)  // sentence ids are referenced in words!
+                                        // however, since the word sentenceIds have already
+                                        // been updated, fully replacing the sentences is fine
+    sentences.forEach {
+        Sentencev12.addSentence(oldDatabase, it, true)
+
+        updateProgress()
+    }
+
+    intent.putExtra(QuizzesActivity.UPDATE_PROGRESS, maxProgress + 1)
+    intent.putExtra(QuizzesActivity.UPDATE_FINISHED, true)
+//    context.sendBroadcast(intent)
+
+    pref.edit().putBoolean(Prefs.DB_UPDATE_ONGOING.pref, false).apply()
 
 }
