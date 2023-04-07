@@ -15,6 +15,11 @@ import org.junit.runner.RunWith
 import java.io.IOException
 
 
+/**
+ * Migration test
+ *
+ * For testing migrations from version 9 up to version 13
+ */
 @RunWith(AndroidJUnit4::class)
 @LargeTest
 class MigrationTest {
@@ -122,12 +127,5 @@ class MigrationTest {
         mMigrationTestHelper.closeWhenFinished(database)
         return database
     }
-
-//    private fun insertUser(user: User, db: SupportSQLiteDatabase) {
-//        val values = ContentValues()
-//        values.put("userid", user.getId())
-//        values.put("username", user.getUserName())
-//        db.insert("users", SQLiteDatabase.CONFLICT_REPLACE, values)
-//    }
 
 }

@@ -498,7 +498,7 @@ data class Sentencev12(var id: Long = -1, val jap: String = "",
                     ${SQLiteSentences.FR.column_name}, ${SQLiteSentences.LEVEL.column_name}
                 )
                 VALUES ( ${if (preserve_id) "${newSentence.id}, " else ""}
-                        ?, ?, ?
+                        ?, ?, ?, ?
                 )
             """.trimIndent(), arrayOf<Any>(newSentence.jap, newSentence.en,
                                            newSentence.fr, newSentence.level)
