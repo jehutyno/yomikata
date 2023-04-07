@@ -48,38 +48,6 @@ public class CopyUtils {
         myInput.close();
     }
 
-    static public void copyEncryptedBddToSd(Activity activity) {
-        // Check if we have write permission
-        String db_name = SQLiteHelper.Companion.getDATABASE_NAME();
-        String db_path = activity.getString(R.string.db_path);
-        File input = new File(db_path + db_name);
-        try {
-            SecretKeySpec yourKey = generateKey("jaimemangerdesgrossespatat&s!!!!!!!!!trololo");
-            byte[] filesBytes = encodeFile(yourKey, fileToByteArray(input));
-            File sdCard = Environment.getExternalStorageDirectory();
-            File dir = new File(sdCard.getAbsolutePath() + "/Yomikata/");
-            dir.mkdirs();
-            File bitch = new File(dir + "/" + "backup.yomikataz");
-            bitch.createNewFile();
-            OutputStream myOutput;
-            myOutput = new FileOutputStream(bitch);
-            myOutput.write(filesBytes);
-            myOutput.flush();
-            myOutput.close();
-            new AlertDialog.Builder(activity).setTitle(R.string.backup_success)
-                .setMessage(activity.getString(R.string.backup_saved_here, bitch.getAbsolutePath()))
-                .setPositiveButton(R.string.ok, null)
-                .show();
-        } catch (Exception e) {
-            new AlertDialog.Builder(activity).setTitle(R.string.backup_error)
-                .setMessage(R.string.backup_error_message)
-                .setPositiveButton(R.string.ok, null)
-                .show();
-            e.printStackTrace();
-        }
-    }
-
-
     static public void restoreEncryptedBdd(File file, String toPath) throws Exception {
         byte[] filesBytes = fileToByteArray(file);
         byte[] decodedData = decodeFile(generateKey("jaimemangerdesgrossespatat&s!!!!!!!!!trololo"), filesBytes);

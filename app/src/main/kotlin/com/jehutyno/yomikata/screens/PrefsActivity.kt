@@ -1,19 +1,24 @@
 package com.jehutyno.yomikata.screens
 
 import android.Manifest
+import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.provider.DocumentsContract
 import android.widget.ProgressBar
 import android.widget.Toast
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.app.ActivityCompat
 import androidx.preference.Preference
-import androidx.preference.PreferenceManager
 import androidx.preference.PreferenceFragmentCompat
+import androidx.preference.PreferenceManager
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.filechooser.FileChooserDialog
 import com.jehutyno.yomikata.repository.local.WordSource
@@ -26,11 +31,11 @@ import com.jehutyno.yomikata.util.Extras.REQUEST_EXTERNAL_STORAGE_RESTORE
 import com.wooplr.spotlight.prefs.PreferencesManager
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.MainScope
-import mu.KLogging
 import kotlinx.coroutines.async
 import kotlinx.coroutines.withContext
+import mu.KLogging
 import splitties.alertdialog.appcompat.*
-import java.io.File
+import java.io.*
 
 
 /**
@@ -40,12 +45,75 @@ class PrefsActivity : AppCompatActivity(), FileChooserDialog.ChooserListener {
 
     companion object : KLogging()
 
+    private lateinit var backupLauncher : ActivityResultLauncher<Intent>
+    private lateinit var restoreLauncher : ActivityResultLauncher<Intent>
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val pref = PreferenceManager.getDefaultSharedPreferences(this)
         AppCompatDelegate.setDefaultNightMode(pref.getInt(Prefs.DAY_NIGHT_MODE.pref, AppCompatDelegate.MODE_NIGHT_YES))
         supportFragmentManager.beginTransaction()
                 .replace(android.R.id.content, PrefsFragment()).commit()
+
+        backupLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode != Activity.RESULT_OK)
+                return@registerForActivityResult
+
+            val inputFile = YomikataDataBase.getDatabaseFile(this)
+            val data = ByteArray(inputFile.length().toInt()) // create byte array with size of input file
+            var inputStream: FileInputStream? = null
+
+            try {
+                inputStream = FileInputStream(inputFile)
+                inputStream.read(data)
+            } catch (e: IOException) {
+                e.printStackTrace()
+            } finally {
+                inputStream?.close()
+            }
+
+            result.data?.data?.also { uri ->
+                val outputStream: OutputStream
+                try {
+                    outputStream = contentResolver.openOutputStream(uri)!!
+                    outputStream.write(data)
+                    outputStream.close()
+                } catch (e: IOException) {
+                    e.printStackTrace()
+                }
+            }
+        }
+
+        restoreLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode != Activity.RESULT_OK)
+                return@registerForActivityResult
+
+            result.data?.data?.also { uri ->
+
+                val contentResolver = this.contentResolver
+                val inputStream = contentResolver.openInputStream(uri)
+                val buffer = ByteArray(4096)
+                val outputStream = ByteArrayOutputStream()
+
+                try {
+                    var len: Int
+                    while (inputStream?.read(buffer).also { len = it ?: -1 } != -1) {
+                        outputStream.write(buffer, 0, len)
+                    }
+                    val data = outputStream.toByteArray()
+                    YomikataDataBase.overwriteDatabase(this, data)
+                } catch (e: IOException) {
+                    e.printStackTrace()
+                } finally {
+                    inputStream?.close()
+                    outputStream.close()
+                }
+
+            }
+
+        }
+
     }
 
     class PrefsFragment : PreferenceFragmentCompat() {
@@ -172,9 +240,25 @@ class PrefsActivity : AppCompatActivity(), FileChooserDialog.ChooserListener {
     }
 
     fun showChooser() {
-        FileChooserDialog.Builder(FileChooserDialog.ChooserType.FILE_CHOOSER, this)
-            .setTitle(getString(R.string.choose_file))
-            .build().show(supportFragmentManager, null)
+        fun openFile(pickerInitialUri: Uri?) {
+            val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+                addCategory(Intent.CATEGORY_OPENABLE)
+                type = "application/vnd.sqlite3"
+                val mimeTypes = arrayOf("application/x-sqlite3", "*/*")
+                putExtra(Intent.EXTRA_MIME_TYPES, mimeTypes)
+                putExtra(Intent.EXTRA_TITLE, "Select Your Yomikata Database File")
+
+                // Optionally, specify a URI for the file that should appear in the
+                // system file picker when it loads.
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    if (pickerInitialUri != null)
+                        putExtra(DocumentsContract.EXTRA_INITIAL_URI, pickerInitialUri)
+                }
+            }
+            restoreLauncher.launch(intent)
+        }
+
+        openFile(null)
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -192,20 +276,29 @@ class PrefsActivity : AppCompatActivity(), FileChooserDialog.ChooserListener {
     }
 
     fun backupProgress() {
-        alertDialog {
-            titleResource = R.string.backup
-            messageResource = R.string.backup_sure
-            okButton {
-                CopyUtils.copyEncryptedBddToSd(this@PrefsActivity)
+        fun createFile(pickerInitialUri: Uri?) {
+            val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
+                addCategory(Intent.CATEGORY_OPENABLE)
+                type = "application/vnd.sqlite3"
+                putExtra(Intent.EXTRA_TITLE, "my_yomikataz.db")
+
+                // Optionally, specify a URI for the directory that should be opened in
+                // the system file picker before your app creates the document.
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    if (pickerInitialUri != null)
+                        putExtra(DocumentsContract.EXTRA_INITIAL_URI, pickerInitialUri)
+                }
             }
-            cancelButton()
-        }.show()
+            backupLauncher.launch(intent)
+        }
+
+        createFile(null)
     }
 
     override fun onSelect(path: String?) {
         if (path?.endsWith(".yomikata")!!) {
             importYomikata(path)
-        } else if (path.endsWith(".yomikataz")) {
+        } else if (path.endsWith(".yomikataz") || path.endsWith(".db")) {
             importYomikataZ(path)
         } else {
             alertDialog {
