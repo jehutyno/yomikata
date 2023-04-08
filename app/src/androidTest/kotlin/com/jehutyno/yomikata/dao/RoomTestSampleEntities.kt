@@ -1,7 +1,6 @@
-package com.jehutyno.yomikata.repository.local
+package com.jehutyno.yomikata.dao
 
-import com.jehutyno.yomikata.dao.QuizDao
-import com.jehutyno.yomikata.dao.WordDao
+import com.jehutyno.yomikata.repository.local.*
 
 
 /**

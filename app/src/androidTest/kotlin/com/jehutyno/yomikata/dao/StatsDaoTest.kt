@@ -1,10 +1,11 @@
-package com.jehutyno.yomikata.repository.local
+package com.jehutyno.yomikata.dao
 
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SmallTest
-import com.jehutyno.yomikata.dao.StatsDao
+import com.jehutyno.yomikata.repository.local.RoomStatEntry
+import com.jehutyno.yomikata.repository.local.YomikataDataBase
 import org.junit.Assert.*
 
 import org.junit.After
