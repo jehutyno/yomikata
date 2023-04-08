@@ -241,7 +241,7 @@ data class Wordv12(var id: Long, var japanese: String, var english: String, var 
         fun insertWord(database: SupportSQLiteDatabase, newWord: Wordv12, preserve_id: Boolean = false) {
             database.execSQL("""
                 INSERT INTO $tableName (
-                    ${if (preserve_id) "${SQLiteWord.ID.column_name}," else ""},
+                    ${if (preserve_id) "${SQLiteWord.ID.column_name}," else ""}
                     ${SQLiteWord.JAPANESE.column_name}, ${SQLiteWord.ENGLISH.column_name},
                     ${SQLiteWord.FRENCH.column_name}, ${SQLiteWord.READING.column_name},
                     ${SQLiteWord.LEVEL.column_name}, ${SQLiteWord.COUNT_TRY.column_name},
@@ -251,7 +251,7 @@ data class Wordv12(var id: Long, var japanese: String, var english: String, var 
                     ${SQLiteWord.IS_SELECTED.column_name}, ${SQLiteWord.SENTENCE_ID.column_name}
                 )
                 VALUES (
-                    ${if (preserve_id) "${newWord.id}," else ""}, "${newWord.japanese}", "${newWord.english}",
+                    ${if (preserve_id) "${newWord.id}," else ""} "${newWord.japanese}", "${newWord.english}",
                     "${newWord.french}", "${newWord.reading}", ${newWord.level}, ${newWord.countTry},
                     ${newWord.countSuccess}, ${newWord.countFail}, ${newWord.isKana}, ${newWord.repetition},
                     ${newWord.points}, ${newWord.baseCategory}, ${newWord.isSelected}, ${newWord.sentenceId}
@@ -312,12 +312,12 @@ data class Quizv12(val id: Long, var nameEn: String, var nameFr: String,
         fun insertQuiz(database: SupportSQLiteDatabase, newQuiz: Quizv12, preserve_id: Boolean = false): Long {
             val cursor = database.query("""
                 INSERT INTO $tableName (
-                    ${if (preserve_id) "${SQLiteQuiz.ID.column_name}," else ""},
+                    ${if (preserve_id) "${SQLiteQuiz.ID.column_name}," else ""}
                     ${SQLiteQuiz.NAME_EN.column_name}, ${SQLiteQuiz.NAME_FR.column_name},
                     ${SQLiteQuiz.CATEGORY.column_name}, ${SQLiteQuiz.IS_SELECTED.column_name}
                 )
                 VALUES (
-                    ${if (preserve_id) "${newQuiz.id}," else ""}, ${newQuiz.nameEn}, ${newQuiz.nameFr},
+                    ${if (preserve_id) "${newQuiz.id}," else ""} ${newQuiz.nameEn}, ${newQuiz.nameFr},
                     ${newQuiz.category}, ${newQuiz.isSelected}
                 )
             """.trimIndent()
