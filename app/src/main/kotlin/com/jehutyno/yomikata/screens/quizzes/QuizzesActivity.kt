@@ -3,10 +3,7 @@ package com.jehutyno.yomikata.screens.quizzes
 import android.R.id.home
 import android.annotation.SuppressLint
 import android.app.Activity
-import android.content.BroadcastReceiver
-import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.graphics.drawable.ColorDrawable
@@ -31,12 +28,10 @@ import android.view.View.GONE
 import android.view.View.VISIBLE
 import android.widget.ImageButton
 import android.widget.ImageView
-import android.widget.ProgressBar
 import android.widget.TextView
 import android.window.OnBackInvokedDispatcher
 import androidx.activity.addCallback
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.app.AlertDialog
 import androidx.preference.PreferenceManager
 import androidx.viewpager2.widget.ViewPager2
 import com.flaviofaria.kenburnsview.KenBurnsView
@@ -77,10 +72,6 @@ class QuizzesActivity : AppCompatActivity(), DIAware {
     private lateinit var kenburns: KenBurnsView
     private var menu: Menu? = null
 
-    // alertDialog for progressBar
-    private var progressAlertDialog: AlertDialog? = null
-    private lateinit var progressBar: ProgressBar
-
     val handler = Handler(Looper.getMainLooper())
     val runnable = object : Runnable {
         override fun run() {
@@ -92,41 +83,6 @@ class QuizzesActivity : AppCompatActivity(), DIAware {
     val homeImages = intArrayOf(R.drawable.pic_04, R.drawable.pic_05, R.drawable.pic_06,
         R.drawable.pic_07, R.drawable.pic_08, R.drawable.pic_21, R.drawable.pic_22,
         R.drawable.pic_23, R.drawable.pic_24, R.drawable.pic_25)
-
-    private val mHandler = Handler(Looper.getMainLooper())
-    private var receiversRegistered = false
-    private val updateReceiver = object : BroadcastReceiver() {
-
-        override fun onReceive(context: Context, intent: Intent) {
-            if (intent.action == UPDATE_INTENT) {
-                if (progressAlertDialog == null) {
-                    progressBar.max = intent.getIntExtra(UPDATE_COUNT, 0)
-
-                    progressAlertDialog = alertDialog {
-                        titleResource = R.string.progress_bdd_update_title
-                        messageResource = R.string.progress_bdd_update_message
-                        setCancelable(false)
-                        setView(progressBar)
-                    }
-                    progressAlertDialog!!.show()
-                }
-                progressBar.progress = intent.getIntExtra(UPDATE_PROGRESS, 0)
-                if (intent.getBooleanExtra(UPDATE_FINISHED, false)) {
-                    progressAlertDialog!!.dismiss()
-                    progressAlertDialog = null
-                    alertDialog {
-                        titleResource = R.string.update_success_title
-                        okButton { }
-                        messageResource = R.string.update_success_message
-                        binding.pagerQuizzes.adapter = null
-                        binding.pagerQuizzes.adapter = quizzesAdapter
-                        selectedCategory = Categories.HOME
-                        displayCategoryTitle(selectedCategory)
-                    }.show()
-                }
-            }
-        }
-    }
 
     // View Binding
     private lateinit var binding: ActivityQuizzesBinding
@@ -152,18 +108,6 @@ class QuizzesActivity : AppCompatActivity(), DIAware {
         binding = ActivityQuizzesBinding.inflate(layoutInflater)
         val view = binding.root
         setContentView(view)
-
-        // progressBar for database update
-        progressBar = ProgressBar(this, null, android.R.style.Widget_ProgressBar_Horizontal)
-        progressBar.setPadding(40, progressBar.paddingTop, 40, progressBar.paddingBottom)
-
-        // Register Sync Receivers
-        if (!receiversRegistered) {
-            val intentToReceiveFilter = IntentFilter()
-            intentToReceiveFilter.addAction(UPDATE_INTENT)
-            registerReceiver(updateReceiver, intentToReceiveFilter, null, mHandler)
-            receiversRegistered = true
-        }
 
         kenburns = binding.imageSectionIcon
 
@@ -528,21 +472,19 @@ class QuizzesActivity : AppCompatActivity(), DIAware {
     private val getResult =
             registerForActivityResult(
                     ActivityResultContracts.StartActivityForResult()
-            ) {
-                if (it.resultCode == Activity.RESULT_OK)
+            ) { result ->
+                if (result.resultCode == Activity.RESULT_OK) {
+                    result.data?.also {
+                        selectedCategory = it.getIntExtra("gotoCategory", selectedCategory)
+                        displayCategoryTitle(selectedCategory)
+                        gotoCategory(selectedCategory)
+                    }
                     tutos()
+                }
             }
 
     override fun onPause() {
         super.onPause()
         handler.removeCallbacks(runnable)
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        if (receiversRegistered) {
-            unregisterReceiver(updateReceiver)
-            receiversRegistered = false
-        }
     }
 }
