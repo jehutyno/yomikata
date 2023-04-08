@@ -8,7 +8,10 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.jehutyno.yomikata.util.updateOldDBtoVersion12
 import java.io.File
+import java.io.FileInputStream
 import java.io.FileOutputStream
+import java.io.OutputStream
+import java.nio.channels.FileLock
 
 
 @Database(entities = [RoomKanjiSolo::class, RoomQuiz::class, RoomSentences::class,
@@ -24,6 +27,7 @@ abstract class YomikataDataBase : RoomDatabase() {
     abstract fun wordDao(): WordDao
 
     companion object {
+        // file name should be the same for assets folder and database folder!
         private const val DATABASE_FILE_NAME = "yomikataz.db"
         private const val DATABASE_LOCAL_BACKUP_FILE_NAME = "yomikataz_backup.db"
         private var INSTANCE: YomikataDataBase? = null
@@ -46,13 +50,21 @@ abstract class YomikataDataBase : RoomDatabase() {
         }
 
         /**
+         * Force load database.
+         *
+         * @param context Context
+         */
+        @Synchronized
+        fun forceLoadDatabase(context: Context) {
+            getDatabase(context).openHelper.writableDatabase
+        }
+
+        /**
          * Overwrite database
          *
          * Overwrites the current database with a new database.
-         * If you want the loaded database to be instantianted and migrated immediately,
-         * you should call
-         *
-         * YomikataDataBase.getDatabase(context).openHelper.writableDatabase.close()
+         * If you want the loaded database to be instantiated and migrated immediately,
+         * you should call forceLoadDatabase
          *
          * @param context Context
          * @param externalDatabasePath The absolute path to an external database which will
@@ -60,33 +72,59 @@ abstract class YomikataDataBase : RoomDatabase() {
          */
         @Synchronized
         fun overwriteDatabase(context: Context, externalDatabasePath: String) {
-            // make sure current database is closed
-            INSTANCE!!.close()
+            var outputStream: OutputStream? = null
+            var lock: FileLock? = null
+            try {
+                outputStream = getDatabaseFile(context).outputStream()
+                lock = outputStream.channel.lock()
 
-            val currentDatabaseFile = context.getDatabasePath(DATABASE_FILE_NAME)
-            createLocalBackup(context)
+                getDatabase(context).close()
+                createLocalBackup(context)
 
-            // overwrite current with external
-            val externalDatabaseFile = File(externalDatabasePath)
-            externalDatabaseFile.copyTo(currentDatabaseFile, overwrite = true)
+                // overwrite current with external data
+                FileInputStream(externalDatabasePath).use {
+                    input -> input.copyTo(outputStream)
+                }
 
-            INSTANCE = null     // set to null to instantiate db on future getDatabase calls
+                INSTANCE = null
+            } finally {
+                lock?.release()
+                outputStream?.close()
+            }
         }
 
         @Synchronized
         fun overwriteDatabase(context: Context, data: ByteArray) {
-            // make sure current database is closed
-            INSTANCE!!.close()
+            // acquire lock
+            var outputStream: FileOutputStream? = null
+            var lock: FileLock? = null
+            try {
+                outputStream = FileOutputStream(getDatabaseFile(context))
+                lock = outputStream.channel.lock()
+                getDatabase(context).close()
+                createLocalBackup(context)
+                // overwrite current with external data
+                outputStream.write(data)
+                INSTANCE = null
+            } finally {
+                lock?.release()
+                outputStream?.close()
+            }
+        }
 
-            val currentDatabaseFile = context.getDatabasePath(DATABASE_FILE_NAME)
-            createLocalBackup(context)
-
-            // overwrite current with external data
-            val databaseOutputStream = FileOutputStream(currentDatabaseFile)
-            databaseOutputStream.write(data)
-            databaseOutputStream.close()
-
-            INSTANCE = null     // set to null to instantiate db on future getDatabase calls
+        /**
+         * Reset database
+         *
+         * Replace the database with the default one from the assets folder.
+         * @param context Context
+         */
+        @Synchronized
+        fun resetDatabase(context: Context) {
+            val assetManager = context.assets
+            // get database from assets and overwrite the database file
+            assetManager.open(DATABASE_FILE_NAME).use {
+                overwriteDatabase(context, it.readBytes())
+            }
         }
 
         @Synchronized
@@ -102,6 +140,27 @@ abstract class YomikataDataBase : RoomDatabase() {
             val currentDatabaseFile = context.getDatabasePath(DATABASE_FILE_NAME)
             val backupFile = context.getDatabasePath(DATABASE_LOCAL_BACKUP_FILE_NAME)
             backupFile.copyTo(currentDatabaseFile, overwrite = true)
+        }
+
+        @Synchronized
+        fun getRawData(context: Context): ByteArray {
+            val dbFile = getDatabaseFile(context)
+            val data = ByteArray(dbFile.length().toInt()) // create byte array with size of input file
+
+            var inputStream: FileInputStream? = null
+//            var lock: FileLock? = null
+            try {
+                inputStream = FileInputStream(dbFile)
+//                lock = inputStream.channel.lock()
+
+                getDatabase(context).close()
+
+                inputStream.read(data)
+            } finally {
+//                lock?.release()
+                inputStream?.close()
+            }
+            return data
         }
 
         fun getDatabaseFile(context: Context): File {
