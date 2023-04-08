@@ -19,6 +19,7 @@ import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.PreferenceManager
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.repository.local.YomikataDataBase
+import com.jehutyno.yomikata.repository.migration.importYomikata
 import com.jehutyno.yomikata.util.*
 import com.wooplr.spotlight.prefs.PreferencesManager
 import kotlinx.coroutines.*
@@ -117,16 +118,21 @@ class PrefsActivity : AppCompatActivity() {
                         val data = outputStream.toByteArray()
 
                         outputStreamTemp.write(data)
-
+                        val type: DatabaseType?
                         try {
-                            validateDatabase(databaseFile)
+                            type = validateDatabase(databaseFile)
                         } catch (e: IllegalStateException) {
                             return@withContext Pair("Invalid file", e.message)
                         } catch (e: SQLiteException) {
                             return@withContext Pair("Something went wrong", e.message + e.cause?.message)
                         }
 
-                        YomikataDataBase.overwriteDatabase(this@PrefsActivity, data)
+                        if (type == DatabaseType.OLD_YOMIKATA) {
+                            importYomikata(this@PrefsActivity, data, null)
+                        } else{
+                            YomikataDataBase.overwriteDatabase(this@PrefsActivity, data)
+                        }
+
                         updateProgressDialog.updateProgress(75)
                     } catch (e: IOException) {
                         e.printStackTrace()

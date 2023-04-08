@@ -15,6 +15,8 @@ import com.jehutyno.yomikata.util.UpdateProgressDialog
 import java.io.File
 import java.io.FileOutputStream
 import kotlin.io.path.pathString
+import kotlin.io.path.readBytes
+import kotlin.io.path.writeBytes
 
 
 /**
@@ -84,7 +86,7 @@ private fun <R> Context.withVersion12(block: (SQLiteDatabase) -> R) {
  * database of version 12
  *
  * @param context Context
- * @param path String of absolute path to old database file
+ * @param path String of absolute path to old (encrypted) database file
  * @param updateProgressDialog An optional progress dialog to update
  */
 @Synchronized
@@ -92,6 +94,24 @@ fun importYomikata(context: Context, path: String, updateProgressDialog: UpdateP
     // decrypt file and place it in a temporary file
     val oldDecryptedPath = kotlin.io.path.createTempFile("temp-decrypted-db-", ".db")
     CopyUtils.restoreEncryptedBdd(File(path), oldDecryptedPath.pathString)
+    importYomikata(context, oldDecryptedPath.readBytes(), updateProgressDialog)
+}
+
+/**
+ * Import yomikata.
+ *
+ * Imports old versions of yomikata database. Merges the progress of words into the
+ * database of version 12
+ *
+ * @param context Context
+ * @param data Raw data bytes containing the decrypted database
+ * @param updateProgressDialog An optional progress dialog to update
+ */
+@Synchronized
+fun importYomikata(context: Context, data: ByteArray, updateProgressDialog: UpdateProgressDialog?) {
+    // place data in temp file
+    val oldDecryptedPath = kotlin.io.path.createTempFile("temp-db-", ".db")
+    oldDecryptedPath.writeBytes(data)
     // open temp file as database
     val oldDatabase = SQLiteDatabase.openDatabase (
         oldDecryptedPath.pathString, null, SQLiteDatabase.OPEN_READONLY
