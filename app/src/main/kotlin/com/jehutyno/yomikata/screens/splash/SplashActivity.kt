@@ -11,7 +11,6 @@ import com.jehutyno.yomikata.databinding.ActivitySplashBinding
 import com.jehutyno.yomikata.screens.quizzes.QuizzesActivity
 import com.jehutyno.yomikata.util.Prefs
 import com.jehutyno.yomikata.util.handleOldEncryptedDatabase
-import com.jehutyno.yomikata.util.migrateFromYomikata
 
 
 // TODO: migrate to splashScreen https://developer.android.com/develop/ui/views/launch/splash-screen/migrate
@@ -49,10 +48,10 @@ class SplashActivity : AppCompatActivity() {
         val handler = Handler(Looper.getMainLooper())
         handler.postDelayed(
             {
-                if (!pref.getBoolean("migrationYomiDone", false)) {
-                    migrateFromYomikata()
-                    pref.edit().putBoolean("migrationYomiDone", true).apply()
-                }
+//                if (!pref.getBoolean("migrationYomiDone", false)) {
+//                    importYomikata("????")
+//                    pref.edit().putBoolean("migrationYomiDone", true).apply()
+//                }
                 val intent = Intent(this@SplashActivity, QuizzesActivity::class.java)
                 startActivity(intent)
                 overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)

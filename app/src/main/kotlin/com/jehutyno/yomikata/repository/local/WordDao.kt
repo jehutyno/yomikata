@@ -73,15 +73,6 @@ interface WordDao {
     @Query("SELECT * FROM words WHERE _id = :wordId LIMIT 1")
     fun getWordById(wordId: Long): RoomWords?
 
-    @Query("UPDATE words SET level = :priority, " +
-                            "points = :points, " +
-                            "count_fail = :counterFail, " +
-                            "count_try = :counterTry, " +
-                            "count_success = :counterSuccess " +
-           "WHERE japanese = (:word) AND reading LIKE '%' || (:pronunciation) || '%'")
-    fun restoreWord(word: String, pronunciation: String, priority: Int, points: Int,
-                    counterFail: Int, counterTry: Int, counterSuccess: Int)
-
     @Query("DELETE FROM words")
     fun deleteAllWords()
 

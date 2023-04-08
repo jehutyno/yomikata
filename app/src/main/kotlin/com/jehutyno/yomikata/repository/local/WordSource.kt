@@ -5,7 +5,6 @@ import androidx.sqlite.db.SimpleSQLiteQuery
 import com.jehutyno.yomikata.model.QuizWord
 import com.jehutyno.yomikata.model.Word
 import com.jehutyno.yomikata.repository.WordRepository
-import com.jehutyno.yomikata.repository.migration.WordTable
 import com.jehutyno.yomikata.util.HiraganaUtils
 import com.jehutyno.yomikata.util.QuizType
 import java.util.*
@@ -158,22 +157,6 @@ class WordSource(private val wordDao: WordDao) : WordRepository {
     override fun decreaseWordsRepetition(quizIds: LongArray) {
         val idList = wordDao.getWordIdsWithRepetitionStrictlyGreaterThan(quizIds, 0)
         wordDao.decreaseWordRepetitionByOne(idList)
-    }
-
-    override fun restoreWord(word: String, pronunciation: String, wordTable: WordTable) {
-        val points = when (wordTable.priority) {
-            1 -> 75
-            2 -> 50
-            3 -> 100
-            else -> 0
-        }
-        val priority = when (wordTable.priority) {
-            1 -> 0
-            else -> wordTable.priority
-        }
-
-        wordDao.restoreWord(word, pronunciation, priority, points,
-                            wordTable.counterFail, wordTable.counterTry, wordTable.counterSuccess)
     }
 
     override fun updateWord(updateWord: Word, word: Word?) {

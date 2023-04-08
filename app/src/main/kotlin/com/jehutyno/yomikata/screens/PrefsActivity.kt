@@ -23,12 +23,7 @@ import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.PreferenceManager
 import com.jehutyno.yomikata.R
-import com.jehutyno.yomikata.repository.local.WordSource
 import com.jehutyno.yomikata.repository.local.YomikataDataBase
-import com.jehutyno.yomikata.repository.migration.MigrationSource
-import com.jehutyno.yomikata.repository.migration.MigrationTable
-import com.jehutyno.yomikata.repository.migration.MigrationTables
-import com.jehutyno.yomikata.repository.migration.OldDataBase
 import com.jehutyno.yomikata.util.*
 import com.jehutyno.yomikata.util.Extras.PERMISSIONS_STORAGE
 import com.jehutyno.yomikata.util.Extras.REQUEST_EXTERNAL_STORAGE_BACKUP
@@ -428,64 +423,6 @@ class PrefsActivity : AppCompatActivity() {
         }
 
         openFile(null)
-    }
-
-    private fun importYomikata(path: String?) {
-        val pathSegments = path?.split("/")
-        val toPath = getString(R.string.db_path)
-        val toName = pathSegments!![pathSegments.count() - 1] + ".decrypted"
-        try {
-            CopyUtils.reinitDataBase(this)
-            CopyUtils.restoreEncryptedBdd(File(path), toPath + toName)
-            val oldDatabase = OldDataBase.getDatabase(this)
-            val migrationDao = oldDatabase.migrationDao()
-            val migrationSource = MigrationSource(migrationDao)
-            val wordTables = MigrationTable.allTables(MigrationTables.values())
-
-            val progressBar1 = ProgressBar(this, null, android.R.style.Widget_ProgressBar_Horizontal)
-            progressBar1.setPadding(40, progressBar1.paddingTop, 40, progressBar1.paddingBottom)
-            progressBar1.max = wordTables.count()
-
-            val progressAlertDialog = alertDialog {
-                titleResource = R.string.progress_import_title
-                messageResource = R.string.progress_import_message_y
-                setCancelable(false)
-                setView(progressBar1)
-            }
-            progressAlertDialog.show()
-
-            MainScope().launch {
-                wordTables.forEach {
-                    val wordTable = migrationSource.getWordTable(it)
-                    progressBar1.incrementProgressBy(1)
-                    wordTable.forEach { word ->
-                        val wordDao = YomikataDataBase.getDatabase(this@PrefsActivity).wordDao()
-                        val source = WordSource(wordDao)
-                        if (word.counterTry > 0 || word.priority > 0)
-                            source.restoreWord(word.word, word.pronunciation, word)
-                    }
-                }
-                File(toPath + toName).delete()
-
-                progressAlertDialog.dismiss()
-                alertDialog {
-                    titleResource = R.string.restore_success
-                    messageResource = R.string.restore_success_message
-                    okButton()
-                }.show()
-            }
-        } catch (exception: Exception) {
-            alertDialog {
-                titleResource = R.string.restore_error
-                messageResource = R.string.restore_error_message
-                okButton()
-            }.show()
-        }
-    }
-
-    private fun importYomikataZ(path: String) {
-        YomikataDataBase.overwriteDatabase(this, path)
-        finish()
     }
 
 }

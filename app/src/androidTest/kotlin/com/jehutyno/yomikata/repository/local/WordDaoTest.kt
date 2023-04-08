@@ -193,10 +193,6 @@ class WordDaoTest {
     }
 
     @Test
-    fun restoreWord() {
-    }
-
-    @Test
     fun deleteAllWords() {
         for (sample in sampleRoomWords) {
             wordDao.addWord(sample)

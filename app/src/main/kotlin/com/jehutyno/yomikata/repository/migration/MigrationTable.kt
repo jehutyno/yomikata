@@ -1,9 +1,5 @@
 package com.jehutyno.yomikata.repository.migration
 
-import androidx.room.ColumnInfo
-import androidx.room.Entity
-import androidx.room.PrimaryKey
-
 
 /**
  * Created by valentin on 13/10/2016.
@@ -128,27 +124,4 @@ enum class MigrationWordTable(override val column: String, override val tableNam
     counter_success("counter_success", ""),
     counter_fail("counter_fail", ""),
     priority("priority", "")
-}
-
-@Entity(tableName = "migrationTable")
-data class RoomMigrationWordTable (
-    @PrimaryKey val _id: Int,
-    @ColumnInfo val word: String,
-    @Suppress("SpellCheckingInspection")
-    @ColumnInfo val prononciation: String,
-    @ColumnInfo val counter_try: Int,
-    @ColumnInfo val counter_success: Int,
-    @ColumnInfo val counter_Fail: Int,
-    @ColumnInfo val priority: Int
-) {
-    companion object {
-        fun from(wordTable: WordTable): RoomMigrationWordTable {
-            return RoomMigrationWordTable(wordTable.id, wordTable.word, wordTable.pronunciation,
-                                          wordTable.counterTry, wordTable.counterSuccess,
-                                          wordTable.counterFail, wordTable.priority)
-        }
-    }
-    fun toWordTable(): WordTable {
-        return WordTable(_id, word, prononciation, counter_try, counter_success, counter_Fail, priority)
-    }
 }

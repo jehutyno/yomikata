@@ -11,6 +11,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentTransaction
 import androidx.appcompat.app.AppCompatActivity
 import android.view.inputmethod.InputMethodManager
+import android.widget.ProgressBar
 import androidx.preference.PreferenceManager
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.jehutyno.yomikata.R
@@ -18,13 +19,14 @@ import com.jehutyno.yomikata.repository.local.*
 import com.jehutyno.yomikata.repository.migration.*
 import com.jehutyno.yomikata.screens.quizzes.QuizzesActivity
 import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 import splitties.alertdialog.appcompat.alertDialog
 import splitties.alertdialog.appcompat.messageResource
 import splitties.alertdialog.appcompat.okButton
 import splitties.alertdialog.appcompat.titleResource
 import java.io.File
 import java.io.FileOutputStream
+import kotlin.io.path.pathString
 
 
 /**
@@ -56,36 +58,63 @@ fun Activity.hideSoftKeyboard() {
         inputMethodManager.hideSoftInputFromWindow(this.currentFocus!!.windowToken, 0)
 }
 
-fun Activity.migrateFromYomikata() {
-    val toPath = getString(R.string.db_path)
-    val toName = getString(R.string.db_name_yomi)
-    val file = File("$toPath/$toName")
-    if (file.exists()) {
-        try {
-            CopyUtils.reinitDataBase(this)
-            val migrationDao = OldDataBase.getDatabase(this).migrationDao()
-            val migrationSource = MigrationSource(migrationDao)
-            val wordTables = MigrationTable.allTables(MigrationTables.values())
+/**
+ * Import yomikata.
+ *
+ * Imports old versions of yomikata database.
+ *
+ * @param path String of absolute path to old database file
+ */
+fun Activity.importYomikata(path: String) {
+    val oldDecryptedPath = kotlin.io.path.createTempFile("temp-decrypted-db-", ".db")
+    try {
+        CopyUtils.reinitDataBase(this)
+        CopyUtils.restoreEncryptedBdd(File(path), oldDecryptedPath.pathString)
+        val oldDatabase = SQLiteDatabase.openDatabase (
+            oldDecryptedPath.pathString, null, OPEN_READONLY
+        )
+        val newDatabase = SQLiteDatabase.openDatabase(
+            YomikataDataBase.getDatabaseFile(this).absolutePath,
+            null, SQLiteDatabase.OPEN_READWRITE
+        )
+        val migrationSource = MigrationSource(oldDatabase, newDatabase)
+        val wordTables = MigrationTable.allTables(MigrationTables.values())
 
-            MainScope().async {
-                wordTables.forEach {
-                    val wordTable = migrationSource.getWordTable(it)
-                    wordTable.forEach { word ->
-                        val wordDao = YomikataDataBase.getDatabase(this@migrateFromYomikata).wordDao()
-                        val source = WordSource(wordDao)
-                        if (word.counterTry > 0 || word.priority > 0)
-                            source.restoreWord(word.word, word.pronunciation, word)
-                    }
+        val oldImportProgress = ProgressBar(this, null, android.R.style.Widget_ProgressBar_Horizontal)
+        oldImportProgress.setPadding(40, oldImportProgress.paddingTop, 40, oldImportProgress.paddingBottom)
+        oldImportProgress.max = wordTables.count()
+
+        val oldImportAlertDialog = alertDialog {
+            titleResource = R.string.progress_import_title
+            messageResource = R.string.progress_import_message_y
+            setCancelable(false)
+            setView(oldImportProgress)
+        }
+        oldImportAlertDialog.show()
+
+        MainScope().launch {
+            wordTables.forEach {
+                val wordTable = migrationSource.getWordTable(it)
+                oldImportProgress.incrementProgressBy(1)
+                wordTable.forEach { word ->
+                    if (word.counterTry > 0 || word.priority > 0)
+                        migrationSource.restoreWord(word.word, word.pronunciation, word)
                 }
-                File(toPath + toName).delete()
             }
-        } catch (exception: Exception) {
+
+            oldImportAlertDialog.dismiss()
             alertDialog {
-                titleResource = R.string.restore_error
-                messageResource = R.string.restore_error_message
+                titleResource = R.string.restore_success
+                messageResource = R.string.restore_success_message
                 okButton()
             }.show()
         }
+    } catch (exception: Exception) {
+        alertDialog {
+            titleResource = R.string.restore_error
+            messageResource = R.string.restore_error_message
+            okButton()
+        }.show()
     }
 }
 
@@ -101,6 +130,8 @@ fun Activity.migrateFromYomikata() {
  *
  */
 fun handleOldEncryptedDatabase(context: Context, filePathEncrypted: String) {
+    // backup!
+    YomikataDataBase.createLocalBackup(context)
     val filePath = context.getDatabasePath("yomikataz.db").absolutePath
     if (filePathEncrypted.isNotEmpty()) {
         val file = File(filePathEncrypted)
