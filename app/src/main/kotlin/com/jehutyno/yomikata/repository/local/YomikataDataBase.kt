@@ -6,6 +6,7 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.jehutyno.yomikata.dao.*
 import com.jehutyno.yomikata.util.updateOldDBtoVersion12
 import java.io.File
 import java.io.FileInputStream
@@ -23,7 +24,6 @@ abstract class YomikataDataBase : RoomDatabase() {
     abstract fun quizDao(): QuizDao
     abstract fun sentenceDao(): SentenceDao
     abstract fun statsDao(): StatsDao
-    abstract fun updateDao(): UpdateDao
     abstract fun wordDao(): WordDao
 
     companion object {

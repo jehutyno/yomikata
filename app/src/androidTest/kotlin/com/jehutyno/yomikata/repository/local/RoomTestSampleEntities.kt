@@ -1,5 +1,8 @@
 package com.jehutyno.yomikata.repository.local
 
+import com.jehutyno.yomikata.dao.QuizDao
+import com.jehutyno.yomikata.dao.WordDao
+
 
 /**
  * Samples of Room entities for testing

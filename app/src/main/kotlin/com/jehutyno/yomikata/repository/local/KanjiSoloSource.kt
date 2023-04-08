@@ -1,5 +1,6 @@
 package com.jehutyno.yomikata.repository.local
 
+import com.jehutyno.yomikata.dao.KanjiSoloDao
 import com.jehutyno.yomikata.model.KanjiSolo
 import com.jehutyno.yomikata.model.KanjiSoloRadical
 import com.jehutyno.yomikata.model.Radical

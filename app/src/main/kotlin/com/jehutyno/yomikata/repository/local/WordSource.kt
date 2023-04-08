@@ -2,6 +2,7 @@ package com.jehutyno.yomikata.repository.local
 
 import android.database.sqlite.SQLiteDatabase
 import androidx.sqlite.db.SimpleSQLiteQuery
+import com.jehutyno.yomikata.dao.WordDao
 import com.jehutyno.yomikata.model.QuizWord
 import com.jehutyno.yomikata.model.Word
 import com.jehutyno.yomikata.repository.WordRepository

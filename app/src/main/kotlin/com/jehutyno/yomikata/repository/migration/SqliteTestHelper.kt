@@ -1,4 +1,4 @@
-package com.jehutyno.yomikata.repository.local
+package com.jehutyno.yomikata.repository.migration
 
 import android.content.Context
 import android.database.Cursor
@@ -358,7 +358,7 @@ data class KanjiSolov12(val id: Long, val kanji: String, val strokes: Int, val e
         }
 
         fun addKanjiSolo(database: SupportSQLiteDatabase, newKanjiSolo: KanjiSolov12,
-                                                          preserve_id: Boolean = false) {
+                         preserve_id: Boolean = false) {
             database.execSQL("""
                 INSERT INTO $tableName ( ${if (preserve_id) "${SQLiteKanjiSolo.ID.column_name}, " else ""}
                     ${SQLiteKanjiSolo.KANJI.column_name}, ${SQLiteKanjiSolo.STROKES.column_name},
@@ -405,7 +405,7 @@ data class Radicalv12(val id: Long, val strokes: Int, val radical: String,
         }
 
         fun addRadical(database: SupportSQLiteDatabase, newRadical: Radicalv12,
-                                                        preserve_id: Boolean = false) {
+                       preserve_id: Boolean = false) {
             database.execSQL("""
                 INSERT INTO $tableName ( ${if (preserve_id) "${SQLiteRadicals.ID.column_name}, " else ""}
                     ${SQLiteRadicals.STROKES.column_name}, ${SQLiteRadicals.RADICAL.column_name},

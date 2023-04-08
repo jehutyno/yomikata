@@ -68,7 +68,6 @@ fun Activity.hideSoftKeyboard() {
 fun Activity.importYomikata(path: String) {
     val oldDecryptedPath = kotlin.io.path.createTempFile("temp-decrypted-db-", ".db")
     try {
-        CopyUtils.reinitDataBase(this)
         CopyUtils.restoreEncryptedBdd(File(path), oldDecryptedPath.pathString)
         val oldDatabase = SQLiteDatabase.openDatabase (
             oldDecryptedPath.pathString, null, OPEN_READONLY

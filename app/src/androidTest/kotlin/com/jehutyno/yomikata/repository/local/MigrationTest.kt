@@ -6,6 +6,8 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
 import androidx.test.platform.app.InstrumentationRegistry
+import com.jehutyno.yomikata.repository.migration.SqliteTestHelper
+import com.jehutyno.yomikata.repository.migration.Wordv12
 import org.junit.After
 import org.junit.Assert.*
 import org.junit.Before

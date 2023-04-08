@@ -1,5 +1,6 @@
 package com.jehutyno.yomikata.repository.local
 
+import com.jehutyno.yomikata.dao.StatsDao
 import com.jehutyno.yomikata.model.StatAction
 import com.jehutyno.yomikata.model.StatEntry
 import com.jehutyno.yomikata.model.StatResult

@@ -1,5 +1,6 @@
 package com.jehutyno.yomikata.repository.local
 
+import com.jehutyno.yomikata.dao.QuizDao
 import com.jehutyno.yomikata.model.Quiz
 import com.jehutyno.yomikata.model.QuizWord
 import com.jehutyno.yomikata.repository.QuizRepository

@@ -1,6 +1,7 @@
 package com.jehutyno.yomikata.repository.local
 
 import android.content.Context
+import com.jehutyno.yomikata.dao.*
 import org.kodein.di.*
 
 

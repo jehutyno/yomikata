@@ -1,6 +1,8 @@
-package com.jehutyno.yomikata.repository.local
+package com.jehutyno.yomikata.dao
 
 import androidx.room.*
+import com.jehutyno.yomikata.repository.local.RoomQuiz
+import com.jehutyno.yomikata.repository.local.RoomQuizWord
 
 
 @Dao

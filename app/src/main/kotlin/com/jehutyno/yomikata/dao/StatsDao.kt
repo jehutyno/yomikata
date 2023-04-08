@@ -1,8 +1,9 @@
-package com.jehutyno.yomikata.repository.local
+package com.jehutyno.yomikata.dao
 
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
+import com.jehutyno.yomikata.repository.local.RoomStatEntry
 
 
 @Dao

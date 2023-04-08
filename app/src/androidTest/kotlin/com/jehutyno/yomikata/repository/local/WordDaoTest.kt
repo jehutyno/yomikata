@@ -4,6 +4,8 @@ import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
+import com.jehutyno.yomikata.dao.QuizDao
+import com.jehutyno.yomikata.dao.WordDao
 import org.junit.Assert.*
 
 import org.junit.After

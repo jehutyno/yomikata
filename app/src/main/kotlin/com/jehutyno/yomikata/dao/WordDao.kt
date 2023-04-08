@@ -1,7 +1,9 @@
-package com.jehutyno.yomikata.repository.local
+package com.jehutyno.yomikata.dao
 
 import androidx.room.*
 import androidx.sqlite.db.SupportSQLiteQuery
+import com.jehutyno.yomikata.repository.local.RoomQuizWord
+import com.jehutyno.yomikata.repository.local.RoomWords
 
 
 @Dao
