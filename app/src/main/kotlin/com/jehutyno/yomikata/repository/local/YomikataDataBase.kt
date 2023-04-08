@@ -7,7 +7,7 @@ import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.jehutyno.yomikata.dao.*
-import com.jehutyno.yomikata.util.updateOldDBtoVersion12
+import com.jehutyno.yomikata.repository.migration.updateOldDBtoVersion12
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -15,10 +15,12 @@ import java.io.OutputStream
 import java.nio.channels.FileLock
 
 
+const val DATABASE_VERSION = 13
+
 @Database(entities = [RoomKanjiSolo::class, RoomQuiz::class, RoomSentences::class,
                       RoomStatEntry::class, RoomWords::class, RoomQuizWord::class,
                       RoomRadicals::class],
-          version = 13, exportSchema = true)
+          version = DATABASE_VERSION, exportSchema = true)
 abstract class YomikataDataBase : RoomDatabase() {
     abstract fun kanjiSoloDao(): KanjiSoloDao
     abstract fun quizDao(): QuizDao
