@@ -1,16 +1,12 @@
 package com.jehutyno.yomikata.screens
 
-import android.Manifest
 import android.app.Activity
 import android.content.Intent
-import android.content.pm.PackageManager
-import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteException
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.DocumentsContract
-import android.view.ViewGroup
 import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
@@ -18,16 +14,12 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
-import androidx.core.app.ActivityCompat
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.PreferenceManager
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.repository.local.YomikataDataBase
 import com.jehutyno.yomikata.util.*
-import com.jehutyno.yomikata.util.Extras.PERMISSIONS_STORAGE
-import com.jehutyno.yomikata.util.Extras.REQUEST_EXTERNAL_STORAGE_BACKUP
-import com.jehutyno.yomikata.util.Extras.REQUEST_EXTERNAL_STORAGE_RESTORE
 import com.wooplr.spotlight.prefs.PreferencesManager
 import kotlinx.coroutines.*
 import mu.KLogging
@@ -46,96 +38,8 @@ class PrefsActivity : AppCompatActivity() {
     private lateinit var restoreLauncher : ActivityResultLauncher<Intent>
 
     // alertDialog for progressBar: shows progress of data backup or migration
-    private var progressAlertDialog: AlertDialog? = null
-    private lateinit var progressBar: ProgressBar
-    private val MAX_PROGRESS = 100
+    private lateinit var updateProgressDialog: UpdateProgressDialog
 
-    private fun showProgress() {
-        if (progressAlertDialog == null) {
-            progressBar.progress = 0
-
-            progressAlertDialog = alertDialog {
-                titleResource = R.string.progress_bdd_update_title
-                messageResource = R.string.progress_bdd_update_message
-                setCancelable(false)
-                setView(progressBar)
-            }
-            progressAlertDialog!!.show()
-        }
-        else {
-            throw Error("Tried to create multiple progress dialogs simultaneously")
-        }
-    }
-
-    private fun updateProgress(newProgress: Int) {
-        progressBar.progress = newProgress
-        if (newProgress == MAX_PROGRESS) {
-            finishProgress()
-        }
-    }
-
-    private fun errorProgress(errorTitle: String?, errorMessage: String?) {
-        (progressBar.parent as ViewGroup).removeView(progressBar)
-        progressAlertDialog!!.dismiss()
-        progressAlertDialog = null
-        alertDialog {
-            title = errorTitle
-            message= "The following error occured:\n$errorMessage"
-            okButton()
-        }.show()
-    }
-
-    private fun finishProgress() {
-        (progressBar.parent as ViewGroup).removeView(progressBar)
-        progressAlertDialog!!.dismiss()
-        progressAlertDialog = null
-        alertDialog {
-            titleResource = R.string.update_success_title
-            messageResource = R.string.update_success_message
-            okButton()
-        }.show()
-        // tell quizzes activity to start in home screen fragment
-        val intent = Intent()
-        intent.putExtra("gotoCategory", Categories.HOME)
-        setResult(RESULT_OK, intent)
-        YomikataDataBase.forceLoadDatabase(this)
-    }
-
-    private fun validateDatabaseFile(database: File) {
-        var db : SQLiteDatabase? = null
-        try {
-            // attempt to open the database file
-            db = SQLiteDatabase.openDatabase(database.absolutePath, null, SQLiteDatabase.OPEN_READONLY)
-
-            // check the database schema version
-//            val cursor = db.rawQuery("PRAGMA schema_version", null)
-//            if (cursor.moveToFirst()) {
-//                val schemaVersion = cursor.getInt(0)
-//                val expectedSchemaVersions = listOf(1, 2, 3)
-//                if (!expectedSchemaVersions.contains(schemaVersion)) {
-//                    throw IllegalStateException("Unexpected database schema version: $schemaVersion")
-//                }
-//            } else {
-//                throw IllegalStateException("Unable to retrieve database schema version")
-//            }
-//            cursor.close()
-
-            // check for tables
-            val tableCursor = db.rawQuery("SELECT name FROM sqlite_master WHERE type='table'" +
-                                                                             "AND name IN (?, ?)",
-                                            arrayOf("words", "quiz"))
-            if (!tableCursor.moveToFirst()) {
-                throw IllegalStateException("Database does not contain some table(s)")
-            }
-            tableCursor.close()
-
-        } catch (e: SQLiteException) {
-            throw IllegalStateException("Unable to open database file, please verify it is a database " +
-                                        "file ending in .db", e)
-        } finally {
-            db?.close()
-        }
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -149,7 +53,7 @@ class PrefsActivity : AppCompatActivity() {
                 return@registerForActivityResult
 
             // start a progress dialog
-            showProgress()
+            updateProgressDialog.show()
 
             CoroutineScope(Dispatchers.Main).launch {
                 var data: ByteArray? = null
@@ -163,10 +67,10 @@ class PrefsActivity : AppCompatActivity() {
                 }
 
                 if (em != null) {
-                    errorProgress("failed to create backup", em)
+                    updateProgressDialog.error("failed to create backup", em)
                     return@launch
                 }
-                updateProgress(50)
+                updateProgressDialog.updateProgress(50)
 
                 result.data?.data?.also { uri ->
                     var outputStream: OutputStream? = null
@@ -174,13 +78,13 @@ class PrefsActivity : AppCompatActivity() {
                         outputStream = contentResolver.openOutputStream(uri)!!
                         outputStream.write(data)
                     } catch (e: IOException) {
-                        errorProgress("failed to create backup", e.message)
+                        updateProgressDialog.error("failed to create backup", e.message)
                         return@launch
                     } finally {
                         outputStream?.close()
                     }
                 }
-                updateProgress(100)
+                updateProgressDialog.updateProgress(100)
             }
 
         }
@@ -189,7 +93,7 @@ class PrefsActivity : AppCompatActivity() {
             if (result.resultCode != Activity.RESULT_OK)
                 return@registerForActivityResult
 
-            showProgress()
+            updateProgressDialog.show()
 
             CoroutineScope(Dispatchers.Main).launch {
                 val inputStream =
@@ -209,13 +113,13 @@ class PrefsActivity : AppCompatActivity() {
                         while (inputStream?.read(buffer).also { len = it ?: -1 } != -1) {
                             outputStream.write(buffer, 0, len)
                         }
-                        updateProgress(50)
+                        updateProgressDialog.updateProgress(50)
                         val data = outputStream.toByteArray()
 
                         outputStreamTemp.write(data)
 
                         try {
-                            validateDatabaseFile(databaseFile)
+                            validateDatabase(databaseFile)
                         } catch (e: IllegalStateException) {
                             return@withContext Pair("Invalid file", e.message)
                         } catch (e: SQLiteException) {
@@ -223,7 +127,7 @@ class PrefsActivity : AppCompatActivity() {
                         }
 
                         YomikataDataBase.overwriteDatabase(this@PrefsActivity, data)
-                        updateProgress(75)
+                        updateProgressDialog.updateProgress(75)
                     } catch (e: IOException) {
                         e.printStackTrace()
                         return@withContext Pair("failed to restore database", e.message)
@@ -236,41 +140,32 @@ class PrefsActivity : AppCompatActivity() {
                 }
 
                 if (titEm.first != null) {
-                    errorProgress(titEm.first, titEm.second)
+                    updateProgressDialog.error(titEm.first, titEm.second)
                     return@launch
                 }
-                updateProgress(100)
+                updateProgressDialog.updateProgress(100)
             }
         }
 
         // progressBar for database update
-        progressBar = ProgressBar(this, null, android.R.style.Widget_ProgressBar_Horizontal)
+        val progressBar = ProgressBar(this, null, android.R.style.Widget_ProgressBar_Horizontal)
         progressBar.setPadding(40, progressBar.paddingTop, 40, progressBar.paddingBottom)
         progressBar.max = 100
+
+        updateProgressDialog = UpdateProgressDialog(this, progressBar)
+        updateProgressDialog.finishCallback = {
+            // tell quizzes activity to start in home screen fragment
+            val intent = Intent()
+            intent.putExtra("gotoCategory", Categories.HOME)
+            setResult(RESULT_OK, intent)
+            YomikataDataBase.forceLoadDatabase(this)
+        }
     }
 
     class PrefsFragment : PreferenceFragmentCompat() {
 
         override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
             setPreferencesFromResource(R.xml.preferences, rootKey)
-        }
-
-        /**
-         * Checks if we have the Manifest.permission.WRITE_EXTERNAL_STORAGE permission.
-         * If not, then prompt the user.
-         * Returns true if permission exists, and false otherwise.
-         */
-        private fun checkAndRequestPermission(requestCode: Int): Boolean {
-            val permission = ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.WRITE_EXTERNAL_STORAGE)
-            if (permission != PackageManager.PERMISSION_GRANTED) {
-                // We don't have permission so prompt the user
-                ActivityCompat.requestPermissions(
-                        requireActivity(),
-                        PERMISSIONS_STORAGE,
-                        requestCode
-                )
-            }
-            return permission == PackageManager.PERMISSION_GRANTED
         }
 
         private fun getResetAlert() : AlertDialog {
@@ -338,15 +233,11 @@ class PrefsActivity : AppCompatActivity() {
 
                 // Backup and Restore
                 "backup" -> {
-                    if (checkAndRequestPermission(REQUEST_EXTERNAL_STORAGE_BACKUP)) {
-                        (activity as PrefsActivity).backupProgress()
-                    }
+                    (activity as PrefsActivity).backupProgress()
                     return true
                 }
                 "restore" -> {
-                    if (checkAndRequestPermission(REQUEST_EXTERNAL_STORAGE_RESTORE)) {
-                        (activity as PrefsActivity).restoreProgress()
-                    }
+                    (activity as PrefsActivity).restoreProgress()
                     return true
                 }
                 "reset" -> {
@@ -369,16 +260,6 @@ class PrefsActivity : AppCompatActivity() {
                 else -> {
                     throw Error("unknown preference key: ${preference.key}")
                 }
-            }
-        }
-    }
-
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            when (requestCode) {
-                REQUEST_EXTERNAL_STORAGE_RESTORE -> restoreProgress()
-                REQUEST_EXTERNAL_STORAGE_BACKUP -> backupProgress()
             }
         }
     }
