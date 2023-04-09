@@ -8,6 +8,7 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.jehutyno.yomikata.dao.*
 import com.jehutyno.yomikata.repository.migration.updateOldDBtoVersion12
+import com.jehutyno.yomikata.util.UpdateProgressDialog
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -103,10 +104,13 @@ abstract class YomikataDataBase : RoomDatabase() {
             try {
                 outputStream = FileOutputStream(getDatabaseFile(context))
                 lock = outputStream.channel.lock()
+
                 getDatabase(context).close()
                 createLocalBackup(context)
+
                 // overwrite current with external data
                 outputStream.write(data)
+
                 INSTANCE = null
             } finally {
                 lock?.release()
@@ -168,6 +172,8 @@ abstract class YomikataDataBase : RoomDatabase() {
         fun getDatabaseFile(context: Context): File {
             return context.getDatabasePath(DATABASE_FILE_NAME)
         }
+
+        var updateProgressDialogGetter: (() -> UpdateProgressDialog)? = null
 
         ///////// DEFINE MIGRATIONS /////////
         // do not use values or constants that may be changed externally
@@ -353,7 +359,7 @@ abstract class YomikataDataBase : RoomDatabase() {
             // This performs all migrations from 1 to 12 (excluding the operations in
             // MIGRATION_8_9). The old database is synchronized with a static copy of version 12
             override fun migrate(database: SupportSQLiteDatabase) {
-                updateOldDBtoVersion12(database, context, null)
+                updateOldDBtoVersion12(database, context, updateProgressDialogGetter?.invoke())
             }
 
         }

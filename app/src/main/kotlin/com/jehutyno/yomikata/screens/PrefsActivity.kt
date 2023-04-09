@@ -89,6 +89,9 @@ class PrefsActivity : AppCompatActivity() {
 
         }
 
+        val updateProgressDialogMigrate = UpdateProgressDialog(this@PrefsActivity)
+        updateProgressDialogMigrate.prepare()
+
         restoreLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode != Activity.RESULT_OK)
                 return@registerForActivityResult
@@ -102,52 +105,26 @@ class PrefsActivity : AppCompatActivity() {
                         contentResolver.openInputStream(uri)
                     }
 
-                val buffer = ByteArray(4096)
-                val outputStream = ByteArrayOutputStream()
-
                 val titEm = withContext(Dispatchers.IO) {
-                    val databaseFile = File.createTempFile("temp-db-", ".db")
-                    val outputStreamTemp = FileOutputStream(databaseFile)
-                    try {
-                        var len: Int
-                        while (inputStream?.read(buffer).also { len = it ?: -1 } != -1) {
-                            outputStream.write(buffer, 0, len)
-                        }
-                        updateProgressDialog.updateProgress(50)
-                        val data = outputStream.toByteArray()
-
-                        outputStreamTemp.write(data)
-                        val type: DatabaseType?
-                        try {
-                            type = validateDatabase(databaseFile)
-                        } catch (e: IllegalStateException) {
-                            return@withContext Pair("Invalid file", e.message)
-                        } catch (e: SQLiteException) {
-                            return@withContext Pair("Something went wrong", e.message + e.cause?.message)
-                        }
-
-                        if (type == DatabaseType.OLD_YOMIKATA) {
-                            importYomikata(this@PrefsActivity, data, null)
-                        } else {
-                            YomikataDataBase.overwriteDatabase(this@PrefsActivity, data)
-                        }
-                        delay(1000L)
-                        updateProgressDialog.updateProgress(75)
-                    } catch (e: IOException) {
-                        e.printStackTrace()
-                        return@withContext Pair("failed to restore database", e.message)
-                    } finally {
-                        inputStream?.close()
-                        outputStream.close()
-                        outputStreamTemp.close()
-                    }
-                    Pair(null, null)
+                    doEverything(inputStream!!)
                 }
 
                 if (titEm.first != null) {
                     updateProgressDialog.error(titEm.first, titEm.second)
                     return@launch
                 }
+
+                YomikataDataBase.updateProgressDialogGetter = {
+                    updateProgressDialogMigrate
+                }
+                updateProgressDialogMigrate.show()
+                withContext(Dispatchers.IO) {
+                    YomikataDataBase.forceLoadDatabase(this@PrefsActivity)
+                }
+                updateProgressDialogMigrate.destroy()
+                YomikataDataBase.updateProgressDialogGetter = null
+
+
                 updateProgressDialog.updateProgress(100)
             }
         }
@@ -160,6 +137,49 @@ class PrefsActivity : AppCompatActivity() {
             setResult(RESULT_OK, intent)
             YomikataDataBase.forceLoadDatabase(this)    // TODO: maybe restart app to reload database?
         }
+
+    }
+
+    private fun doEverything(inputStream: InputStream): Pair<String?, String?> {
+        val buffer = ByteArray(4096)
+        val outputStream = ByteArrayOutputStream()
+
+        val databaseFile = File.createTempFile("temp-db-", ".db")
+        val outputStreamTemp = FileOutputStream(databaseFile)   // for validation
+        try {
+            var len: Int
+            while (inputStream.read(buffer).also { len = it } != -1) {
+                outputStream.write(buffer, 0, len)
+            }
+            updateProgressDialog.updateProgress(50)
+            val data = outputStream.toByteArray()
+
+            outputStreamTemp.write(data)
+            val type: DatabaseType?
+            try {
+                type = validateDatabase(databaseFile)
+            } catch (e: IllegalStateException) {
+                return Pair("Invalid file", e.message)
+            } catch (e: SQLiteException) {
+                return Pair("Something went wrong", e.message + e.cause?.message)
+            }
+
+            if (type == DatabaseType.OLD_YOMIKATA) {
+                importYomikata(this@PrefsActivity, data, null)
+            } else {
+                YomikataDataBase.overwriteDatabase(this@PrefsActivity, data)
+            }
+
+            updateProgressDialog.updateProgress(75)
+        } catch (e: IOException) {
+            e.printStackTrace()
+            return Pair("failed to restore database", e.message)
+        } finally {
+            inputStream.close()
+            outputStream.close()
+            outputStreamTemp.close()
+        }
+        return Pair(null, null)
     }
 
     class PrefsFragment : PreferenceFragmentCompat() {

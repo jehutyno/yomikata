@@ -24,21 +24,32 @@ class UpdateProgressDialog(private val activity: Activity) {
         progressBar.max = max
     }
 
-    /**
-     * Show the progress dialog
-     */
-    fun show() {
-        if (progressAlertDialog != null) {
-            throw Error("Tried to create multiple progress dialogs simultaneously")
-        }
-        progressBar.progress = 0
-
+    fun prepare() {
         progressAlertDialog = activity.alertDialog {
             titleResource = R.string.progress_bdd_update_title
             messageResource = R.string.progress_bdd_update_message
             setCancelable(false)
             setView(progressBar)
         }
+    }
+
+    /**
+     * Show the progress dialog
+     */
+    fun show() {
+        if (progressAlertDialog != null) {
+//            throw Error("Tried to create multiple progress dialogs simultaneously")
+
+        } else {
+            progressAlertDialog = activity.alertDialog {
+                titleResource = R.string.progress_bdd_update_title
+                messageResource = R.string.progress_bdd_update_message
+                setCancelable(false)
+                setView(progressBar)
+            }
+        }
+        progressBar.progress = 0
+
         progressAlertDialog!!.show()
     }
 
@@ -62,15 +73,24 @@ class UpdateProgressDialog(private val activity: Activity) {
      * Dismiss the dialog
      */
     fun finish() {
-        (progressBar.parent as ViewGroup).removeView(progressBar)
-        progressAlertDialog!!.dismiss()
-        progressAlertDialog = null
+        destroy()
         activity.alertDialog {
             titleResource = R.string.update_success_title
             messageResource = R.string.update_success_message
             okButton()
         }.show()
         finishCallback?.invoke()
+    }
+
+    /**
+     * Destroy
+     *
+     * Dismiss the dialog without calling any callbacks or showing any confirmations.
+     */
+    fun destroy() {
+        (progressBar.parent as ViewGroup).removeView(progressBar)
+        progressAlertDialog!!.dismiss()
+        progressAlertDialog = null
     }
 
     /**
