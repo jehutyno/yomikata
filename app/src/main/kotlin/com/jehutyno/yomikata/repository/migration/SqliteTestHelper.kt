@@ -208,6 +208,21 @@ abstract class BaseGetAllItems<T>(private val constructor: (Cursor) -> T) {
     fun deleteAll(database: SupportSQLiteDatabase) {
         database.execSQL("""DELETE FROM $tableName""")
     }
+
+    fun resetAutoIncrement(database: SupportSQLiteDatabase) {
+        database.execSQL("""PRAGMA foreign_keys = OFF""")
+        database.execSQL("""DELETE FROM sqlite_sequence WHERE name = '${tableName}'""")
+        database.execSQL("""PRAGMA foreign_keys = ON""")
+    }
+
+    fun getLastInsertedId(database: SupportSQLiteDatabase): Long {
+        val cursor = database.query("SELECT last_insert_rowid()")
+        cursor.use {
+            if (!it.moveToFirst())
+                throw IllegalStateException("could not retrieve inserted row id")
+            return it.getLong(0)
+        }
+    }
 }
 
 data class Wordv12(var id: Long, var japanese: String, var english: String, var french: String,
@@ -233,12 +248,24 @@ data class Wordv12(var id: Long, var japanese: String, var english: String, var 
         cursor.getLong(cursor.getColumnIndexOrThrow(SQLiteWord.SENTENCE_ID.column_name)),
     )
 
+    /**
+     * create a word by merging a base word with another word,
+     * the base word is used for all "objective" stats such as japanese, reading, etc.
+     * The other word is used for the user stats such as level, points, etc.
+     */
+    constructor(baseWord: Wordv12, userValuesWord: Wordv12) : this (
+        baseWord.id, baseWord.japanese, baseWord.english, baseWord.french, baseWord.reading,
+        userValuesWord.level, userValuesWord.countTry, userValuesWord.countSuccess,
+        userValuesWord.countFail, baseWord.isKana, userValuesWord.repetition, userValuesWord.points,
+        baseWord.baseCategory, userValuesWord.isSelected, baseWord.sentenceId
+    )
+
     companion object : BaseGetAllItems<Wordv12>(::Wordv12) {
         init {
             tableName = "words"
         }
 
-        fun insertWord(database: SupportSQLiteDatabase, newWord: Wordv12, preserve_id: Boolean = false) {
+        fun insertWord(database: SupportSQLiteDatabase, newWord: Wordv12, preserve_id: Boolean): Long {
             database.execSQL("""
                 INSERT INTO $tableName (
                     ${if (preserve_id) "${SQLiteWord.ID.column_name}," else ""}
@@ -251,13 +278,16 @@ data class Wordv12(var id: Long, var japanese: String, var english: String, var 
                     ${SQLiteWord.IS_SELECTED.column_name}, ${SQLiteWord.SENTENCE_ID.column_name}
                 )
                 VALUES (
-                    ${if (preserve_id) "${newWord.id}," else ""} "${newWord.japanese}", "${newWord.english}",
-                    "${newWord.french}", "${newWord.reading}", ${newWord.level}, ${newWord.countTry},
-                    ${newWord.countSuccess}, ${newWord.countFail}, ${newWord.isKana}, ${newWord.repetition},
-                    ${newWord.points}, ${newWord.baseCategory}, ${newWord.isSelected}, ${newWord.sentenceId}
+                    ${if (preserve_id) "${newWord.id}," else ""}
+                    ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
                 )
-            """.trimIndent()
+            """.trimIndent(), arrayOf(
+                    newWord.japanese, newWord.english, newWord.french, newWord.reading, newWord.level,
+                    newWord.countTry, newWord.countSuccess, newWord.countFail, newWord.isKana,
+                    newWord.reading, newWord.points, newWord.baseCategory, newWord.isSelected, newWord.sentenceId
+                )
             )
+            return getLastInsertedId(database)
         }
 
         fun updateWord(database: SupportSQLiteDatabase, originalId: Long, newWord: Wordv12) {
@@ -309,23 +339,22 @@ data class Quizv12(val id: Long, var nameEn: String, var nameFr: String,
             tableName = "quiz"
         }
 
-        fun insertQuiz(database: SupportSQLiteDatabase, newQuiz: Quizv12, preserve_id: Boolean = false): Long {
-            val cursor = database.query("""
+        fun insertQuiz(database: SupportSQLiteDatabase, newQuiz: Quizv12, preserve_id: Boolean): Long {
+            database.execSQL("""
                 INSERT INTO $tableName (
                     ${if (preserve_id) "${SQLiteQuiz.ID.column_name}," else ""}
                     ${SQLiteQuiz.NAME_EN.column_name}, ${SQLiteQuiz.NAME_FR.column_name},
                     ${SQLiteQuiz.CATEGORY.column_name}, ${SQLiteQuiz.IS_SELECTED.column_name}
                 )
                 VALUES (
-                    ${if (preserve_id) "${newQuiz.id}," else ""} ${newQuiz.nameEn}, ${newQuiz.nameFr},
-                    ${newQuiz.category}, ${newQuiz.isSelected}
+                    ${if (preserve_id) "${newQuiz.id}," else ""}
+                    ?, ?, ?, ?
                 )
-            """.trimIndent()
+            """.trimIndent(), arrayOf(
+                    newQuiz.nameEn, newQuiz.nameFr, newQuiz.category, newQuiz.isSelected
+                )
             )
-            cursor.moveToFirst()
-            val newIndex = cursor.getLong(0)
-            cursor.close()
-            return newIndex
+            return getLastInsertedId(database)
         }
     }
 
@@ -358,7 +387,7 @@ data class KanjiSolov12(val id: Long, val kanji: String, val strokes: Int, val e
         }
 
         fun addKanjiSolo(database: SupportSQLiteDatabase, newKanjiSolo: KanjiSolov12,
-                         preserve_id: Boolean = false) {
+                         preserve_id: Boolean) {
             database.execSQL("""
                 INSERT INTO $tableName ( ${if (preserve_id) "${SQLiteKanjiSolo.ID.column_name}, " else ""}
                     ${SQLiteKanjiSolo.KANJI.column_name}, ${SQLiteKanjiSolo.STROKES.column_name},
@@ -405,7 +434,7 @@ data class Radicalv12(val id: Long, val strokes: Int, val radical: String,
         }
 
         fun addRadical(database: SupportSQLiteDatabase, newRadical: Radicalv12,
-                       preserve_id: Boolean = false) {
+                       preserve_id: Boolean) {
             database.execSQL("""
                 INSERT INTO $tableName ( ${if (preserve_id) "${SQLiteRadicals.ID.column_name}, " else ""}
                     ${SQLiteRadicals.STROKES.column_name}, ${SQLiteRadicals.RADICAL.column_name},
@@ -457,12 +486,14 @@ data class QuizWordv12(val id: Long, var quizId: Long, var wordId: Long) {
             return exists != 0
         }
 
-        fun addQuizWord(database: SupportSQLiteDatabase, quizID : Long, wordId: Long) {
+        fun insertQuizWord(database: SupportSQLiteDatabase, quizWord: QuizWordv12, preserve_id: Boolean) {
             database.execSQL("""
                 INSERT INTO $tableName
-                ( ${SQLiteQuizWord.QUIZ_ID.column_name}, ${SQLiteQuizWord.WORD_ID.column_name} )
-                VALUES (?, ?)
-            """.trimIndent(), arrayOf<Any>(quizID, wordId)
+                ( ${if (preserve_id) "${Radicalv12.SQLiteRadicals.ID.column_name}, " else ""}
+                ${SQLiteQuizWord.QUIZ_ID.column_name}, ${SQLiteQuizWord.WORD_ID.column_name} )
+                VALUES ( ${if (preserve_id) "${quizWord.id}, " else ""}
+                            ?, ?)
+            """.trimIndent(), arrayOf(quizWord.quizId, quizWord.wordId)
             )
         }
     }
@@ -491,7 +522,7 @@ data class Sentencev12(var id: Long = -1, val jap: String = "",
         }
 
         fun addSentence(database: SupportSQLiteDatabase, newSentence: Sentencev12,
-                        preserve_id: Boolean = false) {
+                        preserve_id: Boolean) {
             database.execSQL("""
                 INSERT INTO $tableName ( ${if (preserve_id) "${SQLiteSentences.ID.column_name}, " else ""}
                     ${SQLiteSentences.JAP.column_name}, ${SQLiteSentences.EN.column_name},

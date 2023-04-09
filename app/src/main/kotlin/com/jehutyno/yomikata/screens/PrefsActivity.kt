@@ -7,7 +7,6 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.DocumentsContract
-import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
@@ -129,10 +128,10 @@ class PrefsActivity : AppCompatActivity() {
 
                         if (type == DatabaseType.OLD_YOMIKATA) {
                             importYomikata(this@PrefsActivity, data, null)
-                        } else{
+                        } else {
                             YomikataDataBase.overwriteDatabase(this@PrefsActivity, data)
                         }
-
+                        delay(1000L)
                         updateProgressDialog.updateProgress(75)
                     } catch (e: IOException) {
                         e.printStackTrace()
@@ -153,18 +152,13 @@ class PrefsActivity : AppCompatActivity() {
             }
         }
 
-        // progressBar for database update
-        val progressBar = ProgressBar(this, null, android.R.style.Widget_ProgressBar_Horizontal)
-        progressBar.setPadding(40, progressBar.paddingTop, 40, progressBar.paddingBottom)
-        progressBar.max = 100
-
-        updateProgressDialog = UpdateProgressDialog(this, progressBar)
+        updateProgressDialog = UpdateProgressDialog(this)
         updateProgressDialog.finishCallback = {
             // tell quizzes activity to start in home screen fragment
             val intent = Intent()
             intent.putExtra("gotoCategory", Categories.HOME)
             setResult(RESULT_OK, intent)
-            YomikataDataBase.forceLoadDatabase(this)
+            YomikataDataBase.forceLoadDatabase(this)    // TODO: maybe restart app to reload database?
         }
     }
 

@@ -353,7 +353,7 @@ abstract class YomikataDataBase : RoomDatabase() {
             // This performs all migrations from 1 to 12 (excluding the operations in
             // MIGRATION_8_9). The old database is synchronized with a static copy of version 12
             override fun migrate(database: SupportSQLiteDatabase) {
-                updateOldDBtoVersion12(database, context)
+                updateOldDBtoVersion12(database, context, null)
             }
 
         }

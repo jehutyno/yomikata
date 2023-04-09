@@ -1,19 +1,14 @@
 package com.jehutyno.yomikata.repository.migration
 
 import android.content.Context
-import android.content.Intent
 import android.database.sqlite.SQLiteDatabase
-import android.os.Handler
-import android.os.Looper
-import androidx.preference.PreferenceManager
+import android.database.sqlite.SQLiteDatabase.OPEN_READONLY
+import android.database.sqlite.SQLiteDatabase.OPEN_READWRITE
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.jehutyno.yomikata.repository.local.YomikataDataBase
-import com.jehutyno.yomikata.screens.quizzes.QuizzesActivity
 import com.jehutyno.yomikata.util.CopyUtils
-import com.jehutyno.yomikata.util.Prefs
 import com.jehutyno.yomikata.util.UpdateProgressDialog
 import java.io.File
-import java.io.FileOutputStream
 import kotlin.io.path.pathString
 import kotlin.io.path.readBytes
 import kotlin.io.path.writeBytes
@@ -46,37 +41,24 @@ private fun handleOldEncryptedDatabase(context: Context, filePathEncrypted: Stri
 }
 
 /**
- * With version12.
+ * Get temp version12.
  *
- * Executes the block of code with a provided instance of the database
- * at version 12. Will close and delete the v12 database file afterward.
+ * Returns a temporary file of the version 12 database from the assets folder.
  *
- * @param R any return value
- * @param block a lambda with SQLiteDatabase of version 12 as input
- * @receiver the return value R
+ * @param context Context
+ * @return Temporary file of version 12 database
  */
-private fun <R> Context.withVersion12(block: (SQLiteDatabase) -> R) {
-    val assetManager = assets
-    val dbName = "yomikataz_version12.db"
-    val dbPath = getDatabasePath(dbName).path
+private fun getTempVersion12(context: Context): File {
+    val assetManager = context.assets
+    val dbAssetName = "yomikataz_version12.db"
+    val tempDbFile = File.createTempFile("temp-v12-db-", ".db")
 
-    // copy the assets database v12 into the database folder to use it
-    if (!File(dbPath).exists()) {
-        assetManager.open(dbName).use { inputStream ->
-            FileOutputStream(dbPath).use { outputStream ->
-                inputStream.copyTo(outputStream)
-            }
-        }
+    // copy the assets database v12 into a temporary file
+    assetManager.open(dbAssetName).use { inputStream ->
+        inputStream.copyTo(tempDbFile.outputStream())
     }
 
-    val databaseVersion12 = SQLiteDatabase.openDatabase(dbPath, null, SQLiteDatabase.OPEN_READWRITE)
-
-    try {
-        block(databaseVersion12)
-    } finally {
-        databaseVersion12.close()
-        File(dbPath).delete()
-    }
+    return tempDbFile
 }
 
 /**
@@ -114,10 +96,11 @@ fun importYomikata(context: Context, data: ByteArray, updateProgressDialog: Upda
     oldDecryptedPath.writeBytes(data)
     // open temp file as database
     val oldDatabase = SQLiteDatabase.openDatabase (
-        oldDecryptedPath.pathString, null, SQLiteDatabase.OPEN_READONLY
+        oldDecryptedPath.pathString, null, OPEN_READONLY
     )
     // open version 12 of the database
-    context.withVersion12 {newDatabase ->
+    val v12File = getTempVersion12(context)
+    SQLiteDatabase.openDatabase(v12File.absolutePath, null, OPEN_READWRITE).use { newDatabase ->
         val migrationSource = MigrationSource(oldDatabase, newDatabase)
         val wordTables = MigrationTable.allTables(MigrationTables.values())
 
@@ -135,10 +118,9 @@ fun importYomikata(context: Context, data: ByteArray, updateProgressDialog: Upda
             progress++
             updateProgressDialog?.updateProgress(progress)
         }
-        // overwrite the real database file with the new version
-        newDatabase.close()
-        YomikataDataBase.overwriteDatabase(context, newDatabase.path)
     }
+    // overwrite the real database file with the new version
+    YomikataDataBase.overwriteDatabase(context, v12File.absolutePath)
 }
 
 /**
@@ -153,142 +135,140 @@ fun importYomikata(context: Context, data: ByteArray, updateProgressDialog: Upda
  */
 @Synchronized
 fun updateOldDBtoVersion12(oldDatabase: SupportSQLiteDatabase, context: Context,
-                           filePathEncrypted: String = "") {
-    // Do not use any externally defined daos, entities, models, etc.
+                           updateProgressDialog: UpdateProgressDialog?) {
+    // Do not use any externally (outside of migration folder) defined daos, entities, models, etc.
     // since they may change in the future.
-    val pref = PreferenceManager.getDefaultSharedPreferences(context)
-    val handler = Handler(Looper.getMainLooper())
-    handler.postDelayed(
-        {
-            pref.edit().putBoolean(Prefs.DB_UPDATE_ONGOING.pref, true).apply()
-        }, 2000)
 
-//    File(context.getString(R.string.db_path) + UpdateSQLiteHelper.UPDATE_DATABASE_NAME).delete()
+    // get version12 which will be used as the correct database to merge with user's oldDatabase
+    val v12File = getTempVersion12(context)
+    SQLiteDatabase.openDatabase(v12File.absolutePath, null, OPEN_READWRITE).use { newDatabase ->
+        val words = Wordv12.getAllItems(newDatabase).sortedBy(Wordv12::id)
+        val quizzes = Quizv12.getAllItems(newDatabase).sortedBy(Quizv12::id)
+        val kanjiSolo = KanjiSolov12.getAllItems(newDatabase).sortedBy(KanjiSolov12::id)
+        val radicals = Radicalv12.getAllItems(newDatabase).sortedBy(Radicalv12::id)
+        val quizWords = QuizWordv12.getAllItems(newDatabase).sortedBy(QuizWordv12::id)
+        val sentences = Sentencev12.getAllItems(newDatabase).sortedBy(Sentencev12::id)
 
-    handleOldEncryptedDatabase(context, filePathEncrypted)
-    pref.edit().remove(Prefs.DB_UPDATE_FILE.pref).apply()
-
-    var words: List<Wordv12>? = null
-    var quizzes: List<Quizv12>? = null
-    var kanjiSolo: List<KanjiSolov12>? = null
-    var radicals: List<Radicalv12>? = null
-    var quizWords: List<QuizWordv12>? = null
-    var sentences: List<Sentencev12>? = null
-
-    context.withVersion12 {checkPointDatabase ->
-        // get new data (version 12)
-        words = Wordv12.getAllItems(checkPointDatabase).sortedBy(Wordv12::id)
-        quizzes = Quizv12.getAllItems(checkPointDatabase).sortedBy(Quizv12::id)
-        kanjiSolo = KanjiSolov12.getAllItems(checkPointDatabase).sortedBy(KanjiSolov12::id)
-        radicals = Radicalv12.getAllItems(checkPointDatabase).sortedBy(Radicalv12::id)
-        quizWords = QuizWordv12.getAllItems(checkPointDatabase).sortedBy(QuizWordv12::id)
-        sentences = Sentencev12.getAllItems(checkPointDatabase).sortedBy(Sentencev12::id)
-    }
-
-    // TODO: does old stats need to be updated in any way?
-//    val oldStatsCount = oldDatabase.query("""SELECT COUNT(*) FROM stat_entry""").run {
-//        this.moveToFirst()
-//        this.getInt(0)
-//    }
-//    val oldKanjiSoloCount = oldDatabase.query("""SELECT COUNT(*) FROM kanji_solo""").run {
-//        this.moveToFirst()
-//        this.getInt(0)
-//    }
-//    val oldRadCount = oldDatabase.query("""SELECT COUNT(*) FROM radicals""").run {
-//        this.moveToFirst()
-//        this.getInt(0)
-//    }
-
-    var progress = 0
-
-    val maxProgress =    // total number of rows to update, used to display a progressBar
-        words!!.size + quizWords!!.size + quizzes!!.size + kanjiSolo!!.size + sentences!!.size
-
-    val intent = Intent()
-    intent.action = QuizzesActivity.UPDATE_INTENT
-    intent.putExtra(QuizzesActivity.UPDATE_COUNT, maxProgress)
-    intent.putExtra(QuizzesActivity.UPDATE_PROGRESS, progress)
-//    context.sendBroadcast(intent)
-
-    fun updateProgress() {  // call each time an item is updated to synchronize progressBar
-        progress++
-        if (progress % 100 == 0) {
-            intent.putExtra(QuizzesActivity.UPDATE_PROGRESS, progress)
-//            context.sendBroadcast(intent)
-        }
-    }
-
-    // -- update method --
-    // loop through newest list:
-    //      if element exist in old list: update the non user-specific fields
-    //      else (element does not exist in old list): add it
-
-    val oldWords = Wordv12.getAllItems(oldDatabase).sortedBy(Wordv12::id).toMutableList()
-    words!!.forEach { word ->
-        val oldWord = oldWords.firstOrNull { it.id == word.id }
-        oldWords.remove(oldWord)
-        if (oldWord == null) {
-            Wordv12.insertWord(oldDatabase, word, false)
-        } else {
-            Wordv12.updateWord(oldDatabase, oldWord.id, word)
+        val oldQuizWordsSize = oldDatabase.query("""SELECT COUNT(*) FROM quiz_word""").run {
+            this.moveToFirst()
+            this.getInt(0)
         }
 
-        updateProgress()
-    }
+        var progress = 0
+        val maxProgress =    // total number of rows to update, used to display a progressBar
+            words.size + quizzes.size + quizWords.size + oldQuizWordsSize +
+            kanjiSolo.size + radicals.size + sentences.size
+        updateProgressDialog?.setMax(maxProgress)
 
-    val quizIdsMap = mutableMapOf<Long, Long>() // store new indices, since they are coupled to
-    // words via quiz_words
-    val oldQuizzes = Quizv12.getAllItems(oldDatabase).sortedBy(Quizv12::id).toMutableList()
-    quizzes!!.forEach { quiz ->
-        val matchOldQuiz = oldQuizzes.firstOrNull { it.id == quiz.id }
-        oldQuizzes.remove(matchOldQuiz)
-        if (matchOldQuiz == null) {             // did not find in old quiz -> insert
-            val insertId = Quizv12.insertQuiz(oldDatabase, quiz, false)
-            quizIdsMap[quiz.id] = insertId
-        } else {
-            quizIdsMap[quiz.id] = quiz.id
+        fun updateProgress() {  // call each time an item is updated to synchronize progressBar
+            progress++
+            if (progress % 100 == 0) {
+                updateProgressDialog?.updateProgress(progress)
+            }
         }
 
-        updateProgress()
-    }
+        // -- update method --
+        // loop through newest list:
+        //      if element exists in old list:
+        //          override user-specific values of new with old values
+        //
+        // any values that exist in old but not in new will be discarded,
+        // except for quiz and quiz_words which correspond to user selections
 
-    // Assuming all old words and quizzes keep their original id -> no problem
-    // Any new ids or ids that changed must be handled here
-    quizWords!!.forEach {
-        if (!QuizWordv12.quizWordExists(oldDatabase, it.quizId, it.wordId)) {
-            QuizWordv12.addQuizWord(oldDatabase, quizIdsMap[it.quizId]!!, it.wordId)
+        // NOTE: AUTOINCREMENT is on for words, quiz, and quiz_word: use resetAutoIncrement !!
+
+        val oldWords = Wordv12.getAllItems(oldDatabase).sortedBy(Wordv12::id).toMutableList()
+        Wordv12.deleteAll(oldDatabase)
+        Wordv12.resetAutoIncrement(oldDatabase)
+        // store all new ids, which is needed in quiz_words update (see further down)
+        val wordIdsMap = mutableMapOf<Long, Long>()
+        words.forEach { word ->
+            val oldWord = oldWords.firstOrNull { it.id == word.id }
+            oldWords.remove(oldWord)
+
+            val updatedWord =
+                if (oldWord != null) {
+                    Wordv12(word, oldWord)
+                } else {
+                    word
+                }
+            val newId = Wordv12.insertWord(oldDatabase, updatedWord, false)
+            if (oldWord != null)
+                wordIdsMap[oldWord.id] = newId
+
+            updateProgress()
         }
 
-        updateProgress()
+        // store new indices, since they are coupled to
+        // words via quiz_words
+        val oldQuizzes = Quizv12.getAllItems(oldDatabase).sortedBy(Quizv12::id).toMutableList()
+        Quizv12.deleteAll(oldDatabase)
+        QuizWordv12.resetAutoIncrement(oldDatabase)
+        quizzes.forEach { quiz ->
+            val matchOldQuiz = oldQuizzes.firstOrNull { it.id == quiz.id }
+            oldQuizzes.remove(matchOldQuiz)
+
+            // always insert new quiz (only isSelected column is user-specific, but doesn't matter)
+            Quizv12.insertQuiz(oldDatabase, quiz, true)
+
+            updateProgress()
+        }
+        // any oldQuizzes that remain have to be added if they are user created quizzes (category == 8)
+        // store their original quizIds and their new quizId in a map
+        val quizIdsMap = mutableMapOf<Long, Long>()
+        oldQuizzes.forEach {oldQuiz ->
+            if (oldQuiz.category == 8) {
+                quizIdsMap[oldQuiz.id] = Quizv12.insertQuiz(oldDatabase, oldQuiz, false)
+            }
+            // other categories are discarded
+        }
+
+        // All new sentences and words have their new quiz_words inserted.
+        // Any user selection quiz ids must be additionally added
+        val oldQuizWords = QuizWordv12.getAllItems(oldDatabase)
+        QuizWordv12.deleteAll(oldDatabase)
+        QuizWordv12.resetAutoIncrement(oldDatabase)
+        quizWords.forEach {quiz_word ->
+            QuizWordv12.insertQuizWord(oldDatabase, quiz_word, true)
+
+            updateProgress()
+        }
+        // search for old quiz_words that correspond to user selections (quizId is in quizIdsMap)
+        oldQuizWords.forEach { old_quiz_word ->
+            if (old_quiz_word.quizId in quizIdsMap.keys) {
+                // change word and quiz id to new ones
+                val updatedQuizWord = QuizWordv12(0,
+                    quizIdsMap[old_quiz_word.quizId]!!, wordIdsMap[old_quiz_word.wordId]!!
+                )
+                QuizWordv12.insertQuizWord(oldDatabase, updatedQuizWord, false)
+            }
+
+            updateProgress()
+        }
+
+        // fully replace, this is safe since there is no user-specific data,
+        // or any defined relations to other tables
+        KanjiSolov12.deleteAll(oldDatabase)
+        kanjiSolo.forEach {
+            KanjiSolov12.addKanjiSolo(oldDatabase, it, true)
+
+            updateProgress()
+        }
+        Radicalv12.deleteAll(oldDatabase)
+        radicals.forEach {
+            Radicalv12.addRadical(oldDatabase, it, true)
+
+            updateProgress()
+        }
+        // sentence ids are referenced by words, which needs to be consistently updated
+        // however, since the words use the sentence_id of the new (version 12) table,
+        // this is already taken care of. Therefore, simply replace all with new values
+        Sentencev12.deleteAll(oldDatabase)
+        sentences.forEach {
+            Sentencev12.addSentence(oldDatabase, it, true)
+
+            updateProgress()
+        }
     }
-
-    // fully replace, this is safe since there is no user-specific data,
-    // or any defined relations to other tables
-    KanjiSolov12.deleteAll(oldDatabase)
-    kanjiSolo!!.forEach {
-        KanjiSolov12.addKanjiSolo(oldDatabase, it, true)
-
-        updateProgress()
-    }
-    Radicalv12.deleteAll(oldDatabase)
-    radicals!!.forEach {
-        Radicalv12.addRadical(oldDatabase, it, true)
-
-        updateProgress()
-    }
-    Sentencev12.deleteAll(oldDatabase)  // sentence ids are referenced in words!
-    // however, since the word sentenceIds have already
-    // been updated, fully replacing the sentences is fine
-    sentences!!.forEach {
-        Sentencev12.addSentence(oldDatabase, it, true)
-
-        updateProgress()
-    }
-
-    intent.putExtra(QuizzesActivity.UPDATE_PROGRESS, maxProgress + 1)
-    intent.putExtra(QuizzesActivity.UPDATE_FINISHED, true)
-//    context.sendBroadcast(intent)
-
-    pref.edit().putBoolean(Prefs.DB_UPDATE_ONGOING.pref, false).apply()
 
 }
