@@ -236,11 +236,12 @@ fun updateOldDBtoVersion12(oldDatabase: SupportSQLiteDatabase, context: Context,
         // search for old quiz_words that correspond to user selections (quizId is in quizIdsMap)
         oldQuizWords.forEach { old_quiz_word ->
             if (old_quiz_word.quizId in quizIdsMap.keys) {
-                // change word and quiz id to new ones
-                val updatedQuizWord = QuizWordv12(0,
-                    quizIdsMap[old_quiz_word.quizId]!!, wordIdsMap[old_quiz_word.wordId]!!
-                )
-                QuizWordv12.insertQuizWord(oldDatabase, updatedQuizWord, false)
+                // use safe check (?) in case any quiz_words refer to non-existing words
+                wordIdsMap[old_quiz_word.wordId]?.also {
+                    val updatedQuizWord = QuizWordv12(0, quizIdsMap[old_quiz_word.quizId]!!, it)
+                    // change word and quiz id to new ones
+                    QuizWordv12.insertQuizWord(oldDatabase, updatedQuizWord, false)
+                }
             }
 
             updateProgress()
