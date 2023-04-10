@@ -284,7 +284,7 @@ data class Wordv12(var id: Long, var japanese: String, var english: String, var 
             """.trimIndent(), arrayOf(
                     newWord.japanese, newWord.english, newWord.french, newWord.reading, newWord.level,
                     newWord.countTry, newWord.countSuccess, newWord.countFail, newWord.isKana,
-                    newWord.reading, newWord.points, newWord.baseCategory, newWord.isSelected, newWord.sentenceId
+                    newWord.repetition, newWord.points, newWord.baseCategory, newWord.isSelected, newWord.sentenceId
                 )
             )
             return getLastInsertedId(database)
