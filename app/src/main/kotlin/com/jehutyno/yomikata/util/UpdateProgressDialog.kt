@@ -22,10 +22,15 @@ class UpdateProgressDialog(private val activity: Activity) {
         progressBar.max = 100   // default max
     }
 
+    private var isShown = false
+
+
+    @Synchronized
     fun setMax(max: Int) {
         progressBar.max = max
     }
 
+    @Synchronized
     fun prepare(title: String?, message: String? = null) {
         progressAlertDialog = activity.alertDialog {
             this.title = title
@@ -38,6 +43,7 @@ class UpdateProgressDialog(private val activity: Activity) {
     /**
      * Show the progress dialog
      */
+    @Synchronized
     fun show() {
         if (progressAlertDialog == null) {
             progressAlertDialog = activity.alertDialog {
@@ -50,6 +56,7 @@ class UpdateProgressDialog(private val activity: Activity) {
         progressBar.progress = 0
 
         progressAlertDialog!!.show()
+        isShown = true
     }
 
     /**
@@ -59,6 +66,7 @@ class UpdateProgressDialog(private val activity: Activity) {
      *
      * @param newProgress set progressBar.progress to this value
      */
+    @Synchronized
     fun updateProgress(newProgress: Int) {
         progressBar.progress = newProgress
         if (newProgress >= progressBar.max) {
@@ -72,8 +80,10 @@ class UpdateProgressDialog(private val activity: Activity) {
     /**
      * Finish progress
      *
-     * Dismiss the dialog
+     * Dismiss the dialog and show the finishDialog, and finally invoke the finishCallback.
+     * Even if no progress dialog was ever shown, this call will succeed
      */
+    @Synchronized
     fun finish() {
         destroy()
         if (finishDialog == null) {
@@ -92,11 +102,16 @@ class UpdateProgressDialog(private val activity: Activity) {
      * Destroy
      *
      * Dismiss the dialog without calling any callbacks or showing any confirmations.
+     * If no dialog was shown, this does nothing.
      */
+    @Synchronized
     fun destroy() {
+        if (!isShown)
+            return
         (progressBar.parent as ViewGroup).removeView(progressBar)
         progressAlertDialog!!.dismiss()
         progressAlertDialog = null
+        isShown = false
     }
 
     /**
@@ -108,6 +123,7 @@ class UpdateProgressDialog(private val activity: Activity) {
      * @param errorTitle title of the error dialog
      * @param errorMessage message of the error dialog
      */
+    @Synchronized
     fun error(errorTitle: String?, errorMessage: String?) {
         (progressBar.parent as ViewGroup).removeView(progressBar)
         progressAlertDialog!!.dismiss()

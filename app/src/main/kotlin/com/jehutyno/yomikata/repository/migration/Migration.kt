@@ -23,7 +23,6 @@ import kotlin.io.path.writeBytes
  *
  * @param context Context
  * @param filePathEncrypted Path to old version of database which is encrypted
- *
  */
 @Synchronized
 private fun handleOldEncryptedDatabase(context: Context, filePathEncrypted: String) {
@@ -150,8 +149,8 @@ fun updateOldDBtoVersion12(oldDatabase: SupportSQLiteDatabase, context: Context,
         val sentences = Sentencev12.getAllItems(newDatabase).sortedBy(Sentencev12::id)
 
         val oldQuizWordsSize = oldDatabase.query("""SELECT COUNT(*) FROM quiz_word""").run {
-            this.moveToFirst()
-            this.getInt(0)
+            moveToFirst()
+            getInt(0)
         }
 
         var progress = 0

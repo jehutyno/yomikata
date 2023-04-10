@@ -67,12 +67,6 @@ class PrefsActivity : AppCompatActivity() {
                 return@registerForActivityResult
 
             val updateProgressDialog = UpdateProgressDialog(this)
-            updateProgressDialog.finishCallback = {
-                // tell quizzes activity to start in home screen fragment
-                val intent = Intent()
-                intent.putExtra("gotoCategory", Categories.HOME)
-                setResult(RESULT_OK, intent)
-            }
             updateProgressDialog.finishDialog = alertDialog {
                 title = "Successfully restored your backup"
                 message = "Please restart the app to reload your data"
@@ -232,6 +226,10 @@ class PrefsActivity : AppCompatActivity() {
                     YomikataDataBase.forceLoadDatabase(requireContext())
                     val toast = Toast.makeText(context, R.string.prefs_reinit_done, Toast.LENGTH_LONG)
                     toast.show()
+                    // tell quizzes activity to start in home screen fragment
+                    val intent = Intent()
+                    intent.putExtra("gotoCategory", Categories.HOME)
+                    requireActivity().setResult(RESULT_OK, intent)
                     requireActivity().finish()
                 }
                 cancelButton()
