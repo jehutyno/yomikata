@@ -6,7 +6,7 @@ import org.kodein.di.*
 
 
 fun databaseModule(context: Context) = DI.Module("databaseModule") {
-    bind<YomikataDataBase>() with instance(YomikataDataBase.getDatabase(context))
+    bind<YomikataDataBase>() with provider { YomikataDataBase.getDatabase(context) }
     bind<QuizDao>() with provider { instance<YomikataDataBase>().quizDao() }
     bind<WordDao>() with provider { instance<YomikataDataBase>().wordDao() }
     bind<StatsDao>() with provider { instance<YomikataDataBase>().statsDao() }
