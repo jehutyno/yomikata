@@ -2,6 +2,7 @@ package com.jehutyno.yomikata.screens
 
 import android.app.Activity
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.database.sqlite.SQLiteException
 import android.net.Uri
 import android.os.Build
@@ -37,9 +38,6 @@ class PrefsActivity : AppCompatActivity() {
     private lateinit var backupLauncher : ActivityResultLauncher<Intent>
     private lateinit var restoreLauncher : ActivityResultLauncher<Intent>
 
-    // alertDialog for progressBar: shows progress of data backup or migration
-    private lateinit var updateProgressDialog: UpdateProgressDialog
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -52,51 +50,43 @@ class PrefsActivity : AppCompatActivity() {
             if (result.resultCode != Activity.RESULT_OK)
                 return@registerForActivityResult
 
-            // start a progress dialog
-            updateProgressDialog.show()
-
-            CoroutineScope(Dispatchers.Main).launch {
-                var data: ByteArray? = null
-                val em = withContext(Dispatchers.IO) {
-                    try {
-                        data = YomikataDataBase.getRawData(this@PrefsActivity)
-                    } catch (e: Exception) {
-                        return@withContext e.message
-                    }
-                    return@withContext null
-                }
-
-                if (em != null) {
-                    updateProgressDialog.error("failed to create backup", em)
-                    return@launch
-                }
-                updateProgressDialog.updateProgress(50)
-
-                result.data?.data?.also { uri ->
-                    var outputStream: OutputStream? = null
-                    try {
-                        outputStream = contentResolver.openOutputStream(uri)!!
-                        outputStream.write(data)
-                    } catch (e: IOException) {
-                        updateProgressDialog.error("failed to create backup", e.message)
-                        return@launch
-                    } finally {
-                        outputStream?.close()
-                    }
-                }
-                updateProgressDialog.updateProgress(100)
+            val updateProgressDialog = UpdateProgressDialog(this)
+            updateProgressDialog.prepare("creating backup")
+            updateProgressDialog.finishDialog = alertDialog {
+                title = "Successfully created backup"
+                okButton()
             }
 
+            val uri = result.data?.data
+            if (uri != null)
+                handleBackup(uri, updateProgressDialog)
         }
-
-        val updateProgressDialogMigrate = UpdateProgressDialog(this@PrefsActivity)
-        updateProgressDialogMigrate.prepare()
 
         restoreLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode != Activity.RESULT_OK)
                 return@registerForActivityResult
 
+            val updateProgressDialog = UpdateProgressDialog(this)
+            updateProgressDialog.finishCallback = {
+                // tell quizzes activity to start in home screen fragment
+                val intent = Intent()
+                intent.putExtra("gotoCategory", Categories.HOME)
+                setResult(RESULT_OK, intent)
+            }
+            updateProgressDialog.finishDialog = alertDialog {
+                title = "Successfully restored your backup"
+                message = "Please restart the app to reload your data"
+                setCancelable(false)
+                positiveButton(R.string.alert_restart) {
+                    triggerRebirth()
+                }
+            }
+            updateProgressDialog.prepare("Restoring your backup", "Do not close the app")
             updateProgressDialog.show()
+
+            val updateProgressDialogMigrate = UpdateProgressDialog(this@PrefsActivity)
+            updateProgressDialogMigrate.prepare("Migrating your database", "This may take a while...")
+            updateProgressDialogMigrate.destroyOnFinish = true
 
             CoroutineScope(Dispatchers.Main).launch {
                 val inputStream =
@@ -105,15 +95,13 @@ class PrefsActivity : AppCompatActivity() {
                         contentResolver.openInputStream(uri)
                     }
 
-                val titEm = withContext(Dispatchers.IO) {
-                    doEverything(inputStream!!)
+                val success = withContext(Dispatchers.IO) {
+                    return@withContext handleRestore(inputStream!!, updateProgressDialog)
                 }
-
-                if (titEm.first != null) {
-                    updateProgressDialog.error(titEm.first, titEm.second)
+                if (!success)
                     return@launch
-                }
 
+                // do migration
                 YomikataDataBase.updateProgressDialogGetter = {
                     updateProgressDialogMigrate
                 }
@@ -124,23 +112,68 @@ class PrefsActivity : AppCompatActivity() {
                 updateProgressDialogMigrate.destroy()
                 YomikataDataBase.updateProgressDialogGetter = null
 
-
                 updateProgressDialog.updateProgress(100)
             }
         }
 
-        updateProgressDialog = UpdateProgressDialog(this)
-        updateProgressDialog.finishCallback = {
-            // tell quizzes activity to start in home screen fragment
-            val intent = Intent()
-            intent.putExtra("gotoCategory", Categories.HOME)
-            setResult(RESULT_OK, intent)
-            YomikataDataBase.forceLoadDatabase(this)    // TODO: maybe restart app to reload database?
-        }
-
     }
 
-    private fun doEverything(inputStream: InputStream): Pair<String?, String?> {
+    /**
+     * Handle backup
+     *
+     * Create a backup of the current database file to the given uri.
+     *
+     * @param uri Uri
+     * @param updateProgressDialog Optional dialog to display progress on screen
+     */
+    private fun handleBackup(uri: Uri, updateProgressDialog: UpdateProgressDialog? = null) {
+        // start a progress dialog
+        updateProgressDialog?.show()
+
+        CoroutineScope(Dispatchers.Main).launch {
+            var data: ByteArray? = null
+            var stop = withContext(Dispatchers.IO) {
+                try {
+                    data = YomikataDataBase.getRawData(this@PrefsActivity)
+                } catch (e: Exception) {
+                    updateProgressDialog?.error("failed to create backup", e.message)
+                    return@withContext true
+                }
+                return@withContext false
+            }
+            if (stop)
+                return@launch
+
+            updateProgressDialog?.updateProgress(50)
+
+            stop = withContext(Dispatchers.IO) {
+                var outputStream: OutputStream? = null
+                try {
+                    outputStream = contentResolver.openOutputStream(uri)!!
+                    outputStream.write(data)
+                } catch (e: IOException) {
+                    updateProgressDialog?.error("failed to create backup", e.message)
+                    return@withContext true
+                } finally {
+                    outputStream?.close()
+                }
+                return@withContext false
+            }
+            if (stop)
+                return@launch
+
+            updateProgressDialog?.updateProgress(100)
+        }
+    }
+
+    /**
+     * Handle restore
+     *
+     * @param inputStream InputStream containing data to restore
+     * @param updateProgressDialog Optional dialog to show progress
+     * @return True if success, False if failure
+     */
+    private fun handleRestore(inputStream: InputStream, updateProgressDialog: UpdateProgressDialog? = null): Boolean {
         val buffer = ByteArray(4096)
         val outputStream = ByteArrayOutputStream()
 
@@ -151,7 +184,7 @@ class PrefsActivity : AppCompatActivity() {
             while (inputStream.read(buffer).also { len = it } != -1) {
                 outputStream.write(buffer, 0, len)
             }
-            updateProgressDialog.updateProgress(50)
+            updateProgressDialog?.updateProgress(50)
             val data = outputStream.toByteArray()
 
             outputStreamTemp.write(data)
@@ -159,9 +192,11 @@ class PrefsActivity : AppCompatActivity() {
             try {
                 type = validateDatabase(databaseFile)
             } catch (e: IllegalStateException) {
-                return Pair("Invalid file", e.message)
+                updateProgressDialog?.error("Invalid file", e.message)
+                return false
             } catch (e: SQLiteException) {
-                return Pair("Something went wrong", e.message + e.cause?.message)
+                updateProgressDialog?.error("Something went wrong", e.message + e.cause?.message)
+                return false
             }
 
             if (type == DatabaseType.OLD_YOMIKATA) {
@@ -170,16 +205,17 @@ class PrefsActivity : AppCompatActivity() {
                 YomikataDataBase.overwriteDatabase(this@PrefsActivity, data)
             }
 
-            updateProgressDialog.updateProgress(75)
+            updateProgressDialog?.updateProgress(75)
         } catch (e: IOException) {
             e.printStackTrace()
-            return Pair("failed to restore database", e.message)
+            updateProgressDialog?.error("failed to restore database", e.message)
+            return false
         } finally {
             inputStream.close()
             outputStream.close()
             outputStreamTemp.close()
         }
-        return Pair(null, null)
+        return true
     }
 
     class PrefsFragment : PreferenceFragmentCompat() {
@@ -324,6 +360,15 @@ class PrefsActivity : AppCompatActivity() {
         }
 
         openFile(null)
+    }
+
+    private fun triggerRebirth() {
+        val packageManager: PackageManager = this.packageManager
+        val intent = packageManager.getLaunchIntentForPackage(this.packageName)
+        val componentName = intent!!.component
+        val mainIntent = Intent.makeRestartActivityTask(componentName)
+        this.startActivity(mainIntent)
+        Runtime.getRuntime().exit(0)
     }
 
 }

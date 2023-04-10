@@ -13,7 +13,9 @@ class UpdateProgressDialog(private val activity: Activity) {
     private val progressBar: ProgressBar = ProgressBar(activity, null, android.R.attr.progressBarStyleHorizontal)
     private var progressAlertDialog: AlertDialog? = null
 
+    var finishDialog: AlertDialog? = null
     var finishCallback: (() -> Unit)? = null    // called when the progress finished successfully
+    var destroyOnFinish: Boolean = false        // when finished, simply destroy the dialog
 
     init {
         progressBar.setPadding(40, progressBar.paddingTop, 40, progressBar.paddingBottom)
@@ -24,10 +26,10 @@ class UpdateProgressDialog(private val activity: Activity) {
         progressBar.max = max
     }
 
-    fun prepare() {
+    fun prepare(title: String?, message: String? = null) {
         progressAlertDialog = activity.alertDialog {
-            titleResource = R.string.progress_bdd_update_title
-            messageResource = R.string.progress_bdd_update_message
+            this.title = title
+            this.message = message
             setCancelable(false)
             setView(progressBar)
         }
@@ -37,10 +39,7 @@ class UpdateProgressDialog(private val activity: Activity) {
      * Show the progress dialog
      */
     fun show() {
-        if (progressAlertDialog != null) {
-//            throw Error("Tried to create multiple progress dialogs simultaneously")
-
-        } else {
+        if (progressAlertDialog == null) {
             progressAlertDialog = activity.alertDialog {
                 titleResource = R.string.progress_bdd_update_title
                 messageResource = R.string.progress_bdd_update_message
@@ -63,7 +62,10 @@ class UpdateProgressDialog(private val activity: Activity) {
     fun updateProgress(newProgress: Int) {
         progressBar.progress = newProgress
         if (newProgress >= progressBar.max) {
-            finish()
+            if (destroyOnFinish)
+                destroy()
+            else
+                finish()
         }
     }
 
@@ -74,11 +76,15 @@ class UpdateProgressDialog(private val activity: Activity) {
      */
     fun finish() {
         destroy()
-        activity.alertDialog {
-            titleResource = R.string.update_success_title
-            messageResource = R.string.update_success_message
-            okButton()
-        }.show()
+        if (finishDialog == null) {
+            activity.alertDialog {
+                titleResource = R.string.update_success_title
+                messageResource = R.string.update_success_message
+                okButton()
+            }.show()
+        } else {
+            finishDialog!!.show()
+        }
         finishCallback?.invoke()
     }
 
@@ -109,6 +115,7 @@ class UpdateProgressDialog(private val activity: Activity) {
         activity.alertDialog {
             title = errorTitle
             message= "The following error occurred:\n$errorMessage"
+            setCancelable(false)
             okButton()
         }.show()
     }
