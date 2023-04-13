@@ -7,7 +7,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
 import androidx.test.platform.app.InstrumentationRegistry
 import com.jehutyno.yomikata.repository.migration.SqliteTestHelper
-import com.jehutyno.yomikata.repository.migration.Wordv12
+import com.jehutyno.yomikata.repository.migration.Wordv13
 import org.junit.After
 import org.junit.Assert.*
 import org.junit.Before
@@ -18,13 +18,14 @@ import java.io.IOException
 
 
 /**
- * Migration test
+ * Room migration test
  *
- * For testing migrations from version 9 up to version 13
+ * For testing migrations from version 13 to version 14
+ * or later Room migrations above 14
  */
 @RunWith(AndroidJUnit4::class)
 @LargeTest
-class MigrationTest {
+class RoomMigrationTest {
 
     // do not use Daos in tests since they only work
     // for the latest version which may change in the future
@@ -38,17 +39,17 @@ class MigrationTest {
         YomikataDataBase::class.java
     )
 
-    // Helper for creating SQLite database in version 12
+    // Helper for creating SQLite database in version 13
     private var mSqliteTestHelper: SqliteTestHelper? = null
 
-    private val sampleWordv12 = Wordv12(65, "草", "grass", "herbe", "くさ",
+    private val sampleWordv13 = Wordv13(65, "草", "grass", "herbe", "くさ",
                                         0, 0, 0, 0, 0,
                                 -1, 0, 2, 0, 6647)
 
     @Before
     fun setUp() {
-        // To test migrations from version 12 of the database, we need to create the database
-        // with version 12 using SQLite API
+        // To test migrations from version 13 of the database, we need to create the database
+        // with version 13 using SQLite API
         mSqliteTestHelper = SqliteTestHelper(
             ApplicationProvider.getApplicationContext(),
             TEST_DB_NAME
@@ -65,15 +66,15 @@ class MigrationTest {
 
     @Test
     @Throws(IOException::class)
-    fun migrationFrom12To13_containsCorrectData() {
-        // Create the database with the version 12 schema and insert some rows
+    fun migrationFrom13To14_containsCorrectData() {
+        // Create the database with the version 13 schema and insert some rows
 
-        SqliteTestHelper.insertWord(mSqliteTestHelper!!, sampleWordv12)
+        SqliteTestHelper.insertWord(mSqliteTestHelper!!, sampleWordv13)
 
 
         mMigrationTestHelper.runMigrationsAndValidate(
-            TEST_DB_NAME, 13, true,
-            YomikataDataBase.MIGRATION_12_13
+            TEST_DB_NAME, 14, true,
+            YomikataDataBase.MIGRATION_13_14
         )
         // Get the latest, migrated, version of the database
         val latestDb: YomikataDataBase = getMigratedRoomDatabase()
@@ -83,16 +84,16 @@ class MigrationTest {
             """SELECT * FROM words""", arrayOf<Any>()
         )
         assert ( wordCusror.moveToFirst() )
-        assert ( wordCusror.getLong(0) == sampleWordv12.id )
+        assert ( wordCusror.getLong(0) == sampleWordv13.id )
     }
 
     @Test
     @Throws(IOException::class)
-    fun startInVersion13_containsCorrectData() {
-        // Create the database with version 13
-        val db = mMigrationTestHelper.createDatabase(TEST_DB_NAME, 13)
+    fun startInVersion14_containsCorrectData() {
+        // Create the database with version 14
+        val db = mMigrationTestHelper.createDatabase(TEST_DB_NAME, 14)
 
-        // db has schema version 13. insert some data
+        // db has schema version 14. insert some data
         db.execSQL("""
             INSERT INTO words (
                 "_id", "japanese", "english", "french", "reading", "level",
@@ -123,7 +124,7 @@ class MigrationTest {
             ApplicationProvider.getApplicationContext(),
             YomikataDataBase::class.java, TEST_DB_NAME
         )
-            .addMigrations(YomikataDataBase.MIGRATION_12_13)
+            .addMigrations(YomikataDataBase.MIGRATION_13_14)
             .build()
         // close the database and release any stream resources when the test finishes
         mMigrationTestHelper.closeWhenFinished(database)

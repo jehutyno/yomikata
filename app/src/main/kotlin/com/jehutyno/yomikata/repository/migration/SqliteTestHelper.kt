@@ -9,11 +9,12 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 
 /**
  * Sqlite test helper
- * Used to test migration from version 12 to version 13. Room schemas started being used from
- * version 13. See MigrationTest.kt
+ *
+ * Used to test migration from versions <= 12 to version 13. Room schemas started being used from
+ * version 14. See MigrationTest.kt
  */
-class SqliteTestHelper(context: Context?, databaseName: String?) :
-      SQLiteOpenHelper(context, databaseName, null, DATABASE_VERSION) {
+class SqliteTestHelper(context: Context?, databaseName: String?, version: Int? = null) :
+      SQLiteOpenHelper(context, databaseName, null, version ?: DATABASE_VERSION) {
 
     override fun onCreate(db: SQLiteDatabase) {
         createAllTables(db)
@@ -132,24 +133,24 @@ class SqliteTestHelper(context: Context?, databaseName: String?) :
         dropTableQueries.forEach { query -> db.execSQL(query) }
     }
 
-    private fun insertWord(db: SQLiteDatabase, wordv12: Wordv12) {
+    private fun insertWord(db: SQLiteDatabase, wordv13: Wordv13) {
         db.execSQL("""
             INSERT INTO words (
                 _id, japanese, english, french, reading, level, count_try, count_success, count_fail,
                 is_kana, repetition, points, base_category, isSelected, sentence_id
             )
             VALUES (
-                ${wordv12.id}, "${wordv12.japanese}", "${wordv12.english}",
-                "${wordv12.french}", "${wordv12.reading}", ${wordv12.level}, ${wordv12.countTry},
-                ${wordv12.countSuccess}, ${wordv12.countFail}, ${wordv12.isKana}, ${wordv12.repetition},
-                ${wordv12.points}, ${wordv12.baseCategory}, ${wordv12.isSelected}, ${wordv12.sentenceId}
+                ${wordv13.id}, "${wordv13.japanese}", "${wordv13.english}",
+                "${wordv13.french}", "${wordv13.reading}", ${wordv13.level}, ${wordv13.countTry},
+                ${wordv13.countSuccess}, ${wordv13.countFail}, ${wordv13.isKana}, ${wordv13.repetition},
+                ${wordv13.points}, ${wordv13.baseCategory}, ${wordv13.isSelected}, ${wordv13.sentenceId}
             )
         """.trimIndent()
         )
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
-        // Not needed for test which goes from 12 to new version 13 using Room
+        // Not needed for test which goes from 13 to new version 14 using Room
     }
 
     override fun onDowngrade(db: SQLiteDatabase?, oldVersion: Int, newVersion: Int) {
@@ -157,30 +158,30 @@ class SqliteTestHelper(context: Context?, databaseName: String?) :
     }
 
     companion object {
-        const val DATABASE_VERSION = 12
+        var DATABASE_VERSION = 13
 
         fun createAllTables(mSqliteTestHelper: SqliteTestHelper) {
-            val closeMe = mSqliteTestHelper.writableDatabase
-            mSqliteTestHelper.createAllTables(closeMe)
-            closeMe.close()
+            mSqliteTestHelper.writableDatabase.use {
+                mSqliteTestHelper.createAllTables(it)
+            }
         }
 
         fun clearDatabase(mSqliteTestHelper: SqliteTestHelper) {
-            val closeMe = mSqliteTestHelper.writableDatabase
-            mSqliteTestHelper.clearDatabase(closeMe)
-            closeMe.close()
+            mSqliteTestHelper.writableDatabase.use {
+                mSqliteTestHelper.clearDatabase(it)
+            }
         }
 
-        fun insertWord(mSqliteTestHelper: SqliteTestHelper, wordv12: Wordv12) {
-            val closeMe = mSqliteTestHelper.writableDatabase
-            mSqliteTestHelper.insertWord(closeMe, wordv12)
-            closeMe.close()
+        fun insertWord(mSqliteTestHelper: SqliteTestHelper, wordv13: Wordv13) {
+            mSqliteTestHelper.writableDatabase.use {
+                mSqliteTestHelper.insertWord(it, wordv13)
+            }
         }
 
     }
 }
 
-// Version of database entries from version 12 used for migration and testing
+// Version of database entries from version 13 used for migration and testing
 // --------- DO NOT CHANGE ---------
 abstract class BaseGetAllItems<T>(private val constructor: (Cursor) -> T) {
     protected lateinit var tableName: String
@@ -225,7 +226,7 @@ abstract class BaseGetAllItems<T>(private val constructor: (Cursor) -> T) {
     }
 }
 
-data class Wordv12(var id: Long, var japanese: String, var english: String, var french: String,
+data class Wordv13(var id: Long, var japanese: String, var english: String, var french: String,
               var reading: String, var level: Int, var countTry: Int, var countSuccess: Int,
               var countFail: Int, var isKana: Int, var repetition: Int, var points: Int,
               var baseCategory: Int, var isSelected: Int, var sentenceId: Long) {
@@ -253,19 +254,32 @@ data class Wordv12(var id: Long, var japanese: String, var english: String, var 
      * the base word is used for all "objective" stats such as japanese, reading, etc.
      * The other word is used for the user stats such as level, points, etc.
      */
-    constructor(baseWord: Wordv12, userValuesWord: Wordv12) : this (
+    constructor(baseWord: Wordv13, userValuesWord: Wordv13) : this (
         baseWord.id, baseWord.japanese, baseWord.english, baseWord.french, baseWord.reading,
         userValuesWord.level, userValuesWord.countTry, userValuesWord.countSuccess,
         userValuesWord.countFail, baseWord.isKana, userValuesWord.repetition, userValuesWord.points,
         baseWord.baseCategory, userValuesWord.isSelected, baseWord.sentenceId
     )
 
-    companion object : BaseGetAllItems<Wordv12>(::Wordv12) {
+    /**
+     * Base equals
+     *
+     * @param otherWord Word to compare to
+     * @return True if the "base" of the word is equal (non user-specific columns)
+     */
+    fun baseEquals(otherWord: Wordv13): Boolean {
+        return (
+            japanese == otherWord.japanese && english == otherWord.english
+             && french == otherWord.french && reading == otherWord.reading
+        )
+    }
+
+    companion object : BaseGetAllItems<Wordv13>(::Wordv13) {
         init {
             tableName = "words"
         }
 
-        fun insertWord(database: SupportSQLiteDatabase, newWord: Wordv12, preserve_id: Boolean): Long {
+        fun insertWord(database: SupportSQLiteDatabase, newWord: Wordv13, preserve_id: Boolean): Long {
             database.execSQL("""
                 INSERT INTO $tableName (
                     ${if (preserve_id) "${SQLiteWord.ID.column_name}," else ""}
@@ -290,7 +304,7 @@ data class Wordv12(var id: Long, var japanese: String, var english: String, var 
             return getLastInsertedId(database)
         }
 
-        fun updateWord(database: SupportSQLiteDatabase, originalId: Long, newWord: Wordv12) {
+        fun updateWord(database: SupportSQLiteDatabase, originalId: Long, newWord: Wordv13) {
             database.execSQL("""
                 UPDATE $tableName SET
                     ${SQLiteWord.JAPANESE.column_name} = ?, ${SQLiteWord.ENGLISH.column_name} = ?,
@@ -323,7 +337,7 @@ data class Wordv12(var id: Long, var japanese: String, var english: String, var 
     }
 }
 
-data class Quizv12(val id: Long, var nameEn: String, var nameFr: String,
+data class Quizv13(val id: Long, var nameEn: String, var nameFr: String,
                    val category: Int, var isSelected: Int) {
 
     constructor(cursor: Cursor) : this (
@@ -334,12 +348,18 @@ data class Quizv12(val id: Long, var nameEn: String, var nameFr: String,
         cursor.getInt(cursor.getColumnIndexOrThrow(SQLiteQuiz.IS_SELECTED.column_name))
     )
 
-    companion object : BaseGetAllItems<Quizv12>(::Quizv12) {
+    fun baseEquals(otherQuiz: Quizv13): Boolean {
+        return (
+            nameEn == otherQuiz.nameEn && nameFr == otherQuiz.nameFr && category == otherQuiz.category
+        )
+    }
+
+    companion object : BaseGetAllItems<Quizv13>(::Quizv13) {
         init {
             tableName = "quiz"
         }
 
-        fun insertQuiz(database: SupportSQLiteDatabase, newQuiz: Quizv12, preserve_id: Boolean): Long {
+        fun insertQuiz(database: SupportSQLiteDatabase, newQuiz: Quizv13, preserve_id: Boolean): Long {
             database.execSQL("""
                 INSERT INTO $tableName (
                     ${if (preserve_id) "${SQLiteQuiz.ID.column_name}," else ""}
@@ -367,7 +387,7 @@ data class Quizv12(val id: Long, var nameEn: String, var nameFr: String,
     }
 }
 
-data class KanjiSolov12(val id: Long, val kanji: String, val strokes: Int, val en: String, val fr: String,
+data class KanjiSolov13(val id: Long, val kanji: String, val strokes: Int, val en: String, val fr: String,
                      val kunyomi: String, val onyomi: String, val radical: String) {
 
     constructor(cursor: Cursor) : this (
@@ -381,12 +401,12 @@ data class KanjiSolov12(val id: Long, val kanji: String, val strokes: Int, val e
         cursor.getString(cursor.getColumnIndexOrThrow(SQLiteKanjiSolo.RADICAL.column_name))
     )
 
-    companion object : BaseGetAllItems<KanjiSolov12>(::KanjiSolov12) {
+    companion object : BaseGetAllItems<KanjiSolov13>(::KanjiSolov13) {
         init {
             tableName = "kanji_solo"
         }
 
-        fun addKanjiSolo(database: SupportSQLiteDatabase, newKanjiSolo: KanjiSolov12,
+        fun addKanjiSolo(database: SupportSQLiteDatabase, newKanjiSolo: KanjiSolov13,
                          preserve_id: Boolean) {
             database.execSQL("""
                 INSERT INTO $tableName ( ${if (preserve_id) "${SQLiteKanjiSolo.ID.column_name}, " else ""}
@@ -416,7 +436,7 @@ data class KanjiSolov12(val id: Long, val kanji: String, val strokes: Int, val e
     }
 }
 
-data class Radicalv12(val id: Long, val strokes: Int, val radical: String,
+data class Radicalv13(val id: Long, val strokes: Int, val radical: String,
                    val reading: String, val en: String, val fr: String) {
 
     constructor(cursor: Cursor) : this (
@@ -428,12 +448,12 @@ data class Radicalv12(val id: Long, val strokes: Int, val radical: String,
         cursor.getString(cursor.getColumnIndexOrThrow(SQLiteRadicals.FR.column_name))
     )
 
-    companion object : BaseGetAllItems<Radicalv12>(::Radicalv12) {
+    companion object : BaseGetAllItems<Radicalv13>(::Radicalv13) {
         init {
             tableName = "radicals"
         }
 
-        fun addRadical(database: SupportSQLiteDatabase, newRadical: Radicalv12,
+        fun addRadical(database: SupportSQLiteDatabase, newRadical: Radicalv13,
                        preserve_id: Boolean) {
             database.execSQL("""
                 INSERT INTO $tableName ( ${if (preserve_id) "${SQLiteRadicals.ID.column_name}, " else ""}
@@ -460,7 +480,7 @@ data class Radicalv12(val id: Long, val strokes: Int, val radical: String,
     }
 }
 
-data class QuizWordv12(val id: Long, var quizId: Long, var wordId: Long) {
+data class QuizWordv13(val id: Long, var quizId: Long, var wordId: Long) {
 
     constructor(cursor: Cursor) : this (
         cursor.getLong(cursor.getColumnIndexOrThrow(SQLiteQuizWord.ID.column_name)),
@@ -468,7 +488,7 @@ data class QuizWordv12(val id: Long, var quizId: Long, var wordId: Long) {
         cursor.getLong(cursor.getColumnIndexOrThrow(SQLiteQuizWord.WORD_ID.column_name))
     )
 
-    companion object : BaseGetAllItems<QuizWordv12>(::QuizWordv12) {
+    companion object : BaseGetAllItems<QuizWordv13>(::QuizWordv13) {
         init {
             tableName = "quiz_word"
         }
@@ -486,10 +506,10 @@ data class QuizWordv12(val id: Long, var quizId: Long, var wordId: Long) {
             return exists != 0
         }
 
-        fun insertQuizWord(database: SupportSQLiteDatabase, quizWord: QuizWordv12, preserve_id: Boolean) {
+        fun insertQuizWord(database: SupportSQLiteDatabase, quizWord: QuizWordv13, preserve_id: Boolean) {
             database.execSQL("""
                 INSERT INTO $tableName
-                ( ${if (preserve_id) "${Radicalv12.SQLiteRadicals.ID.column_name}, " else ""}
+                ( ${if (preserve_id) "${Radicalv13.SQLiteRadicals.ID.column_name}, " else ""}
                 ${SQLiteQuizWord.QUIZ_ID.column_name}, ${SQLiteQuizWord.WORD_ID.column_name} )
                 VALUES ( ${if (preserve_id) "${quizWord.id}, " else ""}
                             ?, ?)
@@ -505,7 +525,7 @@ data class QuizWordv12(val id: Long, var quizId: Long, var wordId: Long) {
     }
 }
 
-data class Sentencev12(var id: Long = -1, val jap: String = "",
+data class Sentencev13(var id: Long = -1, val jap: String = "",
                        val en: String = "", val fr: String = "", val level: Int = -1) {
 
     constructor(cursor: Cursor) : this (
@@ -516,12 +536,12 @@ data class Sentencev12(var id: Long = -1, val jap: String = "",
         cursor.getInt(cursor.getColumnIndexOrThrow(SQLiteSentences.LEVEL.column_name))
     )
 
-    companion object : BaseGetAllItems<Sentencev12>(::Sentencev12) {
+    companion object : BaseGetAllItems<Sentencev13>(::Sentencev13) {
         init {
             tableName = "sentences"
         }
 
-        fun addSentence(database: SupportSQLiteDatabase, newSentence: Sentencev12,
+        fun addSentence(database: SupportSQLiteDatabase, newSentence: Sentencev13,
                         preserve_id: Boolean) {
             database.execSQL("""
                 INSERT INTO $tableName ( ${if (preserve_id) "${SQLiteSentences.ID.column_name}, " else ""}
