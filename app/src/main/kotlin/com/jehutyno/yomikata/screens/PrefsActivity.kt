@@ -67,14 +67,7 @@ class PrefsActivity : AppCompatActivity() {
                 return@registerForActivityResult
 
             val updateProgressDialog = UpdateProgressDialog(this)
-            updateProgressDialog.finishDialog = alertDialog {
-                title = "Successfully restored your backup"
-                message = "Please restart the app to reload your data"
-                setCancelable(false)
-                positiveButton(R.string.alert_restart) {
-                    triggerRebirth()
-                }
-            }
+            updateProgressDialog.finishDialog = getRestartDialog()
             updateProgressDialog.prepare("Restoring your backup", "Do not close the app")
             updateProgressDialog.show()
 
@@ -96,20 +89,29 @@ class PrefsActivity : AppCompatActivity() {
                     return@launch
 
                 // do migration
-                YomikataDataBase.updateProgressDialogGetter = {
-                    updateProgressDialogMigrate
-                }
+                YomikataDataBase.setUpdateProgressDialog(updateProgressDialogMigrate)
                 updateProgressDialogMigrate.show()
                 withContext(Dispatchers.IO) {
                     YomikataDataBase.forceLoadDatabase(this@PrefsActivity)
                 }
                 updateProgressDialogMigrate.destroy()
-                YomikataDataBase.updateProgressDialogGetter = null
+                YomikataDataBase.setUpdateProgressDialog(null)
 
                 updateProgressDialog.updateProgress(100)
             }
         }
 
+    }
+
+    private fun getRestartDialog(): AlertDialog {
+        return alertDialog {
+            title = "Successfully restored your backup"
+            message = "Please restart the app to reload your data"
+            setCancelable(false)
+            positiveButton(R.string.alert_restart) {
+                triggerRebirth()
+            }
+        }
     }
 
     /**
@@ -224,13 +226,14 @@ class PrefsActivity : AppCompatActivity() {
                 okButton {
                     YomikataDataBase.resetDatabase(requireContext())
                     YomikataDataBase.forceLoadDatabase(requireContext())
-                    val toast = Toast.makeText(context, R.string.prefs_reinit_done, Toast.LENGTH_LONG)
-                    toast.show()
-                    // tell quizzes activity to start in home screen fragment
-                    val intent = Intent()
-                    intent.putExtra("gotoCategory", Categories.HOME)
-                    requireActivity().setResult(RESULT_OK, intent)
-                    requireActivity().finish()
+                    (requireActivity() as PrefsActivity).getRestartDialog().show()
+//                    val toast = Toast.makeText(context, R.string.prefs_reinit_done, Toast.LENGTH_LONG)
+//                    toast.show()
+//                    // tell quizzes activity to start in home screen fragment
+//                    val intent = Intent()
+//                    intent.putExtra("gotoCategory", Categories.HOME)
+//                    requireActivity().setResult(RESULT_OK, intent)
+//                    requireActivity().finish()
                 }
                 cancelButton()
             }

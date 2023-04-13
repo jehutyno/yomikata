@@ -32,9 +32,7 @@ class SplashActivity : AppCompatActivity() {
 
         val job = CoroutineScope(Dispatchers.Main).launch {
             // do migration
-            YomikataDataBase.updateProgressDialogGetter = {
-                updateProgressDialogMigrate
-            }
+            YomikataDataBase.setUpdateProgressDialog(updateProgressDialogMigrate)
             withContext(Dispatchers.IO) {
                 YomikataDataBase.forceLoadDatabase(this@SplashActivity)
             }
@@ -67,7 +65,7 @@ class SplashActivity : AppCompatActivity() {
                     // finish the migration & destroy progress dialog (if it was shown at all)
                     job.join()
                     updateProgressDialogMigrate.destroy()
-                    YomikataDataBase.updateProgressDialogGetter = null
+                    YomikataDataBase.setUpdateProgressDialog(null)
 
                     val intent = Intent(this@SplashActivity, QuizzesActivity::class.java)
                     startActivity(intent)

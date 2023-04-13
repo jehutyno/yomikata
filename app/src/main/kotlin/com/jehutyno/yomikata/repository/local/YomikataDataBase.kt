@@ -7,7 +7,7 @@ import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.jehutyno.yomikata.dao.*
-import com.jehutyno.yomikata.repository.migration.updateOldDBtoVersion12
+import com.jehutyno.yomikata.repository.migration.OldMigrations
 import com.jehutyno.yomikata.util.UpdateProgressDialog
 import java.io.File
 import java.io.FileInputStream
@@ -16,7 +16,7 @@ import java.io.OutputStream
 import java.nio.channels.FileLock
 
 
-const val DATABASE_VERSION = 13
+const val DATABASE_VERSION = 14
 
 @Database(entities = [RoomKanjiSolo::class, RoomQuiz::class, RoomSentences::class,
                       RoomStatEntry::class, RoomWords::class, RoomQuizWord::class,
@@ -38,13 +38,17 @@ abstract class YomikataDataBase : RoomDatabase() {
             if (INSTANCE == null) {
                 synchronized(this) {
                     INSTANCE =
-                        Room.databaseBuilder(context, YomikataDataBase::class.java, DATABASE_FILE_NAME)
+                        Room.databaseBuilder(
+                            context,
+                            YomikataDataBase::class.java,
+                            DATABASE_FILE_NAME
+                        )
                             .createFromAsset(DATABASE_FILE_NAME)
                             .allowMainThreadQueries()   // TODO: remove this after using coroutines/livedata
                             .addMigrations(
-                                MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6,
-                                MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11,
-                                MIGRATION_11_12(context), MIGRATION_12_13
+                                *OldMigrations.getOldMigrations(),
+                                OldMigrations.MIGRATION_12_13(context),
+                                MIGRATION_13_14
                             )
                             .build()
                 }
@@ -85,8 +89,8 @@ abstract class YomikataDataBase : RoomDatabase() {
                 createLocalBackup(context)
 
                 // overwrite current with external data
-                FileInputStream(externalDatabasePath).use {
-                    input -> input.copyTo(outputStream)
+                FileInputStream(externalDatabasePath).use { input ->
+                    input.copyTo(outputStream)
                 }
 
                 INSTANCE = null
@@ -126,18 +130,17 @@ abstract class YomikataDataBase : RoomDatabase() {
          */
         @Synchronized
         fun resetDatabase(context: Context) {
-            val assetManager = context.assets
-            // get database from assets and overwrite the database file
-            assetManager.open(DATABASE_FILE_NAME).use {
-                overwriteDatabase(context, it.readBytes())
-            }
+            createLocalBackup(context)
+            getDatabase(context).close()
+            getDatabaseFile(context).delete()
+            INSTANCE = null
         }
 
         @Synchronized
         fun createLocalBackup(context: Context) {
             val currentDatabaseFile = context.getDatabasePath(DATABASE_FILE_NAME)
-            // make backup of current
             val backupFile = context.getDatabasePath(DATABASE_LOCAL_BACKUP_FILE_NAME)
+            getDatabase(context).close()
             currentDatabaseFile.copyTo(backupFile, overwrite = true)
         }
 
@@ -151,7 +154,8 @@ abstract class YomikataDataBase : RoomDatabase() {
         @Synchronized
         fun getRawData(context: Context): ByteArray {
             val dbFile = getDatabaseFile(context)
-            val data = ByteArray(dbFile.length().toInt()) // create byte array with size of input file
+            val data =
+                ByteArray(dbFile.length().toInt()) // create byte array with size of input file
 
             var inputStream: FileInputStream? = null
 //            var lock: FileLock? = null
@@ -173,18 +177,21 @@ abstract class YomikataDataBase : RoomDatabase() {
             return context.getDatabasePath(DATABASE_FILE_NAME)
         }
 
-        var updateProgressDialogGetter: (() -> UpdateProgressDialog)? = null
+        fun setUpdateProgressDialog(updateProgressDialog: UpdateProgressDialog?) {
+            OldMigrations.updateProgressDialogGetter = { updateProgressDialog }
+        }
 
         ///////// DEFINE MIGRATIONS /////////
-        // do not use values or constants that may be changed externally
+        // do not use values, constants, entities, daos, etc. that may be changed externally
 
         // migrate from anko sqlite to room
-        val MIGRATION_12_13 = object : Migration(12, 13) {
+        val MIGRATION_13_14 = object : Migration(13, 14) {
 
             // drop and recreate tables in order to make types more consistent
             override fun migrate(database: SupportSQLiteDatabase) {
                 // quiz     isSelected is a boolean, but Room stores it as an INTEGER in the db
-                database.execSQL("""
+                database.execSQL(
+                    """
                     CREATE TABLE NEW_quiz (
                     _id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
                     name_en TEXT NOT NULL,
@@ -194,7 +201,8 @@ abstract class YomikataDataBase : RoomDatabase() {
                     )
                     """.trimIndent()
                 )
-                database.execSQL("""
+                database.execSQL(
+                    """
                     INSERT INTO NEW_quiz ( _id, name_en, name_fr, category, isSelected )
                     SELECT                 _id, name_en, name_fr, category, isSelected
                     FROM quiz
@@ -205,7 +213,8 @@ abstract class YomikataDataBase : RoomDatabase() {
                 database.execSQL("ALTER TABLE NEW_quiz RENAME TO quiz")
 
                 // words
-                database.execSQL("""
+                database.execSQL(
+                    """
                     CREATE TABLE NEW_words (
                       _id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
                       japanese TEXT NOT NULL,
@@ -225,7 +234,8 @@ abstract class YomikataDataBase : RoomDatabase() {
                     )
                     """.trimIndent()
                 )
-                database.execSQL("""
+                database.execSQL(
+                    """
                     INSERT INTO NEW_words (
                         _id, japanese, english, french, reading, level, count_try,
                         count_success, count_fail, is_kana, repetition, points,
@@ -242,7 +252,8 @@ abstract class YomikataDataBase : RoomDatabase() {
                 database.execSQL("ALTER TABLE NEW_words RENAME TO words")
 
                 // quiz word
-                database.execSQL("""
+                database.execSQL(
+                    """
                     CREATE TABLE NEW_quiz_word (
                         _id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
                         quiz_id INTEGER NOT NULL,
@@ -250,7 +261,8 @@ abstract class YomikataDataBase : RoomDatabase() {
                     )
                     """.trimIndent()
                 )
-                database.execSQL("""
+                database.execSQL(
+                    """
                     INSERT INTO NEW_quiz_word ( _id, quiz_id, word_id )
                     SELECT                      _id, quiz_id, word_id
                     FROM quiz_word
@@ -260,7 +272,8 @@ abstract class YomikataDataBase : RoomDatabase() {
                 database.execSQL("""ALTER TABLE NEW_quiz_word RENAME TO quiz_word""")
 
                 // stat entry
-                database.execSQL("""
+                database.execSQL(
+                    """
                     CREATE TABLE NEW_stat_entry (
                         _id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
                         "action" INTEGER NOT NULL,
@@ -270,7 +283,8 @@ abstract class YomikataDataBase : RoomDatabase() {
                     )
                     """.trimIndent()
                 )
-                database.execSQL("""
+                database.execSQL(
+                    """
                     INSERT INTO NEW_stat_entry ( _id, "action", associatedId, date, result )
                     SELECT                       _id, "action", associatedId, date, result
                     FROM stat_entry
@@ -280,7 +294,8 @@ abstract class YomikataDataBase : RoomDatabase() {
                 database.execSQL("""ALTER TABLE NEW_stat_entry RENAME TO stat_entry""")
 
                 // kanji solo
-                database.execSQL("""
+                database.execSQL(
+                    """
                     CREATE TABLE NEW_kanji_solo (
                         _id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
                         kanji TEXT NOT NULL,
@@ -293,7 +308,8 @@ abstract class YomikataDataBase : RoomDatabase() {
                     )
                     """.trimIndent()
                 )
-                database.execSQL("""
+                database.execSQL(
+                    """
                     INSERT INTO NEW_kanji_solo ( 
                                     _id, kanji, strokes, en, fr, kunyomi, onyomi, radical
                                 )
@@ -305,7 +321,8 @@ abstract class YomikataDataBase : RoomDatabase() {
                 database.execSQL("""ALTER TABLE NEW_kanji_solo RENAME TO kanji_solo""")
 
                 // radicals
-                database.execSQL("""
+                database.execSQL(
+                    """
                     CREATE TABLE NEW_radicals (
                         _id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
                         strokes INTEGER NOT NULL,
@@ -316,7 +333,8 @@ abstract class YomikataDataBase : RoomDatabase() {
                     )
                     """.trimIndent()
                 )
-                database.execSQL("""
+                database.execSQL(
+                    """
                     INSERT INTO NEW_radicals ( _id, strokes, radical, reading, en, fr )
                     SELECT                     _id, strokes, radical, reading, en, fr
                     FROM radicals
@@ -326,7 +344,8 @@ abstract class YomikataDataBase : RoomDatabase() {
                 database.execSQL("""ALTER TABLE NEW_radicals RENAME TO radicals""")
 
                 // sentences
-                database.execSQL("""
+                database.execSQL(
+                    """
                     CREATE TABLE NEW_sentences (
                         _id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
                         jap TEXT NOT NULL,
@@ -336,7 +355,8 @@ abstract class YomikataDataBase : RoomDatabase() {
                     )
                     """.trimIndent()
                 )
-                database.execSQL("""
+                database.execSQL(
+                    """
                     INSERT INTO NEW_sentences (_id, jap, en, fr, level )
                     SELECT                     _id, jap, en, fr, level
                     FROM sentences
@@ -348,113 +368,6 @@ abstract class YomikataDataBase : RoomDatabase() {
 
         }
 
-        @Suppress("FunctionName")
-        fun getMigration_11_12(context: Context): MIGRATION_11_12 {
-            return MIGRATION_11_12(context)
-        }
-
-        @Suppress("ClassName")
-        class MIGRATION_11_12(val context: Context) : Migration(11, 12) {
-
-            // This performs all migrations from 1 to 12 (excluding the operations in
-            // MIGRATION_8_9). The old database is synchronized with a static copy of version 12
-            override fun migrate(database: SupportSQLiteDatabase) {
-                updateOldDBtoVersion12(database, context, updateProgressDialogGetter?.invoke())
-            }
-
-        }
-
-        val MIGRATION_10_11 = object : Migration(10, 11) {
-            override fun migrate(database: SupportSQLiteDatabase) {}
-        }
-
-        val MIGRATION_9_10 = object : Migration(9, 10) {
-            override fun migrate(database: SupportSQLiteDatabase) {}
-        }
-
-        val MIGRATION_8_9 = object : Migration(8, 9) {
-            // STEPS
-            // 1. Add sentences table (did not exist before version 9)
-            // 2. Alter the words table: new column = sentenceId (all others preserved)
-            // 3. A̶d̶d̶ ̶a̶l̶l̶ ̶o̶f̶ ̶t̶h̶e̶ ̶n̶e̶w̶ ̶s̶e̶n̶t̶e̶n̶c̶e̶s̶ This is now done when migrating from 11 -> 12
-            override fun migrate(database: SupportSQLiteDatabase) {
-                // STEP 1
-                val queryCreateSentencesTable = "CREATE TABLE sentences (\n" +
-                        "   _id         INTEGER     PRIMARY KEY,\n" +
-                        "   jap         TEXT,\n" +
-                        "   en          TEXT,\n" +
-                        "   fr          TEXT,\n" +
-                        "   level       INTEGER\n" +
-                        ");"
-
-                database.execSQL(queryCreateSentencesTable)
-
-                // STEP 2
-                val queryRenameOldTable = "ALTER TABLE words RENAME TO OLD_words"
-
-                val queryCreateNewTable = "CREATE TABLE words (\n" +
-                        "    _id           INTEGER      PRIMARY KEY AUTOINCREMENT,\n" +
-                        "    japanese      TEXT         NOT NULL,\n" +
-                        "    english       TEXT         NOT NULL,\n" +
-                        "    french        TEXT         NOT NULL,\n" +
-                        "    reading       TEXT         NOT NULL,\n" +
-                        "    level         INTEGER,\n" +
-                        "    count_try     INTEGER,\n" +
-                        "    count_success INTEGER,\n" +
-                        "    count_fail    INTEGER,\n" +
-                        "    is_kana       BOOLEAN,\n" +
-                        "    repetition    INTEGER (-1),\n" +
-                        "    points        INTEGER,\n" +
-                        "    base_category INTEGER,\n" +
-                        "    isSelected    INTEGER      DEFAULT (0),\n" +
-                        "    sentence_id   INTEGER      DEFAULT (-1) \n" +
-                        ");"
-
-                val queryInsertOldIntoNew = "INSERT INTO words " +
-                        "(_id, japanese, english, french, reading, level, count_try, count_success, " +
-                        "       count_fail, is_kana, repetition, points, base_category, isSelected) " +
-                        "SELECT _id, japanese, english, french, reading, level, count_try, count_success, " +
-                        "       count_fail, is_kana, repetition, points, base_category, isSelected " +
-                        "FROM OLD_words"
-
-                val queryDropOldTable = "DROP TABLE OLD_words"
-
-                database.use {
-                    it.execSQL(queryRenameOldTable)
-                    it.execSQL(queryCreateNewTable)
-                    it.execSQL(queryInsertOldIntoNew)
-                    it.execSQL(queryDropOldTable)
-                }
-            }
-        }
-
-        val MIGRATION_7_8 = object : Migration(7, 8) {
-            override fun migrate(database: SupportSQLiteDatabase) {}
-        }
-
-        val MIGRATION_6_7 = object : Migration(6, 7) {
-            override fun migrate(database: SupportSQLiteDatabase) {}
-        }
-
-        val MIGRATION_5_6 = object : Migration(5, 6) {
-            override fun migrate(database: SupportSQLiteDatabase) {}
-        }
-
-        val MIGRATION_4_5 = object : Migration(4, 5) {
-            override fun migrate(database: SupportSQLiteDatabase) {}
-        }
-
-        val MIGRATION_3_4 = object : Migration(3, 4) {
-            override fun migrate(database: SupportSQLiteDatabase) {}
-        }
-
-        val MIGRATION_2_3 = object : Migration(2, 3) {
-            override fun migrate(database: SupportSQLiteDatabase) {}
-        }
-
-        val MIGRATION_1_2 = object : Migration(1, 2) {
-            override fun migrate(database: SupportSQLiteDatabase) {}
-        }
     }
 
 }

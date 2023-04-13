@@ -32,7 +32,7 @@ class MigrationSource(private val oldDatabase: SQLiteDatabase, private val newDa
     /**
      * Restore word.
      *
-     * Converts a word from the old yomikata format to the new yomikataz (version 12) format
+     * Converts a word from the old yomikata format to the new yomikataz format (at version 13)
      *
      * @param word
      * @param pronunciation
