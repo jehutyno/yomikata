@@ -220,7 +220,7 @@ class WordSource(private val wordDao: WordDao) : WordRepository {
     }
 
     fun addQuizWord(quizId: Long, wordId: Long) {
-        wordDao.addQuizWord(RoomQuizWord(0, quizId, wordId))
+        wordDao.addQuizWord(RoomQuizWord(quizId, wordId))
     }
 
 }

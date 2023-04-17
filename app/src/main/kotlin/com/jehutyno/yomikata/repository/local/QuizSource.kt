@@ -2,8 +2,8 @@ package com.jehutyno.yomikata.repository.local
 
 import com.jehutyno.yomikata.dao.QuizDao
 import com.jehutyno.yomikata.model.Quiz
-import com.jehutyno.yomikata.model.QuizWord
 import com.jehutyno.yomikata.repository.QuizRepository
+
 
 /**
  * Created by valentin on 07/10/2016.
@@ -65,8 +65,7 @@ class QuizSource(private val quizDao: QuizDao) : QuizRepository {
     }
 
     override fun addWordToQuiz(wordId: Long, quizId: Long) {
-        val quizWord = QuizWord(0, quizId, wordId)
-        quizDao.addQuizWord(RoomQuizWord.from(quizWord))
+        quizDao.addQuizWord(RoomQuizWord(quizId, wordId))
     }
 
     override fun deleteWordFromQuiz(wordId: Long, quizId: Long) {

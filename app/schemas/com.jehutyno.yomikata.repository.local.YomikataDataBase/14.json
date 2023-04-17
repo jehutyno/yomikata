@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 14,
-    "identityHash": "1fe714caafe7b04f308f176be5ca394e",
+    "identityHash": "f91d03f7ecd63718db861f6c907a5544",
     "entities": [
       {
         "tableName": "kanji_solo",
@@ -201,7 +201,7 @@
       },
       {
         "tableName": "words",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `japanese` TEXT NOT NULL, `english` TEXT NOT NULL, `french` TEXT NOT NULL, `reading` TEXT NOT NULL, `level` INTEGER NOT NULL DEFAULT 0, `count_try` INTEGER NOT NULL DEFAULT 0, `count_success` INTEGER NOT NULL DEFAULT 0, `count_fail` INTEGER NOT NULL DEFAULT 0, `is_kana` INTEGER NOT NULL, `repetition` INTEGER NOT NULL DEFAULT -1, `points` INTEGER NOT NULL DEFAULT 0, `base_category` INTEGER NOT NULL, `isSelected` INTEGER NOT NULL DEFAULT 0, `sentence_id` INTEGER NOT NULL DEFAULT -1)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `japanese` TEXT NOT NULL, `english` TEXT NOT NULL, `french` TEXT NOT NULL, `reading` TEXT NOT NULL, `level` INTEGER NOT NULL DEFAULT 0, `count_try` INTEGER NOT NULL DEFAULT 0, `count_success` INTEGER NOT NULL DEFAULT 0, `count_fail` INTEGER NOT NULL DEFAULT 0, `is_kana` INTEGER NOT NULL, `repetition` INTEGER NOT NULL DEFAULT -1, `points` INTEGER NOT NULL DEFAULT 0, `base_category` INTEGER NOT NULL, `isSelected` INTEGER NOT NULL DEFAULT 0, `sentence_id` INTEGER NOT NULL DEFAULT -1, FOREIGN KEY(`sentence_id`) REFERENCES `sentences`(`_id`) ON UPDATE CASCADE ON DELETE SET DEFAULT )",
         "fields": [
           {
             "fieldPath": "_id",
@@ -308,19 +308,35 @@
             "_id"
           ]
         },
-        "indices": [],
-        "foreignKeys": []
+        "indices": [
+          {
+            "name": "index_words_sentence_id",
+            "unique": false,
+            "columnNames": [
+              "sentence_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_words_sentence_id` ON `${TABLE_NAME}` (`sentence_id`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "sentences",
+            "onDelete": "SET DEFAULT",
+            "onUpdate": "CASCADE",
+            "columns": [
+              "sentence_id"
+            ],
+            "referencedColumns": [
+              "_id"
+            ]
+          }
+        ]
       },
       {
         "tableName": "quiz_word",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `quiz_id` INTEGER NOT NULL, `word_id` INTEGER NOT NULL)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`quiz_id` INTEGER NOT NULL, `word_id` INTEGER NOT NULL, PRIMARY KEY(`quiz_id`, `word_id`), FOREIGN KEY(`quiz_id`) REFERENCES `quiz`(`_id`) ON UPDATE CASCADE ON DELETE CASCADE , FOREIGN KEY(`word_id`) REFERENCES `words`(`_id`) ON UPDATE CASCADE ON DELETE CASCADE )",
         "fields": [
-          {
-            "fieldPath": "_id",
-            "columnName": "_id",
-            "affinity": "INTEGER",
-            "notNull": true
-          },
           {
             "fieldPath": "quiz_id",
             "columnName": "quiz_id",
@@ -335,13 +351,47 @@
           }
         ],
         "primaryKey": {
-          "autoGenerate": true,
+          "autoGenerate": false,
           "columnNames": [
-            "_id"
+            "quiz_id",
+            "word_id"
           ]
         },
-        "indices": [],
-        "foreignKeys": []
+        "indices": [
+          {
+            "name": "index_quiz_word_word_id",
+            "unique": false,
+            "columnNames": [
+              "word_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_quiz_word_word_id` ON `${TABLE_NAME}` (`word_id`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "quiz",
+            "onDelete": "CASCADE",
+            "onUpdate": "CASCADE",
+            "columns": [
+              "quiz_id"
+            ],
+            "referencedColumns": [
+              "_id"
+            ]
+          },
+          {
+            "table": "words",
+            "onDelete": "CASCADE",
+            "onUpdate": "CASCADE",
+            "columns": [
+              "word_id"
+            ],
+            "referencedColumns": [
+              "_id"
+            ]
+          }
+        ]
       },
       {
         "tableName": "radicals",
@@ -397,7 +447,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '1fe714caafe7b04f308f176be5ca394e')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'f91d03f7ecd63718db861f6c907a5544')"
     ]
   }
 }

@@ -124,26 +124,26 @@ class QuizDaoTest {
 
     @Test
     fun addQuizWord() {
-        val roomQuizWord = RoomQuizWord(0, 1, 2)
-        val id = quizDao.addQuizWord(roomQuizWord)
+        val roomQuizWord = RoomQuizWord(1, 2)
+        quizDao.addQuizWord(roomQuizWord)
         assert (
-            quizDao.getAllQuizWords().contains(roomQuizWord.copy(_id = id))
+            quizDao.getAllQuizWords().contains(roomQuizWord)
         )
     }
 
     @Test
     fun deleteWordFromQuiz() {
-        val ids = sampleRoomQuizWords.map {
+        sampleRoomQuizWords.map {
             quizDao.addQuizWord(it)
         }
         val testRoomQuizWord = sampleRoomQuizWords[0]
         quizDao.deleteWordFromQuiz(testRoomQuizWord.word_id, testRoomQuizWord.quiz_id)
         assert (
-            !quizDao.getAllQuizWords().contains(testRoomQuizWord.copy(_id = ids[0]))
+            !quizDao.getAllQuizWords().contains(testRoomQuizWord)
         )
         for (i in 1 until sampleRoomQuizWords.size) {
             assert (
-                quizDao.getAllQuizWords().contains(sampleRoomQuizWords[i].copy(_id = ids[i]))
+                quizDao.getAllQuizWords().contains(sampleRoomQuizWords[i])
             )
         }
     }
@@ -153,7 +153,7 @@ class QuizDaoTest {
         val test = sampleRoomWords[0]
         val id = wordDao.addWord(test)
         val quizId : Long = 56
-        val quizWord = RoomQuizWord(0, quizId, id)
+        val quizWord = RoomQuizWord(quizId, id)
         quizDao.addQuizWord(quizWord)
         val level = test.level
         assert (

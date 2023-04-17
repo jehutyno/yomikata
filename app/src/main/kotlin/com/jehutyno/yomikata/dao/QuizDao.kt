@@ -35,7 +35,7 @@ interface QuizDao {
     fun getAllQuizWords(): List<RoomQuizWord>
 
     @Insert
-    fun addQuizWord(quiz_word: RoomQuizWord): Long
+    fun addQuizWord(quiz_word: RoomQuizWord)
 
     @Query("DELETE FROM quiz_word " +
            "WHERE word_id = :wordId AND quiz_id = :quizId")

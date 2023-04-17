@@ -31,9 +31,12 @@ abstract class YomikataDataBase : RoomDatabase() {
 
     companion object {
         // file name should be the same for assets folder and database folder!
-        private const val DATABASE_FILE_NAME = "yomikataz.db"
+        private const val DATABASE_FILE_NAME = "yomikataz_version13.db"
         private const val DATABASE_LOCAL_BACKUP_FILE_NAME = "yomikataz_backup.db"
         private var INSTANCE: YomikataDataBase? = null
+        // WARNING: when creating from asset/file, Room will validate the schema, which
+        // causes any gaps in the AUTOINCREMENT id columns to disappear (eg. ids 1, 2, 4 -> 1, 2, 3)
+        // make sure there are no gaps in the asset databases to ensure consistency with migrations
         fun getDatabase(context: Context): YomikataDataBase {
             if (INSTANCE == null) {
                 synchronized(this) {
@@ -230,7 +233,8 @@ abstract class YomikataDataBase : RoomDatabase() {
                       points INTEGER NOT NULL DEFAULT (0),
                       base_category INTEGER NOT NULL,
                       isSelected INTEGER NOT NULL DEFAULT (0),
-                      sentence_id INTEGER NOT NULL DEFAULT (-1)
+                      sentence_id INTEGER NOT NULL DEFAULT (-1),
+                      FOREIGN KEY(sentence_id) REFERENCES sentences(_id) ON UPDATE CASCADE ON DELETE SET DEFAULT
                     )
                     """.trimIndent()
                 )
@@ -251,25 +255,37 @@ abstract class YomikataDataBase : RoomDatabase() {
                 database.execSQL("DROP TABLE words")
                 database.execSQL("ALTER TABLE NEW_words RENAME TO words")
 
-                // quiz word
+                // add words sentence_id index
+                database.execSQL(
+                    """CREATE INDEX IF NOT EXISTS index_words_sentence_id ON words (sentence_id)"""
+                )
+
+                // quiz word        remove _id column, make quiz_id & word_id both primary keys
                 database.execSQL(
                     """
                     CREATE TABLE NEW_quiz_word (
-                        _id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
                         quiz_id INTEGER NOT NULL,
-                        word_id INTEGER NOT NULL
+                        word_id INTEGER NOT NULL,
+                        PRIMARY KEY(quiz_id, word_id),
+                        FOREIGN KEY(quiz_id) REFERENCES quiz(_id) ON UPDATE CASCADE ON DELETE CASCADE,
+                        FOREIGN KEY(word_id) REFERENCES words(_id) ON UPDATE CASCADE ON DELETE CASCADE
                     )
                     """.trimIndent()
                 )
                 database.execSQL(
                     """
-                    INSERT INTO NEW_quiz_word ( _id, quiz_id, word_id )
-                    SELECT                      _id, quiz_id, word_id
+                    INSERT INTO NEW_quiz_word ( quiz_id, word_id )
+                    SELECT                      quiz_id, word_id
                     FROM quiz_word
                     """.trimIndent()
                 )
                 database.execSQL("""DROP TABLE quiz_word""")
                 database.execSQL("""ALTER TABLE NEW_quiz_word RENAME TO quiz_word""")
+
+                // add quiz_word indices
+                database.execSQL(
+                    """CREATE INDEX IF NOT EXISTS index_quiz_word_word_id ON quiz_word (word_id)"""
+                )
 
                 // stat entry
                 database.execSQL(

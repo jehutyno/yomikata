@@ -1,8 +1,6 @@
 package com.jehutyno.yomikata.repository.local
 
-import androidx.room.ColumnInfo
-import androidx.room.Entity
-import androidx.room.PrimaryKey
+import androidx.room.*
 import com.jehutyno.yomikata.model.*
 
 
@@ -25,7 +23,16 @@ data class RoomQuiz (
     }
 }
 
-@Entity(tableName = "words")
+@Entity(tableName = "words", foreignKeys = [
+            ForeignKey(
+                entity = RoomSentences::class,
+                parentColumns = ["_id"],
+                childColumns = ["sentence_id"],
+                onDelete = ForeignKey.SET_DEFAULT,
+                onUpdate = ForeignKey.CASCADE
+            )
+        ]
+)
 data class RoomWords (
     @PrimaryKey(autoGenerate = true) val _id: Long,
     @ColumnInfo val japanese: String,
@@ -42,7 +49,7 @@ data class RoomWords (
     @ColumnInfo(defaultValue = "0") val points: Int,
     @ColumnInfo val base_category: Int,
     @ColumnInfo(defaultValue = "0") val isSelected: Int,
-    @ColumnInfo(defaultValue = "-1") val sentence_id: Long
+    @ColumnInfo(defaultValue = "-1", index = true) val sentence_id: Long
 ) {
     companion object {
         fun from(word: Word): RoomWords {
@@ -61,20 +68,36 @@ data class RoomWords (
     }
 }
 
-@Entity(tableName = "quiz_word")
+@Entity(tableName = "quiz_word", primaryKeys = ["quiz_id", "word_id"],
+        foreignKeys = [
+            ForeignKey(
+                entity = RoomQuiz::class,
+                parentColumns = arrayOf("_id"),
+                childColumns = arrayOf("quiz_id"),
+                onDelete = ForeignKey.CASCADE,
+                onUpdate = ForeignKey.CASCADE
+            ),
+            ForeignKey(
+                entity = RoomWords::class,
+                parentColumns = arrayOf("_id"),
+                childColumns = arrayOf("word_id"),
+                onDelete = ForeignKey.CASCADE,
+                onUpdate = ForeignKey.CASCADE
+            )
+        ]
+)
 data class RoomQuizWord (
-    @PrimaryKey(autoGenerate = true) val _id: Long,
-    @ColumnInfo val quiz_id: Long,
-    @ColumnInfo val word_id: Long
+    val quiz_id: Long,
+    @ColumnInfo(index = true) val word_id: Long
 ) {
     companion object {
         fun from(quizWord: QuizWord): RoomQuizWord {
-            return RoomQuizWord(quizWord.id, quizWord.quizId, quizWord.wordId)
+            return RoomQuizWord(quizWord.quizId, quizWord.wordId)
         }
     }
 
     fun toQuizWord(): QuizWord {
-        return QuizWord(_id, quiz_id, word_id)
+        return QuizWord(quiz_id, word_id)
     }
 }
 
