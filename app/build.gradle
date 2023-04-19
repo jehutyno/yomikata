@@ -5,23 +5,6 @@ plugins {
     id("com.google.devtools.ksp")
 }
 
-// Room export schemas
-class RoomSchemaArgProvider implements CommandLineArgumentProvider {
-
-    @InputDirectory
-    @PathSensitive(PathSensitivity.RELATIVE)
-    File schemaDir
-
-    RoomSchemaArgProvider(File schemaDir) {
-        this.schemaDir = schemaDir
-    }
-
-    @Override
-    Iterable<String> asArguments() {
-        return ["room.schemaLocation=${schemaDir.path}"]
-    }
-}
-
 android {
     namespace 'com.jehutyno.yomikata'
 
@@ -41,7 +24,6 @@ android {
     ksp {
         // Room export schemas
         arg('room.schemaLocation', "$projectDir/schemas")
-//        arg(new RoomSchemaArgProvider(new File(projectDir, "schemas")))
     }
 
     buildFeatures {

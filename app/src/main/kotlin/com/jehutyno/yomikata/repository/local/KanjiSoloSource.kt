@@ -11,14 +11,6 @@ import com.jehutyno.yomikata.repository.KanjiSoloRepository
  * Created by valentin on 10/01/2017.
  */
 class KanjiSoloSource(private val kanjiSoloDao: KanjiSoloDao) : KanjiSoloRepository {
-    override fun createKanjiSoloTable() {
-        TODO("Not yet implemented")
-    }
-
-    override fun createRadicalsTable() {
-        TODO("Not yet implemented")
-    }
-
     override fun kanjiSoloCount(): Int {
         return kanjiSoloDao.kanjiSoloCount()
     }

@@ -1,6 +1,5 @@
 package com.jehutyno.yomikata.repository.local
 
-import android.database.sqlite.SQLiteDatabase
 import com.jehutyno.yomikata.dao.SentenceDao
 import com.jehutyno.yomikata.model.Sentence
 import com.jehutyno.yomikata.model.Word
@@ -11,11 +10,6 @@ import com.jehutyno.yomikata.repository.SentenceRepository
  * Created by valentinlanfranchi on 19/05/2017.
  */
 class SentenceSource(private val sentenceDao: SentenceDao) : SentenceRepository {
-
-    override fun createSentencesTable() {
-        TODO("Not yet implemented")
-    }
-
     override fun addSentence(sentence: Sentence) {
         sentenceDao.addSentence(RoomSentences.from(sentence))
     }
@@ -28,7 +22,7 @@ class SentenceSource(private val sentenceDao: SentenceDao) : SentenceRepository 
         return sentenceDao.getSentenceById(id)!!.toSentence()
     }
 
-    override fun getAllSentences(db: SQLiteDatabase?): List<Sentence> {
+    override fun getAllSentences(): List<Sentence> {
         return sentenceDao.getAllSentences().map { it.toSentence() }
     }
 

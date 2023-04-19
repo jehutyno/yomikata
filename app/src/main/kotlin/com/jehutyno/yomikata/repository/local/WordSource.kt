@@ -1,6 +1,5 @@
 package com.jehutyno.yomikata.repository.local
 
-import android.database.sqlite.SQLiteDatabase
 import androidx.sqlite.db.SimpleSQLiteQuery
 import com.jehutyno.yomikata.dao.WordDao
 import com.jehutyno.yomikata.model.QuizWord
@@ -8,7 +7,6 @@ import com.jehutyno.yomikata.model.Word
 import com.jehutyno.yomikata.repository.WordRepository
 import com.jehutyno.yomikata.util.HiraganaUtils
 import com.jehutyno.yomikata.util.QuizType
-import java.util.*
 
 
 /**
@@ -16,7 +14,7 @@ import java.util.*
  */
 class WordSource(private val wordDao: WordDao) : WordRepository {
 
-    override fun getAllWords(db: SQLiteDatabase?): List<Word> {
+    override fun getAllWords(): List<Word> {
         return wordDao.getAllWords().map { it.toWord() }
     }
 

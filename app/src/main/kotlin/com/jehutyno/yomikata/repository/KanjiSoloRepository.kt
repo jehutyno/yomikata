@@ -9,11 +9,9 @@ import com.jehutyno.yomikata.model.Radical
  * Created by valentin on 10/01/2017.
  */
 interface KanjiSoloRepository {
-    fun createKanjiSoloTable()
     fun kanjiSoloCount(): Int
     fun addKanjiSolo(kanjiSolo: KanjiSolo)
     fun getSoloByKanji(kanji: String): KanjiSolo?
-    fun createRadicalsTable()
     fun radicalsCount(): Int
     fun addRadical(radical: Radical)
     fun getKanjiRadical(radicalString: String): Radical?

@@ -1,9 +1,7 @@
 package com.jehutyno.yomikata.repository
 
-import android.database.sqlite.SQLiteDatabase
 import com.jehutyno.yomikata.model.Word
 import com.jehutyno.yomikata.util.QuizType
-import java.util.*
 
 
 /**
@@ -35,7 +33,7 @@ interface WordRepository {
     fun decreaseWordsRepetition(quizIds: LongArray)
     fun updateWordSelected(wordId: Long, check: Boolean)
     fun getWordsByLevel(quizIds: LongArray, level: Int, callback: LoadWordsCallback)
-    fun getAllWords(db: SQLiteDatabase?) : List<Word>
+    fun getAllWords() : List<Word>
     fun getWordById(wordId: Long): Word
     fun updateWord(updateWord: Word, word: Word?)
     fun updateWordProgression(updateWord: Word, word: Word)
