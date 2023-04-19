@@ -2,18 +2,12 @@
   "formatVersion": 1,
   "database": {
     "version": 14,
-    "identityHash": "f91d03f7ecd63718db861f6c907a5544",
+    "identityHash": "b40f162cc3b313773718b6e55c34aa22",
     "entities": [
       {
         "tableName": "kanji_solo",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `kanji` TEXT NOT NULL, `strokes` INTEGER NOT NULL, `en` TEXT NOT NULL, `fr` TEXT NOT NULL, `kunyomi` TEXT NOT NULL, `onyomi` TEXT NOT NULL, `radical` TEXT NOT NULL)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`kanji` TEXT NOT NULL, `strokes` INTEGER NOT NULL, `en` TEXT NOT NULL, `fr` TEXT NOT NULL, `kunyomi` TEXT NOT NULL, `onyomi` TEXT NOT NULL, `radical` TEXT NOT NULL, PRIMARY KEY(`kanji`))",
         "fields": [
-          {
-            "fieldPath": "_id",
-            "columnName": "_id",
-            "affinity": "INTEGER",
-            "notNull": true
-          },
           {
             "fieldPath": "kanji",
             "columnName": "kanji",
@@ -58,9 +52,9 @@
           }
         ],
         "primaryKey": {
-          "autoGenerate": true,
+          "autoGenerate": false,
           "columnNames": [
-            "_id"
+            "kanji"
           ]
         },
         "indices": [],
@@ -201,7 +195,7 @@
       },
       {
         "tableName": "words",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `japanese` TEXT NOT NULL, `english` TEXT NOT NULL, `french` TEXT NOT NULL, `reading` TEXT NOT NULL, `level` INTEGER NOT NULL DEFAULT 0, `count_try` INTEGER NOT NULL DEFAULT 0, `count_success` INTEGER NOT NULL DEFAULT 0, `count_fail` INTEGER NOT NULL DEFAULT 0, `is_kana` INTEGER NOT NULL, `repetition` INTEGER NOT NULL DEFAULT -1, `points` INTEGER NOT NULL DEFAULT 0, `base_category` INTEGER NOT NULL, `isSelected` INTEGER NOT NULL DEFAULT 0, `sentence_id` INTEGER NOT NULL DEFAULT -1, FOREIGN KEY(`sentence_id`) REFERENCES `sentences`(`_id`) ON UPDATE CASCADE ON DELETE SET DEFAULT )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `japanese` TEXT NOT NULL, `english` TEXT NOT NULL, `french` TEXT NOT NULL, `reading` TEXT NOT NULL, `level` INTEGER NOT NULL DEFAULT 0, `count_try` INTEGER NOT NULL DEFAULT 0, `count_success` INTEGER NOT NULL DEFAULT 0, `count_fail` INTEGER NOT NULL DEFAULT 0, `is_kana` INTEGER NOT NULL, `repetition` INTEGER NOT NULL DEFAULT -1, `points` INTEGER NOT NULL DEFAULT 0, `base_category` INTEGER NOT NULL, `isSelected` INTEGER NOT NULL DEFAULT 0, `sentence_id` INTEGER, FOREIGN KEY(`sentence_id`) REFERENCES `sentences`(`_id`) ON UPDATE CASCADE ON DELETE SET NULL )",
         "fields": [
           {
             "fieldPath": "_id",
@@ -298,8 +292,7 @@
             "fieldPath": "sentence_id",
             "columnName": "sentence_id",
             "affinity": "INTEGER",
-            "notNull": true,
-            "defaultValue": "-1"
+            "notNull": false
           }
         ],
         "primaryKey": {
@@ -322,7 +315,7 @@
         "foreignKeys": [
           {
             "table": "sentences",
-            "onDelete": "SET DEFAULT",
+            "onDelete": "SET NULL",
             "onUpdate": "CASCADE",
             "columns": [
               "sentence_id"
@@ -395,24 +388,18 @@
       },
       {
         "tableName": "radicals",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `strokes` INTEGER NOT NULL, `radical` TEXT NOT NULL, `reading` TEXT NOT NULL, `en` TEXT NOT NULL, `fr` TEXT NOT NULL)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`radical` TEXT NOT NULL, `strokes` INTEGER NOT NULL, `reading` TEXT NOT NULL, `en` TEXT NOT NULL, `fr` TEXT NOT NULL, PRIMARY KEY(`radical`))",
         "fields": [
           {
-            "fieldPath": "_id",
-            "columnName": "_id",
-            "affinity": "INTEGER",
+            "fieldPath": "radical",
+            "columnName": "radical",
+            "affinity": "TEXT",
             "notNull": true
           },
           {
             "fieldPath": "strokes",
             "columnName": "strokes",
             "affinity": "INTEGER",
-            "notNull": true
-          },
-          {
-            "fieldPath": "radical",
-            "columnName": "radical",
-            "affinity": "TEXT",
             "notNull": true
           },
           {
@@ -435,9 +422,9 @@
           }
         ],
         "primaryKey": {
-          "autoGenerate": true,
+          "autoGenerate": false,
           "columnNames": [
-            "_id"
+            "radical"
           ]
         },
         "indices": [],
@@ -447,7 +434,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'f91d03f7ecd63718db861f6c907a5544')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'b40f162cc3b313773718b6e55c34aa22')"
     ]
   }
 }

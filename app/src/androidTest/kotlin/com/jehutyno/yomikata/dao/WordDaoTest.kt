@@ -131,23 +131,24 @@ class WordDaoTest {
         val words = listOf (
             RoomWords(1, "月", "moon; Monday", "lune; lundi", "げつ",
                 0, 0, 0, 0, 0,
-                -1, 0, 2, 0, 472),
+                -1, 0, 2, 0, null),
             RoomWords(2, "酒", "sake; alcohol", "saké; alcool", "さけ",
                 0, 0, 0, 0, 0,
-                -1, 0, 2, 0, 576),
+                -1, 0, 2, 0, null),
             RoomWords(3, "石炭", "(n) coal;(P)", "(n) charbon;houille",
                 "せきたん;いしずみ", 0, 0, 0, 0, 0,
-                -1, 0, 5, 0, 6274),
+                -1, 0, 5, 0, null),
             RoomWords(4, "式", "ceremony", "cérémonie", "しき",
                 0, 0, 0, 0, 0, -1, 0,
-                6, 0, 6488)
+                6, 0, null)
         )
         words.forEach { wordDao.addWord(it) }
+        quizDao.addQuiz(sampleRoomQuiz[0].copy(_id = 1))
         val quizWords = listOf (
-            RoomQuizWord(1, 1, 1),
-            RoomQuizWord(2, 1, 2),
-            RoomQuizWord(3, 1, 3),
-            RoomQuizWord(4, 1, 4)
+            RoomQuizWord(1, 1),
+            RoomQuizWord(1, 2),
+            RoomQuizWord(1, 3),
+            RoomQuizWord(1, 4)
         )
         quizWords.forEach { wordDao.addQuizWord(it) }
         val retrievedWordIds = wordDao.getWordsOfSizeRelatedTo(1, 1, 100)
@@ -165,7 +166,7 @@ class WordDaoTest {
     fun searchWords() {
         val sample = RoomWords(1, "金", "metal; Friday", "métal; vendredi", "きん",
             0, 0, 0, 0, 0, -1, 0,
-            2, 0, 588)
+            2, 0, null)
         val weird = "OZFEOZ3°OK?ZEVK°9K9jéPAODFAFPO?3O233"  // string that should not be found in db
         wordDao.addWord(sample)
         assert ( wordDao.searchWords("met", weird) == listOf(sample) )
@@ -181,8 +182,10 @@ class WordDaoTest {
 
     @Test
     fun isWordInQuiz() {
-        val sample = sampleRoomQuizWords[0].copy(_id = 1)
+        val sample = sampleRoomQuizWords[0]
         assert ( !wordDao.isWordInQuiz(sample.word_id, sample.quiz_id) )
+        wordDao.addWord(getRandomRoomWord(sample.word_id))
+        quizDao.addQuiz(getRandomRoomQuiz(sample.quiz_id))
         wordDao.addQuizWord(sample)
         assert ( wordDao.isWordInQuiz(sample.word_id, sample.quiz_id) )
     }

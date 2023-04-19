@@ -9,21 +9,21 @@ import com.jehutyno.yomikata.repository.local.*
 
 
 val sampleRoomKanjiSolo = listOf (
-    RoomKanjiSolo(0, "", 0, "", "", "", "", ""),
-    RoomKanjiSolo(0, "七", 2, "seven", "sept", "なな、なの、ななつ","シチ", "一"),
-    RoomKanjiSolo(0, "症", 10, "symptoms, illness", "symptômes, maladie", "", "ショウ", "⽧")
+    RoomKanjiSolo("", 0, "", "", "", "", ""),
+    RoomKanjiSolo("七", 2, "seven", "sept", "なな、なの、ななつ","シチ", "一"),
+    RoomKanjiSolo("症", 10, "symptoms, illness", "symptômes, maladie", "", "ショウ", "⽧")
 )
 
 val sampleRoomRadicals = listOf (
-    RoomRadicals(0, 0, "", "", "", ""),
-    RoomRadicals(0, 1, "⼄", "", "the second", "le second"),
-    RoomRadicals(0, 6, "⽼", "おいかんむり", "old, old-age", "vieux, ancien")
+    RoomRadicals("", 0, "", "", ""),
+    RoomRadicals("⼄", 1, "", "the second", "le second"),
+    RoomRadicals("⽼", 6, "おいかんむり", "old, old-age", "vieux, ancien")
 )
 
 val sampleRoomKanjiSoloRadical = listOf (
-    RoomKanjiSoloRadical(0, "", 0, "", "", "", "", "",
+    RoomKanjiSoloRadical("", 0, "", "", "", "", "",
         0, "", "", ""),
-    RoomKanjiSoloRadical(0, "侮", 8, "insult, despise, scorn", "insulter, mépriser, dédain",
+    RoomKanjiSoloRadical("侮", 8, "insult, despise, scorn", "insulter, mépriser, dédain",
         "あなど、あなどる", "ブ", "⺅", 2, "にんべん",
         "person", "personne")
 )
@@ -35,16 +35,16 @@ val sampleRoomQuiz = listOf (
 )
 
 val sampleRoomQuizWords = listOf (
-    RoomQuizWord(0, 1, 2),
-    RoomQuizWord(0, 4, 6)
+    RoomQuizWord(1, 2),
+    RoomQuizWord(4, 6)
 )
 
 val sampleRoomWords = listOf (
     RoomWords(0, "", "", "", "", 0, 0, 0,
-          0, 0, 0, 0, 0, 0, 0),
+          0, 0, 0, 0, 0, 0, null),
     RoomWords(0, "金", "metal; Friday", "métal; vendredi", "きん",
              0, 0, 0, 0, 0, -1, 0,
-       2, 0, 588)
+       2, 0, null)
 )
 
 val sampleRoomSentences = listOf (
@@ -60,25 +60,35 @@ val sampleStatEntries = listOf (
     RoomStatEntry(0, 1, 753, 1680455079568, 0)
 )
 
+fun getRandomRoomWord(wordId: Long): RoomWords {
+    return RoomWords(wordId, "", "", "", "", 0, 0, 0,
+        0, 0, 0, 0, 0, 0, null)
+}
+
+fun getRandomRoomQuiz(quizId: Long): RoomQuiz {
+    return RoomQuiz(quizId, "", "", 0, false)
+}
+
+
 class CoupledQuizWords(private val quizDao: QuizDao, private val wordDao: WordDao) {
 
-    val sampleRoomQuiz = listOf (
+    private val sampleRoomQuiz = listOf (
         RoomQuiz(1, "", "", 0, false),
         RoomQuiz(2, "Kanji: Verbs%行く 入る 会う...", "Kanji: Verbes%行く 入る 会う...", 2, false),
         RoomQuiz(3, "N4 - Vocabulary Part2%注意 火事 星...", "N4 - Vocabulaire Partie2%注意 火事 星...", 6, true)
     )
 
-    val sampleRoomWords = listOf (
+    private val sampleRoomWords = listOf (
         RoomWords(1, "", "", "", "", 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0),
+            0, 0, 0, 0, 0, 0, null),
         RoomWords(2, "金", "metal; Friday", "métal; vendredi", "きん",
             0, 0, 0, 0, 0, -1, 0,
-            2, 0, 588)
+            2, 0, null)
     )
-    val sampleRoomQuizWords = listOf (
-        RoomQuizWord(1, 1, 1),
-        RoomQuizWord(2, 3, 1),
-        RoomQuizWord(3, 3, 2)
+    private val sampleRoomQuizWords = listOf (
+        RoomQuizWord(1, 1),
+        RoomQuizWord(3, 1),
+        RoomQuizWord(3, 2)
     )
 
     fun addAllToDatabase() {

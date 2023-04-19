@@ -38,7 +38,7 @@ class WordPresenter(
                 override fun onWordsLoaded(words: List<Word>) {
                     val wordsRad = mutableListOf<Triple<Word, List<KanjiSoloRadical?>, Sentence>>()
                     words.forEach {
-                        val sentence = sentenceRepository.getSentenceById(it.sentenceId)
+                        val sentence = sentenceRepository.getSentenceById(it.sentenceId!!)
                         wordsRad.add(Triple(it, loadRadicals(it.japanese), sentence))
                     }
                     contentView.displayWords(wordsRad)
@@ -54,7 +54,7 @@ class WordPresenter(
                 override fun onWordsLoaded(words: List<Word>) {
                     val wordsRad = mutableListOf<Triple<Word, List<KanjiSoloRadical?>, Sentence>>()
                     words.forEach {
-                        val sentence = sentenceRepository.getSentenceById(it.sentenceId)
+                        val sentence = sentenceRepository.getSentenceById(it.sentenceId!!)
                         wordsRad.add(Triple(it, loadRadicals(it.japanese), sentence))
                     }
                     contentView.displayWords(wordsRad)
@@ -71,7 +71,7 @@ class WordPresenter(
 
     override fun loadWord(wordId: Long) {
         val word = wordRepository.getWordById(wordId)
-        val sentence = sentenceRepository.getSentenceById(word.sentenceId)
+        val sentence = sentenceRepository.getSentenceById(word.sentenceId!!)
         val wordsRad = mutableListOf<Triple<Word, List<KanjiSoloRadical?>, Sentence>>()
         wordsRad.add(Triple(word, loadRadicals(word.japanese), sentence))
         contentView.displayWords(wordsRad)
@@ -82,7 +82,7 @@ class WordPresenter(
             override fun onWordsLoaded(words: List<Word>) {
                 val wordsRad = mutableListOf<Triple<Word, List<KanjiSoloRadical?>, Sentence>>()
                 words.forEach {
-                    val sentence = sentenceRepository.getSentenceById(it.sentenceId)
+                    val sentence = sentenceRepository.getSentenceById(it.sentenceId!!)
                     wordsRad.add(Triple(it, loadRadicals(it.japanese), sentence))
                 }
                 contentView.displayWords(wordsRad)

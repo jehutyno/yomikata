@@ -28,7 +28,7 @@ data class RoomQuiz (
                 entity = RoomSentences::class,
                 parentColumns = ["_id"],
                 childColumns = ["sentence_id"],
-                onDelete = ForeignKey.SET_DEFAULT,
+                onDelete = ForeignKey.SET_NULL,
                 onUpdate = ForeignKey.CASCADE
             )
         ]
@@ -49,7 +49,7 @@ data class RoomWords (
     @ColumnInfo(defaultValue = "0") val points: Int,
     @ColumnInfo val base_category: Int,
     @ColumnInfo(defaultValue = "0") val isSelected: Int,
-    @ColumnInfo(defaultValue = "-1", index = true) val sentence_id: Long
+    @ColumnInfo(index = true) val sentence_id: Long?
 ) {
     companion object {
         fun from(word: Word): RoomWords {
@@ -101,6 +101,28 @@ data class RoomQuizWord (
     }
 }
 
+// used to get a quiz together with a list of corresponding quiz_words
+data class QuizWithQuizWords (
+    @Embedded val quiz: RoomQuiz,
+    @Relation(
+        parentColumn = "_id",
+        entityColumn = "quiz_id",
+        associateBy = Junction(RoomQuizWord::class)
+    )
+    val quizWords: List<RoomQuizWord>
+)
+
+// used to get a word together with a list of corresponding quiz_words
+data class WordWithQuizWords (
+    @Embedded val word: RoomWords,
+    @Relation(
+        parentColumn = "_id",
+        entityColumn = "word_id",
+        associateBy = Junction(RoomQuizWord::class)
+    )
+    val quizWords: List<RoomQuizWord>
+)
+
 @Entity(tableName = "stat_entry")
 data class RoomStatEntry (
     @PrimaryKey(autoGenerate = true) val _id: Long,
@@ -123,8 +145,7 @@ data class RoomStatEntry (
 
 @Entity(tableName = "kanji_solo")
 data class RoomKanjiSolo (
-    @PrimaryKey(autoGenerate = true) val _id: Long,
-    @ColumnInfo val kanji: String,
+    @PrimaryKey val kanji: String,
     @ColumnInfo val strokes: Int,
     @ColumnInfo val en: String,
     @ColumnInfo val fr: String,
@@ -134,34 +155,33 @@ data class RoomKanjiSolo (
 ) {
     companion object {
         fun from(kanjiSolo: KanjiSolo): RoomKanjiSolo {
-            return RoomKanjiSolo(kanjiSolo.id, kanjiSolo.kanji, kanjiSolo.strokes, kanjiSolo.en,
+            return RoomKanjiSolo(kanjiSolo.kanji, kanjiSolo.strokes, kanjiSolo.en,
                                  kanjiSolo.fr, kanjiSolo.kunyomi, kanjiSolo.onyomi, kanjiSolo.radical)
         }
     }
 
     fun toKanjiSolo(): KanjiSolo {
-        return KanjiSolo(_id, kanji, strokes, en, fr, kunyomi, onyomi, radical)
+        return KanjiSolo(kanji, strokes, en, fr, kunyomi, onyomi, radical)
     }
 }
 
 @Entity(tableName = "radicals")
 data class RoomRadicals (
-    @PrimaryKey(autoGenerate = true) val _id: Long,
+    @PrimaryKey val radical: String,
     @ColumnInfo val strokes: Int,
-    @ColumnInfo val radical: String,
     @ColumnInfo val reading: String,
     @ColumnInfo val en: String,
     @ColumnInfo val fr: String
 ) {
     companion object {
         fun from(radical: Radical): RoomRadicals {
-            return RoomRadicals(radical.id, radical.strokes, radical.radical,
+            return RoomRadicals(radical.radical, radical.strokes,
                                 radical.reading, radical.en, radical.fr)
         }
     }
 
     fun toRadical(): Radical {
-        return Radical(_id, strokes, radical, reading, en, fr)
+        return Radical(radical, strokes, reading, en, fr)
     }
 }
 
@@ -186,7 +206,6 @@ data class RoomSentences (
 
 // not part of database
 data class RoomKanjiSoloRadical (
-    val _id: Long,
     val kanji: String,
     val strokes: Int,
     val en: String,
@@ -201,14 +220,23 @@ data class RoomKanjiSoloRadical (
 )  {
     companion object {
         fun from(kanjiSolo: KanjiSolo, radical: Radical): RoomKanjiSoloRadical {
-            return RoomKanjiSoloRadical(kanjiSolo.id, kanjiSolo.kanji, kanjiSolo.strokes, kanjiSolo.en,
+            return RoomKanjiSoloRadical(kanjiSolo.kanji, kanjiSolo.strokes, kanjiSolo.en,
                                         kanjiSolo.fr, kanjiSolo.kunyomi, kanjiSolo.onyomi, kanjiSolo.radical,
                                         radical.strokes, radical.reading, radical.en, radical.fr)
         }
     }
 
     fun toKanjiSoloRadical(): KanjiSoloRadical {
-        return KanjiSoloRadical(_id, kanji, strokes, en, fr, kunyomi, onyomi, radical,
+        return KanjiSoloRadical(kanji, strokes, en, fr, kunyomi, onyomi, radical,
                                 radStroke, radReading, radEn, radFr)
     }
+
+    fun toKanjiSolo(): KanjiSolo {
+        return KanjiSolo(kanji, strokes, en, fr, kunyomi, onyomi, radical)
+    }
+
+    fun toRadical(): Radical {
+        return Radical(radical, radStroke, radReading, radEn, radFr)
+    }
+
 }

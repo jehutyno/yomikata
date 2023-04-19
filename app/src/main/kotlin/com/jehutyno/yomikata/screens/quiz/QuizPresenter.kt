@@ -293,10 +293,11 @@ class QuizPresenter(
 
     fun getQCMDisPlayForEnJap(word: Word): String {
         return if (word.isKana == 2) {
+            val sentence = sentenceRepository.getSentenceById(word.sentenceId!!)
             if (isFuriDisplayed)
-                sentenceRepository.getSentenceById(word.sentenceId).jap
+                sentence.jap
             else
-                sentenceNoFuri(sentenceRepository.getSentenceById(word.sentenceId))
+                sentenceNoFuri(sentence)
         }
         else if (isFuriDisplayed)
             " {${word.japanese};${word.reading}} "
@@ -723,7 +724,7 @@ class QuizPresenter(
     override fun getRandomSentence(word: Word): Sentence {
         val sentence = sentenceRepository.getRandomSentence(word, getCategoryLevel(word.baseCategory))
         return if (word.isKana == 2 || sentence == null)
-            sentenceRepository.getSentenceById(word.sentenceId)
+            sentenceRepository.getSentenceById(word.sentenceId!!)
         else
             sentence
     }

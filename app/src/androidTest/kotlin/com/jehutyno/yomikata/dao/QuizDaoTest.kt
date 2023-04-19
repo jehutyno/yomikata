@@ -124,6 +124,9 @@ class QuizDaoTest {
 
     @Test
     fun addQuizWord() {
+        // must add quiz and word first to satisfy foreign key constraint
+        quizDao.addQuiz(sampleRoomQuiz[0].copy(_id = 1))
+        wordDao.addWord(sampleRoomWords[0].copy(_id = 2))
         val roomQuizWord = RoomQuizWord(1, 2)
         quizDao.addQuizWord(roomQuizWord)
         assert (
@@ -133,9 +136,12 @@ class QuizDaoTest {
 
     @Test
     fun deleteWordFromQuiz() {
-        sampleRoomQuizWords.map {
+        sampleRoomQuizWords.forEach {
+            wordDao.addWord(getRandomRoomWord(it.word_id))
+            quizDao.addQuiz(getRandomRoomQuiz(it.quiz_id))
             quizDao.addQuizWord(it)
         }
+
         val testRoomQuizWord = sampleRoomQuizWords[0]
         quizDao.deleteWordFromQuiz(testRoomQuizWord.word_id, testRoomQuizWord.quiz_id)
         assert (
@@ -153,6 +159,7 @@ class QuizDaoTest {
         val test = sampleRoomWords[0]
         val id = wordDao.addWord(test)
         val quizId : Long = 56
+        quizDao.addQuiz(getRandomRoomQuiz(quizId))
         val quizWord = RoomQuizWord(quizId, id)
         quizDao.addQuizWord(quizWord)
         val level = test.level

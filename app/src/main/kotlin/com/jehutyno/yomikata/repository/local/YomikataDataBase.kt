@@ -233,8 +233,8 @@ abstract class YomikataDataBase : RoomDatabase() {
                       points INTEGER NOT NULL DEFAULT (0),
                       base_category INTEGER NOT NULL,
                       isSelected INTEGER NOT NULL DEFAULT (0),
-                      sentence_id INTEGER NOT NULL DEFAULT (-1),
-                      FOREIGN KEY(sentence_id) REFERENCES sentences(_id) ON UPDATE CASCADE ON DELETE SET DEFAULT
+                      sentence_id INTEGER,
+                      FOREIGN KEY(sentence_id) REFERENCES sentences(_id) ON UPDATE CASCADE ON DELETE SET NULL
                     )
                     """.trimIndent()
                 )
@@ -313,8 +313,7 @@ abstract class YomikataDataBase : RoomDatabase() {
                 database.execSQL(
                     """
                     CREATE TABLE NEW_kanji_solo (
-                        _id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-                        kanji TEXT NOT NULL,
+                        kanji TEXT PRIMARY KEY NOT NULL,
                         strokes INTEGER NOT NULL,
                         en TEXT NOT NULL,
                         fr TEXT NOT NULL,
@@ -327,9 +326,9 @@ abstract class YomikataDataBase : RoomDatabase() {
                 database.execSQL(
                     """
                     INSERT INTO NEW_kanji_solo ( 
-                                    _id, kanji, strokes, en, fr, kunyomi, onyomi, radical
+                                    kanji, strokes, en, fr, kunyomi, onyomi, radical
                                 )
-                    SELECT          _id, kanji, strokes, en, fr, kunyomi, onyomi, radical
+                    SELECT          kanji, strokes, en, fr, kunyomi, onyomi, radical
                     FROM kanji_solo
                     """.trimIndent()
                 )
@@ -340,9 +339,8 @@ abstract class YomikataDataBase : RoomDatabase() {
                 database.execSQL(
                     """
                     CREATE TABLE NEW_radicals (
-                        _id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        radical TEXT PRIMARY KEY NOT NULL,
                         strokes INTEGER NOT NULL,
-                        radical TEXT NOT NULL,
                         reading TEXT NOT NULL,
                         en TEXT NOT NULL,
                         fr TEXT NOT NULL
@@ -351,8 +349,8 @@ abstract class YomikataDataBase : RoomDatabase() {
                 )
                 database.execSQL(
                     """
-                    INSERT INTO NEW_radicals ( _id, strokes, radical, reading, en, fr )
-                    SELECT                     _id, strokes, radical, reading, en, fr
+                    INSERT INTO NEW_radicals ( radical, strokes, reading, en, fr )
+                    SELECT                     radical, strokes, reading, en, fr
                     FROM radicals
                 """.trimIndent()
                 )

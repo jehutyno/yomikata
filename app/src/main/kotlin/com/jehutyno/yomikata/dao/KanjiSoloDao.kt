@@ -23,10 +23,10 @@ interface KanjiSoloDao {
     fun radicalsCount(): Int
 
     @Insert
-    fun addKanjiSolo(kanjiSolo: RoomKanjiSolo): Long
+    fun addKanjiSolo(kanjiSolo: RoomKanjiSolo)
 
     @Insert
-    fun addRadical(radical: RoomRadicals): Long
+    fun addRadical(radical: RoomRadicals)
 
     @Query("SELECT * FROM kanji_solo WHERE kanji = :kanji LIMIT 1")
     fun getSoloByKanji(kanji: String): RoomKanjiSolo?
