@@ -110,7 +110,7 @@ fun contactPlayStore(context: Context) {
 }
 
 fun contactDiscord(context: Context) {
-    context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://discord.gg/zgkbMn6mYC")).setFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+    context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(context.getString(R.string.discord_link))).setFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
 }
 
 fun onTTSinit(context: Context?, status: Int, tts: TextToSpeech?): Int {

@@ -31,7 +31,7 @@ abstract class YomikataDataBase : RoomDatabase() {
 
     companion object {
         // file name should be the same for assets folder and database folder!
-        private const val DATABASE_FILE_NAME = "yomikataz_version13.db"
+        private const val DATABASE_FILE_NAME = "yomikataz.db"
         private const val DATABASE_LOCAL_BACKUP_FILE_NAME = "yomikataz_backup.db"
         private var INSTANCE: YomikataDataBase? = null
         // WARNING: when creating from asset/file, Room will validate the schema, which

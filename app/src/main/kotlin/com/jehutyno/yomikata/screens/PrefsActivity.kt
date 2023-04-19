@@ -1,13 +1,8 @@
 package com.jehutyno.yomikata.screens
 
-import android.app.Activity
 import android.content.Intent
-import android.content.pm.PackageManager
-import android.database.sqlite.SQLiteException
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
-import android.provider.DocumentsContract
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
@@ -19,13 +14,10 @@ import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.PreferenceManager
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.repository.local.YomikataDataBase
-import com.jehutyno.yomikata.repository.migration.importYomikata
 import com.jehutyno.yomikata.util.*
 import com.wooplr.spotlight.prefs.PreferencesManager
-import kotlinx.coroutines.*
 import mu.KLogging
 import splitties.alertdialog.appcompat.*
-import java.io.*
 
 
 /**
@@ -46,173 +38,12 @@ class PrefsActivity : AppCompatActivity() {
         supportFragmentManager.beginTransaction()
                 .replace(android.R.id.content, PrefsFragment()).commit()
 
-        backupLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            if (result.resultCode != Activity.RESULT_OK)
-                return@registerForActivityResult
+        backupLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult())
+                                                    { result -> getBackupLauncher(result) }
 
-            val updateProgressDialog = UpdateProgressDialog(this)
-            updateProgressDialog.prepare(getString(R.string.backup_progress))
-            updateProgressDialog.finishDialog = alertDialog {
-                titleResource = R.string.backup_success
-                okButton()
-            }
+        restoreLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult())
+                                                    {result -> getRestoreLauncher(result)}
 
-            val uri = result.data?.data
-            if (uri != null)
-                handleBackup(uri, updateProgressDialog)
-        }
-
-        restoreLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            if (result.resultCode != Activity.RESULT_OK)
-                return@registerForActivityResult
-
-            val updateProgressDialog = UpdateProgressDialog(this)
-            updateProgressDialog.finishDialog = getRestartDialog()
-            updateProgressDialog.prepare(getString(R.string.restoring_progress), getString(R.string.do_not_close_app))
-            updateProgressDialog.show()
-
-            val updateProgressDialogMigrate = UpdateProgressDialog(this@PrefsActivity)
-            updateProgressDialogMigrate.prepare(getString(R.string.migrating), getString(R.string.may_take_a_while))
-            updateProgressDialogMigrate.destroyOnFinish = true
-
-            CoroutineScope(Dispatchers.Main).launch {
-                val inputStream =
-                    result.data?.data?.let { uri ->
-                        val contentResolver = this@PrefsActivity.contentResolver
-                        contentResolver.openInputStream(uri)
-                    }
-
-                val success = withContext(Dispatchers.IO) {
-                    return@withContext handleRestore(inputStream!!, updateProgressDialog)
-                }
-                if (!success)
-                    return@launch
-
-                // do migration
-                YomikataDataBase.setUpdateProgressDialog(updateProgressDialogMigrate)
-                updateProgressDialogMigrate.show()
-                withContext(Dispatchers.IO) {
-                    YomikataDataBase.forceLoadDatabase(this@PrefsActivity)
-                }
-                updateProgressDialogMigrate.destroy()
-                YomikataDataBase.setUpdateProgressDialog(null)
-
-                updateProgressDialog.updateProgress(100)
-            }
-        }
-
-    }
-
-    private fun getRestartDialog(): AlertDialog {
-        return alertDialog {
-            titleResource = R.string.restore_success_message
-            messageResource = R.string.ask_to_restart
-            setCancelable(false)
-            positiveButton(R.string.alert_restart) {
-                triggerRebirth()
-            }
-        }
-    }
-
-    /**
-     * Handle backup
-     *
-     * Create a backup of the current database file to the given uri.
-     *
-     * @param uri Uri
-     * @param updateProgressDialog Optional dialog to display progress on screen
-     */
-    private fun handleBackup(uri: Uri, updateProgressDialog: UpdateProgressDialog? = null) {
-        // start a progress dialog
-        updateProgressDialog?.show()
-
-        CoroutineScope(Dispatchers.Main).launch {
-            var data: ByteArray? = null
-            var stop = withContext(Dispatchers.IO) {
-                try {
-                    data = YomikataDataBase.getRawData(this@PrefsActivity)
-                } catch (e: Exception) {
-                    updateProgressDialog?.error(getString(R.string.backup_error), e.message)
-                    return@withContext true
-                }
-                return@withContext false
-            }
-            if (stop)
-                return@launch
-
-            updateProgressDialog?.updateProgress(50)
-
-            stop = withContext(Dispatchers.IO) {
-                var outputStream: OutputStream? = null
-                try {
-                    outputStream = contentResolver.openOutputStream(uri)!!
-                    outputStream.write(data)
-                } catch (e: IOException) {
-                    updateProgressDialog?.error(getString(R.string.backup_error), e.message)
-                    return@withContext true
-                } finally {
-                    outputStream?.close()
-                }
-                return@withContext false
-            }
-            if (stop)
-                return@launch
-
-            updateProgressDialog?.updateProgress(100)
-        }
-    }
-
-    /**
-     * Handle restore
-     *
-     * @param inputStream InputStream containing data to restore
-     * @param updateProgressDialog Optional dialog to show progress
-     * @return True if success, False if failure
-     */
-    private fun handleRestore(inputStream: InputStream, updateProgressDialog: UpdateProgressDialog? = null): Boolean {
-        val buffer = ByteArray(4096)
-        val outputStream = ByteArrayOutputStream()
-
-        val databaseFile = File.createTempFile("temp-db-", ".db")
-        val outputStreamTemp = FileOutputStream(databaseFile)   // for validation
-        try {
-            var len: Int
-            while (inputStream.read(buffer).also { len = it } != -1) {
-                outputStream.write(buffer, 0, len)
-            }
-            updateProgressDialog?.updateProgress(50)
-            val data = outputStream.toByteArray()
-
-            outputStreamTemp.write(data)
-            val type: DatabaseType?
-            try {
-                type = validateDatabase(databaseFile)
-            } catch (e: IllegalStateException) {
-                updateProgressDialog?.error(getString(R.string.invalid_file), e.message)
-                return false
-            } catch (e: SQLiteException) {
-                updateProgressDialog?.error(getString(R.string.restore_error), e.message + e.cause?.message)
-                return false
-            }
-
-            if (type == DatabaseType.OLD_YOMIKATA) {
-                importYomikata(this@PrefsActivity, data, null)
-            } else {
-                YomikataDataBase.overwriteDatabase(this@PrefsActivity, data)
-            }
-
-            updateProgressDialog?.updateProgress(75)
-        } catch (e: IOException) {
-            e.printStackTrace()
-            updateProgressDialog?.error(getString(R.string.restore_error), e.message)
-            return false
-        } finally {
-            inputStream.close()
-            outputStream.close()
-            outputStreamTemp.close()
-            databaseFile.delete()
-        }
-        return true
     }
 
     class PrefsFragment : PreferenceFragmentCompat() {
@@ -227,7 +58,7 @@ class PrefsActivity : AppCompatActivity() {
                 okButton {
                     YomikataDataBase.resetDatabase(requireContext())
                     YomikataDataBase.forceLoadDatabase(requireContext())
-                    (requireActivity() as PrefsActivity).getRestartDialog().show()
+                    requireActivity().getRestartDialog()
 //                    val toast = Toast.makeText(context, R.string.prefs_reinit_done, Toast.LENGTH_LONG)
 //                    toast.show()
 //                    // tell quizzes activity to start in home screen fragment
@@ -291,11 +122,11 @@ class PrefsActivity : AppCompatActivity() {
 
                 // Backup and Restore
                 "backup" -> {
-                    (activity as PrefsActivity).backupProgress()
+                    backupProgress((activity as PrefsActivity).backupLauncher)
                     return true
                 }
                 "restore" -> {
-                    (activity as PrefsActivity).restoreProgress()
+                    (activity as PrefsActivity).restoreProgress((activity as PrefsActivity).restoreLauncher)
                     return true
                 }
                 "reset" -> {
@@ -320,57 +151,6 @@ class PrefsActivity : AppCompatActivity() {
                 }
             }
         }
-    }
-
-    fun backupProgress() {
-        fun createFile(pickerInitialUri: Uri?) {
-            val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
-                addCategory(Intent.CATEGORY_OPENABLE)
-                type = "application/vnd.sqlite3"
-                putExtra(Intent.EXTRA_TITLE, "my_yomikataz.db")
-
-                // Optionally, specify a URI for the directory that should be opened in
-                // the system file picker before your app creates the document.
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    if (pickerInitialUri != null)
-                        putExtra(DocumentsContract.EXTRA_INITIAL_URI, pickerInitialUri)
-                }
-            }
-            backupLauncher.launch(intent)
-        }
-
-        createFile(null)
-    }
-
-    fun restoreProgress() {
-        fun openFile(pickerInitialUri: Uri?) {
-            val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
-                addCategory(Intent.CATEGORY_OPENABLE)
-                type = "application/vnd.sqlite3"
-                val mimeTypes = arrayOf("application/x-sqlite3", "*/*")
-                putExtra(Intent.EXTRA_MIME_TYPES, mimeTypes)
-                putExtra(Intent.EXTRA_TITLE, getString(R.string.choose_file))
-
-                // Optionally, specify a URI for the file that should appear in the
-                // system file picker when it loads.
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    if (pickerInitialUri != null)
-                        putExtra(DocumentsContract.EXTRA_INITIAL_URI, pickerInitialUri)
-                }
-            }
-            restoreLauncher.launch(intent)
-        }
-
-        openFile(null)
-    }
-
-    private fun triggerRebirth() {
-        val packageManager: PackageManager = this.packageManager
-        val intent = packageManager.getLaunchIntentForPackage(this.packageName)
-        val componentName = intent!!.component
-        val mainIntent = Intent.makeRestartActivityTask(componentName)
-        this.startActivity(mainIntent)
-        Runtime.getRuntime().exit(0)
     }
 
 }

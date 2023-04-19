@@ -4,13 +4,25 @@ import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import androidx.appcompat.app.AppCompatActivity
 import android.view.View
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
+import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.databinding.ActivitySplashBinding
 import com.jehutyno.yomikata.repository.local.YomikataDataBase
 import com.jehutyno.yomikata.screens.quizzes.QuizzesActivity
 import com.jehutyno.yomikata.util.UpdateProgressDialog
+import com.jehutyno.yomikata.util.backupProgress
+import com.jehutyno.yomikata.util.contactDiscord
+import com.jehutyno.yomikata.util.getBackupLauncher
 import kotlinx.coroutines.*
+import splitties.alertdialog.appcompat.alertDialog
+import splitties.alertdialog.appcompat.messageResource
+import splitties.alertdialog.appcompat.neutralButton
+import splitties.alertdialog.appcompat.positiveButton
+import splitties.alertdialog.appcompat.titleResource
 
 
 // TODO: migrate to splashScreen https://developer.android.com/develop/ui/views/launch/splash-screen/migrate
@@ -18,6 +30,7 @@ class SplashActivity : AppCompatActivity() {
 
     // View Binding
     private lateinit var binding: ActivitySplashBinding
+    private lateinit var backupLauncher : ActivityResultLauncher<Intent>
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -28,14 +41,46 @@ class SplashActivity : AppCompatActivity() {
         setContentView(view)
 
         val updateProgressDialogMigrate = UpdateProgressDialog(this)
-        updateProgressDialogMigrate.prepare("Migrating your database", "This may take a while...")
+        updateProgressDialogMigrate.prepare(getString(R.string.migrating), getString(R.string.may_take_a_while))
 
+        backupLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult())
+                                                        { result -> getBackupLauncher(result) }
+
+        val errorDialog = alertDialog {
+            titleResource = R.string.migration_error
+            messageResource = R.string.contact_devs_for_help
+
+            positiveButton(R.string.contact) {}
+            neutralButton(R.string.create_backup) {}
+            setCancelable(false)
+        }
+        // override onClickListener to never dismiss AlertDialog
+        errorDialog.setOnShowListener {
+            val buttonPositive = errorDialog.getButton(AlertDialog.BUTTON_POSITIVE)
+            buttonPositive.setOnClickListener {
+                contactDiscord(this@SplashActivity)
+            }
+            val buttonNeutral = errorDialog.getButton(AlertDialog.BUTTON_NEUTRAL)
+            buttonNeutral.setOnClickListener {
+                backupProgress(backupLauncher)
+            }
+        }
+
+        var success = false
         val job = CoroutineScope(Dispatchers.Main).launch {
             // do migration
             YomikataDataBase.setUpdateProgressDialog(updateProgressDialogMigrate)
-            withContext(Dispatchers.IO) {
-                YomikataDataBase.forceLoadDatabase(this@SplashActivity)
+            success = withContext(Dispatchers.IO) {
+                try {
+                    YomikataDataBase.forceLoadDatabase(this@SplashActivity)
+                    return@withContext true
+                } catch (e: Exception) {
+                    updateProgressDialogMigrate.destroy()
+                    return@withContext false
+                }
             }
+            if (!success)
+                errorDialog.show()
         }
 
         binding.pathView.useNaturalColors()
@@ -64,6 +109,8 @@ class SplashActivity : AppCompatActivity() {
                 CoroutineScope(Dispatchers.Main).launch {
                     // finish the migration & destroy progress dialog (if it was shown at all)
                     job.join()
+                    if (!success)
+                        return@launch
                     updateProgressDialogMigrate.destroy()
                     YomikataDataBase.setUpdateProgressDialog(null)
 

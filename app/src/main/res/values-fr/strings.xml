@@ -203,4 +203,8 @@
     <string name="migrating">Migrating your database</string>
     <string name="may_take_a_while">Cela peut prendre un certain temps</string>
     <string name="invalid_file">Fichier invalide</string>
+    <string name="migration_error">Erreur de migration</string>
+    <string name="contact_devs_for_help">Veuillez contacter les développeurs pour obtenir de l\'aide</string>
+    <string name="create_backup">Créer une sauvegarde</string>
+    <string name="contact">Contacter</string>
 </resources>

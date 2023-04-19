@@ -230,4 +230,9 @@
     <string name="dont_ask_voices">Don\'t ask again</string>
     <string name="voices_reinit_done">Voice files have been deleted</string>
     <string name="do_not_close_app">Do not close the app</string>
+    <string name="migration_error">Migration error</string>
+    <string name="discord_link" translatable="false">https://discord.gg/zgkbMn6mYC</string>
+    <string name="contact_devs_for_help">Please contact the developers for help</string>
+    <string name="create_backup">Create backup</string>
+    <string name="contact">Contact</string>
 </resources>
