@@ -62,6 +62,9 @@ abstract class YomikataDataBase : RoomDatabase() {
         /**
          * Force load database.
          *
+         * Will force the database to be loaded (and migrated if needed).
+         * Room may still keep the old version loaded as well, so it is best to restart the app anyway.
+         *
          * @param context Context
          */
         @Synchronized

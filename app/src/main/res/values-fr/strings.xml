@@ -87,10 +87,11 @@
     <string name="restore_success_message">Vos données ont bien été restaurées !</string>
     <string name="restore_error">Restauration échouée</string>
     <string name="restore_error_message">Une erreur est survenue pendant la restauration des données</string>
+    <string name="ask_to_restart">Veuillez redémarrer l\'application pour recharger vos données</string>
     <string name="settings">Paramètres</string>
     <string name="settings_restore_header">Sauvegarder et restraurer sa progression avec un fichier venant de cette application ou de Yomikata</string>
     <string name="select_dir">Choisir</string>
-    <string name="choose_file">Choissir fichier Yomikata ou Yomikata Z</string>
+    <string name="choose_file">Choisir votre fichier Yomikata Z</string>
     <string name="ok">OK</string>
     <string name="progress_import_title">Importation</string>
     <string name="progress_import_message_y">Votre progression dans Yomikata est en cours d\'importation</string>
@@ -196,4 +197,10 @@
     <string name="delete_voices_files">Effacer les fichiers de voix</string>
     <string name="dont_ask_voices">Ne plus demander</string>
     <string name="voices_reinit_done">Fichiers de voix supprimés</string>
+    <string name="restoring_progress">Restaurer votre sauvegarde</string>
+    <string name="do_not_close_app">Ne pas fermer l\'application</string>
+    <string name="backup_progress">Créer une sauvegarde</string>
+    <string name="migrating">Migrating your database</string>
+    <string name="may_take_a_while">Cela peut prendre un certain temps</string>
+    <string name="invalid_file">Fichier invalide</string>
 </resources>

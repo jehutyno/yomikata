@@ -51,9 +51,9 @@ class PrefsActivity : AppCompatActivity() {
                 return@registerForActivityResult
 
             val updateProgressDialog = UpdateProgressDialog(this)
-            updateProgressDialog.prepare("creating backup")
+            updateProgressDialog.prepare(getString(R.string.backup_progress))
             updateProgressDialog.finishDialog = alertDialog {
-                title = "Successfully created backup"
+                titleResource = R.string.backup_success
                 okButton()
             }
 
@@ -68,11 +68,11 @@ class PrefsActivity : AppCompatActivity() {
 
             val updateProgressDialog = UpdateProgressDialog(this)
             updateProgressDialog.finishDialog = getRestartDialog()
-            updateProgressDialog.prepare("Restoring your backup", "Do not close the app")
+            updateProgressDialog.prepare(getString(R.string.restoring_progress), getString(R.string.do_not_close_app))
             updateProgressDialog.show()
 
             val updateProgressDialogMigrate = UpdateProgressDialog(this@PrefsActivity)
-            updateProgressDialogMigrate.prepare("Migrating your database", "This may take a while...")
+            updateProgressDialogMigrate.prepare(getString(R.string.migrating), getString(R.string.may_take_a_while))
             updateProgressDialogMigrate.destroyOnFinish = true
 
             CoroutineScope(Dispatchers.Main).launch {
@@ -105,8 +105,8 @@ class PrefsActivity : AppCompatActivity() {
 
     private fun getRestartDialog(): AlertDialog {
         return alertDialog {
-            title = "Successfully restored your backup"
-            message = "Please restart the app to reload your data"
+            titleResource = R.string.restore_success_message
+            messageResource = R.string.ask_to_restart
             setCancelable(false)
             positiveButton(R.string.alert_restart) {
                 triggerRebirth()
@@ -132,7 +132,7 @@ class PrefsActivity : AppCompatActivity() {
                 try {
                     data = YomikataDataBase.getRawData(this@PrefsActivity)
                 } catch (e: Exception) {
-                    updateProgressDialog?.error("failed to create backup", e.message)
+                    updateProgressDialog?.error(getString(R.string.backup_error), e.message)
                     return@withContext true
                 }
                 return@withContext false
@@ -148,7 +148,7 @@ class PrefsActivity : AppCompatActivity() {
                     outputStream = contentResolver.openOutputStream(uri)!!
                     outputStream.write(data)
                 } catch (e: IOException) {
-                    updateProgressDialog?.error("failed to create backup", e.message)
+                    updateProgressDialog?.error(getString(R.string.backup_error), e.message)
                     return@withContext true
                 } finally {
                     outputStream?.close()
@@ -188,10 +188,10 @@ class PrefsActivity : AppCompatActivity() {
             try {
                 type = validateDatabase(databaseFile)
             } catch (e: IllegalStateException) {
-                updateProgressDialog?.error("Invalid file", e.message)
+                updateProgressDialog?.error(getString(R.string.invalid_file), e.message)
                 return false
             } catch (e: SQLiteException) {
-                updateProgressDialog?.error("Something went wrong", e.message + e.cause?.message)
+                updateProgressDialog?.error(getString(R.string.restore_error), e.message + e.cause?.message)
                 return false
             }
 
@@ -204,7 +204,7 @@ class PrefsActivity : AppCompatActivity() {
             updateProgressDialog?.updateProgress(75)
         } catch (e: IOException) {
             e.printStackTrace()
-            updateProgressDialog?.error("failed to restore database", e.message)
+            updateProgressDialog?.error(getString(R.string.restore_error), e.message)
             return false
         } finally {
             inputStream.close()
@@ -348,7 +348,7 @@ class PrefsActivity : AppCompatActivity() {
                 type = "application/vnd.sqlite3"
                 val mimeTypes = arrayOf("application/x-sqlite3", "*/*")
                 putExtra(Intent.EXTRA_MIME_TYPES, mimeTypes)
-                putExtra(Intent.EXTRA_TITLE, "Select Your Yomikata Database File")
+                putExtra(Intent.EXTRA_TITLE, getString(R.string.choose_file))
 
                 // Optionally, specify a URI for the file that should appear in the
                 // system file picker when it loads.
