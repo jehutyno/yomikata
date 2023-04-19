@@ -9,6 +9,7 @@ import com.jehutyno.yomikata.repository.local.YomikataDataBase
 import com.jehutyno.yomikata.util.CopyUtils
 import com.jehutyno.yomikata.util.UpdateProgressDialog
 import java.io.File
+import kotlin.io.path.deleteIfExists
 import kotlin.io.path.pathString
 import kotlin.io.path.readBytes
 import kotlin.io.path.writeBytes
@@ -76,6 +77,7 @@ fun importYomikata(context: Context, path: String, updateProgressDialog: UpdateP
     val oldDecryptedPath = kotlin.io.path.createTempFile("temp-decrypted-db-", ".db")
     CopyUtils.restoreEncryptedBdd(File(path), oldDecryptedPath.pathString)
     importYomikata(context, oldDecryptedPath.readBytes(), updateProgressDialog)
+    oldDecryptedPath.deleteIfExists()
 }
 
 /**
@@ -120,6 +122,8 @@ fun importYomikata(context: Context, data: ByteArray, updateProgressDialog: Upda
     }
     // overwrite the real database file with the new version
     YomikataDataBase.overwriteDatabase(context, v13File.absolutePath)
+    v13File.delete()
+    oldDecryptedPath.deleteIfExists()
 }
 
 /**
@@ -271,4 +275,5 @@ fun updateOldDBtoVersion13(oldDatabase: SupportSQLiteDatabase, context: Context,
         }
     }
 
+    v13File.delete()
 }

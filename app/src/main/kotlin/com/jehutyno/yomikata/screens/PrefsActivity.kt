@@ -210,6 +210,7 @@ class PrefsActivity : AppCompatActivity() {
             inputStream.close()
             outputStream.close()
             outputStreamTemp.close()
+            databaseFile.delete()
         }
         return true
     }
