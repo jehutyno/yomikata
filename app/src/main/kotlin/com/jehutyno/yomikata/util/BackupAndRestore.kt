@@ -167,13 +167,25 @@ fun Activity.getRestoreLauncher(result: ActivityResult) {
         // do migration
         YomikataDataBase.setUpdateProgressDialog(updateProgressDialogMigrate)
         updateProgressDialogMigrate.show()
-        withContext(Dispatchers.IO) {
-            YomikataDataBase.forceLoadDatabase(this@getRestoreLauncher)
+        val migrationSuccess = withContext(Dispatchers.IO) {
+            try {
+                YomikataDataBase.forceLoadDatabase(this@getRestoreLauncher)
+                return@withContext true
+            } catch (e: Exception) {
+                return@withContext false
+            }
         }
-        updateProgressDialogMigrate.destroy()
-        YomikataDataBase.setUpdateProgressDialog(null)
-
-        updateProgressDialog.updateProgress(100)
+        try {
+            updateProgressDialogMigrate.destroy()
+            YomikataDataBase.setUpdateProgressDialog(null)
+        } finally {
+            if (!migrationSuccess) {
+                YomikataDataBase.restoreLocalBackup(this@getRestoreLauncher)
+                updateProgressDialog.error(getString(R.string.restore_error), "migration failed")
+            } else {
+                updateProgressDialog.updateProgress(100)
+            }
+        }
     }
 }
 
@@ -187,6 +199,9 @@ fun Activity.getRestoreLauncher(result: ActivityResult) {
 private fun Activity.handleRestore(inputStream: InputStream, updateProgressDialog: UpdateProgressDialog? = null): Boolean {
     val buffer = ByteArray(4096)
     val outputStream = ByteArrayOutputStream()
+
+    // if flag = true -> original db was overwritten. If error occurs -> recover local backup
+    var flag = false
 
     val databaseFile = File.createTempFile("temp-db-", ".db")
     val outputStreamTemp = FileOutputStream(databaseFile)   // for validation
@@ -215,9 +230,13 @@ private fun Activity.handleRestore(inputStream: InputStream, updateProgressDialo
         } else {
             YomikataDataBase.overwriteDatabase(this, data)
         }
+        flag = true
 
         updateProgressDialog?.updateProgress(75)
     } catch (e: IOException) {
+        if (flag) {
+            YomikataDataBase.restoreLocalBackup(this)
+        }
         e.printStackTrace()
         updateProgressDialog?.error(getString(R.string.restore_error), e.message)
         return false

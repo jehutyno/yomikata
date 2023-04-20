@@ -58,7 +58,7 @@ class PrefsActivity : AppCompatActivity() {
                 okButton {
                     YomikataDataBase.resetDatabase(requireContext())
                     YomikataDataBase.forceLoadDatabase(requireContext())
-                    requireActivity().getRestartDialog()
+                    requireActivity().getRestartDialog().show()
 //                    val toast = Toast.makeText(context, R.string.prefs_reinit_done, Toast.LENGTH_LONG)
 //                    toast.show()
 //                    // tell quizzes activity to start in home screen fragment

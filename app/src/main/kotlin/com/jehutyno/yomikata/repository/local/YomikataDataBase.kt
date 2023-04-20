@@ -85,6 +85,8 @@ abstract class YomikataDataBase : RoomDatabase() {
          */
         @Synchronized
         fun overwriteDatabase(context: Context, externalDatabasePath: String) {
+            createLocalBackup(context)
+            // acquire lock
             var outputStream: OutputStream? = null
             var lock: FileLock? = null
             try {
@@ -92,7 +94,6 @@ abstract class YomikataDataBase : RoomDatabase() {
                 lock = outputStream.channel.lock()
 
                 getDatabase(context).close()
-                createLocalBackup(context)
 
                 // overwrite current with external data
                 FileInputStream(externalDatabasePath).use { input ->
@@ -108,6 +109,7 @@ abstract class YomikataDataBase : RoomDatabase() {
 
         @Synchronized
         fun overwriteDatabase(context: Context, data: ByteArray) {
+            createLocalBackup(context)
             // acquire lock
             var outputStream: FileOutputStream? = null
             var lock: FileLock? = null
@@ -116,8 +118,6 @@ abstract class YomikataDataBase : RoomDatabase() {
                 lock = outputStream.channel.lock()
 
                 getDatabase(context).close()
-                createLocalBackup(context)
-
                 // overwrite current with external data
                 outputStream.write(data)
 
@@ -151,10 +151,14 @@ abstract class YomikataDataBase : RoomDatabase() {
         }
 
         @Synchronized
-        fun restoreLocalBackup(context: Context) {
+        fun restoreLocalBackup(context: Context): Boolean {
             val currentDatabaseFile = context.getDatabasePath(DATABASE_FILE_NAME)
             val backupFile = context.getDatabasePath(DATABASE_LOCAL_BACKUP_FILE_NAME)
+            if (!backupFile.exists())
+                return false
+            getDatabase(context).close()
             backupFile.copyTo(currentDatabaseFile, overwrite = true)
+            return true
         }
 
         @Synchronized

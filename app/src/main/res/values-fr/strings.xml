@@ -207,4 +207,8 @@
     <string name="contact_devs_for_help">Veuillez contacter les développeurs pour obtenir de l\'aide</string>
     <string name="create_backup">Créer une sauvegarde</string>
     <string name="contact">Contacter</string>
+    <string name="recovery">Récupération</string>
+    <string name="choose_file_short">Choisir le fichier</string>
+    <string name="recover_automatic_backup">"Récupérer la sauvegarde automatique  "</string>
+    <string name="no_local_backup_found">Aucune sauvegarde locale trouvée</string>
 </resources>

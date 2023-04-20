@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.view.View
+import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
@@ -17,9 +18,14 @@ import com.jehutyno.yomikata.util.UpdateProgressDialog
 import com.jehutyno.yomikata.util.backupProgress
 import com.jehutyno.yomikata.util.contactDiscord
 import com.jehutyno.yomikata.util.getBackupLauncher
+import com.jehutyno.yomikata.util.getRestartDialog
+import com.jehutyno.yomikata.util.getRestoreLauncher
+import com.jehutyno.yomikata.util.restoreProgress
 import kotlinx.coroutines.*
 import splitties.alertdialog.appcompat.alertDialog
+import splitties.alertdialog.appcompat.cancelButton
 import splitties.alertdialog.appcompat.messageResource
+import splitties.alertdialog.appcompat.negativeButton
 import splitties.alertdialog.appcompat.neutralButton
 import splitties.alertdialog.appcompat.positiveButton
 import splitties.alertdialog.appcompat.titleResource
@@ -30,7 +36,9 @@ class SplashActivity : AppCompatActivity() {
 
     // View Binding
     private lateinit var binding: ActivitySplashBinding
+
     private lateinit var backupLauncher : ActivityResultLauncher<Intent>
+    private lateinit var restoreLauncher : ActivityResultLauncher<Intent>
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -45,6 +53,30 @@ class SplashActivity : AppCompatActivity() {
 
         backupLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult())
                                                         { result -> getBackupLauncher(result) }
+        restoreLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult())
+                                                        { result -> getRestoreLauncher(result) }
+
+        val recoveryDialog = alertDialog {
+            titleResource = R.string.recovery
+
+            positiveButton(R.string.choose_file_short) {
+                restoreProgress(restoreLauncher)
+            }
+            neutralButton(R.string.recover_automatic_backup) {
+                val result = YomikataDataBase.restoreLocalBackup(this@SplashActivity)
+                if (result) {
+                    getRestartDialog().show()
+                } else {
+                    Toast.makeText(
+                        this@SplashActivity,
+                        getString(R.string.no_local_backup_found), Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
+            cancelButton()
+
+            setCancelable(false)
+        }
 
         val errorDialog = alertDialog {
             titleResource = R.string.migration_error
@@ -52,6 +84,7 @@ class SplashActivity : AppCompatActivity() {
 
             positiveButton(R.string.contact) {}
             neutralButton(R.string.create_backup) {}
+            negativeButton(R.string.recovery) {}
             setCancelable(false)
         }
         // override onClickListener to never dismiss AlertDialog
@@ -64,6 +97,10 @@ class SplashActivity : AppCompatActivity() {
             buttonNeutral.setOnClickListener {
                 backupProgress(backupLauncher)
             }
+            val buttonNegative = errorDialog.getButton(AlertDialog.BUTTON_NEGATIVE)
+            buttonNegative.setOnClickListener {
+                recoveryDialog.show()
+            }
         }
 
         var success = false
@@ -75,12 +112,13 @@ class SplashActivity : AppCompatActivity() {
                     YomikataDataBase.forceLoadDatabase(this@SplashActivity)
                     return@withContext true
                 } catch (e: Exception) {
-                    updateProgressDialogMigrate.destroy()
                     return@withContext false
                 }
             }
-            if (!success)
+            if (!success) {
+                updateProgressDialogMigrate.destroy()
                 errorDialog.show()
+            }
         }
 
         binding.pathView.useNaturalColors()
