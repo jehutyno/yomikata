@@ -239,4 +239,6 @@
     <string name="choose_file_short">Choose file</string>
     <string name="recover_automatic_backup">Recover automatic backup</string>
     <string name="no_local_backup_found">No local backup found</string>
+    <string name="migration_failed">Migration failed</string>
+    <string name="create_backup_is_recommended">You should make a backup of your database before attempting a recovery</string>
 </resources>

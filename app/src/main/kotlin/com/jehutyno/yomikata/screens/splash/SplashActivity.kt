@@ -24,7 +24,7 @@ import com.jehutyno.yomikata.util.restoreProgress
 import kotlinx.coroutines.*
 import splitties.alertdialog.appcompat.alertDialog
 import splitties.alertdialog.appcompat.cancelButton
-import splitties.alertdialog.appcompat.messageResource
+import splitties.alertdialog.appcompat.message
 import splitties.alertdialog.appcompat.negativeButton
 import splitties.alertdialog.appcompat.neutralButton
 import splitties.alertdialog.appcompat.positiveButton
@@ -53,8 +53,9 @@ class SplashActivity : AppCompatActivity() {
 
         backupLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult())
                                                         { result -> getBackupLauncher(result) }
+        // don't create a local backup from the current database, since it may be corrupt
         restoreLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult())
-                                                        { result -> getRestoreLauncher(result) }
+                                                        { result -> getRestoreLauncher(result, false) }
 
         val recoveryDialog = alertDialog {
             titleResource = R.string.recovery
@@ -80,7 +81,8 @@ class SplashActivity : AppCompatActivity() {
 
         val errorDialog = alertDialog {
             titleResource = R.string.migration_error
-            messageResource = R.string.contact_devs_for_help
+            message = getString(R.string.contact_devs_for_help) + "\n" +
+                      getString(R.string.create_backup_is_recommended)
 
             positiveButton(R.string.contact) {}
             neutralButton(R.string.create_backup) {}
@@ -115,10 +117,6 @@ class SplashActivity : AppCompatActivity() {
                     return@withContext false
                 }
             }
-            if (!success) {
-                updateProgressDialogMigrate.destroy()
-                errorDialog.show()
-            }
         }
 
         binding.pathView.useNaturalColors()
@@ -139,7 +137,7 @@ class SplashActivity : AppCompatActivity() {
         }, 250)
         handler.postDelayed(
             {
-                // TODO: handle old yomikata database type
+                // TODO: handle old yomikata database type?
 //                if (!pref.getBoolean("migrationYomiDone", false)) {
 //                    importYomikata("????")
 //                    pref.edit().putBoolean("migrationYomiDone", true).apply()
@@ -147,10 +145,13 @@ class SplashActivity : AppCompatActivity() {
                 CoroutineScope(Dispatchers.Main).launch {
                     // finish the migration & destroy progress dialog (if it was shown at all)
                     job.join()
-                    if (!success)
-                        return@launch
                     updateProgressDialogMigrate.destroy()
                     YomikataDataBase.setUpdateProgressDialog(null)
+
+                    if (!success) { // failure -> show error dialog and don't load main activity
+                        errorDialog.show()
+                        return@launch
+                    }
 
                     val intent = Intent(this@SplashActivity, QuizzesActivity::class.java)
                     startActivity(intent)

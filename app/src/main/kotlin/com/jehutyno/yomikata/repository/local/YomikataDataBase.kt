@@ -81,11 +81,13 @@ abstract class YomikataDataBase : RoomDatabase() {
          *
          * @param context Context
          * @param externalDatabasePath The absolute path to an external database which will
+         * @param create_backup Create local backup if true
          * replace the currently loaded database
          */
         @Synchronized
-        fun overwriteDatabase(context: Context, externalDatabasePath: String) {
-            createLocalBackup(context)
+        fun overwriteDatabase(context: Context, externalDatabasePath: String, create_backup: Boolean = true) {
+            if (create_backup)
+                createLocalBackup(context)
             // acquire lock
             var outputStream: OutputStream? = null
             var lock: FileLock? = null
@@ -108,8 +110,9 @@ abstract class YomikataDataBase : RoomDatabase() {
         }
 
         @Synchronized
-        fun overwriteDatabase(context: Context, data: ByteArray) {
-            createLocalBackup(context)
+        fun overwriteDatabase(context: Context, data: ByteArray, create_backup: Boolean = true) {
+            if (create_backup)
+                createLocalBackup(context)
             // acquire lock
             var outputStream: FileOutputStream? = null
             var lock: FileLock? = null

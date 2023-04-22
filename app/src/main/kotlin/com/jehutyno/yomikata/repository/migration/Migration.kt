@@ -72,11 +72,12 @@ private fun getTempVersion13(context: Context): File {
  * @param updateProgressDialog An optional progress dialog to update
  */
 @Synchronized
-fun importYomikata(context: Context, path: String, updateProgressDialog: UpdateProgressDialog?) {
+fun importYomikata(context: Context, path: String,
+                   updateProgressDialog: UpdateProgressDialog?, create_backup: Boolean = true) {
     // decrypt file and place it in a temporary file
     val oldDecryptedPath = kotlin.io.path.createTempFile("temp-decrypted-db-", ".db")
     CopyUtils.restoreEncryptedBdd(File(path), oldDecryptedPath.pathString)
-    importYomikata(context, oldDecryptedPath.readBytes(), updateProgressDialog)
+    importYomikata(context, oldDecryptedPath.readBytes(), updateProgressDialog, create_backup)
     oldDecryptedPath.deleteIfExists()
 }
 
@@ -91,7 +92,8 @@ fun importYomikata(context: Context, path: String, updateProgressDialog: UpdateP
  * @param updateProgressDialog An optional progress dialog to update
  */
 @Synchronized
-fun importYomikata(context: Context, data: ByteArray, updateProgressDialog: UpdateProgressDialog?) {
+fun importYomikata(context: Context, data: ByteArray,
+                   updateProgressDialog: UpdateProgressDialog?, create_backup: Boolean = true) {
     // place data in temp file
     val oldDecryptedPath = kotlin.io.path.createTempFile("temp-db-", ".db")
     oldDecryptedPath.writeBytes(data)
@@ -121,7 +123,7 @@ fun importYomikata(context: Context, data: ByteArray, updateProgressDialog: Upda
         }
     }
     // overwrite the real database file with the new version
-    YomikataDataBase.overwriteDatabase(context, v13File.absolutePath)
+    YomikataDataBase.overwriteDatabase(context, v13File.absolutePath, create_backup)
     v13File.delete()
     oldDecryptedPath.deleteIfExists()
 }

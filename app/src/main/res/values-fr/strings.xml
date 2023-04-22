@@ -211,4 +211,6 @@
     <string name="choose_file_short">Choisir le fichier</string>
     <string name="recover_automatic_backup">"Récupérer la sauvegarde automatique  "</string>
     <string name="no_local_backup_found">Aucune sauvegarde locale trouvée</string>
+    <string name="migration_failed">Échec de la migration</string>
+    <string name="create_backup_is_recommended">Vous devez effectuer une sauvegarde de votre base de données avant de tenter une récupération.</string>
 </resources>

@@ -104,17 +104,21 @@ private fun Activity.handleBackup(uri: Uri, updateProgressDialog: UpdateProgress
 
     CoroutineScope(Dispatchers.Main).launch {
         var data: ByteArray? = null
-        var stop = withContext(Dispatchers.IO) {
+        var errorMessage : String? = null
+
+        var stop: Boolean = withContext(Dispatchers.IO) {
             try {
                 data = YomikataDataBase.getRawData(this@handleBackup)
             } catch (e: Exception) {
-                updateProgressDialog?.error(getString(R.string.backup_error), e.message)
+                errorMessage = e.message
                 return@withContext true
             }
             return@withContext false
         }
-        if (stop)
+        if (stop) {
+            updateProgressDialog?.error(getString(R.string.backup_error), errorMessage)
             return@launch
+        }
 
         updateProgressDialog?.updateProgress(50)
 
@@ -124,21 +128,23 @@ private fun Activity.handleBackup(uri: Uri, updateProgressDialog: UpdateProgress
                 outputStream = contentResolver.openOutputStream(uri)!!
                 outputStream.write(data)
             } catch (e: IOException) {
-                updateProgressDialog?.error(getString(R.string.backup_error), e.message)
+                errorMessage = e.message
                 return@withContext true
             } finally {
                 outputStream?.close()
             }
             return@withContext false
         }
-        if (stop)
+        if (stop) {
+            updateProgressDialog?.error(getString(R.string.backup_error), errorMessage)
             return@launch
+        }
 
         updateProgressDialog?.updateProgress(100)
     }
 }
 
-fun Activity.getRestoreLauncher(result: ActivityResult) {
+fun Activity.getRestoreLauncher(result: ActivityResult, create_backup: Boolean = true) {
     if (result.resultCode != Activity.RESULT_OK)
         return
 
@@ -158,30 +164,32 @@ fun Activity.getRestoreLauncher(result: ActivityResult) {
                 contentResolver.openInputStream(uri)
             }
 
-        val success = withContext(Dispatchers.IO) {
-            return@withContext handleRestore(inputStream!!, updateProgressDialog)
-        }
+        val success = handleRestore(inputStream!!, updateProgressDialog, create_backup)
         if (!success)
             return@launch
 
         // do migration
         YomikataDataBase.setUpdateProgressDialog(updateProgressDialogMigrate)
         updateProgressDialogMigrate.show()
-        val migrationSuccess = withContext(Dispatchers.IO) {
+        val successAndMessage = withContext(Dispatchers.IO) {
             try {
                 YomikataDataBase.forceLoadDatabase(this@getRestoreLauncher)
-                return@withContext true
+                return@withContext Pair(true, "")
             } catch (e: Exception) {
-                return@withContext false
+                return@withContext Pair(false, e.message)
             }
         }
+        val migrationSuccess = successAndMessage.first
         try {
             updateProgressDialogMigrate.destroy()
             YomikataDataBase.setUpdateProgressDialog(null)
         } finally {
             if (!migrationSuccess) {
                 YomikataDataBase.restoreLocalBackup(this@getRestoreLauncher)
-                updateProgressDialog.error(getString(R.string.restore_error), "migration failed")
+                val errorMessage = successAndMessage.second
+                updateProgressDialog.error(getString(R.string.restore_error),
+                    getString(R.string.migration_failed) + ":\n" + errorMessage
+                )
             } else {
                 updateProgressDialog.updateProgress(100)
             }
@@ -196,7 +204,9 @@ fun Activity.getRestoreLauncher(result: ActivityResult) {
  * @param updateProgressDialog Optional dialog to show progress
  * @return True if success, False if failure
  */
-private fun Activity.handleRestore(inputStream: InputStream, updateProgressDialog: UpdateProgressDialog? = null): Boolean {
+private suspend fun Activity.handleRestore(inputStream: InputStream,
+           updateProgressDialog: UpdateProgressDialog? = null, create_backup: Boolean = true)
+                                                        : Boolean = withContext(Dispatchers.IO) {
     val buffer = ByteArray(4096)
     val outputStream = ByteArrayOutputStream()
 
@@ -218,35 +228,41 @@ private fun Activity.handleRestore(inputStream: InputStream, updateProgressDialo
         try {
             type = validateDatabase(databaseFile)
         } catch (e: IllegalStateException) {
-            updateProgressDialog?.error(getString(R.string.invalid_file), e.message)
-            return false
+            withContext(Dispatchers.Main) {
+                updateProgressDialog?.error(getString(R.string.invalid_file), e.message)
+            }
+            return@withContext false
         } catch (e: SQLiteException) {
-            updateProgressDialog?.error(getString(R.string.restore_error), e.message + e.cause?.message)
-            return false
+            withContext(Dispatchers.Main) {
+                updateProgressDialog?.error(getString(R.string.restore_error), e.message + e.cause?.message)
+            }
+            return@withContext false
         }
 
         if (type == DatabaseType.OLD_YOMIKATA) {
-            importYomikata(this, data, null)
+            importYomikata(this@handleRestore, data, null, create_backup)
         } else {
-            YomikataDataBase.overwriteDatabase(this, data)
+            YomikataDataBase.overwriteDatabase(this@handleRestore, data, create_backup)
         }
         flag = true
 
         updateProgressDialog?.updateProgress(75)
     } catch (e: IOException) {
         if (flag) {
-            YomikataDataBase.restoreLocalBackup(this)
+            YomikataDataBase.restoreLocalBackup(this@handleRestore)
         }
         e.printStackTrace()
-        updateProgressDialog?.error(getString(R.string.restore_error), e.message)
-        return false
+        withContext(Dispatchers.Main) {
+            updateProgressDialog?.error(getString(R.string.restore_error), e.message)
+        }
+        return@withContext false
     } finally {
         inputStream.close()
         outputStream.close()
         outputStreamTemp.close()
         databaseFile.delete()
     }
-    return true
+    return@withContext true
 }
 
 fun Context.getRestartDialog(): AlertDialog {
