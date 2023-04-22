@@ -37,6 +37,7 @@ abstract class YomikataDataBase : RoomDatabase() {
         // WARNING: when creating from asset/file, Room will validate the schema, which
         // causes any gaps in the AUTOINCREMENT id columns to disappear (eg. ids 1, 2, 4 -> 1, 2, 3)
         // make sure there are no gaps in the asset databases to ensure consistency with migrations
+        // update: this does not happen if the id is a foreign key constraint
         fun getDatabase(context: Context): YomikataDataBase {
             if (INSTANCE == null) {
                 synchronized(this) {
