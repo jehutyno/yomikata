@@ -20,6 +20,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import splitties.alertdialog.appcompat.alertDialog
 import splitties.alertdialog.appcompat.messageResource
+import splitties.alertdialog.appcompat.negativeButton
 import splitties.alertdialog.appcompat.okButton
 import splitties.alertdialog.appcompat.positiveButton
 import splitties.alertdialog.appcompat.titleResource
@@ -144,12 +145,26 @@ private fun Activity.handleBackup(uri: Uri, updateProgressDialog: UpdateProgress
     }
 }
 
+
+/**
+ * Get restore launcher
+ *
+ * Used for registerForActivityResult(ActivityResultContracts.StartActivityForResult())
+ *
+ * @param result ActivityResult
+ * @param create_backup If true -> create backup and add undo button to dialog
+ *                      If false -> don't create backup and don't show undo button
+ */
 fun Activity.getRestoreLauncher(result: ActivityResult, create_backup: Boolean = true) {
     if (result.resultCode != Activity.RESULT_OK)
         return
 
     val updateProgressDialog = UpdateProgressDialog(this)
-    updateProgressDialog.finishDialog = getRestartDialog()
+    updateProgressDialog.finishDialog =
+        if (create_backup)
+            getRestartDialog(RestartDialogMessage.RESTORE) { YomikataDataBase.restoreLocalBackup(this) }
+        else
+            getRestartDialog(RestartDialogMessage.RESTORE, null)
     updateProgressDialog.prepare(getString(R.string.restoring_progress), getString(R.string.do_not_close_app))
     updateProgressDialog.show()
 
@@ -265,13 +280,37 @@ private suspend fun Activity.handleRestore(inputStream: InputStream,
     return@withContext true
 }
 
-fun Context.getRestartDialog(): AlertDialog {
+enum class RestartDialogMessage {
+    RESTORE,
+    RESET,
+    UNDO
+}
+
+fun Context.getRestartDialog(message: RestartDialogMessage, undoCallback: (() -> Unit)?): AlertDialog {
     return alertDialog {
-        titleResource = R.string.restore_success_message
-        messageResource = R.string.ask_to_restart
+        when(message) {
+            RestartDialogMessage.RESTORE -> {
+                titleResource = R.string.restore_success_message
+                messageResource = R.string.ask_to_restart
+            }
+            RestartDialogMessage.RESET -> {
+                titleResource = R.string.your_data_has_been_reset
+                messageResource = R.string.undo_to_restore
+            }
+            RestartDialogMessage.UNDO -> {
+                titleResource = R.string.changes_undone
+                messageResource = R.string.ask_to_restart
+            }
+        }
         setCancelable(false)
         positiveButton(R.string.alert_restart) {
             triggerRebirth()
+        }
+        if (undoCallback != null) {
+            negativeButton(R.string.undo) {
+                undoCallback()
+                getRestartDialog(RestartDialogMessage.UNDO, null).show()
+            }
         }
     }
 }

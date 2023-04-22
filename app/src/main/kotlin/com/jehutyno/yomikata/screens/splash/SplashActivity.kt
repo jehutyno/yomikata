@@ -14,6 +14,7 @@ import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.databinding.ActivitySplashBinding
 import com.jehutyno.yomikata.repository.local.YomikataDataBase
 import com.jehutyno.yomikata.screens.quizzes.QuizzesActivity
+import com.jehutyno.yomikata.util.RestartDialogMessage
 import com.jehutyno.yomikata.util.UpdateProgressDialog
 import com.jehutyno.yomikata.util.backupProgress
 import com.jehutyno.yomikata.util.contactDiscord
@@ -66,7 +67,7 @@ class SplashActivity : AppCompatActivity() {
             neutralButton(R.string.recover_automatic_backup) {
                 val result = YomikataDataBase.restoreLocalBackup(this@SplashActivity)
                 if (result) {
-                    getRestartDialog().show()
+                    getRestartDialog(RestartDialogMessage.RESTORE, null).show()
                 } else {
                     Toast.makeText(
                         this@SplashActivity,

@@ -241,4 +241,8 @@
     <string name="no_local_backup_found">No local backup found</string>
     <string name="migration_failed">Migration failed</string>
     <string name="create_backup_is_recommended">You should make a backup of your database before attempting a recovery</string>
+    <string name="undo">Undo</string>
+    <string name="your_data_has_been_reset">Your data has been reset</string>
+    <string name="undo_to_restore">Undo to restore your previous data</string>
+    <string name="changes_undone">Changes were undone successfully</string>
 </resources>
