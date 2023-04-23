@@ -30,21 +30,16 @@ fun validateDatabase(databaseFile: File): DatabaseType {
         db = SQLiteDatabase.openDatabase(databaseFile.absolutePath, null, SQLiteDatabase.OPEN_READONLY)
 
         // optional schema check
-//        checkSchema(db, listOf(1, 2, 3).toIntArray())
+//        checkSchema(db, listOf(???).toIntArray())
 
         if (isOldYomikata(db)) {
             return DatabaseType.OLD_YOMIKATA
         }
-        // check for tables
-        val requiredTables = arrayOf("words", "quiz")
-        val tableCursor = db.rawQuery("SELECT name FROM sqlite_master WHERE type='table'" +
-                                          "AND name IN (?, ?)", requiredTables)
-        for (table in requiredTables) {
-            if (!tableCursor.moveToNext()) {
-                throw IllegalStateException("Database does not contain some table(s)")
-            }
+        // sentences table is not required since it did not exist yet in versions <= 8
+        val requiredTables = arrayOf("words", "quiz", "quiz_word", "kanji_solo", "radicals", "stat_entry")
+        if (!containsTables(db, requiredTables)) {
+            throw IllegalStateException("Database does not contain some table(s)")
         }
-        tableCursor.close()
 
         val version = db.version
         return if (version == DATABASE_VERSION)
@@ -67,16 +62,33 @@ fun validateDatabase(databaseFile: File): DatabaseType {
  * @return True if Old type of yomikata database
  */
 fun isOldYomikata(database: SQLiteDatabase): Boolean {
-    // check for tables
-    var tableCursor: Cursor? = null
     val requiredTables = MigrationTable.allTables(MigrationTables.values())
-    try {
-        val size = requiredTables.size
-        // generates a string of the form "?," repeated 'size' times and removes the last comma and space
-        val questionMarks = "?, ".repeat(size).removeSuffix(", ")
+    return containsTables(database, requiredTables)
+}
 
-        tableCursor = database.rawQuery("SELECT name FROM sqlite_master WHERE type='table'" +
-                                            "AND name IN ($questionMarks)", requiredTables)
+/**
+ * Contains tables
+ *
+ * check if the database contains all the given tables
+ *
+ * @param database SQLiteDatabase
+ * @param requiredTables Strings of table names
+ * @return true if contains all tables, false otherwise
+ */
+private fun containsTables(database: SQLiteDatabase, requiredTables: Array<String>): Boolean {
+    val size = requiredTables.size
+    // generates a string of the form "?," repeated 'size' times and removes the last comma and space
+    val questionMarks = "?, ".repeat(size).removeSuffix(", ")
+
+    var tableCursor: Cursor? = null
+    try {
+        tableCursor = database.rawQuery(
+            """
+                SELECT name FROM sqlite_master WHERE type='table'
+                AND name IN ($questionMarks)
+            """.trimIndent(),
+            requiredTables
+        )
         for (table in requiredTables) {
             if (!tableCursor.moveToNext()) {
                 return false

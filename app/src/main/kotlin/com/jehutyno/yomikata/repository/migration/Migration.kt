@@ -103,7 +103,8 @@ fun importYomikata(context: Context, data: ByteArray,
     )
     // open version 13 of the database
     val v13File = getTempVersion13(context)
-    SQLiteDatabase.openDatabase(v13File.absolutePath, null, OPEN_READWRITE).use { newDatabase ->
+    val newDatabase = SQLiteDatabase.openDatabase(v13File.absolutePath, null, OPEN_READWRITE)
+    try {
         val migrationSource = MigrationSource(oldDatabase, newDatabase)
         val wordTables = MigrationTable.allTables(MigrationTables.values())
 
@@ -121,11 +122,15 @@ fun importYomikata(context: Context, data: ByteArray,
             progress++
             updateProgressDialog?.updateProgress(progress)
         }
+
+        // overwrite the real database file with the new version
+        YomikataDataBase.overwriteDatabase(context, v13File.absolutePath, create_backup)
+    } finally {
+        oldDatabase.close()
+        oldDecryptedPath.deleteIfExists()
+        newDatabase.close()
+        v13File.delete()
     }
-    // overwrite the real database file with the new version
-    YomikataDataBase.overwriteDatabase(context, v13File.absolutePath, create_backup)
-    v13File.delete()
-    oldDecryptedPath.deleteIfExists()
 }
 
 /**
@@ -146,7 +151,8 @@ fun updateOldDBtoVersion13(oldDatabase: SupportSQLiteDatabase, context: Context,
 
     // get version13 which will be used as the correct database to merge with user's oldDatabase
     val v13File = getTempVersion13(context)
-    SQLiteDatabase.openDatabase(v13File.absolutePath, null, OPEN_READWRITE).use { newDatabase ->
+    val newDatabase = SQLiteDatabase.openDatabase(v13File.absolutePath, null, OPEN_READWRITE)
+    try {
         val words = Wordv13.getAllItems(newDatabase).sortedBy(Wordv13::id)
         val quizzes = Quizv13.getAllItems(newDatabase).sortedBy(Quizv13::id)
         val kanjiSolo = KanjiSolov13.getAllItems(newDatabase).sortedBy(KanjiSolov13::id)
@@ -275,7 +281,9 @@ fun updateOldDBtoVersion13(oldDatabase: SupportSQLiteDatabase, context: Context,
 
             updateProgress()
         }
+    } finally {
+        newDatabase.close()
+        v13File.delete()
     }
 
-    v13File.delete()
 }

@@ -148,40 +148,47 @@ abstract class YomikataDataBase : RoomDatabase() {
 
         @Synchronized
         fun createLocalBackup(context: Context) {
-            val currentDatabaseFile = context.getDatabasePath(DATABASE_FILE_NAME)
+            val currentDatabaseFile = getDatabaseFile(context)
             val backupFile = context.getDatabasePath(DATABASE_LOCAL_BACKUP_FILE_NAME)
-            getDatabase(context).close()
+            getDatabase(context).close()    // close to make sure transactions are finished
             currentDatabaseFile.copyTo(backupFile, overwrite = true)
         }
 
         @Synchronized
         fun restoreLocalBackup(context: Context): Boolean {
-            val currentDatabaseFile = context.getDatabasePath(DATABASE_FILE_NAME)
             val backupFile = context.getDatabasePath(DATABASE_LOCAL_BACKUP_FILE_NAME)
             if (!backupFile.exists())
                 return false
-            getDatabase(context).close()
-            backupFile.copyTo(currentDatabaseFile, overwrite = true)
+            // create temp file and then move it to prevent corrupt database
+            // if app closes/crashes during copy operation
+            val tempFile = File.createTempFile("temp-backup--", ".db")
+            try {
+                backupFile.copyTo(tempFile)
+                getDatabase(context).close()
+            } finally {
+                tempFile.delete()
+            }
+            // rename temp file to database file
+            if (!tempFile.renameTo(getDatabaseFile(context))) {
+                throw Exception("Rename failed")
+            }
+
             return true
         }
 
         @Synchronized
         fun getRawData(context: Context): ByteArray {
             val dbFile = getDatabaseFile(context)
-            val data =
-                ByteArray(dbFile.length().toInt()) // create byte array with size of input file
+            val data = ByteArray(dbFile.length().toInt()) // create byte array with size of input file
 
             var inputStream: FileInputStream? = null
-//            var lock: FileLock? = null
             try {
                 inputStream = FileInputStream(dbFile)
-//                lock = inputStream.channel.lock()
 
                 getDatabase(context).close()
 
                 inputStream.read(data)
             } finally {
-//                lock?.release()
                 inputStream?.close()
             }
             return data
