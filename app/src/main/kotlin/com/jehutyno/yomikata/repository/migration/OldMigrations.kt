@@ -98,11 +98,11 @@ object OldMigrations {
 
             val queryDropOldTable = "DROP TABLE OLD_words"
 
-            database.use {
-                it.execSQL(queryRenameOldTable)
-                it.execSQL(queryCreateNewTable)
-                it.execSQL(queryInsertOldIntoNew)
-                it.execSQL(queryDropOldTable)
+            database.run {
+                this.execSQL(queryRenameOldTable)
+                this.execSQL(queryCreateNewTable)
+                this.execSQL(queryInsertOldIntoNew)
+                this.execSQL(queryDropOldTable)
             }
         }
     }
