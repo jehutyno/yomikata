@@ -217,4 +217,5 @@
     <string name="your_data_has_been_reset">Vos données ont été réinitialisées</string>
     <string name="undo_to_restore">Défaire pour rétablir les données précédentes</string>
     <string name="changes_undone">Les modifications ont été annulées avec succès</string>
+    <string name="app_closed_data_recovered">L\'application a été fermée pendant le processus de restauration et une erreur s\'est produite, vos données précédentes ont été récupérées</string>
 </resources>

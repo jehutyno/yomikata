@@ -5,15 +5,16 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.view.View
-import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.preference.PreferenceManager
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.databinding.ActivitySplashBinding
 import com.jehutyno.yomikata.repository.local.YomikataDataBase
 import com.jehutyno.yomikata.screens.quizzes.QuizzesActivity
+import com.jehutyno.yomikata.util.Prefs
 import com.jehutyno.yomikata.util.RestartDialogMessage
 import com.jehutyno.yomikata.util.UpdateProgressDialog
 import com.jehutyno.yomikata.util.backupProgress
@@ -22,12 +23,15 @@ import com.jehutyno.yomikata.util.getBackupLauncher
 import com.jehutyno.yomikata.util.getRestartDialog
 import com.jehutyno.yomikata.util.getRestoreLauncher
 import com.jehutyno.yomikata.util.restoreProgress
+import com.jehutyno.yomikata.util.triggerRebirth
 import kotlinx.coroutines.*
 import splitties.alertdialog.appcompat.alertDialog
 import splitties.alertdialog.appcompat.cancelButton
 import splitties.alertdialog.appcompat.message
+import splitties.alertdialog.appcompat.messageResource
 import splitties.alertdialog.appcompat.negativeButton
 import splitties.alertdialog.appcompat.neutralButton
+import splitties.alertdialog.appcompat.okButton
 import splitties.alertdialog.appcompat.positiveButton
 import splitties.alertdialog.appcompat.titleResource
 
@@ -49,6 +53,8 @@ class SplashActivity : AppCompatActivity() {
         val view = binding.root
         setContentView(view)
 
+        val prefs = PreferenceManager.getDefaultSharedPreferences(this)
+
         val updateProgressDialogMigrate = UpdateProgressDialog(this)
         updateProgressDialogMigrate.prepare(getString(R.string.migrating), getString(R.string.may_take_a_while))
 
@@ -64,16 +70,16 @@ class SplashActivity : AppCompatActivity() {
             positiveButton(R.string.choose_file_short) {
                 restoreProgress(restoreLauncher)
             }
-            neutralButton(R.string.recover_automatic_backup) {
-                val result = YomikataDataBase.restoreLocalBackup(this@SplashActivity)
-                if (result) {
-                    getRestartDialog(RestartDialogMessage.RESTORE, null).show()
-                } else {
-                    Toast.makeText(
-                        this@SplashActivity,
-                        getString(R.string.no_local_backup_found), Toast.LENGTH_LONG
-                    ).show()
-                }
+            neutralButton(R.string.prefs_reinit) {
+                alertDialog {
+                    messageResource = R.string.prefs_reinit_sure
+                    okButton {
+                        YomikataDataBase.resetDatabase(this@SplashActivity)
+                        YomikataDataBase.forceLoadDatabase(this@SplashActivity)
+                        getRestartDialog(RestartDialogMessage.RESET, null).show()
+                    }
+                    cancelButton()
+                }.show()
             }
             cancelButton()
 
@@ -150,10 +156,30 @@ class SplashActivity : AppCompatActivity() {
                     YomikataDataBase.setUpdateProgressDialog(null)
 
                     if (!success) { // failure -> show error dialog and don't load main activity
-                        errorDialog.show()
+                        // if the error was caused due to loading a bad database from PrefsActivity,
+                        // automatically restore the local backup and continue the app
+                        var restoredSuccessfully = false
+                        if (prefs.getBoolean(Prefs.DB_RESTORE_ONGOING.pref, false)) {
+                            restoredSuccessfully =
+                                YomikataDataBase.restoreLocalBackup(this@SplashActivity)
+                        }
+                        prefs.edit().putBoolean(Prefs.DB_RESTORE_ONGOING.pref, false).apply()
+                        if (!restoredSuccessfully) {
+                            errorDialog.show()
+                        } else {
+                            alertDialog {
+                                titleResource = R.string.restore_error
+                                messageResource = R.string.app_closed_data_recovered
+                                okButton {
+                                    this@SplashActivity.triggerRebirth()
+                                }
+                                setCancelable(false)
+                            }.show()
+                        }
                         return@launch
                     }
 
+                    prefs.edit().putBoolean(Prefs.DB_RESTORE_ONGOING.pref, false).apply()
                     val intent = Intent(this@SplashActivity, QuizzesActivity::class.java)
                     startActivity(intent)
                     overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)

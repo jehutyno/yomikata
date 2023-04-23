@@ -42,7 +42,11 @@ class PrefsActivity : AppCompatActivity() {
                                                     { result -> getBackupLauncher(result) }
 
         restoreLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult())
-                                                    {result -> getRestoreLauncher(result)}
+        {
+            result ->
+                pref.edit().putBoolean(Prefs.DB_RESTORE_ONGOING.pref, true).apply()
+                getRestoreLauncher(result)
+        }
 
     }
 
@@ -61,13 +65,6 @@ class PrefsActivity : AppCompatActivity() {
                     requireActivity().getRestartDialog(RestartDialogMessage.RESET) {
                         YomikataDataBase.restoreLocalBackup(requireContext())
                     }.show()
-//                    val toast = Toast.makeText(context, R.string.prefs_reinit_done, Toast.LENGTH_LONG)
-//                    toast.show()
-//                    // tell quizzes activity to start in home screen fragment
-//                    val intent = Intent()
-//                    intent.putExtra("gotoCategory", Categories.HOME)
-//                    requireActivity().setResult(RESULT_OK, intent)
-//                    requireActivity().finish()
                 }
                 cancelButton()
             }
@@ -117,7 +114,10 @@ class PrefsActivity : AppCompatActivity() {
                 // Tutorials
                 "reset_tuto" -> {
                     PreferencesManager(activity).resetAll()
-                    requireActivity().setResult(RESULT_OK)
+                    // tell quizzes activity to start in home screen fragment
+                    val intent = Intent()
+                    intent.putExtra("gotoCategory", Categories.HOME)
+                    requireActivity().setResult(RESULT_OK, intent)
                     requireActivity().finish()
                     return true
                 }

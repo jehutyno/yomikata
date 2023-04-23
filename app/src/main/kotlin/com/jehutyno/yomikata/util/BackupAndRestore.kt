@@ -11,6 +11,7 @@ import android.provider.DocumentsContract
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.appcompat.app.AlertDialog
+import androidx.preference.PreferenceManager
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.repository.local.YomikataDataBase
 import com.jehutyno.yomikata.repository.migration.importYomikata
@@ -208,6 +209,8 @@ fun Activity.getRestoreLauncher(result: ActivityResult, create_backup: Boolean =
             } else {
                 updateProgressDialog.updateProgress(100)
             }
+            PreferenceManager.getDefaultSharedPreferences(this@getRestoreLauncher).edit()
+                                        .putBoolean(Prefs.DB_RESTORE_ONGOING.pref, false).apply()
         }
     }
 }
@@ -295,7 +298,8 @@ fun Context.getRestartDialog(message: RestartDialogMessage, undoCallback: (() ->
             }
             RestartDialogMessage.RESET -> {
                 titleResource = R.string.your_data_has_been_reset
-                messageResource = R.string.undo_to_restore
+                if (undoCallback != null)
+                    messageResource = R.string.undo_to_restore
             }
             RestartDialogMessage.UNDO -> {
                 titleResource = R.string.changes_undone
@@ -315,7 +319,7 @@ fun Context.getRestartDialog(message: RestartDialogMessage, undoCallback: (() ->
     }
 }
 
-private fun Context.triggerRebirth() {
+fun Context.triggerRebirth() {
     val packageManager: PackageManager = this.packageManager
     val intent = packageManager.getLaunchIntentForPackage(this.packageName)
     val componentName = intent!!.component
