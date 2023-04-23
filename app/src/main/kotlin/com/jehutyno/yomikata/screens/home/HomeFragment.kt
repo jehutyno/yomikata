@@ -11,6 +11,7 @@ import android.widget.TextView
 import androidx.preference.PreferenceManager
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.jehutyno.yomikata.R
@@ -34,6 +35,9 @@ class HomeFragment(di: DI) : Fragment(), HomeContract.View {
     private val mpresenter: HomeContract.Presenter by di.newInstance {
         HomePresenter(instance(), instance(), this@HomeFragment)
     }
+
+    private lateinit var newsRef: DatabaseReference
+    private lateinit var newsListener: ValueEventListener
 
     // View Binding
     private var _binding: FragmentHomeBinding? = null
@@ -73,14 +77,13 @@ class HomeFragment(di: DI) : Fragment(), HomeContract.View {
         super.onViewCreated(view, savedInstanceState)
 
         val database = FirebaseDatabase.getInstance()
-        val newsRef = if (Locale.getDefault().language == "fr")
+        newsRef = if (Locale.getDefault().language == "fr")
             database.getReference("news_fr")
         else
             database.getReference("news_en")
 
         binding.expandTextView.text = getString(R.string.news_loading)
-
-        newsRef.addValueEventListener(object : ValueEventListener {
+        newsListener = object : ValueEventListener {
             override fun onDataChange(dataSnapshot: DataSnapshot) {
                 val value = dataSnapshot.getValue(String::class.java)
                 binding.expandTextView.text = value
@@ -89,7 +92,8 @@ class HomeFragment(di: DI) : Fragment(), HomeContract.View {
             override fun onCancelled(error: DatabaseError) {
                 binding.expandTextView.text = getString(R.string.news_default)
             }
-        })
+        }
+        newsRef.addValueEventListener(newsListener)
 
         binding.share.setOnClickListener { shareApp(requireActivity()) }
         binding.facebook.setOnClickListener { contactFacebook(activity) }
@@ -190,6 +194,7 @@ class HomeFragment(di: DI) : Fragment(), HomeContract.View {
 
     override fun onDestroyView() {
         super.onDestroyView()
+        newsRef.removeEventListener(newsListener)
         _binding = null
     }
 
