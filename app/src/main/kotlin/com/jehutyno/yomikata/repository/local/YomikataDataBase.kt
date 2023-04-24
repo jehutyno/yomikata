@@ -163,10 +163,11 @@ abstract class YomikataDataBase : RoomDatabase() {
             // if app closes/crashes during copy operation
             val tempFile = File.createTempFile("temp-backup--", ".db")
             try {
-                backupFile.copyTo(tempFile)
+                backupFile.copyTo(tempFile, overwrite = true)
                 getDatabase(context).close()
-            } finally {
+            } catch(e: Exception) {
                 tempFile.delete()
+                throw e
             }
             // rename temp file to database file
             if (!tempFile.renameTo(getDatabaseFile(context))) {
