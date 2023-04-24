@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/edit_container"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="16dp"
+    android:layout_marginEnd="16dp"
+    android:layout_marginStart="16dp"
+    android:orientation="horizontal"
+    tools:showIn="@layout/fragment_quiz">
+
+    <com.jehutyno.hiraganaedittext.HiraganaEditText
+        android:id="@+id/hiragana_edit"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:hint="@string/quiz_input_hint"
+        android:imeOptions="flagNoExtractUi|flagNoFullscreen"
+        android:inputType="textNoSuggestions"
+        android:padding="10dp"
+        android:privateImeOptions="nm"
+        android:textColor="@color/lighter_gray"
+        android:textColorHint="@color/gray"
+        android:textSize="18sp"/>
+
+    <ImageView
+        android:id="@+id/edit_action"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:src="@drawable/ic_cancel_black_24dp"
+        app:tint="@color/lighter_gray" />
+
+</LinearLayout>

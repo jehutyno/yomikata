@@ -246,4 +246,11 @@
     <string name="undo_to_restore">Undo to restore your previous data</string>
     <string name="changes_undone">Changes were undone successfully</string>
     <string name="app_closed_data_recovered">The app was closed during the restore process and an error occurred, your previous data was recovered</string>
+    <string name="tap_to_reveal_choices">Tap to reveal choices</string>
+    <string name="tap_to_reveal_choices_summary">Hide multiple choice options until you tap the screen</string>
+    <string name="give_hiragana_reading_hint">Give hiragana reading</string>
+    <string name="give_romaji_hint">Give rōmaji</string>
+    <string name="give_word_or_kanji_hint">Give word or kanji</string>
+    <string name="translate_to_japanese_hint">Translate to Japanese</string>
+    <string name="translate_to_english_hint">Translate to English</string>
 </resources>

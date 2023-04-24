@@ -208,7 +208,10 @@ class QuizPresenter(
             QuizType.TYPE_PRONUNCIATION_QCM -> {
                 // Keyboard
                 quizView.hideKeyboard()
-                quizView.displayQCMMode()
+                quizView.displayQCMMode(if (word.isKana == 0)
+                                            context.getString(R.string.give_hiragana_reading_hint)
+                                        else
+                                            context.getString(R.string.give_romaji_hint))
                 // TTS at start
                 if (defaultSharedPreferences.getBoolean("play_start", false))
                     quizView.speakWord(if (errorMode) errors[currentItem].first else quizWords[currentItem].first)
@@ -219,7 +222,7 @@ class QuizPresenter(
             QuizType.TYPE_AUDIO -> {
                 // Keyboard
                 quizView.hideKeyboard()
-                quizView.displayQCMMode()
+                quizView.displayQCMMode(context.getString(R.string.give_word_or_kanji_hint))
                 // TTS at start
                 quizView.speakWord(if (errorMode) errors[currentItem].first else quizWords[currentItem].first)
                 // QCM options
@@ -229,7 +232,7 @@ class QuizPresenter(
             QuizType.TYPE_EN_JAP -> {
                 // Keyboard
                 quizView.hideKeyboard()
-                quizView.displayQCMMode()
+                quizView.displayQCMMode(context.getString(R.string.translate_to_japanese_hint))
                 // TTS at stat
                 if (defaultSharedPreferences.getBoolean("play_start", false))
                     quizView.speakWord(if (errorMode) errors[currentItem].first else quizWords[currentItem].first)
@@ -240,7 +243,7 @@ class QuizPresenter(
             QuizType.TYPE_JAP_EN -> {
                 // Keyboard
                 quizView.hideKeyboard()
-                quizView.displayQCMMode()
+                quizView.displayQCMMode(context.getString(R.string.translate_to_english_hint))
                 // TTS at start
                 if (defaultSharedPreferences.getBoolean("play_start", false))
                     quizView.speakWord(if (errorMode) errors[currentItem].first else quizWords[currentItem].first)

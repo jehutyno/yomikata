@@ -104,6 +104,9 @@ class PrefsActivity : AppCompatActivity() {
                 "length" -> {
                     return true
                 }
+                "tap_to_reveal" -> {
+                    return true
+                }
                 "play_start" -> {
                     return true
                 }

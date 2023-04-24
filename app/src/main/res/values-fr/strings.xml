@@ -218,4 +218,11 @@
     <string name="undo_to_restore">Défaire pour rétablir les données précédentes</string>
     <string name="changes_undone">Les modifications ont été annulées avec succès</string>
     <string name="app_closed_data_recovered">L\'application a été fermée pendant le processus de restauration et une erreur s\'est produite, vos données précédentes ont été récupérées</string>
+    <string name="tap_to_reveal_choices">Appuyez pour révéler les choix</string>
+    <string name="tap_to_reveal_choices_summary">Les choix sont cachés jusqu\'à ce que vous touchiez l\'écran</string>
+    <string name="give_hiragana_reading_hint">Donnez la lecture en hiragana</string>
+    <string name="give_romaji_hint">Donnez la lecture en rōmaji</string>
+    <string name="give_word_or_kanji_hint">Donnez le mot ou le kanji</string>
+    <string name="translate_to_japanese_hint">Traduisez en Japonais</string>
+    <string name="translate_to_english_hint">Traduisez en Français</string>
 </resources>

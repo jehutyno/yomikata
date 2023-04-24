@@ -20,7 +20,7 @@ interface QuizContract {
         fun selectionLoaded(quizzes: List<Quiz>)
         fun noSelections()
         fun setHiraganaConversion(enabled: Boolean)
-        fun displayQCMMode()
+        fun displayQCMMode(hintText: String? = null)
         fun displayEditMode()
         fun displayQCMNormalTextViews()
         fun displayQCMFuriTextViews()

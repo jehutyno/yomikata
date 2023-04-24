@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                xmlns:app="http://schemas.android.com/apk/res-auto"
                 xmlns:tools="http://schemas.android.com/tools"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
@@ -88,225 +87,50 @@
 
     </FrameLayout>
 
-    <FrameLayout
+    <RelativeLayout
         android:id="@+id/answer_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true">
 
-        <LinearLayout
-            android:id="@+id/edit_container"
+        <TextView
+            android:id="@+id/quiz_answer_type"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            android:layout_marginEnd="16dp"
-            android:layout_marginStart="16dp"
-            android:orientation="horizontal">
+            android:textColor="@color/lighter_gray"
+            android:textSize="18sp"
+            android:gravity="center"
+            android:text="Translate to english"
+            android:textAppearance="@style/TextAppearance.AppCompat.Headline"
+            android:layout_marginVertical="10dp" />
 
-            <com.jehutyno.hiraganaedittext.HiraganaEditText
-                android:id="@+id/hiragana_edit"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:hint="@string/quiz_input_hint"
-                android:imeOptions="flagNoExtractUi|flagNoFullscreen"
-                android:inputType="textNoSuggestions"
-                android:padding="10dp"
-                android:privateImeOptions="nm"
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/quiz_answer_type">
+
+            <include
+                android:id="@+id/quiz_answers_keyboard_entry"
+                layout="@layout/quiz_answers_keyboard_entry"/>
+
+            <include
+                android:id="@+id/quiz_answers_multiple_choice"
+                layout="@layout/quiz_answers_multiple_choice"/>
+
+            <TextView
+                android:id="@+id/tap_to_reveal"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
                 android:textColor="@color/lighter_gray"
-                android:textColorHint="@color/gray"
-                android:textSize="18sp"/>
+                android:textSize="22sp"
+                android:background="@drawable/rounded_bg"
+                android:gravity="center"
+                android:text="@string/tap_to_reveal_choices"
+                android:textAppearance="@style/TextAppearance.AppCompat.Headline"
+                android:visibility="gone"/>
 
-            <ImageView
-                android:id="@+id/edit_action"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:src="@drawable/ic_cancel_black_24dp"
-                android:tint="@color/lighter_gray"/>
+        </FrameLayout>
 
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/qcm_container"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            android:layout_marginEnd="16dp"
-            android:layout_marginStart="16dp"
-            android:orientation="vertical"
-            android:visibility="visible">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="100dp"
-                android:orientation="horizontal"
-                android:paddingTop="16dp">
-
-                <FrameLayout
-                    android:id="@+id/option_1_container"
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_gravity="center"
-                    android:layout_marginEnd="8dp"
-                    android:layout_marginRight="8dp"
-                    android:layout_weight="1"
-                    android:background="@drawable/rounded_bg"
-                    android:foreground="?attr/selectableItemBackground">
-
-                    <com.jehutyno.yomikata.furigana.FuriganaView
-                        android:id="@+id/option_1_furi"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center"
-                        android:layout_margin="4dp"
-                        android:gravity="center"
-                        android:maxLines="10"
-                        android:textColor="@color/lighter_gray"
-                        android:textSize="18sp"
-                        tools:text="trololo1"/>
-
-                    <TextView
-                        android:id="@+id/option_1_tv"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:layout_gravity="center"
-                        android:layout_margin="4dp"
-                        android:foreground="?attr/selectableItemBackgroundBorderless"
-                        android:gravity="center"
-                        android:maxLines="10"
-                        android:scrollbars="vertical"
-                        android:textColor="@color/lighter_gray"
-                        android:textSize="18sp"
-                        tools:text="trololo1"/>
-
-                </FrameLayout>
-
-                <FrameLayout
-                    android:id="@+id/option_2_container"
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_gravity="center"
-                    android:layout_marginLeft="8dp"
-                    android:layout_marginStart="8dp"
-                    android:layout_weight="1"
-                    android:background="@drawable/rounded_bg"
-                    android:foreground="?attr/selectableItemBackground">
-
-                    <com.jehutyno.yomikata.furigana.FuriganaView
-                        android:id="@+id/option_2_furi"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center"
-                        android:layout_margin="4dp"
-                        android:gravity="center"
-                        android:maxLines="10"
-                        android:textColor="@color/lighter_gray"
-                        android:textSize="18sp"
-                        tools:text="trololo1"/>
-
-                    <TextView
-                        android:id="@+id/option_2_tv"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:layout_gravity="center"
-                        android:layout_margin="4dp"
-                        android:foreground="?attr/selectableItemBackgroundBorderless"
-                        android:gravity="center"
-                        android:maxLines="10"
-                        android:scrollbars="vertical"
-                        android:textColor="@color/lighter_gray"
-                        android:textSize="18sp"
-                        tools:text="trololo1"/>
-
-                </FrameLayout>
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="100dp"
-                android:orientation="horizontal"
-                android:paddingTop="16dp">
-
-                <FrameLayout
-                    android:id="@+id/option_3_container"
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_gravity="center"
-                    android:layout_marginEnd="8dp"
-                    android:layout_marginRight="8dp"
-                    android:layout_weight="1"
-                    android:background="@drawable/rounded_bg"
-                    android:foreground="?attr/selectableItemBackground">
-
-                    <com.jehutyno.yomikata.furigana.FuriganaView
-                        android:id="@+id/option_3_furi"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center"
-                        android:layout_margin="4dp"
-                        android:gravity="center"
-                        android:textColor="@color/lighter_gray"
-                        android:textSize="18sp"
-                        tools:text="trololo1"/>
-
-                    <TextView
-                        android:id="@+id/option_3_tv"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:layout_gravity="center"
-                        android:layout_margin="4dp"
-                        android:foreground="?attr/selectableItemBackgroundBorderless"
-                        android:gravity="center"
-                        android:maxLines="10"
-                        android:scrollbars="vertical"
-                        android:textColor="@color/lighter_gray"
-                        android:textSize="18sp"
-                        tools:text="trololo1"/>
-
-                </FrameLayout>
-
-                <FrameLayout
-                    android:id="@+id/option_4_container"
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_gravity="center"
-                    android:layout_marginLeft="8dp"
-                    android:layout_marginStart="8dp"
-                    android:layout_weight="1"
-                    android:background="@drawable/rounded_bg"
-                    android:foreground="?attr/selectableItemBackground">
-
-                    <com.jehutyno.yomikata.furigana.FuriganaView
-                        android:id="@+id/option_4_furi"
-                        android:layout_width="wrap_content"
-                        android:layout_height="match_parent"
-                        android:layout_gravity="center"
-                        android:layout_margin="4dp"
-                        android:gravity="center"
-                        android:textColor="@color/lighter_gray"
-                        android:textSize="18sp"
-                        tools:text="trololo1"/>
-
-                    <TextView
-                        android:id="@+id/option_4_tv"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:layout_gravity="center"
-                        android:layout_margin="4dp"
-                        android:foreground="?attr/selectableItemBackgroundBorderless"
-                        android:gravity="center"
-                        android:maxLines="10"
-                        android:scrollbars="vertical"
-                        android:textColor="@color/lighter_gray"
-                        android:textSize="18sp"
-                        tools:text="trololo1"/>
-
-                </FrameLayout>
-            </LinearLayout>
-        </LinearLayout>
-    </FrameLayout>
+    </RelativeLayout>
 
 </RelativeLayout>
