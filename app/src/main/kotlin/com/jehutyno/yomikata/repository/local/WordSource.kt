@@ -71,7 +71,7 @@ class WordSource(private val wordDao: WordDao) : WordRepository {
         limit: Int,
         quizType: QuizType
     ): ArrayList<Word> {
-        val wordsTableName = "words" // CHANGE THIS IF WORDS TABLE NAME IS CHANGE
+        val wordsTableName = "words" // CHANGE THIS IF WORDS TABLE NAME IS CHANGED
         val column = when (quizType) {
             QuizType.TYPE_PRONUNCIATION -> "${wordsTableName}.reading"
             QuizType.TYPE_PRONUNCIATION_QCM -> "${wordsTableName}.reading"
@@ -81,7 +81,12 @@ class WordSource(private val wordDao: WordDao) : WordRepository {
             else -> "${wordsTableName}.japanese"
         }
 
-        val wordIds = wordDao.getWordsOfSizeRelatedTo(wordId, wordSize, 96)
+        val wordIds = mutableListOf<Long>()
+        var tryWordSize = wordSize
+        while (wordIds.size <= 1 && tryWordSize > 0) {
+            wordIds += wordDao.getWordsOfSizeRelatedTo(wordId, tryWordSize)
+            tryWordSize--   // get smaller sizes in case there are no other words of the same size
+        }
 
         // use @RawQuery since column names cannot be inserted in @Query by Room
         val rawQuery = "SELECT * FROM words " +
@@ -92,10 +97,13 @@ class WordSource(private val wordDao: WordDao) : WordRepository {
 
         val roomWordsList = wordDao.getRandomWords(supportSQLiteQuery).toMutableList()
 
-        if (roomWordsList.size < limit) {
-            supportSQLiteQuery = SimpleSQLiteQuery(rawQuery, arrayOf<Any>(answer, limit - roomWordsList.size))
-            val extraRoomWordsList = wordDao.getRandomWords(supportSQLiteQuery)
-            roomWordsList += extraRoomWordsList
+        // try two more times to make sure size is at least 3
+        for (i in 1..2) {
+            if (roomWordsList.size < limit) {
+                supportSQLiteQuery = SimpleSQLiteQuery(rawQuery, arrayOf<Any>(answer, limit - roomWordsList.size))
+                val extraRoomWordsList = wordDao.getRandomWords(supportSQLiteQuery)
+                roomWordsList += extraRoomWordsList
+            }
         }
 
         return roomWordsList.map { it.toWord() } as ArrayList<Word>

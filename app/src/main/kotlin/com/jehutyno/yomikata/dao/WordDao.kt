@@ -46,13 +46,15 @@ interface WordDao {
             "ON quiz_word.word_id = words._id " +    // select all quiz_words of the correct word id
             "AND quiz_word.quiz_id =  " +
             "( " +
-            "SELECT quiz_id FROM quiz_word " +
-            "WHERE quiz_word.word_id = :wordId " +      // such that the quiz_id matches
-            "AND quiz_id <= :defaultSize " +            // that of the word with id=wordId
+            "SELECT quiz_id FROM quiz_word " +          // such that the quiz_id matches
+            "WHERE quiz_word.word_id = :wordId " +      // that of the word with id=wordId
+            "AND ( " +                              // category 8 = custom selections
+            " (SELECT category FROM quiz WHERE _id = quiz_id LIMIT 1) != 8 " +
+            ") " +
             ") " +
             "AND LENGTH(words.japanese) = :wordSize " +
             "AND words._id != :wordId")
-    fun getWordsOfSizeRelatedTo(wordId: Long, wordSize: Int, defaultSize: Int): List<Long>
+    fun getWordsOfSizeRelatedTo(wordId: Long, wordSize: Int): List<Long>
 
     @RawQuery
     fun getRandomWords(rawQuery: SupportSQLiteQuery): List<RoomWords>
