@@ -535,18 +535,18 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
     override fun displayQCMNormalTextViews() {
         val pref = PreferenceManager.getDefaultSharedPreferences(requireContext())
 
-        binding.option1Tv.textSize = pref.getString("font_size", "23")!!.toFloat()
-        binding.option2Tv.textSize = pref.getString("font_size", "23")!!.toFloat()
-        binding.option3Tv.textSize = pref.getString("font_size", "23")!!.toFloat()
-        binding.option4Tv.textSize = pref.getString("font_size", "23")!!.toFloat()
-        binding.option1Tv.visibility = VISIBLE
-        binding.option2Tv.visibility = VISIBLE
-        binding.option3Tv.visibility = VISIBLE
-        binding.option4Tv.visibility = VISIBLE
-        binding.option1Furi.visibility = GONE
-        binding.option2Furi.visibility = GONE
-        binding.option3Furi.visibility = GONE
-        binding.option4Furi.visibility = GONE
+        qcmBinding.option1Tv.textSize = pref.getString("font_size", "23")!!.toFloat()
+        qcmBinding.option2Tv.textSize = pref.getString("font_size", "23")!!.toFloat()
+        qcmBinding.option3Tv.textSize = pref.getString("font_size", "23")!!.toFloat()
+        qcmBinding.option4Tv.textSize = pref.getString("font_size", "23")!!.toFloat()
+        qcmBinding.option1Tv.visibility = VISIBLE
+        qcmBinding.option2Tv.visibility = VISIBLE
+        qcmBinding.option3Tv.visibility = VISIBLE
+        qcmBinding.option4Tv.visibility = VISIBLE
+        qcmBinding.option1Furi.visibility = GONE
+        qcmBinding.option2Furi.visibility = GONE
+        qcmBinding.option3Furi.visibility = GONE
+        qcmBinding.option4Furi.visibility = GONE
     }
 
     override fun displayQCMFuriTextViews() {
