@@ -42,12 +42,8 @@ class QuizSource(private val quizDao: QuizDao) : QuizRepository {
         return quizDao.addQuiz(roomQuiz)
     }
 
-    override fun refreshQuiz() {
-        throw UnsupportedOperationException("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
     override fun deleteAllQuiz() {
-        throw UnsupportedOperationException("not implemented") //To change body of created functions use File | Settings | File Templates.
+        quizDao.deleteAllQuiz()
     }
 
     override fun deleteQuiz(quizId: Long) {

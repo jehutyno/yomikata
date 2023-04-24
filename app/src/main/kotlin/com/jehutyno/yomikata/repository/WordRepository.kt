@@ -19,8 +19,6 @@ interface WordRepository {
     fun getWords(quizId: Long, callback: LoadWordsCallback)
     fun getWords(quizIds: LongArray, callback: LoadWordsCallback)
     fun searchWords(searchString: String, callback: LoadWordsCallback)
-    fun saveWord(task :Word)
-    fun refreshWords()
     fun deleteAllWords()
     fun deleteWord(wordId: Long)
     fun isWordInQuiz(wordId:Long, quizId:Long) : Boolean

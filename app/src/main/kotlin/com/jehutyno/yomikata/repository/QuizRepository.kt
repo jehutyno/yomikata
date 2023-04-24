@@ -18,7 +18,6 @@ interface QuizRepository {
     fun getQuiz(category: Int, callback: LoadQuizCallback)
     fun getQuiz(quizId: Long, callback: GetQuizCallback)
     fun saveQuiz(quizName: String, category: Int) : Long
-    fun refreshQuiz()
     fun deleteAllQuiz()
     fun deleteQuiz(quizId:Long)
     fun updateQuizName(quizId: Long, quizName: String)

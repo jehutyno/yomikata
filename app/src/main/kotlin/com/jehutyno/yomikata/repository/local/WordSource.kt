@@ -123,14 +123,6 @@ class WordSource(private val wordDao: WordDao) : WordRepository {
         return wordDao.getWordById(wordId)!!.toWord()
     }
 
-    override fun saveWord(task: Word) {
-
-    }
-
-    override fun refreshWords() {
-
-    }
-
     override fun deleteAllWords() {
         wordDao.deleteAllWords()
     }

@@ -22,6 +22,9 @@ interface QuizDao {
     @Delete
     fun deleteQuiz(quiz: RoomQuiz)
 
+    @Query("DELETE FROM quiz")
+    fun deleteAllQuiz()
+
     @Query("UPDATE quiz SET name_en = :quizName, " +
                            "name_fr = :quizName " +
            "WHERE _id = :quizId")
