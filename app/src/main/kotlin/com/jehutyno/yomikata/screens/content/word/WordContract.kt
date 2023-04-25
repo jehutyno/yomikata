@@ -6,6 +6,7 @@ import com.jehutyno.yomikata.model.KanjiSoloRadical
 import com.jehutyno.yomikata.model.Quiz
 import com.jehutyno.yomikata.model.Sentence
 import com.jehutyno.yomikata.model.Word
+import kotlinx.coroutines.Job
 import java.util.*
 
 /**
@@ -20,17 +21,17 @@ interface WordContract {
     }
 
     interface Presenter : BasePresenter {
-        fun loadWords(quizIds: LongArray, level: Int)
-        fun loadSelections()
-        fun createSelection(quizName: String): Long
-        fun addWordToSelection(wordId: Long, quizId: Long)
-        fun isWordInQuizzes(wordId: Long, quizIds: Array<Long>) : ArrayList<Boolean>
-        fun isWordInQuiz(wordId: Long, quizId: Long) : Boolean
-        fun deleteWordFromSelection(wordId: Long, selectionId: Long)
-        fun searchWords(searchString: String)
-        fun levelUp(id: Long, level: Int) : Int
-        fun levelDown(id: Long, level: Int) : Int
-        fun loadWord(wordId: Long)
+        suspend fun loadWords(quizIds: LongArray, level: Int)
+        suspend fun loadSelections()
+        suspend fun createSelection(quizName: String): Long
+        suspend fun addWordToSelection(wordId: Long, quizId: Long)
+        suspend fun isWordInQuizzes(wordId: Long, quizIds: Array<Long>) : ArrayList<Boolean>
+        suspend fun isWordInQuiz(wordId: Long, quizId: Long) : Boolean
+        suspend fun deleteWordFromSelection(wordId: Long, selectionId: Long)
+        fun searchWords(searchString: String) : Job
+        suspend fun levelUp(id: Long, level: Int) : Int
+        suspend fun levelDown(id: Long, level: Int) : Int
+        fun loadWord(wordId: Long) : Job
     }
 
 }

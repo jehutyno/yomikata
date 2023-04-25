@@ -10,7 +10,7 @@ import com.jehutyno.yomikata.repository.QuizRepository
  */
 class QuizSource(private val quizDao: QuizDao) : QuizRepository {
 
-    override fun getQuiz(category: Int, callback: QuizRepository.LoadQuizCallback) {
+    override suspend fun getQuiz(category: Int, callback: QuizRepository.LoadQuizCallback) {
         val roomQuizList = quizDao.getQuizzesOfCategory(category)
         if (roomQuizList.isNotEmpty()) {
             val quizList = roomQuizList.map {
@@ -22,7 +22,7 @@ class QuizSource(private val quizDao: QuizDao) : QuizRepository {
         }
     }
 
-    override fun getQuiz(quizId: Long, callback: QuizRepository.GetQuizCallback) {
+    override suspend fun getQuiz(quizId: Long, callback: QuizRepository.GetQuizCallback) {
         val roomQuiz = quizDao.getQuizById(quizId)
         if (roomQuiz != null) {
             callback.onQuizLoaded(roomQuiz.toQuiz())
@@ -31,48 +31,48 @@ class QuizSource(private val quizDao: QuizDao) : QuizRepository {
         }
     }
 
-    fun getQuiz(quizId: Long): Quiz? {
+    suspend fun getQuiz(quizId: Long): Quiz? {
         val roomQuiz = quizDao.getQuizById(quizId)
         return roomQuiz?.toQuiz()
     }
 
-    override fun saveQuiz(quizName: String, category: Int): Long {
+    override suspend fun saveQuiz(quizName: String, category: Int): Long {
         val quiz = Quiz(0, quizName, quizName, category, false)
         val roomQuiz = RoomQuiz.from(quiz)
         return quizDao.addQuiz(roomQuiz)
     }
 
-    override fun deleteAllQuiz() {
+    override suspend fun deleteAllQuiz() {
         quizDao.deleteAllQuiz()
     }
 
-    override fun deleteQuiz(quizId: Long) {
+    override suspend fun deleteQuiz(quizId: Long) {
         val quiz = quizDao.getQuizById(quizId)
         if (quiz != null)
             quizDao.deleteQuiz(quiz)
     }
 
-    override fun updateQuizName(quizId: Long, quizName: String) {
+    override suspend fun updateQuizName(quizId: Long, quizName: String) {
         quizDao.updateQuizName(quizId, quizName)
     }
 
-    override fun updateQuizSelected(quizId: Long, isSelected: Boolean) {
+    override suspend fun updateQuizSelected(quizId: Long, isSelected: Boolean) {
         quizDao.updateQuizSelected(quizId, isSelected)
     }
 
-    override fun addWordToQuiz(wordId: Long, quizId: Long) {
+    override suspend fun addWordToQuiz(wordId: Long, quizId: Long) {
         quizDao.addQuizWord(RoomQuizWord(quizId, wordId))
     }
 
-    override fun deleteWordFromQuiz(wordId: Long, quizId: Long) {
+    override suspend fun deleteWordFromQuiz(wordId: Long, quizId: Long) {
         quizDao.deleteWordFromQuiz(wordId, quizId)
     }
 
-    override fun countWordsForLevel(quizIds: LongArray, level: Int): Int {
+    override suspend fun countWordsForLevel(quizIds: LongArray, level: Int): Int {
         return quizDao.countWordsForLevel(quizIds, level)
     }
 
-    override fun countWordsForQuizzes(quizIds: LongArray): Int {
+    override suspend fun countWordsForQuizzes(quizIds: LongArray): Int {
         return quizDao.countWordsForQuizzes(quizIds)
     }
 }

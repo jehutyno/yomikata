@@ -11,6 +11,7 @@ import android.view.View.GONE
 import android.view.View.VISIBLE
 import android.widget.EditText
 import android.widget.FrameLayout
+import androidx.lifecycle.coroutineScope
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.databinding.FragmentContentGraphBinding
 import com.jehutyno.yomikata.model.Quiz
@@ -19,6 +20,10 @@ import com.jehutyno.yomikata.screens.content.word.WordDetailDialogFragment
 import com.jehutyno.yomikata.util.DimensionHelper
 import com.jehutyno.yomikata.util.Extras
 import com.jehutyno.yomikata.util.SeekBarsManager
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
 import org.kodein.di.*
 import splitties.alertdialog.appcompat.*
 import java.util.*
@@ -75,7 +80,9 @@ class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, Wo
         super.onStart()
         mpresenter?.start()
         mpresenter?.loadWords(quizIds, level)
-        mpresenter?.loadSelections()
+        lifecycle.coroutineScope.launch {
+            mpresenter?.loadSelections()
+        }
 
         displayStats()
     }
@@ -89,7 +96,9 @@ class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, Wo
         mpresenter?.start()
         mpresenter?.loadWords(quizIds, level)
         binding.recyclerviewContent.scrollToPosition(position)
-        mpresenter?.loadSelections()
+        lifecycle.coroutineScope.launch {
+            mpresenter?.loadSelections()
+        }
 
         displayStats()
         seekBars.animateAll()
@@ -108,7 +117,7 @@ class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, Wo
         binding.seekMaster.progress = 0
     }
 
-    override fun displayStats() {
+    override fun displayStats() = lifecycle.coroutineScope.launch {
         seekBars.count = mpresenter!!.countQuiz(quizIds)
         seekBars.low = mpresenter!!.countLow(quizIds)
         seekBars.medium = mpresenter!!.countMedium(quizIds)
@@ -170,7 +179,7 @@ class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, Wo
         requireActivity().startActionMode(actionModeCallback)
     }
 
-    override fun onCheckChange(position: Int, check: Boolean) {
+    override fun onCheckChange(position: Int, check: Boolean) = runBlocking {
         mpresenter!!.updateWordCheck(adapter.items[position].id, check)
     }
 
@@ -214,7 +223,7 @@ class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, Wo
                     for ((i, selection) in selections.withIndex()) {
                         popup.menu.add(1, i, i, selection.getName()).isChecked = false
                     }
-                    popup.setOnMenuItemClickListener { it ->
+                    popup.setOnMenuItemClickListener {it -> runBlocking {
                         val selectedWords: ArrayList<Word> = arrayListOf()
                         adapter.items.forEach { item -> if (item.isSelected == 1) selectedWords.add(item) }
                         val selectionItemId = it.itemId
@@ -229,7 +238,7 @@ class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, Wo
                             }
                         }
                         true
-                    }
+                    }}
                     popup.show()
                 }
                 REMOVE_FROM_SELECTIONS -> {
@@ -237,7 +246,7 @@ class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, Wo
                     for ((i, selection) in selections.withIndex()) {
                         popup.menu.add(1, i, i, selection.getName()).isChecked = false
                     }
-                    popup.setOnMenuItemClickListener {it ->
+                    popup.setOnMenuItemClickListener {it -> runBlocking {
                         val selectedWords: ArrayList<Word> = arrayListOf()
                         adapter.items.forEach { item -> if (item.isSelected == 1) selectedWords.add(item) }
                         val selectionItemId = it.itemId
@@ -251,7 +260,7 @@ class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, Wo
                             }
                         }
                         true
-                    }
+                    }}
                     popup.show()
 
                 }
@@ -284,11 +293,17 @@ class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, Wo
                 setView(container)
 
                 okButton {
-                    val selectionId = mpresenter!!.createSelection(input.text.toString())
-                    selectedWords.forEach {
-                        mpresenter!!.addWordToSelection(it.id, selectionId)
+                    MainScope().launch {// don't use lifecycle since creation might
+                        // take a while, and we don't want the quiz selection to stop even if the activity stops
+                        // use time out to prevent unexpected problems
+                        withTimeout(2000L) {
+                            val selectionId = mpresenter!!.createSelection(input.text.toString())
+                            selectedWords.forEach {
+                                mpresenter!!.addWordToSelection(it.id, selectionId)
+                            }
+                            mpresenter!!.loadSelections()
+                        }
                     }
-                    mpresenter!!.loadSelections()
                 }
                 cancelButton { }
             }.show()

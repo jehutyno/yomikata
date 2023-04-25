@@ -12,6 +12,7 @@ import android.view.View.GONE
 import android.view.View.VISIBLE
 import android.window.OnBackInvokedDispatcher
 import androidx.activity.addCallback
+import androidx.lifecycle.coroutineScope
 import androidx.preference.PreferenceManager
 import androidx.viewpager2.widget.ViewPager2
 import com.jehutyno.yomikata.R
@@ -27,6 +28,7 @@ import com.jehutyno.yomikata.util.Extras.EXTRA_LEVEL
 import com.jehutyno.yomikata.util.Extras.EXTRA_QUIZ_IDS
 import com.jehutyno.yomikata.util.Extras.EXTRA_QUIZ_TITLE
 import io.github.inflationx.viewpump.ViewPumpContextWrapper
+import kotlinx.coroutines.launch
 import mu.KLogging
 import org.kodein.di.*
 import org.kodein.di.android.di
@@ -99,14 +101,14 @@ class ContentActivity : AppCompatActivity(), DIAware {
 
         val quizSource: QuizRepository by instance()
 
-        quizSource.getQuiz(category, object : QuizRepository.LoadQuizCallback {
+        val loadQuizCallback = object : QuizRepository.LoadQuizCallback {
             override fun onQuizLoaded(quizzes: List<Quiz>) {
                 if (level > -1) {
                     title = when (level) {
-                       0 -> getString(R.string.red_review)
-                       1 -> getString(R.string.orange_review)
-                       2 -> getString(R.string.yellow_review)
-                       else -> getString(R.string.green_review)
+                        0 -> getString(R.string.red_review)
+                        1 -> getString(R.string.orange_review)
+                        2 -> getString(R.string.yellow_review)
+                        else -> getString(R.string.green_review)
                     }
                     binding.pagerContent.visibility = GONE
                     if (savedInstanceState != null) {
@@ -150,7 +152,12 @@ class ContentActivity : AppCompatActivity(), DIAware {
 
             }
 
-        })
+        }
+
+        lifecycle.coroutineScope.launch {
+            quizSource.getQuiz(category, loadQuizCallback)
+        }
+
 
         binding.progressivePlay.visibility = if (level > -1) GONE else VISIBLE
 
@@ -204,7 +211,13 @@ class ContentActivity : AppCompatActivity(), DIAware {
     }
 
     private fun launchQuiz(strategy: QuizStrategy) {
-        statsRepository.addStatEntry(StatAction.LAUNCH_QUIZ_FROM_CATEGORY, category.toLong(), Calendar.getInstance().timeInMillis, StatResult.OTHER)
+        lifecycle.coroutineScope.launch {
+            statsRepository.addStatEntry(
+                StatAction.LAUNCH_QUIZ_FROM_CATEGORY,
+                category.toLong(),
+                Calendar.getInstance().timeInMillis,
+                StatResult.OTHER)
+        }
         val pref = PreferenceManager.getDefaultSharedPreferences(this)
         val cat1 = pref.getInt(Prefs.LATEST_CATEGORY_1.pref, -1)
 

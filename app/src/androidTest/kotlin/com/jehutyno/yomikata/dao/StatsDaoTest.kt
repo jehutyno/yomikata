@@ -6,6 +6,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SmallTest
 import com.jehutyno.yomikata.repository.local.RoomStatEntry
 import com.jehutyno.yomikata.repository.local.YomikataDataBase
+import kotlinx.coroutines.runBlocking
 import org.junit.Assert.*
 
 import org.junit.After
@@ -37,7 +38,7 @@ class StatsDaoTest {
     }
 
     @Test
-    fun addStatEntry() {
+    fun addStatEntry() = runBlocking {
         for (roomStatEntry in sampleStatEntries) {
             val id = statsDao.addStatEntry(roomStatEntry)
             assert (
@@ -47,7 +48,7 @@ class StatsDaoTest {
     }
 
     @Test
-    fun getStatEntriesOfTimeInterval() {
+    fun getStatEntriesOfTimeInterval() = runBlocking {
         val samples = listOf (
             RoomStatEntry(1, 2, 3, 1680455076292, 0),
             RoomStatEntry(2, 5, 12, 1680455075001, 1),
@@ -71,7 +72,7 @@ class StatsDaoTest {
     }
 
     @Test
-    fun removeAllStats() {
+    fun removeAllStats() = runBlocking {
         for (sample in sampleStatEntries) {
             statsDao.addStatEntry(sample)
         }

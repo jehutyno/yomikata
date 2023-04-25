@@ -11,12 +11,15 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.FrameLayout
+import androidx.lifecycle.coroutineScope
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.databinding.FragmentContentBinding
 import com.jehutyno.yomikata.managers.VoicesManager
 import com.jehutyno.yomikata.model.Answer
 import com.jehutyno.yomikata.model.Quiz
 import com.jehutyno.yomikata.util.*
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.kodein.di.*
 import splitties.alertdialog.appcompat.alertDialog
 import splitties.alertdialog.appcompat.cancelButton
@@ -72,7 +75,9 @@ class AnswersFragment(private val di: DI) : Fragment(), AnswersContract.View, An
         }
         adapter = AnswersAdapter(requireActivity(), this)
         layoutManager = LinearLayoutManager(activity)
-        adapter.replaceData(presenter.getAnswersWordsSentences(answers))
+        runBlocking {
+            adapter.replaceData(presenter.getAnswersWordsSentences(answers))
+        }
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -100,14 +105,16 @@ class AnswersFragment(private val di: DI) : Fragment(), AnswersContract.View, An
     override fun onResume() {
         super.onResume()
         presenter.start()
-        presenter.loadSelections()
+        lifecycle.coroutineScope.launch {
+            presenter.loadSelections()
+        }
     }
 
     override fun displayAnswers() {
 
     }
 
-    override fun onSelectionClick(position: Int, view: View) {
+    override fun onSelectionClick(position: Int, view: View) = runBlocking {
         val popup = PopupMenu(requireActivity(), view)
         popup.menuInflater.inflate(R.menu.popup_selections, popup.menu)
         for ((i, selection) in selections.withIndex()) {
@@ -118,12 +125,14 @@ class AnswersFragment(private val di: DI) : Fragment(), AnswersContract.View, An
             when (it.itemId) {
                 R.id.add_selection -> addSelection(adapter.items[position].second.id)
                 else -> {
-                    if (!it.isChecked)
-                        presenter.addWordToSelection(adapter.items[position].second.id, selections[it.itemId].id)
-                    else {
-                        presenter.deleteWordFromSelection(adapter.items[position].second.id, selections[it.itemId].id)
+                    runBlocking {
+                        if (!it.isChecked)
+                            presenter.addWordToSelection(adapter.items[position].second.id, selections[it.itemId].id)
+                        else {
+                            presenter.deleteWordFromSelection(adapter.items[position].second.id, selections[it.itemId].id)
+                        }
+                        it.isChecked = !it.isChecked
                     }
-                    it.isChecked = !it.isChecked
                 }
             }
             true
@@ -148,9 +157,11 @@ class AnswersFragment(private val di: DI) : Fragment(), AnswersContract.View, An
             setView(input)
 
             okButton {
-                val selectionId = presenter.createSelection(input.text.toString())
-                presenter.addWordToSelection(wordId, selectionId)
-                presenter.loadSelections()
+                lifecycle.coroutineScope.launch {
+                    val selectionId = presenter.createSelection(input.text.toString())
+                    presenter.addWordToSelection(wordId, selectionId)
+                    presenter.loadSelections()
+                }
             }
             cancelButton()
         }.show()

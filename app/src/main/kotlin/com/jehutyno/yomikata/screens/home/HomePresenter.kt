@@ -7,6 +7,7 @@ import com.jehutyno.yomikata.repository.StatsRepository
 import mu.KLogging
 import java.util.*
 
+
 /**
  * Created by valentin on 26/12/2016.
  */
@@ -25,7 +26,7 @@ class HomePresenter(
 
     }
 
-    override fun loadAllStats() {
+    override suspend fun loadAllStats() {
         val calendar = Calendar.getInstance()
         statsRepository.getTodayStatEntries(calendar, object: StatsRepository.LoadStatsCallback {
             override fun onStatsLoaded(statTime: StatTime, stats: List<StatEntry>) {
@@ -64,6 +65,5 @@ class HomePresenter(
             }
         })
     }
-
 
 }

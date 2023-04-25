@@ -8,6 +8,7 @@ import android.view.View.GONE
 import android.view.View.VISIBLE
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.lifecycle.coroutineScope
 import androidx.preference.PreferenceManager
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -21,6 +22,7 @@ import com.jehutyno.yomikata.model.StatEntry
 import com.jehutyno.yomikata.model.StatResult
 import com.jehutyno.yomikata.screens.quizzes.QuizzesActivity
 import com.jehutyno.yomikata.util.*
+import kotlinx.coroutines.launch
 import org.kodein.di.*
 
 import java.util.*
@@ -57,14 +59,18 @@ class HomeFragment(di: DI) : Fragment(), HomeContract.View {
         // preload for viewPager2
         super.onStart()
         mpresenter.start()
-        mpresenter.loadAllStats()
+        lifecycle.coroutineScope.launch {
+            mpresenter.loadAllStats()
+        }
         displayLatestCategories()
     }
 
     override fun onResume() {
         super.onResume()
         mpresenter.start()
-        mpresenter.loadAllStats()
+        lifecycle.coroutineScope.launch {
+            mpresenter.loadAllStats()
+        }
         displayLatestCategories()
     }
 

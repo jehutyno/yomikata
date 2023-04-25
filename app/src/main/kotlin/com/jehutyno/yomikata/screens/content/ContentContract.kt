@@ -4,6 +4,7 @@ import com.jehutyno.yomikata.BasePresenter
 import com.jehutyno.yomikata.BaseView
 import com.jehutyno.yomikata.model.Quiz
 import com.jehutyno.yomikata.model.Word
+import kotlinx.coroutines.Job
 import java.util.*
 
 /**
@@ -13,25 +14,25 @@ interface ContentContract {
 
     interface View: BaseView<Presenter> {
         fun displayWords(words: List<Word>)
-        fun displayStats()
+        fun displayStats(): Job
         fun selectionLoaded(quizzes: List<Quiz>)
         fun noSelections()
     }
 
     interface Presenter: BasePresenter {
-        fun loadWords(quizIds: LongArray, level: Int)
-        fun countLow(ids: LongArray): Int
-        fun countMedium(ids: LongArray): Int
-        fun countHigh(ids: LongArray): Int
-        fun countMaster(ids: LongArray): Int
-        fun countQuiz(ids: LongArray): Int
-        fun updateWordCheck(id: Long, check: Boolean)
-        fun loadSelections()
-        fun isWordInQuiz(wordId: Long, quizId: Long): Boolean
-        fun createSelection(quizName: String): Long
-        fun addWordToSelection(wordId: Long, quizId: Long)
-        fun isWordInQuizzes(wordId: Long, quizIds: Array<Long>): ArrayList<Boolean>
-        fun deleteWordFromSelection(wordId: Long, selectionId: Long)
+        fun loadWords(quizIds: LongArray, level: Int) : Job
+        suspend fun countLow(ids: LongArray): Int
+        suspend fun countMedium(ids: LongArray): Int
+        suspend fun countHigh(ids: LongArray): Int
+        suspend fun countMaster(ids: LongArray): Int
+        suspend fun countQuiz(ids: LongArray): Int
+        suspend fun updateWordCheck(id: Long, check: Boolean)
+        suspend fun loadSelections()
+        suspend fun isWordInQuiz(wordId: Long, quizId: Long): Boolean
+        suspend fun createSelection(quizName: String): Long
+        suspend fun addWordToSelection(wordId: Long, quizId: Long)
+        suspend fun isWordInQuizzes(wordId: Long, quizIds: Array<Long>): ArrayList<Boolean>
+        suspend fun deleteWordFromSelection(wordId: Long, selectionId: Long)
     }
 
 }

@@ -14,6 +14,7 @@ import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.TextView
 import android.widget.Toast
+import androidx.lifecycle.coroutineScope
 import androidx.preference.PreferenceManager
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.databinding.FragmentQuizzesBinding
@@ -21,11 +22,9 @@ import com.jehutyno.yomikata.model.Quiz
 import com.jehutyno.yomikata.screens.content.ContentActivity
 import com.jehutyno.yomikata.screens.quiz.QuizActivity
 import com.jehutyno.yomikata.util.*
-import com.wooplr.spotlight.utils.SpotlightListener
 import kotlinx.coroutines.Dispatchers.IO
-import kotlinx.coroutines.Dispatchers.Main
-import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import org.kodein.di.DI
 import org.kodein.di.instance
@@ -81,14 +80,18 @@ class QuizzesFragment(di: DI) : Fragment(), QuizzesContract.View, QuizzesAdapter
         // use onStart so that viewPager2 can set everything up before the page becomes visible
         super.onStart()
         mpresenter.start()
-        mpresenter.loadQuizzes(selectedCategory)
+        lifecycle.coroutineScope.launch {
+            mpresenter.loadQuizzes(selectedCategory)
+        }
     }
 
     override fun onResume() {
         super.onResume()
         val position = (binding.recyclerview.layoutManager as LinearLayoutManager).findFirstVisibleItemPosition()
         mpresenter.start()
-        mpresenter.loadQuizzes(selectedCategory)
+        lifecycle.coroutineScope.launch {
+            mpresenter.loadQuizzes(selectedCategory)
+        }
         seekBars.animateAll()    // call this after loadQuizzes, since seekBars variables are set there
         binding.recyclerview.scrollToPosition(position)
         tutos()
@@ -127,14 +130,17 @@ class QuizzesFragment(di: DI) : Fragment(), QuizzesContract.View, QuizzesAdapter
 
         binding.btnPronunciationQcmSwitch.setOnClickListener {
             mpresenter.pronunciationQcmSwitch()
-            spotlightTuto(requireActivity(), binding.btnPronunciationQcmSwitch, getString(R.string.tutos_pronunciation_mcq), getString(R.string.tutos_pronunciation_mcq_message), SpotlightListener { })
+            spotlightTuto(requireActivity(), binding.btnPronunciationQcmSwitch, getString(R.string.tutos_pronunciation_mcq), getString(R.string.tutos_pronunciation_mcq_message)
+            ) { }
         }
         binding.btnPronunciationSwitch.setOnClickListener {
             mpresenter.pronunciationSwitch()
-            spotlightTuto(requireActivity(), binding.btnPronunciationSwitch, getString(R.string.tutos_pronunciation_quiz), getString(R.string.tutos_pronunciation_quiz_message), SpotlightListener { })
+            spotlightTuto(requireActivity(), binding.btnPronunciationSwitch, getString(R.string.tutos_pronunciation_quiz), getString(R.string.tutos_pronunciation_quiz_message)
+            ) { }
         }
         binding.btnAudioSwitch.setOnClickListener {
-            spotlightTuto(requireActivity(), binding.btnAudioSwitch, getString(R.string.tutos_audio_quiz), getString(R.string.tutos_audio_quiz_message), SpotlightListener { })
+            spotlightTuto(requireActivity(), binding.btnAudioSwitch, getString(R.string.tutos_audio_quiz), getString(R.string.tutos_audio_quiz_message)
+            ) { }
             when (checkSpeechAvailability(requireActivity(), ttsSupported, getCategoryLevel(selectedCategory))) {
                 SpeechAvailability.NOT_AVAILABLE -> speechNotSupportedAlert(requireActivity(), getCategoryLevel(selectedCategory)) { (activity as QuizzesActivity).quizzesAdapter.notifyDataSetChanged() }
                 else -> mpresenter.audioSwitch()
@@ -142,15 +148,18 @@ class QuizzesFragment(di: DI) : Fragment(), QuizzesContract.View, QuizzesAdapter
         }
         binding.btnEnJapSwitch.setOnClickListener {
             mpresenter.enJapSwitch()
-            spotlightTuto(requireActivity(), binding.btnEnJapSwitch, getString(R.string.tutos_en_jp), getString(R.string.tutos_en_jp_message), SpotlightListener { })
+            spotlightTuto(requireActivity(), binding.btnEnJapSwitch, getString(R.string.tutos_en_jp), getString(R.string.tutos_en_jp_message)
+            ) { }
         }
         binding.btnJapEnSwitch.setOnClickListener {
             mpresenter.japEnSwitch()
-            spotlightTuto(requireActivity(), binding.btnJapEnSwitch, getString(R.string.tutos_jp_en), getString(R.string.tutos_jp_en_message), SpotlightListener { })
+            spotlightTuto(requireActivity(), binding.btnJapEnSwitch, getString(R.string.tutos_jp_en), getString(R.string.tutos_jp_en_message)
+            ) { }
         }
         binding.btnAutoSwitch.setOnClickListener {
             mpresenter.autoSwitch()
-            spotlightTuto(requireActivity(), binding.btnAutoSwitch, getString(R.string.tutos_auto_quiz), getString(R.string.tutos_auto_quiz_message), SpotlightListener { })
+            spotlightTuto(requireActivity(), binding.btnAutoSwitch, getString(R.string.tutos_auto_quiz), getString(R.string.tutos_auto_quiz_message)
+            ) { }
         }
 
         binding.playLow.setOnClickListener {
@@ -254,7 +263,7 @@ class QuizzesFragment(di: DI) : Fragment(), QuizzesContract.View, QuizzesAdapter
         }
 
         // No quiz to launch
-        if (ids.size == 0 || mpresenter.countQuiz(ids.toLongArray()) <= 0) {
+        if (ids.size == 0 || runBlocking {mpresenter.countQuiz(ids.toLongArray())} <= 0) {
             val toast = Toast.makeText(context, R.string.error_no_quiz_no_word, Toast.LENGTH_SHORT)
             toast.show()
             return
@@ -269,7 +278,7 @@ class QuizzesFragment(di: DI) : Fragment(), QuizzesContract.View, QuizzesAdapter
         startActivity(intent)
     }
 
-    fun launchQuizClick(strategy: QuizStrategy, title: String) {
+    fun launchQuizClick(strategy: QuizStrategy, title: String) = runBlocking {
         mpresenter.launchQuizClick(strategy, title, selectedCategory)
     }
 
@@ -283,21 +292,23 @@ class QuizzesFragment(di: DI) : Fragment(), QuizzesContract.View, QuizzesAdapter
             ids.add(it.id)
         }
 
-        seekBars.count = mpresenter.countQuiz(ids.toLongArray())
-        seekBars.low = mpresenter.countLow(ids.toLongArray())
-        seekBars.medium = mpresenter.countMedium(ids.toLongArray())
-        seekBars.high = mpresenter.countHigh(ids.toLongArray())
-        seekBars.master = mpresenter.countMaster(ids.toLongArray())
+        lifecycle.coroutineScope.launch {
+            seekBars.count = mpresenter.countQuiz(ids.toLongArray())
+            seekBars.low = mpresenter.countLow(ids.toLongArray())
+            seekBars.medium = mpresenter.countMedium(ids.toLongArray())
+            seekBars.high = mpresenter.countHigh(ids.toLongArray())
+            seekBars.master = mpresenter.countMaster(ids.toLongArray())
 
-        binding.textLow.text = seekBars.low.toString()
-        binding.textMedium.text = seekBars.medium.toString()
-        binding.textHigh.text = seekBars.high.toString()
-        binding.textMaster.text = seekBars.master.toString()
+            binding.textLow.text = seekBars.low.toString()
+            binding.textMedium.text = seekBars.medium.toString()
+            binding.textHigh.text = seekBars.high.toString()
+            binding.textMaster.text = seekBars.master.toString()
 
-        binding.playLow.visibility = if (seekBars.low > 0) VISIBLE else INVISIBLE
-        binding.playMedium.visibility = if (seekBars.medium > 0) VISIBLE else INVISIBLE
-        binding.playHigh.visibility = if (seekBars.high > 0) VISIBLE else INVISIBLE
-        binding.playMaster.visibility = if (seekBars.master > 0) VISIBLE else INVISIBLE
+            binding.playLow.visibility = if (seekBars.low > 0) VISIBLE else INVISIBLE
+            binding.playMedium.visibility = if (seekBars.medium > 0) VISIBLE else INVISIBLE
+            binding.playHigh.visibility = if (seekBars.high > 0) VISIBLE else INVISIBLE
+            binding.playMaster.visibility = if (seekBars.master > 0) VISIBLE else INVISIBLE
+        }
     }
 
     private fun openContent(position: Int, level: Int) {
@@ -327,7 +338,7 @@ class QuizzesFragment(di: DI) : Fragment(), QuizzesContract.View, QuizzesAdapter
         binding.textMaster.text = 0.toString()
     }
 
-    override fun onMenuItemClick(category: Int) {
+    override fun onMenuItemClick(category: Int) = runBlocking {
         selectedCategory = category
         mpresenter.loadQuizzes(selectedCategory)
     }
@@ -336,7 +347,7 @@ class QuizzesFragment(di: DI) : Fragment(), QuizzesContract.View, QuizzesAdapter
         openContent(position, -1)
     }
 
-    override fun onItemChecked(position: Int, checked: Boolean) {
+    override fun onItemChecked(position: Int, checked: Boolean) = runBlocking {
         mpresenter.updateQuizCheck(adapter.items[position].id, checked)
 
     }
@@ -375,15 +386,19 @@ class QuizzesFragment(di: DI) : Fragment(), QuizzesContract.View, QuizzesAdapter
                 requireContext().alertDialog {
                     titleResource = R.string.selection_delete_sure
                     okButton {
-                        mpresenter.deleteQuiz(adapter.items[position].id)
-                        adapter.deleteItem(position)
+                        runBlocking {
+                            mpresenter.deleteQuiz(adapter.items[position].id)
+                            adapter.deleteItem(position)
+                        }
                     }
                     cancelButton { }
                 }.show()
             }
             okButton {
                 if (adapter.items[position].getName() != input.text.toString() && input.error == null) {
-                    mpresenter.updateQuizName(adapter.items[position].id, input.text.toString())
+                    runBlocking {
+                        mpresenter.updateQuizName(adapter.items[position].id, input.text.toString())
+                    }
                     adapter.items[position].nameFr = input.text.toString()
                     adapter.items[position].nameEn = input.text.toString()
                     adapter.notifyItemChanged(position)
@@ -423,8 +438,10 @@ class QuizzesFragment(di: DI) : Fragment(), QuizzesContract.View, QuizzesAdapter
 
             okButton {
                 if (input.error == null) {
-                    mpresenter.createQuiz(input.text.toString())
-                    mpresenter.loadQuizzes(selectedCategory)
+                    runBlocking {
+                        mpresenter.createQuiz(input.text.toString())
+                        mpresenter.loadQuizzes(selectedCategory)
+                    }
                 }
             }
             cancelButton { }
@@ -442,25 +459,29 @@ class QuizzesFragment(di: DI) : Fragment(), QuizzesContract.View, QuizzesAdapter
         _binding = null
     }
 
-    private fun tutos() {
-        MainScope().async {
-            withContext(IO) {
-                sleep(500)
-            }
-            withContext(Main) {
+    private fun tutos() = lifecycle.coroutineScope.launch {
+        withContext(IO) {
+            sleep(500)
+        }
+        if (activity != null) {
+            spotlightTuto(requireActivity(), binding.btnPronunciationQcmSwitch, getString(R.string.tuto_quiz_type), getString(R.string.tuto_quiz_type_message)
+            ) {
                 if (activity != null) {
-                    spotlightTuto(requireActivity(), binding.btnPronunciationQcmSwitch, getString(R.string.tuto_quiz_type), getString(R.string.tuto_quiz_type_message),
-                        SpotlightListener {
-                            if (activity != null) {
-                                spotlightTuto(requireActivity(), binding.textLow, getString(R.string.tuto_progress), getString(R.string.tuto_progress_message),
-                                    SpotlightListener {
-                                        if (activity != null) {
-                                            spotlightTuto(requireActivity(), binding.recyclerview.findViewHolderForAdapterPosition(0)?.itemView?.findViewById(R.id.quiz_check), getString(R.string.tuto_part_selection), getString(R.string.tuto_part_selection_message),
-                                                SpotlightListener {})
-                                        }
-                                    })
-                            }
-                        })
+                    spotlightTuto(requireActivity(),
+                        binding.textLow,
+                        getString(R.string.tuto_progress),
+                        getString(R.string.tuto_progress_message)
+                    ) {
+                        if (activity != null) {
+                            spotlightTuto(requireActivity(),
+                                binding.recyclerview.findViewHolderForAdapterPosition(0)?.itemView?.findViewById(
+                                    R.id.quiz_check
+                                ),
+                                getString(R.string.tuto_part_selection),
+                                getString(R.string.tuto_part_selection_message)
+                            ) { }
+                        }
+                    }
                 }
             }
         }

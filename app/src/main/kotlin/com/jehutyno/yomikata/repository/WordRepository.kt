@@ -16,23 +16,23 @@ interface WordRepository {
         fun onWordsLoaded(task:Word)
         fun onDataNotAvailable()
     }
-    fun getWords(quizId: Long, callback: LoadWordsCallback)
-    fun getWords(quizIds: LongArray, callback: LoadWordsCallback)
-    fun searchWords(searchString: String, callback: LoadWordsCallback)
-    fun deleteAllWords()
-    fun deleteWord(wordId: Long)
-    fun isWordInQuiz(wordId:Long, quizId:Long) : Boolean
-    fun isWordInQuizzes(wordId: Long, quizIds: Array<Long>) : ArrayList<Boolean>
-    fun updateWordLevel(wordId: Long, level: Int)
-    fun getRandomWords(wordId: Long, answer: String, wordSize: Int, limit: Int, quizType: QuizType): ArrayList<Word>
-    fun updateWordPoints(wordId: Long, points: Int)
-    fun getWordsByRepetition(quizIds: LongArray, repetition: Int, limit: Int): ArrayList<Word>
-    fun updateWordRepetition(wordId: Long, repetition: Int)
-    fun decreaseWordsRepetition(quizIds: LongArray)
-    fun updateWordSelected(wordId: Long, check: Boolean)
-    fun getWordsByLevel(quizIds: LongArray, level: Int, callback: LoadWordsCallback)
-    fun getAllWords() : List<Word>
-    fun getWordById(wordId: Long): Word
-    fun updateWord(updateWord: Word, word: Word?)
-    fun updateWordProgression(updateWord: Word, word: Word)
+    suspend fun getWords(quizId: Long, callback: LoadWordsCallback)
+    suspend fun getWords(quizIds: LongArray, callback: LoadWordsCallback)
+    suspend fun searchWords(searchString: String, callback: LoadWordsCallback)
+    suspend fun deleteAllWords()
+    suspend fun deleteWord(wordId: Long)
+    suspend fun isWordInQuiz(wordId:Long, quizId:Long) : Boolean
+    suspend fun isWordInQuizzes(wordId: Long, quizIds: Array<Long>) : ArrayList<Boolean>
+    suspend fun updateWordLevel(wordId: Long, level: Int)
+    suspend fun getRandomWords(wordId: Long, answer: String, wordSize: Int, limit: Int, quizType: QuizType): ArrayList<Word>
+    suspend fun updateWordPoints(wordId: Long, points: Int)
+    suspend fun getWordsByRepetition(quizIds: LongArray, repetition: Int, limit: Int): ArrayList<Word>
+    suspend fun updateWordRepetition(wordId: Long, repetition: Int)
+    suspend fun decreaseWordsRepetition(quizIds: LongArray)
+    suspend fun updateWordSelected(wordId: Long, check: Boolean)
+    suspend fun getWordsByLevel(quizIds: LongArray, level: Int, callback: LoadWordsCallback)
+    suspend fun getAllWords() : List<Word>
+    suspend fun getWordById(wordId: Long): Word
+    suspend fun updateWord(updateWord: Word, word: Word?)
+    suspend fun updateWordProgression(updateWord: Word, word: Word)
 }

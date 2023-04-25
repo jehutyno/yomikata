@@ -15,12 +15,12 @@ interface StatsRepository {
         fun onStatsLoaded(statTime: StatTime, stats: List<StatEntry>)
         fun onDataNotAvailable()
     }
-    fun addStatEntry(action: StatAction, associatedId: Long, date: Long, result: StatResult)
-    fun getTodayStatEntries(today: Calendar, callback: LoadStatsCallback)
-    fun getThisWeekStatEntries(today: Calendar, callback: LoadStatsCallback)
-    fun getThisMonthStatEntries(today: Calendar, callback: LoadStatsCallback)
-    fun getAllStatEntries(callback: LoadStatsCallback)
-    fun removeAllStats()
-    fun addStatEntry(entry: StatEntry)
-    fun getStatEntriesOfTimeInterval(start: Long, end: Long): List<StatEntry>
+    suspend fun addStatEntry(action: StatAction, associatedId: Long, date: Long, result: StatResult)
+    suspend fun getTodayStatEntries(today: Calendar, callback: LoadStatsCallback)
+    suspend fun getThisWeekStatEntries(today: Calendar, callback: LoadStatsCallback)
+    suspend fun getThisMonthStatEntries(today: Calendar, callback: LoadStatsCallback)
+    suspend fun getAllStatEntries(callback: LoadStatsCallback)
+    suspend fun removeAllStats()
+    suspend fun addStatEntry(entry: StatEntry)
+    suspend fun getStatEntriesOfTimeInterval(start: Long, end: Long): List<StatEntry>
 }

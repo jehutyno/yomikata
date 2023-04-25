@@ -11,25 +11,25 @@ import com.jehutyno.yomikata.repository.local.RoomRadicals
 @Dao
 interface KanjiSoloDao {
     @Query("SELECT * FROM kanji_solo")
-    fun getAllKanjiSolo(): List<RoomKanjiSolo>
+    suspend fun getAllKanjiSolo(): List<RoomKanjiSolo>
 
     @Query("SELECT * FROM radicals")
-    fun getAllRadicals(): List<RoomRadicals>
+    suspend fun getAllRadicals(): List<RoomRadicals>
 
     @Query("SELECT COUNT(*) FROM kanji_solo")
-    fun kanjiSoloCount(): Int
+    suspend fun kanjiSoloCount(): Int
 
     @Query("SELECT COUNT(*) FROM radicals")
-    fun radicalsCount(): Int
+    suspend fun radicalsCount(): Int
 
     @Insert
-    fun addKanjiSolo(kanjiSolo: RoomKanjiSolo)
+    suspend fun addKanjiSolo(kanjiSolo: RoomKanjiSolo)
 
     @Insert
-    fun addRadical(radical: RoomRadicals)
+    suspend fun addRadical(radical: RoomRadicals)
 
     @Query("SELECT * FROM kanji_solo WHERE kanji = :kanji LIMIT 1")
-    fun getSoloByKanji(kanji: String): RoomKanjiSolo?
+    suspend fun getSoloByKanji(kanji: String): RoomKanjiSolo?
 
     @Query("SELECT kanji_solo.*, " +
            "radicals.strokes AS radStroke, radicals.reading AS radReading, " +
@@ -38,8 +38,8 @@ interface KanjiSoloDao {
            "ON kanji_solo.radical = radicals.radical " +
            "WHERE kanji_solo.kanji = :kanji " +
            "LIMIT 1")
-    fun getSoloByKanjiRadical(kanji: String): RoomKanjiSoloRadical?
+    suspend fun getSoloByKanjiRadical(kanji: String): RoomKanjiSoloRadical?
 
     @Query("SELECT * FROM radicals WHERE radical = :radicalString LIMIT 1")
-    fun getKanjiRadical(radicalString: String): RoomRadicals?
+    suspend fun getKanjiRadical(radicalString: String): RoomRadicals?
 }

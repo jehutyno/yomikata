@@ -24,16 +24,16 @@ interface QuizzesContract {
     }
 
     interface Presenter : BasePresenter {
-        fun loadQuizzes(category: Int)
-        fun createQuiz(quizName: String)
-        fun updateQuizName(quizId: Long, quizName: String)
-        fun deleteQuiz(quizId: Long)
-        fun updateQuizCheck(id: Long, checked: Boolean)
-        fun countLow(ids: LongArray): Int
-        fun countQuiz(ids: LongArray): Int
-        fun countMedium(ids: LongArray): Int
-        fun countHigh(ids: LongArray): Int
-        fun countMaster(ids: LongArray): Int
+        suspend fun loadQuizzes(category: Int)
+        suspend fun createQuiz(quizName: String)
+        suspend fun updateQuizName(quizId: Long, quizName: String)
+        suspend fun deleteQuiz(quizId: Long)
+        suspend fun updateQuizCheck(id: Long, checked: Boolean)
+        suspend fun countLow(ids: LongArray): Int
+        suspend fun countQuiz(ids: LongArray): Int
+        suspend fun countMedium(ids: LongArray): Int
+        suspend fun countHigh(ids: LongArray): Int
+        suspend fun countMaster(ids: LongArray): Int
         fun initQuizTypes()
         fun pronunciationQcmSwitch()
         fun pronunciationSwitch()
@@ -41,7 +41,7 @@ interface QuizzesContract {
         fun enJapSwitch()
         fun japEnSwitch()
         fun autoSwitch()
-        fun launchQuizClick(strategy: QuizStrategy, title: String, category: Int)
+        suspend fun launchQuizClick(strategy: QuizStrategy, title: String, category: Int)
         fun getSelectedTypes(): IntArray
     }
 }

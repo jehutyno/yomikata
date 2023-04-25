@@ -5,6 +5,9 @@ import com.jehutyno.yomikata.model.Word
 import com.jehutyno.yomikata.repository.QuizRepository
 import com.jehutyno.yomikata.repository.WordRepository
 import com.jehutyno.yomikata.util.Categories
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import mu.KLogging
 import java.util.*
 
@@ -26,7 +29,7 @@ class ContentPresenter(
         logger.info("Content presenter start")
     }
 
-    override fun loadWords(quizIds: LongArray, level: Int) {
+    override fun loadWords(quizIds: LongArray, level: Int) = CoroutineScope(Dispatchers.Main).launch {
         if (level > -1) {
             wordRepository.getWordsByLevel(quizIds, level, object : WordRepository.LoadWordsCallback {
                 override fun onWordsLoaded(words: List<Word>) {
@@ -52,31 +55,31 @@ class ContentPresenter(
         }
     }
 
-    override fun countQuiz(ids: LongArray): Int {
+    override suspend fun countQuiz(ids: LongArray): Int {
         return quizRepository.countWordsForQuizzes(ids)
     }
 
-    override fun countLow(ids: LongArray): Int {
+    override suspend fun countLow(ids: LongArray): Int {
         return quizRepository.countWordsForLevel(ids, 0)
     }
 
-    override fun countMedium(ids: LongArray): Int {
+    override suspend fun countMedium(ids: LongArray): Int {
         return quizRepository.countWordsForLevel(ids, 1)
     }
 
-    override fun countHigh(ids: LongArray): Int {
+    override suspend fun countHigh(ids: LongArray): Int {
         return quizRepository.countWordsForLevel(ids, 2)
     }
 
-    override fun countMaster(ids: LongArray): Int {
+    override suspend fun countMaster(ids: LongArray): Int {
         return quizRepository.countWordsForLevel(ids, 3) + quizRepository.countWordsForLevel(ids, 4)
     }
 
-    override fun updateWordCheck(id: Long, check: Boolean) {
+    override suspend fun updateWordCheck(id: Long, check: Boolean) {
         wordRepository.updateWordSelected(id, check)
     }
 
-    override fun loadSelections() {
+    override suspend fun loadSelections() {
         quizRepository.getQuiz(Categories.CATEGORY_SELECTIONS, object: QuizRepository.LoadQuizCallback {
             override fun onQuizLoaded(quizzes: List<Quiz>) {
                 contentView.selectionLoaded(quizzes)
@@ -89,23 +92,23 @@ class ContentPresenter(
         })
     }
 
-    override fun isWordInQuiz(wordId: Long, quizId: Long) : Boolean {
+    override suspend fun isWordInQuiz(wordId: Long, quizId: Long) : Boolean {
         return wordRepository.isWordInQuiz(wordId, quizId)
     }
 
-    override fun createSelection(quizName: String): Long {
+    override suspend fun createSelection(quizName: String): Long {
         return quizRepository.saveQuiz(quizName, Categories.CATEGORY_SELECTIONS)
     }
 
-    override fun addWordToSelection(wordId: Long, quizId: Long) {
+    override suspend fun addWordToSelection(wordId: Long, quizId: Long) {
         quizRepository.addWordToQuiz(wordId, quizId)
     }
 
-    override fun isWordInQuizzes(wordId: Long, quizIds: Array<Long>) : ArrayList<Boolean> {
+    override suspend fun isWordInQuizzes(wordId: Long, quizIds: Array<Long>) : ArrayList<Boolean> {
         return wordRepository.isWordInQuizzes(wordId, quizIds)
     }
 
-    override fun deleteWordFromSelection(wordId: Long, selectionId: Long) {
+    override suspend fun deleteWordFromSelection(wordId: Long, selectionId: Long) {
         quizRepository.deleteWordFromQuiz(wordId, selectionId)
     }
 

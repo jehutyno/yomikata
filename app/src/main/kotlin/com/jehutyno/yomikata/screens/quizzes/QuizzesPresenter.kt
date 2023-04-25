@@ -36,7 +36,7 @@ class QuizzesPresenter(
         Log.i("YomikataZK", "Home Presenter start")
     }
 
-    override fun loadQuizzes(category: Int) {
+    override suspend fun loadQuizzes(category: Int) {
         quizRepository.getQuiz(category, object : QuizRepository.LoadQuizCallback {
             override fun onQuizLoaded(quizzes: List<Quiz>) {
                 quizzesView.displayQuizzes(quizzes)
@@ -49,39 +49,39 @@ class QuizzesPresenter(
         })
     }
 
-    override fun createQuiz(quizName: String) {
+    override suspend fun createQuiz(quizName: String) {
         quizRepository.saveQuiz(quizName, Categories.CATEGORY_SELECTIONS)
     }
 
-    override fun updateQuizName(quizId: Long, quizName: String) {
+    override suspend fun updateQuizName(quizId: Long, quizName: String) {
         quizRepository.updateQuizName(quizId, quizName)
     }
 
-    override fun updateQuizCheck(id: Long, checked: Boolean) {
+    override suspend fun updateQuizCheck(id: Long, checked: Boolean) {
         quizRepository.updateQuizSelected(id, checked)
     }
 
-    override fun deleteQuiz(quizId: Long) {
+    override suspend fun deleteQuiz(quizId: Long) {
         quizRepository.deleteQuiz(quizId)
     }
 
-    override fun countQuiz(ids: LongArray): Int {
+    override suspend fun countQuiz(ids: LongArray): Int {
         return quizRepository.countWordsForQuizzes(ids)
     }
 
-    override fun countLow(ids: LongArray): Int {
+    override suspend fun countLow(ids: LongArray): Int {
         return quizRepository.countWordsForLevel(ids, 0)
     }
 
-    override fun countMedium(ids: LongArray): Int {
+    override suspend fun countMedium(ids: LongArray): Int {
         return quizRepository.countWordsForLevel(ids, 1)
     }
 
-    override fun countHigh(ids: LongArray): Int {
+    override suspend fun countHigh(ids: LongArray): Int {
         return quizRepository.countWordsForLevel(ids, 2)
     }
 
-    override fun countMaster(ids: LongArray): Int {
+    override suspend fun countMaster(ids: LongArray): Int {
         return quizRepository.countWordsForLevel(ids, 3) + quizRepository.countWordsForLevel(ids, 4)
     }
 
@@ -195,7 +195,7 @@ class QuizzesPresenter(
         pref.edit().putString(key, str.toString()).apply()
     }
 
-    override fun launchQuizClick(strategy: QuizStrategy, title: String, category: Int) {
+    override suspend fun launchQuizClick(strategy: QuizStrategy, title: String, category: Int) {
         statsRepository.addStatEntry(StatAction.LAUNCH_QUIZ_FROM_CATEGORY, category.toLong(), Calendar.getInstance().timeInMillis, StatResult.OTHER)
         val pref = PreferenceManager.getDefaultSharedPreferences(context)
         val cat1 = pref.getInt(Prefs.LATEST_CATEGORY_1.pref, -1)

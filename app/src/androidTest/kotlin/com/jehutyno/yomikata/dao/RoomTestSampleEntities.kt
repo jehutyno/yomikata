@@ -1,6 +1,7 @@
 package com.jehutyno.yomikata.dao
 
 import com.jehutyno.yomikata.repository.local.*
+import kotlinx.coroutines.runBlocking
 
 
 /**
@@ -91,7 +92,7 @@ class CoupledQuizWords(private val quizDao: QuizDao, private val wordDao: WordDa
         RoomQuizWord(3, 2)
     )
 
-    fun addAllToDatabase() {
+    fun addAllToDatabase() = runBlocking {
         for (sample in sampleRoomQuiz) {
             quizDao.addQuiz(sample)
         }

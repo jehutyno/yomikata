@@ -7,6 +7,7 @@ import androidx.test.filters.MediumTest
 import com.jehutyno.yomikata.repository.local.RoomQuizWord
 import com.jehutyno.yomikata.repository.local.RoomWords
 import com.jehutyno.yomikata.repository.local.YomikataDataBase
+import kotlinx.coroutines.runBlocking
 import org.junit.Assert.*
 
 import org.junit.After
@@ -40,7 +41,7 @@ class WordDaoTest {
     }
 
     @Test
-    fun getWords() {
+    fun getWords() = runBlocking {
         val sample = CoupledQuizWords(quizDao, wordDao)
         sample.addAllToDatabase()
         val quizIdsTest = listOf (
@@ -56,7 +57,7 @@ class WordDaoTest {
     }
 
     @Test
-    fun getWordsByLevels() {
+    fun getWordsByLevels() = runBlocking {
         val sample = CoupledQuizWords(quizDao, wordDao)
         sample.addAllToDatabase()
         val quizIdsAndLevelsTest = listOf (
@@ -75,7 +76,7 @@ class WordDaoTest {
     }
 
     @Test
-    fun getWordsByRepetition() {
+    fun getWordsByRepetition() = runBlocking {
         val sample = CoupledQuizWords(quizDao, wordDao)
         sample.addAllToDatabase()
         val quizIdsAndRepetitionsTest = listOf (
@@ -95,7 +96,7 @@ class WordDaoTest {
     }
 
     @Test
-    fun getWordsWithRepetitionStrictlyGreaterThan() {
+    fun getWordsWithRepetitionStrictlyGreaterThan() = runBlocking {
         val sample = CoupledQuizWords(quizDao, wordDao)
         sample.addAllToDatabase()
         val quizIdsAndRepetitionsTest = listOf (
@@ -114,7 +115,7 @@ class WordDaoTest {
     }
 
     @Test
-    fun decreaseWordRepetitionByOne() {
+    fun decreaseWordRepetitionByOne() = runBlocking {
         val ids = sampleRoomWords.map {
             wordDao.addWord(it)
         }.toLongArray()
@@ -127,7 +128,7 @@ class WordDaoTest {
     }
 
     @Test
-    fun getWordsOfSizeRelatedTo() {
+    fun getWordsOfSizeRelatedTo() = runBlocking {
         val words = listOf (
             RoomWords(1, "月", "moon; Monday", "lune; lundi", "げつ",
                 0, 0, 0, 0, 0,
@@ -158,12 +159,12 @@ class WordDaoTest {
     }
 
     @Test
-    fun getRandomWords() {
+    fun getRandomWords() = runBlocking {
 
     }
 
     @Test
-    fun searchWords() {
+    fun searchWords() = runBlocking {
         val sample = RoomWords(1, "金", "metal; Friday", "métal; vendredi", "きん",
             0, 0, 0, 0, 0, -1, 0,
             2, 0, null)
@@ -181,7 +182,7 @@ class WordDaoTest {
     }
 
     @Test
-    fun isWordInQuiz() {
+    fun isWordInQuiz() = runBlocking {
         val sample = sampleRoomQuizWords[0]
         assert ( !wordDao.isWordInQuiz(sample.word_id, sample.quiz_id) )
         wordDao.addWord(getRandomRoomWord(sample.word_id))
@@ -191,7 +192,7 @@ class WordDaoTest {
     }
 
     @Test
-    fun getWordById() {
+    fun getWordById() = runBlocking {
         for (sample in sampleRoomWords) {
             val id = wordDao.addWord(sample)
             assert ( wordDao.getWordById(id) == sample.copy(_id = id) )
@@ -199,7 +200,7 @@ class WordDaoTest {
     }
 
     @Test
-    fun deleteAllWords() {
+    fun deleteAllWords() = runBlocking {
         for (sample in sampleRoomWords) {
             wordDao.addWord(sample)
         }
@@ -208,7 +209,7 @@ class WordDaoTest {
     }
 
     @Test
-    fun deleteWord() {
+    fun deleteWord() = runBlocking {
         val ids = sampleRoomWords.map {
             wordDao.addWord(it)
         }
@@ -222,35 +223,35 @@ class WordDaoTest {
     }
 
     @Test
-    fun updateWord() {
+    fun updateWord() = runBlocking {
     }
 
     @Test
-    fun updateWordPoints() {
+    fun updateWordPoints() = runBlocking {
     }
 
     @Test
-    fun updateWordLevel() {
+    fun updateWordLevel() = runBlocking {
     }
 
     @Test
-    fun updateWordRepetition() {
+    fun updateWordRepetition() = runBlocking {
     }
 
     @Test
-    fun updateWordSelected() {
+    fun updateWordSelected() = runBlocking {
     }
 
     @Test
-    fun getQuizWordFromId() {
+    fun getQuizWordFromId() = runBlocking {
     }
 
     @Test
-    fun addQuizWord() {
+    fun addQuizWord() = runBlocking {
     }
 
     @Test
-    fun addWord() {
+    fun addWord() = runBlocking {
     }
 
 }

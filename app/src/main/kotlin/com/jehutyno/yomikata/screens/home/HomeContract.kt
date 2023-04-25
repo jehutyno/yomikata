@@ -19,6 +19,6 @@ interface HomeContract {
     }
 
     interface Presenter : BasePresenter {
-        fun loadAllStats()
+        suspend fun loadAllStats()
     }
 }

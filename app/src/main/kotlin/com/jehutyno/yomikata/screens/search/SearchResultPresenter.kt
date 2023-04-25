@@ -27,7 +27,7 @@ class SearchResultPresenter(
 
     }
 
-    override fun loadWords(searchString: String) {
+    override suspend fun loadWords(searchString: String) {
         wordRepository.searchWords(searchString, object: WordRepository.LoadWordsCallback {
             override fun onWordsLoaded(words: List<Word>) {
                 searchResultView.displayResults(words)
@@ -40,11 +40,11 @@ class SearchResultPresenter(
         })
     }
 
-    override fun updateWordCheck(id: Long, check: Boolean) {
+    override suspend fun updateWordCheck(id: Long, check: Boolean) {
         wordRepository.updateWordSelected(id, check)
     }
 
-    override fun loadSelections() {
+    override suspend fun loadSelections() {
         quizRepository.getQuiz(Categories.CATEGORY_SELECTIONS, object: QuizRepository.LoadQuizCallback {
             override fun onQuizLoaded(quizzes: List<Quiz>) {
                 searchResultView.selectionLoaded(quizzes)
@@ -57,26 +57,24 @@ class SearchResultPresenter(
         })
     }
 
-    override fun isWordInQuiz(wordId: Long, quizId: Long) : Boolean {
+    override suspend fun isWordInQuiz(wordId: Long, quizId: Long) : Boolean {
         return wordRepository.isWordInQuiz(wordId, quizId)
     }
 
-    override fun createSelection(quizName: String): Long {
+    override suspend fun createSelection(quizName: String): Long {
         return quizRepository.saveQuiz(quizName, Categories.CATEGORY_SELECTIONS)
     }
 
-    override fun addWordToSelection(wordId: Long, quizId: Long) {
+    override suspend fun addWordToSelection(wordId: Long, quizId: Long) {
         quizRepository.addWordToQuiz(wordId, quizId)
     }
 
-    override fun isWordInQuizzes(wordId: Long, quizIds: Array<Long>) : ArrayList<Boolean> {
+    override suspend fun isWordInQuizzes(wordId: Long, quizIds: Array<Long>) : ArrayList<Boolean> {
         return wordRepository.isWordInQuizzes(wordId, quizIds)
     }
 
-    override fun deleteWordFromSelection(wordId: Long, selectionId: Long) {
+    override suspend fun deleteWordFromSelection(wordId: Long, selectionId: Long) {
         quizRepository.deleteWordFromQuiz(wordId, selectionId)
     }
-
-
 
 }

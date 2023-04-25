@@ -19,14 +19,14 @@ interface SearchResultContract {
     }
 
     interface Presenter: BasePresenter {
-        fun loadWords(searchString: String)
-        fun loadSelections()
-        fun isWordInQuiz(wordId: Long, quizId: Long): Boolean
-        fun createSelection(quizName: String): Long
-        fun addWordToSelection(wordId: Long, quizId: Long)
-        fun isWordInQuizzes(wordId: Long, quizIds: Array<Long>): ArrayList<Boolean>
-        fun deleteWordFromSelection(wordId: Long, selectionId: Long)
-        fun updateWordCheck(id: Long, check: Boolean)
+        suspend fun loadWords(searchString: String)
+        suspend fun loadSelections()
+        suspend fun isWordInQuiz(wordId: Long, quizId: Long): Boolean
+        suspend fun createSelection(quizName: String): Long
+        suspend fun addWordToSelection(wordId: Long, quizId: Long)
+        suspend fun isWordInQuizzes(wordId: Long, quizIds: Array<Long>): ArrayList<Boolean>
+        suspend fun deleteWordFromSelection(wordId: Long, selectionId: Long)
+        suspend fun updateWordCheck(id: Long, check: Boolean)
     }
 
 }
