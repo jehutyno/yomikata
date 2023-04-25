@@ -151,7 +151,7 @@ class WordDaoTest {
             RoomQuizWord(1, 4)
         )
         quizWords.forEach { wordDao.addQuizWord(it) }
-        val retrievedWordIds = wordDao.getWordsOfSizeRelatedTo(1, 1, 100)
+        val retrievedWordIds = wordDao.getWordsOfSizeRelatedTo(1, 1)
         assert (
             retrievedWordIds.toSet() == setOf(words[1]._id, words[3]._id)
         )
