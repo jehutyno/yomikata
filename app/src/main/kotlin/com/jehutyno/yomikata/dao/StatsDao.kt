@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
 import com.jehutyno.yomikata.repository.local.RoomStatEntry
+import kotlinx.coroutines.flow.Flow
 
 
 @Dao
@@ -13,10 +14,10 @@ interface StatsDao {
 
     @Query("SELECT * FROM stat_entry " +
            "WHERE date > :start AND date < :end")
-    suspend fun getStatEntriesOfTimeInterval(start: Long, end: Long): List<RoomStatEntry>
+    fun getStatEntriesOfTimeInterval(start: Long, end: Long): Flow<List<RoomStatEntry>>
 
     @Query("SELECT * FROM stat_entry")
-    suspend fun getAllStatEntries(): List<RoomStatEntry>
+    fun getAllStatEntries(): Flow<List<RoomStatEntry>>
 
     @Query("DELETE FROM stat_entry")
     suspend fun removeAllStats()

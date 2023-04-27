@@ -16,7 +16,6 @@ import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.databinding.FragmentContentBinding
 import com.jehutyno.yomikata.managers.VoicesManager
 import com.jehutyno.yomikata.model.Answer
-import com.jehutyno.yomikata.model.Quiz
 import com.jehutyno.yomikata.util.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -45,7 +44,6 @@ class AnswersFragment(private val di: DI) : Fragment(), AnswersContract.View, An
     private lateinit var presenter: AnswersContract.Presenter
     private lateinit var layoutManager: LinearLayoutManager
     private lateinit var adapter: AnswersAdapter
-    private lateinit var selections: List<Quiz>
 
     private var tts: TextToSpeech? = null
     private var ttsSupported: Int = TextToSpeech.LANG_NOT_SUPPORTED
@@ -94,20 +92,9 @@ class AnswersFragment(private val di: DI) : Fragment(), AnswersContract.View, An
         }
     }
 
-    override fun selectionLoaded(quizzes: List<Quiz>) {
-        selections = quizzes
-    }
-
-    override fun noSelections() {
-        selections = emptyList()
-    }
-
     override fun onResume() {
         super.onResume()
         presenter.start()
-        lifecycle.coroutineScope.launch {
-            presenter.loadSelections()
-        }
     }
 
     override fun displayAnswers() {
@@ -115,6 +102,7 @@ class AnswersFragment(private val di: DI) : Fragment(), AnswersContract.View, An
     }
 
     override fun onSelectionClick(position: Int, view: View) = runBlocking {
+        val selections = presenter.selections.value!!
         val popup = PopupMenu(requireActivity(), view)
         popup.menuInflater.inflate(R.menu.popup_selections, popup.menu)
         for ((i, selection) in selections.withIndex()) {
@@ -160,7 +148,6 @@ class AnswersFragment(private val di: DI) : Fragment(), AnswersContract.View, An
                 lifecycle.coroutineScope.launch {
                     val selectionId = presenter.createSelection(input.text.toString())
                     presenter.addWordToSelection(wordId, selectionId)
-                    presenter.loadSelections()
                 }
             }
             cancelButton()

@@ -2,6 +2,8 @@ package com.jehutyno.yomikata.screens.quizzes
 
 import android.content.Context
 import android.util.Log
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.asLiveData
 import androidx.preference.PreferenceManager
 import com.jehutyno.yomikata.model.Quiz
 import com.jehutyno.yomikata.model.StatAction
@@ -15,6 +17,7 @@ import com.jehutyno.yomikata.util.QuizType
 import mu.KLogging
 import java.util.*
 
+
 /**
  * Created by valentin on 29/09/2016.
  */
@@ -22,7 +25,8 @@ class QuizzesPresenter(
     private val context: Context,
     private val quizRepository: QuizRepository,
     private val statsRepository: StatsRepository,
-    private val quizzesView: QuizzesContract.View) : QuizzesContract.Presenter {
+    private val quizzesView: QuizzesContract.View,
+    category: Int) : QuizzesContract.Presenter {
 
     companion object : KLogging()
 
@@ -32,21 +36,12 @@ class QuizzesPresenter(
 
     private lateinit var selectedTypes: ArrayList<Int>
 
+    // define LiveData
+    // from Room
+    override val quizList : LiveData<List<Quiz>> = quizRepository.getQuiz(category).asLiveData()
+
     override fun start() {
         Log.i("YomikataZK", "Home Presenter start")
-    }
-
-    override suspend fun loadQuizzes(category: Int) {
-        quizRepository.getQuiz(category, object : QuizRepository.LoadQuizCallback {
-            override fun onQuizLoaded(quizzes: List<Quiz>) {
-                quizzesView.displayQuizzes(quizzes)
-            }
-
-            override fun onDataNotAvailable() {
-                quizzesView.displayNoData()
-            }
-
-        })
     }
 
     override suspend fun createQuiz(quizName: String) {

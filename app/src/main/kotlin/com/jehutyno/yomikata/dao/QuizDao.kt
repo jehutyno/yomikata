@@ -3,12 +3,13 @@ package com.jehutyno.yomikata.dao
 import androidx.room.*
 import com.jehutyno.yomikata.repository.local.RoomQuiz
 import com.jehutyno.yomikata.repository.local.RoomQuizWord
+import kotlinx.coroutines.flow.Flow
 
 
 @Dao
 interface QuizDao {
     @Query("SELECT * FROM quiz WHERE category = :category")
-    suspend fun getQuizzesOfCategory(category: Int): List<RoomQuiz>
+    fun getQuizzesOfCategory(category: Int): Flow<List<RoomQuiz>>
 
     @Query("SELECT * FROM quiz WHERE _id = :quizId LIMIT 1")
     suspend fun getQuizById(quizId: Long): RoomQuiz?

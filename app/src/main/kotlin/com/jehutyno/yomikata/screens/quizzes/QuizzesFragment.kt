@@ -40,7 +40,7 @@ class QuizzesFragment(di: DI) : Fragment(), QuizzesContract.View, QuizzesAdapter
 
     // kodein
     private val mpresenter: QuizzesContract.Presenter by di.newInstance {
-        QuizzesPresenter(instance(), instance(), instance(), this@QuizzesFragment)
+        QuizzesPresenter(instance(), instance(), instance(), this@QuizzesFragment, selectedCategory)
     }
 
     val REQUEST_TUTO: Int = 55
@@ -72,6 +72,7 @@ class QuizzesFragment(di: DI) : Fragment(), QuizzesContract.View, QuizzesAdapter
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // make sure selectedCategory is set before mpresenter is used to properly initialize with kodein
         selectedCategory = requireArguments().getInt(Extras.EXTRA_CATEGORY)
         adapter = QuizzesAdapter(requireActivity(), selectedCategory, this, selectedCategory == Categories.CATEGORY_SELECTIONS)
     }
@@ -80,18 +81,13 @@ class QuizzesFragment(di: DI) : Fragment(), QuizzesContract.View, QuizzesAdapter
         // use onStart so that viewPager2 can set everything up before the page becomes visible
         super.onStart()
         mpresenter.start()
-        lifecycle.coroutineScope.launch {
-            mpresenter.loadQuizzes(selectedCategory)
-        }
+        subscribeDisplayQuizzes()
     }
 
     override fun onResume() {
         super.onResume()
         val position = (binding.recyclerview.layoutManager as LinearLayoutManager).findFirstVisibleItemPosition()
         mpresenter.start()
-        lifecycle.coroutineScope.launch {
-            mpresenter.loadQuizzes(selectedCategory)
-        }
         seekBars.animateAll()    // call this after loadQuizzes, since seekBars variables are set there
         binding.recyclerview.scrollToPosition(position)
         tutos()
@@ -282,6 +278,13 @@ class QuizzesFragment(di: DI) : Fragment(), QuizzesContract.View, QuizzesAdapter
         mpresenter.launchQuizClick(strategy, title, selectedCategory)
     }
 
+    private fun subscribeDisplayQuizzes() {
+        mpresenter.quizList.observe(viewLifecycleOwner) {
+            displayQuizzes(it)
+            seekBars.animateAll()
+        }
+    }
+
     override fun displayQuizzes(quizzes: List<Quiz>) {
         binding.recyclerview.visibility
         adapter.replaceData(quizzes, selectedCategory == Categories.CATEGORY_SELECTIONS)
@@ -336,11 +339,6 @@ class QuizzesFragment(di: DI) : Fragment(), QuizzesContract.View, QuizzesAdapter
         binding.textHigh.text = 0.toString()
         animateSeekBar(binding.seekMaster, 0, 0, 0)
         binding.textMaster.text = 0.toString()
-    }
-
-    override fun onMenuItemClick(category: Int) = runBlocking {
-        selectedCategory = category
-        mpresenter.loadQuizzes(selectedCategory)
     }
 
     override fun onItemClick(position: Int) {
@@ -440,7 +438,6 @@ class QuizzesFragment(di: DI) : Fragment(), QuizzesContract.View, QuizzesAdapter
                 if (input.error == null) {
                     runBlocking {
                         mpresenter.createQuiz(input.text.toString())
-                        mpresenter.loadQuizzes(selectedCategory)
                     }
                 }
             }

@@ -3,6 +3,8 @@ package com.jehutyno.yomikata.repository.local
 import com.jehutyno.yomikata.dao.QuizDao
 import com.jehutyno.yomikata.model.Quiz
 import com.jehutyno.yomikata.repository.QuizRepository
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 
 
 /**
@@ -10,25 +12,14 @@ import com.jehutyno.yomikata.repository.QuizRepository
  */
 class QuizSource(private val quizDao: QuizDao) : QuizRepository {
 
-    override suspend fun getQuiz(category: Int, callback: QuizRepository.LoadQuizCallback) {
+    override fun getQuiz(category: Int) : Flow<List<Quiz>> {
         val roomQuizList = quizDao.getQuizzesOfCategory(category)
-        if (roomQuizList.isNotEmpty()) {
-            val quizList = roomQuizList.map {
+        val quizList = roomQuizList.map { list ->
+            list.map {
                 it.toQuiz()
             }
-            callback.onQuizLoaded(quizList)
-        } else {
-            callback.onDataNotAvailable()
         }
-    }
-
-    override suspend fun getQuiz(quizId: Long, callback: QuizRepository.GetQuizCallback) {
-        val roomQuiz = quizDao.getQuizById(quizId)
-        if (roomQuiz != null) {
-            callback.onQuizLoaded(roomQuiz.toQuiz())
-        } else {
-            callback.onDataNotAvailable()
-        }
+        return quizList
     }
 
     suspend fun getQuiz(quizId: Long): Quiz? {

@@ -7,6 +7,8 @@ import com.jehutyno.yomikata.model.Word
 import com.jehutyno.yomikata.repository.WordRepository
 import com.jehutyno.yomikata.util.HiraganaUtils
 import com.jehutyno.yomikata.util.QuizType
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 
 
 /**
@@ -18,33 +20,36 @@ class WordSource(private val wordDao: WordDao) : WordRepository {
         return wordDao.getAllWords().map { it.toWord() }
     }
 
-    private fun wordsCallback(
-        roomWordsList: List<RoomWords>,
-        callback: WordRepository.LoadWordsCallback
-    ) {
-        if (roomWordsList.isNotEmpty()) {
-            val wordsList = roomWordsList.map { it.toWord() }
-            callback.onWordsLoaded(wordsList)
-        } else {
-            callback.onDataNotAvailable()
+    override fun getWords(quizId: Long) : Flow<List<Word>> {
+        val roomWordsList = wordDao.getWords(quizId)
+        return roomWordsList.map { list ->
+            list.map {
+                it.toWord()
+            }
         }
     }
 
-    override suspend fun getWords(quizId: Long, callback: WordRepository.LoadWordsCallback) {
-        val roomWordsList = wordDao.getWords(quizId)
-        wordsCallback(roomWordsList, callback)
-    }
-
-    override suspend fun getWords(quizIds: LongArray, callback: WordRepository.LoadWordsCallback) {
+    override fun getWords(quizIds: LongArray) : Flow<List<Word>> {
         val roomWordsList = wordDao.getWords(quizIds)
-        wordsCallback(roomWordsList, callback)
+        return roomWordsList.map { list ->
+            list.map {
+                it.toWord()
+            }
+        }
     }
 
-    override suspend fun getWordsByLevel(
-        quizIds: LongArray,
-        level: Int,
-        callback: WordRepository.LoadWordsCallback
-    ) {
+    /**
+     * Get words by level
+     *
+     * @param quizIds Ids of the quiz of the returned words
+     * @param level The level of the word. If level = -1, words of any level are returned
+     * @return Flow of List of Words with the specified level in a quiz of the given quizIds
+     */
+    override fun getWordsByLevel(quizIds: LongArray, level: Int) : Flow<List<Word>> {
+        if (level == -1) {
+            return getWords(quizIds)
+        }
+
         val levelsArray =
             if (level == 3)
                 intArrayOf(level, level + 1)
@@ -52,7 +57,11 @@ class WordSource(private val wordDao: WordDao) : WordRepository {
                 intArrayOf(level)
 
         val roomWordsList = wordDao.getWordsByLevels(quizIds, levelsArray)
-        wordsCallback(roomWordsList, callback)
+        return roomWordsList.map { list ->
+            list.map {
+                it.toWord()
+            }
+        }
     }
 
     override suspend fun getWordsByRepetition(
@@ -109,10 +118,14 @@ class WordSource(private val wordDao: WordDao) : WordRepository {
         return roomWordsList.map { it.toWord() } as ArrayList<Word>
     }
 
-    override suspend fun searchWords(searchString: String, callback: WordRepository.LoadWordsCallback) {
+    override fun searchWords(searchString: String) : Flow<List<Word>> {
         val hiragana = HiraganaUtils.toHiragana(searchString)
         val roomWordsList = wordDao.searchWords(searchString, hiragana)
-        wordsCallback(roomWordsList, callback)
+        return roomWordsList.map { list ->
+            list.map {
+                it.toWord()
+            }
+        }
     }
 
     override suspend fun isWordInQuiz(wordId: Long, quizId: Long): Boolean {

@@ -15,6 +15,10 @@ import com.jehutyno.yomikata.repository.SentenceRepository
 import com.jehutyno.yomikata.repository.StatsRepository
 import com.jehutyno.yomikata.repository.WordRepository
 import com.jehutyno.yomikata.util.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.runBlocking
 import java.util.*
 
@@ -26,7 +30,8 @@ class QuizPresenter(
     val context: Context,
     private val quizRepository: QuizRepository, private val wordRepository: WordRepository, private val sentenceRepository: SentenceRepository,
     private val statsRepository: StatsRepository, private val quizView: QuizContract.View,
-    private var quizIds: LongArray, private var strategy: QuizStrategy, private val quizTypes: IntArray) : QuizContract.Presenter {
+    private var quizIds: LongArray, private var strategy: QuizStrategy, private val quizTypes: IntArray,
+    coroutineScope: CoroutineScope) : QuizContract.Presenter {
 
     private val defaultSharedPreferences: SharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
 
@@ -46,7 +51,13 @@ class QuizPresenter(
     private var errorMode = false
     private var quizEnded = false
 
+    override lateinit var words : StateFlow<List<Word>>
+
     init {
+        runBlocking {
+            words = wordRepository.getWordsByLevel(quizIds, getQuizLevelIfAny(strategy))
+                                    .stateIn(coroutineScope)
+        }
         isFuriDisplayed = defaultSharedPreferences.getBoolean(Prefs.FURI_DISPLAYED.pref, true)
         quizView.setPresenter(this)
     }
@@ -142,7 +153,7 @@ class QuizPresenter(
             QuizStrategy.STRAIGHT, QuizStrategy.SHUFFLE, QuizStrategy.LOW_STRAIGHT, QuizStrategy.MEDIUM_STRAIGHT,
             QuizStrategy.HIGH_STRAIGHT, QuizStrategy.MASTER_STRAIGHT, QuizStrategy.LOW_SHUFFLE,
             QuizStrategy.MEDIUM_SHUFFLE, QuizStrategy.HIGH_SHUFFLE, QuizStrategy.MASTER_SHUFFLE -> {
-                loadWords(quizIds)
+                loadWords()
             }
             QuizStrategy.PROGRESSIVE -> {
                 quizWords = getNextWords()
@@ -152,44 +163,28 @@ class QuizPresenter(
         }
     }
 
-    override suspend fun loadWords(quizIds: LongArray) {
-        val level = getQuizLevelIfAny()
-        if (level != -1) {
-            // Quiz by Level
-            wordRepository.getWordsByLevel(quizIds, level, object : WordRepository.LoadWordsCallback {
-                override fun onWordsLoaded(words: List<Word>) {
-                    quizWords = createWordTypePair(
-                        if (strategy == QuizStrategy.LOW_SHUFFLE
-                            || strategy == QuizStrategy.MEDIUM_SHUFFLE
-                            || strategy == QuizStrategy.HIGH_SHUFFLE
-                            || strategy == QuizStrategy.MASTER_SHUFFLE)
-                            shuffle(words.toMutableList()) else words)
-
-                    quizView.displayWords(quizWords)
-                    runBlocking {
-                        setUpNextQuiz()
-                    }
-                }
-
-                override fun onDataNotAvailable() {
-                    quizView.noWords()
-                }
-            })
+    override suspend fun loadWords() {
+        val words = words.first()
+        if (words.isEmpty()) {
+            quizView.noWords()
+            return
+        }
+        quizWords = if (getQuizLevelIfAny(strategy) != -1) {
+            createWordTypePair(
+                if (strategy == QuizStrategy.LOW_SHUFFLE || strategy == QuizStrategy.MEDIUM_SHUFFLE
+                    || strategy == QuizStrategy.HIGH_SHUFFLE || strategy == QuizStrategy.MASTER_SHUFFLE)
+                    shuffle(words.toMutableList()) else words
+            )
         } else {
-            // Quiz From Home Page
-            wordRepository.getWords(quizIds, object : WordRepository.LoadWordsCallback {
-                override fun onWordsLoaded(words: List<Word>) {
-                    quizWords = createWordTypePair(if (strategy == QuizStrategy.SHUFFLE) shuffle(words.toMutableList()) else words)
-                    quizView.displayWords(quizWords)
-                    runBlocking {
-                        setUpNextQuiz()
-                    }
-                }
+            createWordTypePair(
+                if (strategy == QuizStrategy.SHUFFLE)
+                    shuffle(words.toMutableList()) else words
+            )
+        }
 
-                override fun onDataNotAvailable() {
-                    quizView.noWords()
-                }
-            })
+        quizView.displayWords(quizWords)
+        runBlocking {
+            setUpNextQuiz()
         }
     }
 
@@ -329,16 +324,24 @@ class QuizPresenter(
         return randoms
     }
 
-    fun getQuizLevelIfAny(): Int {
-        return if (strategy == QuizStrategy.LOW_STRAIGHT) 0
-        else if (strategy == QuizStrategy.MEDIUM_STRAIGHT) 1
-        else if (strategy == QuizStrategy.HIGH_STRAIGHT) 2
-        else if (strategy == QuizStrategy.MASTER_STRAIGHT) 3
-        else if (strategy == QuizStrategy.LOW_SHUFFLE) 0
-        else if (strategy == QuizStrategy.MEDIUM_SHUFFLE) 1
-        else if (strategy == QuizStrategy.HIGH_SHUFFLE) 2
-        else if (strategy == QuizStrategy.MASTER_SHUFFLE) 3
-        else -1
+    /**
+     * Get quiz level if any
+     *
+     * @return The level of a strategy, or -1 if strategy does not correspond to any specific level
+     * such as QuizStrategy.SHUFFLE
+     */
+    private fun getQuizLevelIfAny(strategy: QuizStrategy): Int {
+        return when(strategy) {
+            QuizStrategy.LOW_STRAIGHT -> 0
+            QuizStrategy.MEDIUM_STRAIGHT -> 1
+            QuizStrategy.HIGH_STRAIGHT -> 2
+            QuizStrategy.MASTER_STRAIGHT -> 3
+            QuizStrategy.LOW_SHUFFLE -> 0
+            QuizStrategy.MEDIUM_SHUFFLE -> 1
+            QuizStrategy.HIGH_SHUFFLE -> 2
+            QuizStrategy.MASTER_SHUFFLE -> 3
+            else -> -1
+        }
     }
 
     fun createWordTypePair(words: List<Word>): List<Pair<Word, QuizType>> {
@@ -655,16 +658,16 @@ class QuizPresenter(
 
 
     override suspend fun loadSelections() {
-        quizRepository.getQuiz(Categories.CATEGORY_SELECTIONS, object : QuizRepository.LoadQuizCallback {
-            override fun onQuizLoaded(quizzes: List<Quiz>) {
-                quizView.selectionLoaded(quizzes)
-            }
-
-            override fun onDataNotAvailable() {
-                quizView.noSelections()
-            }
-
-        })
+//        quizRepository.getQuiz(Categories.CATEGORY_SELECTIONS, object : QuizRepository.LoadQuizCallback {
+//            override fun onQuizLoaded(quizzes: List<Quiz>) {
+//                quizView.selectionLoaded(quizzes)
+//            }
+//
+//            override fun onDataNotAvailable() {
+//                quizView.noSelections()
+//            }
+//
+//        })
     }
 
     override suspend fun createSelection(quizName: String): Long {

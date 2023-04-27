@@ -1,5 +1,6 @@
 package com.jehutyno.yomikata.screens.answers
 
+import androidx.lifecycle.LiveData
 import com.jehutyno.yomikata.BasePresenter
 import com.jehutyno.yomikata.BaseView
 import com.jehutyno.yomikata.model.Answer
@@ -15,13 +16,10 @@ interface AnswersContract {
 
     interface View: BaseView<Presenter> {
         fun displayAnswers()
-        fun selectionLoaded(quizzes: List<Quiz>)
-        fun noSelections()
     }
 
     interface Presenter: BasePresenter {
-
-        suspend fun loadSelections()
+        val selections: LiveData<List<Quiz>>
         suspend fun createSelection(quizName: String): Long
         suspend fun addWordToSelection(wordId: Long, quizId: Long)
         suspend fun isWordInQuiz(wordId: Long, quizId: Long): Boolean

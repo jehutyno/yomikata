@@ -28,6 +28,7 @@ import org.kodein.di.DI
 import splitties.alertdialog.appcompat.*
 import java.util.*
 
+
 /**
  * Created by valentin on 13/10/2016.
  */
@@ -56,6 +57,17 @@ class SearchResultFragment(private val di: DI) : Fragment(), SearchResultContrac
         setHasOptionsMenu(true)
     }
 
+    override fun onStart() {
+        super.onStart()
+
+        searchResultPresenter.words.observe(viewLifecycleOwner) {
+            if (it.isEmpty()) {
+                displayNoResults()
+            } else {
+                displayResults(it)
+            }
+        }
+    }
 
     override fun onResume() {
         super.onResume()
@@ -96,9 +108,7 @@ class SearchResultFragment(private val di: DI) : Fragment(), SearchResultContrac
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String): Boolean {
                 searchString = query.replace("'", " ").replace("\"", " ")
-                runBlocking {
-                    searchResultPresenter.loadWords(searchString)
-                }
+                searchResultPresenter.updateSearchString(searchString)
                 if (!searchView.isIconified) {
                     searchView.isIconified = true
                 }

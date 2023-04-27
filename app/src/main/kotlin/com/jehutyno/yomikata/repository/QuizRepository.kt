@@ -1,22 +1,14 @@
 package com.jehutyno.yomikata.repository
 
 import com.jehutyno.yomikata.model.Quiz
+import kotlinx.coroutines.flow.Flow
 
 
 /**
  * Created by valentin on 27/09/2016.
  */
 interface QuizRepository {
-    interface LoadQuizCallback {
-        fun onQuizLoaded(quizzes: List<Quiz>)
-        fun onDataNotAvailable()
-    }
-    interface GetQuizCallback {
-        fun onQuizLoaded(quiz: Quiz)
-        fun onDataNotAvailable()
-    }
-    suspend fun getQuiz(category: Int, callback: LoadQuizCallback)
-    suspend fun getQuiz(quizId: Long, callback: GetQuizCallback)
+    fun getQuiz(category: Int): Flow<List<Quiz>>
     suspend fun saveQuiz(quizName: String, category: Int) : Long
     suspend fun deleteAllQuiz()
     suspend fun deleteQuiz(quizId:Long)

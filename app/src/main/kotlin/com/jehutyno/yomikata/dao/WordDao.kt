@@ -4,6 +4,7 @@ import androidx.room.*
 import androidx.sqlite.db.SupportSQLiteQuery
 import com.jehutyno.yomikata.repository.local.RoomQuizWord
 import com.jehutyno.yomikata.repository.local.RoomWords
+import kotlinx.coroutines.flow.Flow
 
 
 @Dao
@@ -14,18 +15,18 @@ interface WordDao {
     @Query("SELECT words.* FROM words JOIN quiz_word " +
            "ON quiz_word.word_id = words._id " +
            "AND quiz_word.quiz_id = :quizId")
-    suspend fun getWords(quizId: Long): List<RoomWords>
+    fun getWords(quizId: Long): Flow<List<RoomWords>>
 
     @Query("SELECT words.* FROM words JOIN quiz_word " +
             "ON quiz_word.word_id = words._id " +
             "AND quiz_word.quiz_id IN (:quizIds)")
-    suspend fun getWords(quizIds: LongArray): List<RoomWords>
+    fun getWords(quizIds: LongArray): Flow<List<RoomWords>>
 
     @Query("SELECT words.* FROM words JOIN quiz_word " +
            "ON quiz_word.word_id = words._id " +
            "AND quiz_word.quiz_id IN (:quizIds) " +
            "AND words.level IN (:levels)")
-    suspend fun getWordsByLevels(quizIds: LongArray, levels: IntArray): List<RoomWords>
+    fun getWordsByLevels(quizIds: LongArray, levels: IntArray): Flow<List<RoomWords>>
 
     @Query("SELECT words.* FROM words JOIN quiz_word " +
            "ON quiz_word.word_id = words._id " +
@@ -66,7 +67,7 @@ interface WordDao {
            "OR japanese LIKE '%' || (:hiraganaString) || '%' " +
            "OR english LIKE '%' || (:searchString) || '%' " +
            "OR french LIKE '%' || (:searchString) || '%'")
-    suspend fun searchWords(searchString: String, hiraganaString: String): List<RoomWords>
+    fun searchWords(searchString: String, hiraganaString: String): Flow<List<RoomWords>>
 
     @Query("SELECT EXISTS ( " +
             "SELECT * FROM quiz_word " +

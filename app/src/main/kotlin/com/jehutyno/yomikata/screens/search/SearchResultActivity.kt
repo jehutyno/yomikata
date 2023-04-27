@@ -20,7 +20,9 @@ class SearchResultActivity : AppCompatActivity(), DIAware {
     private val subDI by DI.lazy {
         extend(di)
         import(searchResultPresenterModule(searchResultFragment))
-        bind<SearchResultContract.Presenter>() with provider { SearchResultPresenter(instance(), instance(), instance())}
+        bind<SearchResultContract.Presenter>() with provider {
+            SearchResultPresenter(instance(), instance(), instance())
+        }
     }
     private val trigger = DITrigger()
     @Suppress("unused")

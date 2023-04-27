@@ -1,5 +1,7 @@
 package com.jehutyno.yomikata.screens.answers
 
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.asLiveData
 import com.jehutyno.yomikata.model.Answer
 import com.jehutyno.yomikata.model.Quiz
 import com.jehutyno.yomikata.model.Sentence
@@ -10,6 +12,7 @@ import com.jehutyno.yomikata.repository.WordRepository
 import com.jehutyno.yomikata.util.Categories
 import java.util.*
 
+
 /**
  * Created by valentin on 25/10/2016.
  */
@@ -17,26 +20,17 @@ class AnswersPresenter(
     private val wordRepository: WordRepository,
     private val quizRepository: QuizRepository,
     private val sentenceRepository: SentenceRepository,
-    private val answersView: AnswersContract.View) : AnswersContract.Presenter {
+    answersView: AnswersContract.View) : AnswersContract.Presenter {
 
     init {
         answersView.setPresenter(this)
     }
 
+    // define LiveData
+    override val selections: LiveData<List<Quiz>> = quizRepository.getQuiz(Categories.CATEGORY_SELECTIONS).asLiveData()
+
+
     override fun start() {
-    }
-
-    override suspend fun loadSelections() {
-        quizRepository.getQuiz(Categories.CATEGORY_SELECTIONS, object: QuizRepository.LoadQuizCallback {
-            override fun onQuizLoaded(quizzes: List<Quiz>) {
-                answersView.selectionLoaded(quizzes)
-            }
-
-            override fun onDataNotAvailable() {
-                answersView.noSelections()
-            }
-
-        })
     }
 
     override suspend fun createSelection(quizName: String): Long {

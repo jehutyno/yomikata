@@ -1,9 +1,11 @@
 package com.jehutyno.yomikata.screens.quizzes
 
+import androidx.lifecycle.LiveData
 import com.jehutyno.yomikata.BasePresenter
 import com.jehutyno.yomikata.BaseView
 import com.jehutyno.yomikata.model.Quiz
 import com.jehutyno.yomikata.util.QuizStrategy
+
 
 /**
  * Created by valentin on 27/09/2016.
@@ -11,7 +13,6 @@ import com.jehutyno.yomikata.util.QuizStrategy
 interface QuizzesContract {
 
     interface View : BaseView<Presenter> {
-        fun onMenuItemClick(category: Int)
         fun displayQuizzes(quizzes: List<Quiz>)
         fun displayNoData()
         fun selectPronunciationQcm(isSelected: Boolean)
@@ -24,7 +25,7 @@ interface QuizzesContract {
     }
 
     interface Presenter : BasePresenter {
-        suspend fun loadQuizzes(category: Int)
+        val quizList : LiveData<List<Quiz>>
         suspend fun createQuiz(quizName: String)
         suspend fun updateQuizName(quizId: Long, quizName: String)
         suspend fun deleteQuiz(quizId: Long)

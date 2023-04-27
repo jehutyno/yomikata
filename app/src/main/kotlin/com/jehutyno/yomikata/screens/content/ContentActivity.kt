@@ -28,6 +28,7 @@ import com.jehutyno.yomikata.util.Extras.EXTRA_LEVEL
 import com.jehutyno.yomikata.util.Extras.EXTRA_QUIZ_IDS
 import com.jehutyno.yomikata.util.Extras.EXTRA_QUIZ_TITLE
 import io.github.inflationx.viewpump.ViewPumpContextWrapper
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import mu.KLogging
 import org.kodein.di.*
@@ -41,6 +42,7 @@ class ContentActivity : AppCompatActivity(), DIAware {
 
     private var quizIds = longArrayOf()
     private lateinit var selectedTypes: IntArray
+    private lateinit var quizzes: List<Quiz>
 
     private var category: Int = -1
     private var level: Int = -1
@@ -53,7 +55,7 @@ class ContentActivity : AppCompatActivity(), DIAware {
         extend(di)
         import(contentPresenterModule(contentLevelFragment!!))
         bind<ContentContract.Presenter>() with provider {
-            ContentPresenter(instance(), instance(), instance())
+            ContentPresenter(instance(), instance(), instance(), quizIds, level)
         }
     }
     private lateinit var statsRepository: StatsSource
@@ -99,63 +101,9 @@ class ContentActivity : AppCompatActivity(), DIAware {
             setDisplayHomeAsUpEnabled(true)
         }
 
-        val quizSource: QuizRepository by instance()
-
-        val loadQuizCallback = object : QuizRepository.LoadQuizCallback {
-            override fun onQuizLoaded(quizzes: List<Quiz>) {
-                if (level > -1) {
-                    title = when (level) {
-                        0 -> getString(R.string.red_review)
-                        1 -> getString(R.string.orange_review)
-                        2 -> getString(R.string.yellow_review)
-                        else -> getString(R.string.green_review)
-                    }
-                    binding.pagerContent.visibility = GONE
-                    if (savedInstanceState != null) {
-                        //Restore the fragment's instance
-                        contentLevelFragment = supportFragmentManager.getFragment(savedInstanceState, "contentLevelFragment") as ContentFragment
-                    } else {
-                        val ids = mutableListOf<Long>()
-                        quizzes.forEach { ids.add(it.id) }
-                        val bundle = Bundle()
-                        bundle.putLongArray(EXTRA_QUIZ_IDS, ids.toLongArray())
-                        bundle.putString(EXTRA_QUIZ_TITLE, title as String)
-                        bundle.putInt(EXTRA_LEVEL, level)
-                        contentLevelFragment = ContentFragment(di)
-                        contentLevelFragment!!.arguments = bundle
-                        quizIds = ids.toLongArray()
-                    }
-                    addOrReplaceFragment(R.id.fragment_container, contentLevelFragment!!)
-                    // contentLevelFragment is set now, so safely pull trigger
-                    trigger.trigger()
-
-                } else {
-                    contentPagerAdapter = ContentPagerAdapter(this@ContentActivity, quizzes, di)
-                    binding.pagerContent.adapter = contentPagerAdapter
-                    val quizTitle = quizzes[quizPosition].getName().split("%")[0]
-                    quizIds = longArrayOf(quizzes[quizPosition].id)
-                    title = quizTitle
-                    binding.pagerContent.currentItem = quizPosition
-                    binding.pagerContent.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
-
-                        override fun onPageSelected(position: Int) {
-                            val newQuizTitle = quizzes[position].getName().split("%")[0]
-                            title = newQuizTitle
-                            quizIds = longArrayOf(quizzes[position].id)
-                        }
-
-                    })
-                }
-            }
-
-            override fun onDataNotAvailable() {
-
-            }
-
-        }
-
         lifecycle.coroutineScope.launch {
-            quizSource.getQuiz(category, loadQuizCallback)
+            getQuizzes()
+            launchFragment(savedInstanceState, quizPosition)
         }
 
 
@@ -206,6 +154,73 @@ class ContentActivity : AppCompatActivity(), DIAware {
             onBackPressedDispatcher.addCallback(this) {
                 collapseOrQuit()
             }
+        }
+
+    }
+
+    private suspend fun getQuizzes() {
+        val quizSource = di.direct.instance<QuizRepository>()
+        quizzes = quizSource.getQuiz(category).first()
+    }
+
+    /**
+     * Launch fragment
+     *
+     * Launches a fragment depending on the level and category that is set.
+     *
+     * There are two types of fragments that can be loaded:
+     * - level fragment (contentLevelFragment) which corresponds to clicking on one of the
+     * per-level sorted selections (through the little arrow buttons in the statsDisplay)
+     * - normal fragment which corresponds to simply clicking on a selection. This type
+     * of fragment is loaded through a viewPager to allow scrolling through the different selections.
+     *
+     * @param savedInstanceState Used to retrieve a previously stored (level) fragment
+     * @param quizPosition The position of the quiz selections in the list in case a normal
+     * selection is loaded (non-level selection)
+     */
+    private fun launchFragment(savedInstanceState: Bundle?, quizPosition: Int) {
+        if (level > -1) {
+            title = when (level) {
+                0 -> getString(R.string.red_review)
+                1 -> getString(R.string.orange_review)
+                2 -> getString(R.string.yellow_review)
+                else -> getString(R.string.green_review)
+            }
+            binding.pagerContent.visibility = GONE
+            if (savedInstanceState != null) {
+                //Restore the fragment's instance
+                contentLevelFragment = supportFragmentManager.getFragment(savedInstanceState, "contentLevelFragment") as ContentFragment
+            } else {
+                val ids = mutableListOf<Long>()
+                quizzes.forEach { ids.add(it.id) }
+                val bundle = Bundle()
+                bundle.putLongArray(EXTRA_QUIZ_IDS, ids.toLongArray())
+                bundle.putString(EXTRA_QUIZ_TITLE, title as String)
+                bundle.putInt(EXTRA_LEVEL, level)
+                contentLevelFragment = ContentFragment(di)
+                contentLevelFragment!!.arguments = bundle
+                quizIds = ids.toLongArray()
+            }
+            addOrReplaceFragment(R.id.fragment_container, contentLevelFragment!!)
+            // contentLevelFragment is set now, so safely pull trigger
+            trigger.trigger()
+
+        } else {
+            contentPagerAdapter = ContentPagerAdapter(this@ContentActivity, quizzes, di)
+            binding.pagerContent.adapter = contentPagerAdapter
+            val quizTitle = quizzes[quizPosition].getName().split("%")[0]
+            quizIds = longArrayOf(quizzes[quizPosition].id)
+            title = quizTitle
+            binding.pagerContent.currentItem = quizPosition
+            binding.pagerContent.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
+
+                override fun onPageSelected(position: Int) {
+                    val newQuizTitle = quizzes[position].getName().split("%")[0]
+                    title = newQuizTitle
+                    quizIds = longArrayOf(quizzes[position].id)
+                }
+
+            })
         }
 
     }

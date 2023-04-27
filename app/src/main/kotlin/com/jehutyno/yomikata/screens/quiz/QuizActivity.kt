@@ -10,6 +10,7 @@ import android.view.KeyEvent
 import android.view.MenuItem
 import android.window.OnBackInvokedDispatcher
 import androidx.activity.addCallback
+import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.util.Extras
@@ -35,7 +36,8 @@ class QuizActivity : AppCompatActivity(), DIAware {
         extend(di)
         import(quizPresenterModule(quizFragment))
         bind<QuizContract.Presenter>() with provider {
-            QuizPresenter(instance(), instance(), instance(), instance(), instance(), instance(), quizIds, quizStrategy, quizTypes)
+            QuizPresenter(instance(), instance(), instance(), instance(), instance(), instance(),
+                            quizIds, quizStrategy, quizTypes, lifecycleScope)
         }
     }
     // trigger when quizFragment is set (see subDI)

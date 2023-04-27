@@ -13,11 +13,11 @@ import android.widget.ImageView
 import androidx.appcompat.widget.PopupMenu
 import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.coroutineScope
+import androidx.lifecycle.lifecycleScope
 import androidx.viewpager.widget.ViewPager
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.managers.VoicesManager
 import com.jehutyno.yomikata.model.KanjiSoloRadical
-import com.jehutyno.yomikata.model.Quiz
 import com.jehutyno.yomikata.model.Sentence
 import com.jehutyno.yomikata.model.Word
 import com.jehutyno.yomikata.util.*
@@ -39,7 +39,10 @@ class WordDetailDialogFragment(private val di: DI) : DialogFragment(), WordContr
         extend(di)
         import(wordPresenterModule(this@WordDetailDialogFragment))
 //            import(voicesManagerModule(activity))
-        bind<WordContract.Presenter>() with provider { WordPresenter(instance(), instance(), instance(), instance(), instance()) }
+        bind<WordContract.Presenter>() with provider {
+            WordPresenter(instance(), instance(), instance(), instance(), instance(),
+                            lifecycleScope, quizIds, level, searchString)
+        }
         bind<VoicesManager>() with singleton { VoicesManager(requireActivity()) }
     }
     @Suppress("unused")
@@ -55,7 +58,6 @@ class WordDetailDialogFragment(private val di: DI) : DialogFragment(), WordContr
     private var searchString: String = ""
     private var quizTitle: String? = ""
     private var level: Int = -1
-    private lateinit var selections: List<Quiz>
     private lateinit var viewPager: ViewPager
     private lateinit var arrowLeft: ImageView
     private lateinit var arrowRight: ImageView
@@ -145,17 +147,18 @@ class WordDetailDialogFragment(private val di: DI) : DialogFragment(), WordContr
     override fun onResume() {
         super.onResume()
         wordPresenter.start()
-        if (quizIds != null && quizIds!!.isNotEmpty()) {
-            lifecycle.coroutineScope.launch {
-                wordPresenter.loadWords(quizIds!!, level)
+        wordPresenter.words?.let {
+            it.observe(this) { words ->
+                lifecycle.coroutineScope.launch {
+                    displayWords(wordPresenter.getWordKanjiSoloRadicalSentenceList(words))
+                }
             }
         }
-        else if (searchString.isNotEmpty())
-            (wordPresenter.searchWords(searchString))
-        else if (wordId != -1L)
-            wordPresenter.loadWord(wordId)
-        lifecycle.coroutineScope.launch {
-            wordPresenter.loadSelections()
+        if (wordPresenter.words == null) {
+            lifecycle.coroutineScope.launch {
+                val oneWordList = listOf(wordPresenter.getWord(wordId))
+                displayWords(wordPresenter.getWordKanjiSoloRadicalSentenceList(oneWordList))
+            }
         }
     }
 
@@ -171,6 +174,7 @@ class WordDetailDialogFragment(private val di: DI) : DialogFragment(), WordContr
     }
 
     override fun onSelectionClick(view: View, position: Int) = runBlocking {
+        val selections = wordPresenter.getSelections()
         val popup = PopupMenu(requireActivity(), view)
         popup.menuInflater.inflate(R.menu.popup_selections, popup.menu)
         for ((i, selection) in selections.withIndex()) {
@@ -214,7 +218,6 @@ class WordDetailDialogFragment(private val di: DI) : DialogFragment(), WordContr
                 lifecycle.coroutineScope.launch {
                     val selectionId = wordPresenter.createSelection(input.text.toString())
                     wordPresenter.addWordToSelection(wordId, selectionId)
-                    wordPresenter.loadSelections()
                 }
             }
             cancelButton { }
@@ -261,14 +264,6 @@ class WordDetailDialogFragment(private val di: DI) : DialogFragment(), WordContr
                 adapter.notifyDataSetChanged()
             }
         }
-    }
-
-    override fun selectionLoaded(quizzes: List<Quiz>) {
-        selections = quizzes
-    }
-
-    override fun noSelections() {
-        selections = emptyList()
     }
 
     override fun onDismiss(dialog: DialogInterface) {

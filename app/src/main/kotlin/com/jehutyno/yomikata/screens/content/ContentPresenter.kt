@@ -1,15 +1,15 @@
 package com.jehutyno.yomikata.screens.content
 
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.asLiveData
 import com.jehutyno.yomikata.model.Quiz
 import com.jehutyno.yomikata.model.Word
 import com.jehutyno.yomikata.repository.QuizRepository
 import com.jehutyno.yomikata.repository.WordRepository
 import com.jehutyno.yomikata.util.Categories
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import mu.KLogging
 import java.util.*
+
 
 /**
  * Created by valentin on 29/09/2016.
@@ -17,7 +17,8 @@ import java.util.*
 class ContentPresenter(
     private val wordRepository: WordRepository,
     private val quizRepository: QuizRepository,
-    private val contentView: ContentContract.View) : ContentContract.Presenter {
+    contentView: ContentContract.View,
+    quizIds : LongArray, level : Int) : ContentContract.Presenter {
 
     companion object : KLogging()
 
@@ -25,34 +26,12 @@ class ContentPresenter(
         contentView.setPresenter(this)
     }
 
+    // define LiveData
+    override val words: LiveData<List<Word>> = wordRepository.getWordsByLevel(quizIds, level).asLiveData()
+    override val selections: LiveData<List<Quiz>> = quizRepository.getQuiz(Categories.CATEGORY_SELECTIONS).asLiveData()
+
     override fun start() {
         logger.info("Content presenter start")
-    }
-
-    override fun loadWords(quizIds: LongArray, level: Int) = CoroutineScope(Dispatchers.Main).launch {
-        if (level > -1) {
-            wordRepository.getWordsByLevel(quizIds, level, object : WordRepository.LoadWordsCallback {
-                override fun onWordsLoaded(words: List<Word>) {
-                    contentView.displayWords(words)
-                }
-
-                override fun onDataNotAvailable() {
-                    contentView.displayWords(emptyList())
-                }
-
-            })
-        } else {
-            wordRepository.getWords(quizIds, object : WordRepository.LoadWordsCallback {
-                override fun onWordsLoaded(words: List<Word>) {
-                    contentView.displayWords(words)
-                }
-
-                override fun onDataNotAvailable() {
-                    contentView.displayWords(emptyList())
-                }
-
-            })
-        }
     }
 
     override suspend fun countQuiz(ids: LongArray): Int {
@@ -77,19 +56,6 @@ class ContentPresenter(
 
     override suspend fun updateWordCheck(id: Long, check: Boolean) {
         wordRepository.updateWordSelected(id, check)
-    }
-
-    override suspend fun loadSelections() {
-        quizRepository.getQuiz(Categories.CATEGORY_SELECTIONS, object: QuizRepository.LoadQuizCallback {
-            override fun onQuizLoaded(quizzes: List<Quiz>) {
-                contentView.selectionLoaded(quizzes)
-            }
-
-            override fun onDataNotAvailable() {
-                contentView.noSelections()
-            }
-
-        })
     }
 
     override suspend fun isWordInQuiz(wordId: Long, quizId: Long) : Boolean {

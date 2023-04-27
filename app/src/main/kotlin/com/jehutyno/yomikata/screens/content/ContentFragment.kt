@@ -1,6 +1,5 @@
 package com.jehutyno.yomikata.screens.content
 
-import android.content.DialogInterface
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.GridLayoutManager
@@ -32,7 +31,7 @@ import java.util.*
 /**
  * Created by valentin on 30/09/2016.
  */
-class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, WordsAdapter.Callback, DialogInterface.OnDismissListener {
+class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, WordsAdapter.Callback {
 
     private var mpresenter: ContentContract.Presenter? = null
     private lateinit var adapter: WordsAdapter
@@ -79,12 +78,20 @@ class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, Wo
     override fun onStart() {
         super.onStart()
         mpresenter?.start()
-        mpresenter?.loadWords(quizIds, level)
-        lifecycle.coroutineScope.launch {
-            mpresenter?.loadSelections()
+        mpresenter?.words?.observe(viewLifecycleOwner) {
+            displayWords(it)
+        }
+        mpresenter?.selections?.observe(viewLifecycleOwner) {
+            if (it.isEmpty()) {
+                noSelections()
+            } else {
+                selectionLoaded(it)
+            }
         }
 
-        displayStats()
+        runBlocking {
+            displayStats()
+        }
     }
 
     override fun onResume() {
@@ -94,14 +101,12 @@ class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, Wo
             else (binding.recyclerviewContent.layoutManager as GridLayoutManager).findFirstVisibleItemPosition()
         lastPosition = -1
         mpresenter?.start()
-        mpresenter?.loadWords(quizIds, level)
         binding.recyclerviewContent.scrollToPosition(position)
-        lifecycle.coroutineScope.launch {
-            mpresenter?.loadSelections()
-        }
 
-        displayStats()
-        seekBars.animateAll()
+        lifecycle.coroutineScope.launch {
+            displayStats()
+            seekBars.animateAll()
+        }
     }
 
     override fun onPause() {
@@ -117,7 +122,7 @@ class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, Wo
         binding.seekMaster.progress = 0
     }
 
-    override fun displayStats() = lifecycle.coroutineScope.launch {
+    override suspend fun displayStats() {
         seekBars.count = mpresenter!!.countQuiz(quizIds)
         seekBars.low = mpresenter!!.countLow(quizIds)
         seekBars.medium = mpresenter!!.countMedium(quizIds)
@@ -144,7 +149,8 @@ class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, Wo
         super.onViewCreated(view, savedInstanceState)
 
         if (mpresenter == null) {
-            mpresenter = ContentPresenter(di.direct.instance(), di.direct.instance(), this@ContentFragment)
+            mpresenter = ContentPresenter(di.direct.instance(), di.direct.instance(),
+                this@ContentFragment, quizIds, level)
         }
 
         binding.recyclerviewContent.let {
@@ -181,11 +187,6 @@ class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, Wo
 
     override fun onCheckChange(position: Int, check: Boolean) = runBlocking {
         mpresenter!!.updateWordCheck(adapter.items[position].id, check)
-    }
-
-    override fun onDismiss(dialog: DialogInterface?) {
-        mpresenter!!.loadWords(quizIds, level)
-        displayStats()
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
@@ -301,7 +302,6 @@ class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, Wo
                             selectedWords.forEach {
                                 mpresenter!!.addWordToSelection(it.id, selectionId)
                             }
-                            mpresenter!!.loadSelections()
                         }
                     }
                 }

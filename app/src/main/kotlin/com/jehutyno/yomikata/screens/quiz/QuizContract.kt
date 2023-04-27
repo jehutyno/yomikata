@@ -8,6 +8,7 @@ import com.jehutyno.yomikata.model.Quiz
 import com.jehutyno.yomikata.model.Sentence
 import com.jehutyno.yomikata.model.Word
 import com.jehutyno.yomikata.util.QuizType
+import kotlinx.coroutines.flow.StateFlow
 
 
 /**
@@ -56,6 +57,8 @@ interface QuizContract {
     }
 
     interface Presenter : BasePresenter {
+        val words : StateFlow<List<Word>>
+        suspend fun loadWords()
         suspend fun createSelection(quizName: String): Long
         suspend fun addWordToSelection(wordId: Long, quizId: Long)
         suspend fun loadSelections()
@@ -68,7 +71,6 @@ interface QuizContract {
         suspend fun getNextWords(): List<Pair<Word, QuizType>>
         suspend fun getWord(id: Long): Word?
         suspend fun initQuiz()
-        suspend fun loadWords(quizIds: LongArray)
         suspend fun updateRepetitions(id: Long, level: Int, points: Int, result: Boolean)
         suspend fun decreaseAllRepetitions()
         suspend fun saveAnswerResultStat(word: Word, result: Boolean)

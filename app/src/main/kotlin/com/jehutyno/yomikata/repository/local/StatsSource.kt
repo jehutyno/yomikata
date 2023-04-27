@@ -4,10 +4,11 @@ import com.jehutyno.yomikata.dao.StatsDao
 import com.jehutyno.yomikata.model.StatAction
 import com.jehutyno.yomikata.model.StatEntry
 import com.jehutyno.yomikata.model.StatResult
-import com.jehutyno.yomikata.model.StatTime
 import com.jehutyno.yomikata.repository.StatsRepository
 import com.jehutyno.yomikata.util.getStartEndOFWeek
 import com.jehutyno.yomikata.util.getStartEndOfMonth
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import java.util.*
 
 
@@ -24,11 +25,14 @@ class StatsSource(private val statsDao: StatsDao) : StatsRepository {
         statsDao.addStatEntry(RoomStatEntry.from(entry))
     }
 
-    override suspend fun getStatEntriesOfTimeInterval(start: Long, end: Long): List<StatEntry> {
-        return statsDao.getStatEntriesOfTimeInterval(start, end).map { it.toStatEntry() }
+    override fun getStatEntriesOfTimeInterval(start: Long, end: Long): Flow<List<StatEntry>> {
+        return statsDao.getStatEntriesOfTimeInterval(start, end).map { list ->
+            list.map { it.toStatEntry() }
+        }
     }
 
-    override suspend fun getTodayStatEntries(today: Calendar, callback: StatsRepository.LoadStatsCallback) {
+    override fun getTodayStatEntries() : Flow<List<StatEntry>> {
+        val today = Calendar.getInstance()
         today.set(Calendar.HOUR_OF_DAY, 0)
         today.set(Calendar.MINUTE, 0)
         val start = today.timeInMillis
@@ -37,25 +41,25 @@ class StatsSource(private val statsDao: StatsDao) : StatsRepository {
         today.set(Calendar.MINUTE, 59)
         val end = today.timeInMillis
 
-        val statEntryList = getStatEntriesOfTimeInterval(start, end)
-        callback.onStatsLoaded(StatTime.TODAY, statEntryList)
+        return getStatEntriesOfTimeInterval(start, end)
     }
 
-    override suspend fun getThisWeekStatEntries(today: Calendar, callback: StatsRepository.LoadStatsCallback) {
+    override fun getThisWeekStatEntries() : Flow<List<StatEntry>> {
+        val today = Calendar.getInstance()
         val startEnd = getStartEndOFWeek(today)
-        val statEntryList = getStatEntriesOfTimeInterval(startEnd[0], startEnd[1])
-        callback.onStatsLoaded(StatTime.THIS_WEEK, statEntryList)
+        return getStatEntriesOfTimeInterval(startEnd[0], startEnd[1])
     }
 
-    override suspend fun getThisMonthStatEntries(today: Calendar, callback: StatsRepository.LoadStatsCallback) {
+    override fun getThisMonthStatEntries() : Flow<List<StatEntry>> {
+        val today = Calendar.getInstance()
         val startEnd = getStartEndOfMonth(today)
-        val statEntryList = getStatEntriesOfTimeInterval(startEnd[0], startEnd[1])
-        callback.onStatsLoaded(StatTime.THIS_MONTH, statEntryList)
+        return getStatEntriesOfTimeInterval(startEnd[0], startEnd[1])
     }
 
-    override suspend fun getAllStatEntries(callback: StatsRepository.LoadStatsCallback) {
-        val statEntryList = statsDao.getAllStatEntries().map { it.toStatEntry() }
-        callback.onStatsLoaded(StatTime.ALL, statEntryList)
+    override fun getAllStatEntries() : Flow<List<StatEntry>> {
+        return statsDao.getAllStatEntries().map { list ->
+            list.map { it.toStatEntry() }
+        }
     }
 
     override suspend fun removeAllStats() {
