@@ -7,10 +7,10 @@ import androidx.test.filters.MediumTest
 import com.jehutyno.yomikata.repository.local.RoomQuizWord
 import com.jehutyno.yomikata.repository.local.RoomWords
 import com.jehutyno.yomikata.repository.local.YomikataDataBase
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
-import org.junit.Assert.*
-
 import org.junit.After
+import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -48,7 +48,7 @@ class WordDaoTest {
             longArrayOf(1), longArrayOf(1, 2), longArrayOf(55, 89)
         )
         for (quizIds in quizIdsTest) {
-            val retrievedRoomWords = wordDao.getWords(quizIds)
+            val retrievedRoomWords = wordDao.getWords(quizIds).first()
             val actualWords = sample.getWords(quizIds)
             assert (
                 retrievedRoomWords.toSet() == actualWords.toSet()
@@ -67,7 +67,7 @@ class WordDaoTest {
         for (quizIdsAndLevels in quizIdsAndLevelsTest) {
             val quizIds = quizIdsAndLevels.first
             val levels = quizIdsAndLevels.second
-            val retrievedRoomWords = wordDao.getWordsByLevels(quizIds, levels)
+            val retrievedRoomWords = wordDao.getWordsByLevels(quizIds, levels).first()
             val actualWords = sample.getWordsByLevels(quizIds, levels)
             assert (
                 retrievedRoomWords.toSet() == actualWords.toSet()
@@ -170,14 +170,14 @@ class WordDaoTest {
             2, 0, null)
         val weird = "OZFEOZ3°OK?ZEVK°9K9jéPAODFAFPO?3O233"  // string that should not be found in db
         wordDao.addWord(sample)
-        assert ( wordDao.searchWords("met", weird) == listOf(sample) )
-        assert ( wordDao.searchWords("metal", weird) == listOf(sample) )
-        assert ( wordDao.searchWords(weird, "きん") == listOf(sample) )
-        assert ( wordDao.searchWords("vendre", "まさか") == listOf(sample) )
+        assert ( wordDao.searchWords("met", weird).first() == listOf(sample) )
+        assert ( wordDao.searchWords("metal", weird).first() == listOf(sample) )
+        assert ( wordDao.searchWords(weird, "きん").first() == listOf(sample) )
+        assert ( wordDao.searchWords("vendre", "まさか").first() == listOf(sample) )
 
-        assert ( wordDao.searchWords("vendredit", weird).isEmpty() )
-        assert ( wordDao.searchWords("metalic", weird).isEmpty() )
-        assert ( wordDao.searchWords(weird, "まさか").isEmpty() )
+        assert ( wordDao.searchWords("vendredit", weird).first().isEmpty() )
+        assert ( wordDao.searchWords("metalic", weird).first().isEmpty() )
+        assert ( wordDao.searchWords(weird, "まさか").first().isEmpty() )
 
     }
 

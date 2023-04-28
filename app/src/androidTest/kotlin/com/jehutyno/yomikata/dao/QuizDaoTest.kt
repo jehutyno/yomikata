@@ -5,10 +5,10 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.jehutyno.yomikata.repository.local.*
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
-import org.junit.Assert.*
-
 import org.junit.After
+import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -46,7 +46,7 @@ class QuizDaoTest {
         }
         val sampleByCategory = sampleRoomQuizWithId.groupBy { it.category }
         for (category in sampleByCategory.keys) {
-            val retrievedRoomQuizzes = quizDao.getQuizzesOfCategory(category)
+            val retrievedRoomQuizzes = quizDao.getQuizzesOfCategory(category).first()
             assert (
                 sampleByCategory[category]!!.toSet() == retrievedRoomQuizzes.toSet()
             )
@@ -55,7 +55,7 @@ class QuizDaoTest {
         if (weirdCategory in sampleByCategory.keys)
             return@runBlocking
         assert (
-            quizDao.getQuizzesOfCategory(weirdCategory).isEmpty()
+            quizDao.getQuizzesOfCategory(weirdCategory).first().isEmpty()
         )
     }
 

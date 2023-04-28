@@ -48,7 +48,6 @@ abstract class YomikataDataBase : RoomDatabase() {
                             DATABASE_FILE_NAME
                         )
                             .createFromAsset(DATABASE_FILE_NAME)
-                            .allowMainThreadQueries()   // TODO: remove this after using coroutines/livedata
                             .addMigrations(
                                 *OldMigrations.getOldMigrations(),
                                 OldMigrations.MIGRATION_12_13(context),

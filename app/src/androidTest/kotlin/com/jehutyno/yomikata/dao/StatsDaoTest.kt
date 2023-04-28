@@ -6,10 +6,10 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SmallTest
 import com.jehutyno.yomikata.repository.local.RoomStatEntry
 import com.jehutyno.yomikata.repository.local.YomikataDataBase
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
-import org.junit.Assert.*
-
 import org.junit.After
+import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -42,7 +42,7 @@ class StatsDaoTest {
         for (roomStatEntry in sampleStatEntries) {
             val id = statsDao.addStatEntry(roomStatEntry)
             assert (
-                statsDao.getAllStatEntries().contains(roomStatEntry.copy(_id = id))
+                statsDao.getAllStatEntries().first().contains(roomStatEntry.copy(_id = id))
             )
         }
     }
@@ -60,7 +60,7 @@ class StatsDaoTest {
         for (sample in samples) {
             statsDao.addStatEntry(sample)
         }
-        val retrievedEntries = statsDao.getStatEntriesOfTimeInterval(start, end)
+        val retrievedEntries = statsDao.getStatEntriesOfTimeInterval(start, end).first()
         for (sample in samples) {
             if (sample.date in (start + 1) until end) {
                 assert ( retrievedEntries.contains(sample) )
@@ -77,7 +77,7 @@ class StatsDaoTest {
             statsDao.addStatEntry(sample)
         }
         statsDao.removeAllStats()
-        assert ( statsDao.getAllStatEntries().isEmpty() )
+        assert ( statsDao.getAllStatEntries().first().isEmpty() )
     }
 
 }
