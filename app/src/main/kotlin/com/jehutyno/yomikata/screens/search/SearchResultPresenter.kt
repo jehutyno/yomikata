@@ -12,9 +12,8 @@ import com.jehutyno.yomikata.util.Categories
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.transform
 import kotlinx.coroutines.launch
 import mu.KLogging
 
@@ -42,10 +41,10 @@ class SearchResultPresenter(
     // LiveData
     private val searchString : MutableLiveData<String> by lazy { MutableLiveData<String>() }
     // Room
-    override val words : LiveData<List<Word>> = searchString.asFlow().transform<String, List<Word>> {
-        emit(wordRepository.searchWords(it).first())
+    @kotlinx.coroutines.ExperimentalCoroutinesApi
+    override val words : LiveData<List<Word>> = searchString.asFlow().flatMapLatest{
+        wordRepository.searchWords(it)
     }.asLiveData()
-
     override fun start() {
 
     }
