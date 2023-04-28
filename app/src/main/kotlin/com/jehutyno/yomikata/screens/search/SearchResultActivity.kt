@@ -2,9 +2,10 @@ package com.jehutyno.yomikata.screens.search
 
 import android.content.pm.ActivityInfo
 import android.os.Bundle
+import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
-import android.view.MenuItem
+import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.util.Prefs
@@ -21,7 +22,7 @@ class SearchResultActivity : AppCompatActivity(), DIAware {
         extend(di)
         import(searchResultPresenterModule(searchResultFragment))
         bind<SearchResultContract.Presenter>() with provider {
-            SearchResultPresenter(instance(), instance(), instance())
+            SearchResultPresenter(instance(), instance(), instance(), lifecycleScope)
         }
     }
     private val trigger = DITrigger()

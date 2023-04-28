@@ -14,7 +14,6 @@ import android.widget.Toast
 import androidx.appcompat.widget.PopupMenu
 import androidx.appcompat.widget.SearchView
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.jehutyno.yomikata.R
@@ -44,7 +43,6 @@ class SearchResultFragment(private val di: DI) : Fragment(), SearchResultContrac
     private lateinit var adapter: WordsAdapter
     private lateinit var layoutManager: LinearLayoutManager
     private var searchString = ""
-    private lateinit var selections: List<Quiz>
 
     // View Binding
     private var _binding: FragmentContentBinding? = null
@@ -79,9 +77,6 @@ class SearchResultFragment(private val di: DI) : Fragment(), SearchResultContrac
     override fun onResume() {
         super.onResume()
         searchResultPresenter.start()
-        lifecycleScope.launch {
-            searchResultPresenter.loadSelections()
-        }
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -182,6 +177,10 @@ class SearchResultFragment(private val di: DI) : Fragment(), SearchResultContrac
         private val UNSELECT_ALL = 4
 
         override fun onActionItemClicked(mode: ActionMode, item: MenuItem): Boolean {
+            val selections: List<Quiz>
+            runBlocking {
+                selections = searchResultPresenter.getSelections()
+            }
             when (item.itemId) {
                 ADD_TO_SELECTIONS -> {
                     val popup = PopupMenu(activity!!, activity!!.findViewById(item.itemId))
@@ -264,7 +263,6 @@ class SearchResultFragment(private val di: DI) : Fragment(), SearchResultContrac
                             selectedWords.forEach {
                                 searchResultPresenter.addWordToSelection(it.id, selectionId)
                             }
-                            searchResultPresenter.loadSelections()
                         }
                     }
                 }
@@ -290,14 +288,6 @@ class SearchResultFragment(private val di: DI) : Fragment(), SearchResultContrac
             adapter.checkMode = false
             adapter.notifyItemRangeChanged(0, adapter.items.size)
         }
-    }
-
-    override fun selectionLoaded(quizzes: List<Quiz>) {
-        selections = quizzes
-    }
-
-    override fun noSelections() {
-        selections = emptyList()
     }
 
     override fun onDestroyView() {

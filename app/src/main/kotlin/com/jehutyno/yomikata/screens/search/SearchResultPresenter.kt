@@ -4,14 +4,19 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.asFlow
 import androidx.lifecycle.asLiveData
+import com.jehutyno.yomikata.model.Quiz
 import com.jehutyno.yomikata.model.Word
 import com.jehutyno.yomikata.repository.QuizRepository
 import com.jehutyno.yomikata.repository.WordRepository
 import com.jehutyno.yomikata.util.Categories
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.transform
+import kotlinx.coroutines.launch
 import mu.KLogging
-import java.util.*
 
 
 /**
@@ -20,10 +25,19 @@ import java.util.*
 class SearchResultPresenter(
     private val wordRepository: WordRepository,
     private val quizRepository: QuizRepository,
-    searchResultView: SearchResultContract.View) : SearchResultContract.Presenter {
+    searchResultView: SearchResultContract.View, coroutineScope: CoroutineScope) : SearchResultContract.Presenter {
 
 
     companion object : KLogging()
+
+    private val job: Job
+    private lateinit var selections: StateFlow<List<Quiz>>
+    init {
+        job = coroutineScope.launch {
+            selections = quizRepository.getQuiz(Categories.CATEGORY_SELECTIONS).stateIn(coroutineScope)
+        }
+        searchResultView.setPresenter(this)
+    }
 
     // LiveData
     private val searchString : MutableLiveData<String> by lazy { MutableLiveData<String>() }
@@ -31,12 +45,14 @@ class SearchResultPresenter(
     override val words : LiveData<List<Word>> = searchString.asFlow().transform<String, List<Word>> {
         emit(wordRepository.searchWords(it).first())
     }.asLiveData()
-    init {
-        searchResultView.setPresenter(this)
-    }
 
     override fun start() {
 
+    }
+
+    override suspend fun getSelections(): List<Quiz> {
+        job.join()
+        return selections.value
     }
 
     override fun updateSearchString(newSearchString: String) {
@@ -45,19 +61,6 @@ class SearchResultPresenter(
 
     override suspend fun updateWordCheck(id: Long, check: Boolean) {
         wordRepository.updateWordSelected(id, check)
-    }
-
-    override suspend fun loadSelections() {
-//        quizRepository.getQuiz(Categories.CATEGORY_SELECTIONS, object: QuizRepository.LoadQuizCallback {
-//            override fun onQuizLoaded(quizzes: List<Quiz>) {
-//                searchResultView.selectionLoaded(quizzes)
-//            }
-//
-//            override fun onDataNotAvailable() {
-//                searchResultView.noSelections()
-//            }
-//
-//        })
     }
 
     override suspend fun isWordInQuiz(wordId: Long, quizId: Long) : Boolean {
