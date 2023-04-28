@@ -12,7 +12,6 @@ import android.widget.FrameLayout
 import android.widget.ImageView
 import androidx.appcompat.widget.PopupMenu
 import androidx.fragment.app.DialogFragment
-import androidx.lifecycle.coroutineScope
 import androidx.lifecycle.lifecycleScope
 import androidx.viewpager.widget.ViewPager
 import com.jehutyno.yomikata.R
@@ -149,13 +148,13 @@ class WordDetailDialogFragment(private val di: DI) : DialogFragment(), WordContr
         wordPresenter.start()
         wordPresenter.words?.let {
             it.observe(this) { words ->
-                lifecycle.coroutineScope.launch {
+                lifecycleScope.launch {
                     displayWords(wordPresenter.getWordKanjiSoloRadicalSentenceList(words))
                 }
             }
         }
         if (wordPresenter.words == null) {
-            lifecycle.coroutineScope.launch {
+            lifecycleScope.launch {
                 val oneWordList = listOf(wordPresenter.getWord(wordId))
                 displayWords(wordPresenter.getWordKanjiSoloRadicalSentenceList(oneWordList))
             }
@@ -215,7 +214,7 @@ class WordDetailDialogFragment(private val di: DI) : DialogFragment(), WordContr
             setView(container)
 
             okButton {
-                lifecycle.coroutineScope.launch {
+                lifecycleScope.launch {
                     val selectionId = wordPresenter.createSelection(input.text.toString())
                     wordPresenter.addWordToSelection(wordId, selectionId)
                 }
@@ -256,7 +255,7 @@ class WordDetailDialogFragment(private val di: DI) : DialogFragment(), WordContr
             adapter.words[position].first.level = newLevel
         }
         adapter.words[position].first.points = points
-        lifecycle.coroutineScope.launch {
+        lifecycleScope.launch {
             withContext(Dispatchers.IO) {
                 Thread.sleep(300)
             }

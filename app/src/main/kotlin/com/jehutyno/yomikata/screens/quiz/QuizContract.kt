@@ -8,7 +8,6 @@ import com.jehutyno.yomikata.model.Quiz
 import com.jehutyno.yomikata.model.Sentence
 import com.jehutyno.yomikata.model.Word
 import com.jehutyno.yomikata.util.QuizType
-import kotlinx.coroutines.flow.StateFlow
 
 
 /**
@@ -19,8 +18,6 @@ interface QuizContract {
     interface View : BaseView<Presenter> {
         fun displayWords(quizWordsPair: List<Pair<Word, QuizType>>)
         fun noWords()
-        fun selectionLoaded(quizzes: List<Quiz>)
-        fun noSelections()
         fun setHiraganaConversion(enabled: Boolean)
         fun displayQCMMode(hintText: String? = null)
         fun displayEditMode()
@@ -57,11 +54,11 @@ interface QuizContract {
     }
 
     interface Presenter : BasePresenter {
-        val words : StateFlow<List<Word>>
+        suspend fun getWords(): List<Word>
+        suspend fun getSelections(): List<Quiz>
         suspend fun loadWords()
         suspend fun createSelection(quizName: String): Long
         suspend fun addWordToSelection(wordId: Long, quizId: Long)
-        suspend fun loadSelections()
         suspend fun isWordInQuiz(wordId: Long, quizId: Long): Boolean
         suspend fun isWordInQuizzes(wordId: Long, quizIds: Array<Long>): ArrayList<Boolean>
         suspend fun deleteWordFromSelection(wordId: Long, selectionId: Long)

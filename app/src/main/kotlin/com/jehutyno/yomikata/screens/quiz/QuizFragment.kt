@@ -9,9 +9,6 @@ import android.media.AudioManager
 import android.os.Bundle
 import android.os.Parcelable
 import android.speech.tts.TextToSpeech
-import androidx.fragment.app.Fragment
-import androidx.core.content.ContextCompat
-import androidx.viewpager.widget.ViewPager
 import android.text.Editable
 import android.text.InputType
 import android.text.TextWatcher
@@ -22,8 +19,11 @@ import android.view.View.VISIBLE
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.*
-import androidx.lifecycle.coroutineScope
+import androidx.core.content.ContextCompat
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
+import androidx.viewpager.widget.ViewPager
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.databinding.FragmentQuizBinding
 import com.jehutyno.yomikata.furigana.FuriganaView
@@ -54,7 +54,6 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
 
     private lateinit var presenter: QuizContract.Presenter
     private var adapter: QuizItemPagerAdapter? = null
-    private lateinit var selections: List<Quiz>
     private var tts: TextToSpeech? = null
     private var ttsSupported = SPEECH_NOT_INITALIZED
     private var currentEditColor: Int = R.color.lighter_gray
@@ -113,9 +112,6 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
         else
             InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
         presenter.start()
-        lifecycle.coroutineScope.launch {
-            presenter.loadSelections()
-        }
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -142,7 +138,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
             editBinding.hiraganaEdit.setTextColor(ContextCompat.getColor(requireActivity(), currentEditColor))
             presenter.onRestoreInstanceState(savedInstanceState)
         } else {
-            runBlocking {
+            lifecycleScope.launch {
                 presenter.initQuiz()
             }
         }
@@ -726,18 +722,6 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
 
     // TODO move to presenter ?
     /**
-     * Selections
-     */
-
-    override fun selectionLoaded(quizzes: List<Quiz>) {
-        selections = quizzes
-    }
-
-    override fun noSelections() {
-        selections = emptyList()
-    }
-
-    /**
      * Actions
      */
 
@@ -806,6 +790,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
     }
 
     override fun onSelectionClick(view: View, position: Int) = runBlocking {
+        val selections = presenter.getSelections()
         val popup = PopupMenu(activity, view)
         val word = adapter!!.words[position].first
         popup.menuInflater.inflate(R.menu.popup_selections, popup.menu)
@@ -838,7 +823,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
         reportError(requireActivity(), word, sentence)
     }
 
-    override fun onFuriClick(position: Int, isSelected: Boolean) = lifecycle.coroutineScope.launch {
+    override fun onFuriClick(position: Int, isSelected: Boolean) = lifecycleScope.launch {
         presenter.setIsFuriDisplayed(isSelected)
     }
 
@@ -866,10 +851,9 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
             titleResource = R.string.new_selection
             setView(container)
             okButton {
-                lifecycle.coroutineScope.launch {
+                lifecycleScope.launch {
                     val selectionId = presenter.createSelection(input.text.toString())
                     presenter.addWordToSelection(wordId, selectionId)
-                    presenter.loadSelections()
                 }
             }
             cancelButton()

@@ -1,7 +1,5 @@
 package com.jehutyno.yomikata.screens.answers
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.asLiveData
 import com.jehutyno.yomikata.model.Answer
 import com.jehutyno.yomikata.model.Quiz
 import com.jehutyno.yomikata.model.Sentence
@@ -10,7 +8,11 @@ import com.jehutyno.yomikata.repository.QuizRepository
 import com.jehutyno.yomikata.repository.SentenceRepository
 import com.jehutyno.yomikata.repository.WordRepository
 import com.jehutyno.yomikata.util.Categories
-import java.util.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
 
 /**
@@ -20,17 +22,24 @@ class AnswersPresenter(
     private val wordRepository: WordRepository,
     private val quizRepository: QuizRepository,
     private val sentenceRepository: SentenceRepository,
-    answersView: AnswersContract.View) : AnswersContract.Presenter {
+    answersView: AnswersContract.View, coroutineScope: CoroutineScope) : AnswersContract.Presenter {
+
+    private val job: Job
+    private lateinit var selections: StateFlow<List<Quiz>>
 
     init {
+        job = coroutineScope.launch {
+            selections = quizRepository.getQuiz(Categories.CATEGORY_SELECTIONS).stateIn(coroutineScope)
+        }
         answersView.setPresenter(this)
     }
 
-    // define LiveData
-    override val selections: LiveData<List<Quiz>> = quizRepository.getQuiz(Categories.CATEGORY_SELECTIONS).asLiveData()
-
-
     override fun start() {
+    }
+
+    override suspend fun getSelections(): List<Quiz> {
+        job.join()
+        return selections.value
     }
 
     override suspend fun createSelection(quizName: String): Long {

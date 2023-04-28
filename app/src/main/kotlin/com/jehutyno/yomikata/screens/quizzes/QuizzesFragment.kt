@@ -3,25 +3,42 @@ package com.jehutyno.yomikata.screens.quizzes
 import android.content.Intent
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
-import androidx.fragment.app.Fragment
-import androidx.recyclerview.widget.LinearLayoutManager
 import android.text.InputType
 import android.view.LayoutInflater
 import android.view.View
-import android.view.View.*
+import android.view.View.GONE
+import android.view.View.INVISIBLE
+import android.view.View.VISIBLE
 import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.TextView
 import android.widget.Toast
-import androidx.lifecycle.coroutineScope
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.databinding.FragmentQuizzesBinding
 import com.jehutyno.yomikata.model.Quiz
 import com.jehutyno.yomikata.screens.content.ContentActivity
 import com.jehutyno.yomikata.screens.quiz.QuizActivity
-import com.jehutyno.yomikata.util.*
+import com.jehutyno.yomikata.util.Categories
+import com.jehutyno.yomikata.util.DimensionHelper
+import com.jehutyno.yomikata.util.Extras
+import com.jehutyno.yomikata.util.Prefs
+import com.jehutyno.yomikata.util.QuizStrategy
+import com.jehutyno.yomikata.util.SeekBarsManager
+import com.jehutyno.yomikata.util.SpeechAvailability
+import com.jehutyno.yomikata.util.TextValidator
+import com.jehutyno.yomikata.util.animateSeekBar
+import com.jehutyno.yomikata.util.checkSpeechAvailability
+import com.jehutyno.yomikata.util.getCategoryLevel
+import com.jehutyno.yomikata.util.getLevelDownloadSize
+import com.jehutyno.yomikata.util.getLevelDownloadVersion
+import com.jehutyno.yomikata.util.onTTSinit
+import com.jehutyno.yomikata.util.speechNotSupportedAlert
+import com.jehutyno.yomikata.util.spotlightTuto
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -29,7 +46,12 @@ import kotlinx.coroutines.withContext
 import org.kodein.di.DI
 import org.kodein.di.instance
 import org.kodein.di.newInstance
-import splitties.alertdialog.appcompat.*
+import splitties.alertdialog.appcompat.alertDialog
+import splitties.alertdialog.appcompat.cancelButton
+import splitties.alertdialog.appcompat.message
+import splitties.alertdialog.appcompat.neutralButton
+import splitties.alertdialog.appcompat.okButton
+import splitties.alertdialog.appcompat.titleResource
 import java.lang.Thread.sleep
 
 
@@ -281,7 +303,6 @@ class QuizzesFragment(di: DI) : Fragment(), QuizzesContract.View, QuizzesAdapter
     private fun subscribeDisplayQuizzes() {
         mpresenter.quizList.observe(viewLifecycleOwner) {
             displayQuizzes(it)
-            seekBars.animateAll()
         }
     }
 
@@ -295,7 +316,7 @@ class QuizzesFragment(di: DI) : Fragment(), QuizzesContract.View, QuizzesAdapter
             ids.add(it.id)
         }
 
-        lifecycle.coroutineScope.launch {
+        lifecycleScope.launch {
             seekBars.count = mpresenter.countQuiz(ids.toLongArray())
             seekBars.low = mpresenter.countLow(ids.toLongArray())
             seekBars.medium = mpresenter.countMedium(ids.toLongArray())
@@ -311,6 +332,8 @@ class QuizzesFragment(di: DI) : Fragment(), QuizzesContract.View, QuizzesAdapter
             binding.playMedium.visibility = if (seekBars.medium > 0) VISIBLE else INVISIBLE
             binding.playHigh.visibility = if (seekBars.high > 0) VISIBLE else INVISIBLE
             binding.playMaster.visibility = if (seekBars.master > 0) VISIBLE else INVISIBLE
+
+            seekBars.animateAll()
         }
     }
 
@@ -456,7 +479,7 @@ class QuizzesFragment(di: DI) : Fragment(), QuizzesContract.View, QuizzesAdapter
         _binding = null
     }
 
-    private fun tutos() = lifecycle.coroutineScope.launch {
+    private fun tutos() = lifecycleScope.launch {
         withContext(IO) {
             sleep(500)
         }

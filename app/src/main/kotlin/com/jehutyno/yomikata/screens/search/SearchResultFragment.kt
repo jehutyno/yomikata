@@ -1,15 +1,20 @@
 package com.jehutyno.yomikata.screens.search
 
 import android.os.Bundle
-import android.view.*
+import android.view.ActionMode
+import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuInflater
 import android.view.MenuItem
+import android.view.View
+import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.Toast
 import androidx.appcompat.widget.PopupMenu
 import androidx.appcompat.widget.SearchView
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.coroutineScope
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.jehutyno.yomikata.R
@@ -25,8 +30,10 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import org.kodein.di.DI
-import splitties.alertdialog.appcompat.*
-import java.util.*
+import splitties.alertdialog.appcompat.alertDialog
+import splitties.alertdialog.appcompat.cancelButton
+import splitties.alertdialog.appcompat.okButton
+import splitties.alertdialog.appcompat.titleResource
 
 
 /**
@@ -72,7 +79,7 @@ class SearchResultFragment(private val di: DI) : Fragment(), SearchResultContrac
     override fun onResume() {
         super.onResume()
         searchResultPresenter.start()
-        lifecycle.coroutineScope.launch {
+        lifecycleScope.launch {
             searchResultPresenter.loadSelections()
         }
     }

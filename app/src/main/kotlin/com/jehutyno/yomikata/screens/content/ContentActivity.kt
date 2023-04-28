@@ -5,14 +5,14 @@ import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.os.Build
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.app.AppCompatDelegate
 import android.view.MenuItem
 import android.view.View.GONE
 import android.view.View.VISIBLE
 import android.window.OnBackInvokedDispatcher
 import androidx.activity.addCallback
-import androidx.lifecycle.coroutineScope
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
 import androidx.viewpager2.widget.ViewPager2
 import com.jehutyno.yomikata.R
@@ -101,7 +101,7 @@ class ContentActivity : AppCompatActivity(), DIAware {
             setDisplayHomeAsUpEnabled(true)
         }
 
-        lifecycle.coroutineScope.launch {
+        lifecycleScope.launch {
             getQuizzes()
             launchFragment(savedInstanceState, quizPosition)
         }
@@ -226,7 +226,7 @@ class ContentActivity : AppCompatActivity(), DIAware {
     }
 
     private fun launchQuiz(strategy: QuizStrategy) {
-        lifecycle.coroutineScope.launch {
+        lifecycleScope.launch {
             statsRepository.addStatEntry(
                 StatAction.LAUNCH_QUIZ_FROM_CATEGORY,
                 category.toLong(),

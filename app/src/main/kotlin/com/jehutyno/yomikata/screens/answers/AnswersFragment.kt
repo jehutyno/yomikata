@@ -3,15 +3,15 @@ package com.jehutyno.yomikata.screens.answers
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
 import android.util.Log
-import androidx.fragment.app.Fragment
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.appcompat.widget.PopupMenu
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.FrameLayout
-import androidx.lifecycle.coroutineScope
+import androidx.appcompat.widget.PopupMenu
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.databinding.FragmentContentBinding
 import com.jehutyno.yomikata.managers.VoicesManager
@@ -25,7 +25,6 @@ import splitties.alertdialog.appcompat.cancelButton
 import splitties.alertdialog.appcompat.okButton
 import splitties.alertdialog.appcompat.titleResource
 import java.util.*
-import kotlin.collections.ArrayList
 
 
 /**
@@ -102,7 +101,7 @@ class AnswersFragment(private val di: DI) : Fragment(), AnswersContract.View, An
     }
 
     override fun onSelectionClick(position: Int, view: View) = runBlocking {
-        val selections = presenter.selections.value!!
+        val selections = presenter.getSelections()
         val popup = PopupMenu(requireActivity(), view)
         popup.menuInflater.inflate(R.menu.popup_selections, popup.menu)
         for ((i, selection) in selections.withIndex()) {
@@ -145,7 +144,7 @@ class AnswersFragment(private val di: DI) : Fragment(), AnswersContract.View, An
             setView(input)
 
             okButton {
-                lifecycle.coroutineScope.launch {
+                lifecycleScope.launch {
                     val selectionId = presenter.createSelection(input.text.toString())
                     presenter.addWordToSelection(wordId, selectionId)
                 }

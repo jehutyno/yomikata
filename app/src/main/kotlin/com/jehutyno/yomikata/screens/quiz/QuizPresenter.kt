@@ -16,9 +16,10 @@ import com.jehutyno.yomikata.repository.StatsRepository
 import com.jehutyno.yomikata.repository.WordRepository
 import com.jehutyno.yomikata.util.*
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import java.util.*
 
@@ -51,18 +52,33 @@ class QuizPresenter(
     private var errorMode = false
     private var quizEnded = false
 
-    override lateinit var words : StateFlow<List<Word>>
+    private val wordsFlowJob: Job
+    private lateinit var words: StateFlow<List<Word>>
+    private val selectionsFlowJob: Job
+    private lateinit var selections: StateFlow<List<Quiz>>
 
     init {
-        runBlocking {
-            words = wordRepository.getWordsByLevel(quizIds, getQuizLevelIfAny(strategy))
-                                    .stateIn(coroutineScope)
+        wordsFlowJob = coroutineScope.launch {
+            words = wordRepository.getWordsByLevel(quizIds, getQuizLevelIfAny(strategy)).stateIn(coroutineScope)
+        }
+        selectionsFlowJob = coroutineScope.launch {
+            selections = quizRepository.getQuiz(Categories.CATEGORY_SELECTIONS).stateIn(coroutineScope)
         }
         isFuriDisplayed = defaultSharedPreferences.getBoolean(Prefs.FURI_DISPLAYED.pref, true)
         quizView.setPresenter(this)
     }
 
     override fun start() {
+    }
+
+    override suspend fun getWords() : List<Word> {
+        wordsFlowJob.join()
+        return words.value
+    }
+
+    override suspend fun getSelections(): List<Quiz> {
+        selectionsFlowJob.join()
+        return selections.value
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -164,7 +180,7 @@ class QuizPresenter(
     }
 
     override suspend fun loadWords() {
-        val words = words.first()
+        val words = getWords()
         if (words.isEmpty()) {
             quizView.noWords()
             return
@@ -656,19 +672,6 @@ class QuizPresenter(
         quizView.finishQuiz()
     }
 
-
-    override suspend fun loadSelections() {
-//        quizRepository.getQuiz(Categories.CATEGORY_SELECTIONS, object : QuizRepository.LoadQuizCallback {
-//            override fun onQuizLoaded(quizzes: List<Quiz>) {
-//                quizView.selectionLoaded(quizzes)
-//            }
-//
-//            override fun onDataNotAvailable() {
-//                quizView.noSelections()
-//            }
-//
-//        })
-    }
 
     override suspend fun createSelection(quizName: String): Long {
         return quizRepository.saveQuiz(quizName, Categories.CATEGORY_SELECTIONS)
