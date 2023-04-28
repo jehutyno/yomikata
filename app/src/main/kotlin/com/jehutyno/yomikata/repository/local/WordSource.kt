@@ -2,7 +2,6 @@ package com.jehutyno.yomikata.repository.local
 
 import androidx.sqlite.db.SimpleSQLiteQuery
 import com.jehutyno.yomikata.dao.WordDao
-import com.jehutyno.yomikata.model.QuizWord
 import com.jehutyno.yomikata.model.Word
 import com.jehutyno.yomikata.repository.WordRepository
 import com.jehutyno.yomikata.util.HiraganaUtils
@@ -226,11 +225,7 @@ class WordSource(private val wordDao: WordDao) : WordRepository {
         wordDao.updateWordSelected(wordId, check)
     }
 
-    suspend fun getQuizWordFromId(quizId: Long, wordId: Long): QuizWord? {
-        return wordDao.getQuizWordFromId(quizId, wordId)?.toQuizWord()
-    }
-
-    suspend fun addQuizWord(quizId: Long, wordId: Long) {
+    override suspend fun addQuizWord(quizId: Long, wordId: Long) {
         wordDao.addQuizWord(RoomQuizWord(quizId, wordId))
     }
 

@@ -101,9 +101,6 @@ interface WordDao {
     @Query("UPDATE words SET isSelected = :isSelected WHERE _id = :wordId")
     suspend fun updateWordSelected(wordId: Long, isSelected: Boolean)
 
-    @Query("SELECT * FROM quiz_word WHERE quiz_id = :quizId AND word_id = :wordId")
-    suspend fun getQuizWordFromId(quizId: Long, wordId: Long): RoomQuizWord?
-
     @Insert
     suspend fun addQuizWord(quizWord: RoomQuizWord): Long
 

@@ -22,7 +22,7 @@ class QuizSource(private val quizDao: QuizDao) : QuizRepository {
         return quizList
     }
 
-    suspend fun getQuiz(quizId: Long): Quiz? {
+    override suspend fun getQuiz(quizId: Long): Quiz? {
         val roomQuiz = quizDao.getQuizById(quizId)
         return roomQuiz?.toQuiz()
     }

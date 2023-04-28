@@ -28,4 +28,5 @@ interface WordRepository {
     suspend fun getWordById(wordId: Long): Word
     suspend fun updateWord(updateWord: Word, word: Word?)
     suspend fun updateWordProgression(updateWord: Word, word: Word)
+    suspend fun addQuizWord(quizId: Long, wordId: Long)
 }

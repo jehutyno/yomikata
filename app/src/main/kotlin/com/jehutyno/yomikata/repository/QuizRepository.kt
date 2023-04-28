@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.Flow
  */
 interface QuizRepository {
     fun getQuiz(category: Int): Flow<List<Quiz>>
+    suspend fun getQuiz(quizId: Long): Quiz?
     suspend fun saveQuiz(quizName: String, category: Int) : Long
     suspend fun deleteAllQuiz()
     suspend fun deleteQuiz(quizId:Long)
