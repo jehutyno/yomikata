@@ -525,40 +525,38 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
         qcmBinding.option4Furi.visibility = VISIBLE
     }
 
-    override fun displayQCMTv1(option: String, color: Int) {
-        qcmBinding.option1Tv.text = option
-        qcmBinding.option1Tv.setTextColor(ContextCompat.getColor(requireContext(), color))
+    override fun displayQCMTv(tvNum: Int, option: String, color: Int) {
+        when (tvNum) {
+            1 -> {
+                qcmBinding.option1Tv.text = option
+                qcmBinding.option1Tv.setTextColor(ContextCompat.getColor(requireContext(), color))
+            }
+            2 -> {
+                qcmBinding.option2Tv.text = option
+                qcmBinding.option2Tv.setTextColor(ContextCompat.getColor(requireContext(), color))
+            }
+            3 -> {
+                qcmBinding.option3Tv.text = option
+                qcmBinding.option3Tv.setTextColor(ContextCompat.getColor(requireContext(), color))
+            }
+            4 -> {
+                qcmBinding.option4Tv.text = option
+                qcmBinding.option4Tv.setTextColor(ContextCompat.getColor(requireContext(), color))
+            }
+            else -> {
+                throw Error("Invalid tvNum: $tvNum")
+            }
+        }
     }
 
-    override fun displayQCMTv2(option: String, color: Int) {
-        qcmBinding.option2Tv.text = option
-        qcmBinding.option2Tv.setTextColor(ContextCompat.getColor(requireContext(), color))
-    }
-
-    override fun displayQCMTv3(option: String, color: Int) {
-        qcmBinding.option3Tv.text = option
-        qcmBinding.option3Tv.setTextColor(ContextCompat.getColor(requireContext(), color))
-    }
-
-    override fun displayQCMTv4(option: String, color: Int) {
-        qcmBinding.option4Tv.text = option
-        qcmBinding.option4Tv.setTextColor(ContextCompat.getColor(requireContext(), color))
-    }
-
-    override fun displayQCMFuri1(optionFuri: String, start: Int, end: Int, color: Int) {
-        qcmBinding.option1Furi.text_set(optionFuri, start, end, color)
-    }
-
-    override fun displayQCMFuri2(optionFuri: String, start: Int, end: Int, color: Int) {
-        qcmBinding.option2Furi.text_set(optionFuri, start, end, color)
-    }
-
-    override fun displayQCMFuri3(optionFuri: String, start: Int, end: Int, color: Int) {
-        qcmBinding.option3Furi.text_set(optionFuri, start, end, color)
-    }
-
-    override fun displayQCMFuri4(optionFuri: String, start: Int, end: Int, color: Int) {
-        qcmBinding.option4Furi.text_set(optionFuri, start, end, color)
+    override fun displayQCMFuri(furiNum: Int, optionFuri: String, start: Int, end: Int, color: Int) {
+        when (furiNum) {
+            1 -> qcmBinding.option1Furi.text_set(optionFuri, start, end, color)
+            2 -> qcmBinding.option2Furi.text_set(optionFuri, start, end, color)
+            3 -> qcmBinding.option3Furi.text_set(optionFuri, start, end, color)
+            4 -> qcmBinding.option4Furi.text_set(optionFuri, start, end, color)
+            else -> throw Error("Invalid furiNum: $furiNum")
+        }
     }
 
     fun setOptionsFontSize(fontSize: Float) {

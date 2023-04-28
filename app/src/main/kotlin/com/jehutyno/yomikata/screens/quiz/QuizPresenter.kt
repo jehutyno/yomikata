@@ -277,41 +277,42 @@ class QuizPresenter(
 
     fun setupQCMPronunciationQuiz() {
         quizView.displayQCMNormalTextViews()
-        quizView.displayQCMTv1(randoms[0].first.reading.split("/")[0].split(";")[0].trim(), randoms[0].second)
-        quizView.displayQCMTv2(randoms[1].first.reading.split("/")[0].split(";")[0].trim(), randoms[1].second)
-        quizView.displayQCMTv3(randoms[2].first.reading.split("/")[0].split(";")[0].trim(), randoms[2].second)
-        quizView.displayQCMTv4(randoms[3].first.reading.split("/")[0].split(";")[0].trim(), randoms[3].second)
+        for (i in 0..3) {
+            quizView.displayQCMTv(i + 1,
+                randoms[i].first.reading.split("/")[0].split(";")[0].trim(),
+                randoms[i].second
+            )
+        }
     }
 
     fun setupQCMQAudioQuiz() {
         quizView.displayQCMNormalTextViews()
-        quizView.displayQCMTv1(randoms[0].first.japanese.split("/")[0].split(";")[0].trim(), randoms[0].second)
-        quizView.displayQCMTv2(randoms[1].first.japanese.split("/")[0].split(";")[0].trim(), randoms[1].second)
-        quizView.displayQCMTv3(randoms[2].first.japanese.split("/")[0].split(";")[0].trim(), randoms[2].second)
-        quizView.displayQCMTv4(randoms[3].first.japanese.split("/")[0].split(";")[0].trim(), randoms[3].second)
+        for (i in 0..3) {
+            quizView.displayQCMTv(i + 1,
+                randoms[i].first.japanese.split("/")[0].split(";")[0].trim(),
+                randoms[i].second
+            )
+        }
     }
 
     suspend fun setupQCMEnJapQuiz() {
         quizView.displayQCMFuriTextViews()
-        val word1 = getQCMDisPlayForEnJap(randoms[0].first)
-        quizView.displayQCMFuri1(word1, 0, word1.length, ContextCompat.getColor(context, randoms[0].second))
-        val word2 = getQCMDisPlayForEnJap(randoms[1].first)
-        quizView.displayQCMFuri2(word2, 0, word2.length, ContextCompat.getColor(context, randoms[1].second))
-        val word3 = getQCMDisPlayForEnJap(randoms[2].first)
-        quizView.displayQCMFuri3(word3, 0, word3.length, ContextCompat.getColor(context, randoms[2].second))
-        val word4 = getQCMDisPlayForEnJap(randoms[3].first)
-        quizView.displayQCMFuri4(word4, 0, word4.length, ContextCompat.getColor(context, randoms[3].second))
+        for (i in 0..3) {
+            val word = getQCMDisPlayForEnJap(randoms[i].first)
+            quizView.displayQCMFuri(i + 1,
+                word, 0, word.length, ContextCompat.getColor(context, randoms[i].second)
+            )
+        }
     }
 
-    fun setupQCMJapEnQuiz() {
+    private fun setupQCMJapEnQuiz() {
         quizView.displayQCMNormalTextViews()
-        quizView.displayQCMTv1(randoms[0].first.getTrad().trim(), randoms[0].second)
-        quizView.displayQCMTv2(randoms[1].first.getTrad().trim(), randoms[1].second)
-        quizView.displayQCMTv3(randoms[2].first.getTrad().trim(), randoms[2].second)
-        quizView.displayQCMTv4(randoms[3].first.getTrad().trim(), randoms[3].second)
+        for (i in 0..3) {
+            quizView.displayQCMTv(i + 1, randoms[i].first.getTrad().trim(), randoms[i].second)
+        }
     }
 
-    suspend fun getQCMDisPlayForEnJap(word: Word): String {
+    private suspend fun getQCMDisPlayForEnJap(word: Word): String {
         return if (word.isKana == 2) {
             val sentence = sentenceRepository.getSentenceById(word.sentenceId!!)
             if (isFuriDisplayed)
