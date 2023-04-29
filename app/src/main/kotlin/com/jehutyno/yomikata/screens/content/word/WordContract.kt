@@ -7,7 +7,6 @@ import com.jehutyno.yomikata.model.KanjiSoloRadical
 import com.jehutyno.yomikata.model.Quiz
 import com.jehutyno.yomikata.model.Sentence
 import com.jehutyno.yomikata.model.Word
-import java.util.*
 
 
 /**
@@ -29,8 +28,8 @@ interface WordContract {
         suspend fun isWordInQuizzes(wordId: Long, quizIds: Array<Long>) : ArrayList<Boolean>
         suspend fun isWordInQuiz(wordId: Long, quizId: Long) : Boolean
         suspend fun deleteWordFromSelection(wordId: Long, selectionId: Long)
-        suspend fun levelUp(id: Long, level: Int) : Int
-        suspend fun levelDown(id: Long, level: Int) : Int
+        suspend fun levelUp(id: Long, points: Int)
+        suspend fun levelDown(id: Long, points: Int)
         suspend fun getWord(wordId: Long): Word
     }
 

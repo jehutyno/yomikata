@@ -7,6 +7,7 @@ import com.jehutyno.yomikata.model.Answer
 import com.jehutyno.yomikata.model.Quiz
 import com.jehutyno.yomikata.model.Sentence
 import com.jehutyno.yomikata.model.Word
+import com.jehutyno.yomikata.util.Level
 import com.jehutyno.yomikata.util.QuizType
 
 
@@ -27,7 +28,7 @@ interface QuizContract {
         fun displayQCMFuri(furiNum: Int, optionFuri: String, start: Int, end: Int, color: Int)
         fun showKeyboard()
         fun hideKeyboard()
-        fun animateColor(position: Int, word: Word, sentence: Sentence, quizType: QuizType, fromLevel: Int, toLevel: Int, fromPoints: Int, toPoints: Int)
+        fun animateColor(position: Int, word: Word, sentence: Sentence, quizType: QuizType, fromPoints: Int, toPoints: Int)
         fun setEditTextColor(color: Int)
         fun animateCheck(result: Boolean)
         fun reInitUI()
@@ -56,13 +57,13 @@ interface QuizContract {
         suspend fun isWordInQuiz(wordId: Long, quizId: Long): Boolean
         suspend fun isWordInQuizzes(wordId: Long, quizIds: Array<Long>): ArrayList<Boolean>
         suspend fun deleteWordFromSelection(wordId: Long, selectionId: Long)
-        suspend fun updateWordLevel(wordId: Long, level: Int)
+        suspend fun updateWordLevel(wordId: Long, level: Level)
         suspend fun getRandomWords(wordId: Long, answer: String, wordSize: Int, limit: Int, quizType: QuizType): ArrayList<Word>
         suspend fun updateWordPoints(wordId: Long, points: Int)
         suspend fun getNextWords(): List<Pair<Word, QuizType>>
         suspend fun getWord(id: Long): Word?
         suspend fun initQuiz()
-        suspend fun updateRepetitions(id: Long, level: Int, points: Int, result: Boolean)
+        suspend fun updateRepetitions(id: Long, repetition: Int)
         suspend fun decreaseAllRepetitions()
         suspend fun saveAnswerResultStat(word: Word, result: Boolean)
         suspend fun saveWordSeenStat(word: Word)
@@ -87,7 +88,7 @@ interface QuizContract {
         fun onSpeakSentence()
         fun onSpeakWordTTS()
         fun onReportClick(position: Int)
-        fun hasMistaken(): Boolean
+        fun previousAnswerWrong(): Boolean
     }
 
 }

@@ -1,10 +1,6 @@
 package com.jehutyno.yomikata.screens.quiz
 
 import android.content.Context
-import androidx.preference.PreferenceManager
-import androidx.core.content.ContextCompat
-import androidx.viewpager.widget.PagerAdapter
-import androidx.appcompat.widget.PopupMenu
 import android.text.method.ScrollingMovementMethod
 import android.view.LayoutInflater
 import android.view.View
@@ -12,14 +8,21 @@ import android.view.ViewGroup
 import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.widget.PopupMenu
+import androidx.core.content.ContextCompat
+import androidx.preference.PreferenceManager
+import androidx.viewpager.widget.PagerAdapter
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.furigana.FuriganaView
 import com.jehutyno.yomikata.model.Sentence
 import com.jehutyno.yomikata.model.Word
 import com.jehutyno.yomikata.model.getWordColor
-import com.jehutyno.yomikata.util.*
+import com.jehutyno.yomikata.util.Prefs
+import com.jehutyno.yomikata.util.QuizType
+import com.jehutyno.yomikata.util.getWordPositionInFuriSentence
+import com.jehutyno.yomikata.util.sentenceNoAnswerFuri
+import com.jehutyno.yomikata.util.sentenceNoFuri
 import kotlinx.coroutines.Job
-import java.util.*
 
 /**
  * Created by jehutyno on 08/10/2016.
@@ -73,13 +76,13 @@ class QuizItemPagerAdapter(var context: Context, var callback: Callback) : Pager
                         if (colorEntireWord) sentence.jap else sentenceNoAnswerFuri(sentence, word),
                         if (colorEntireWord) 0 else wordTruePosition,
                         if (colorEntireWord) sentence.jap.length else wordTruePosition + word.japanese.length,
-                        getWordColor(context, word.level, word.points))
+                        getWordColor(context, word.points))
                 } else {
                     furi_sentence.text_set(
                         sentenceNoFuri,
                         if (colorEntireWord) 0 else wordTruePosition,
                         if (colorEntireWord) sentence.jap.length else wordTruePosition + word.japanese.length,
-                        getWordColor(context, word.level, word.points))
+                        getWordColor(context, word.points))
                 }
                 btn_trad.visibility = if (words[position].second != QuizType.TYPE_JAP_EN) View.VISIBLE else View.GONE
                 trad_sentence.text = if (words[position].first.isKana == 2) "" else sentence.getTrad()
@@ -92,7 +95,7 @@ class QuizItemPagerAdapter(var context: Context, var callback: Callback) : Pager
                 btn_trad.visibility = View.GONE
                 trad_sentence.visibility = View.VISIBLE
                 trad_sentence.movementMethod = ScrollingMovementMethod()
-                trad_sentence.setTextColor(getWordColor(context, word.level, word.points))
+                trad_sentence.setTextColor(getWordColor(context, word.points))
                 trad_sentence.textSize = PreferenceManager.getDefaultSharedPreferences(context).getString("font_size", "18")!!.toFloat()
                 trad_sentence.text = word.getTrad()
             }
@@ -102,7 +105,7 @@ class QuizItemPagerAdapter(var context: Context, var callback: Callback) : Pager
                 btn_trad.visibility = View.GONE
                 btn_furi.visibility = View.GONE
                 btn_tts.visibility = View.GONE
-                sound.setColorFilter(getWordColor(context, word.level, word.points))
+                sound.setColorFilter(getWordColor(context, word.points))
             }
             else -> {
             }

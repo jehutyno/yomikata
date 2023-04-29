@@ -242,20 +242,21 @@ class WordDetailDialogFragment(private val di: DI) : DialogFragment(), WordContr
     }
 
     override fun onLevelUp(position: Int) = runBlocking {
-        val newLevel = wordPresenter.levelUp(adapter.words[position].first.id, adapter.words[position].first.level)
-        waitAndUpdateLevel(position, if (newLevel == 4) 3 else newLevel, if (newLevel == 4) 100 else adapter.words[position].first.points)
+        wordPresenter.levelUp(adapter.words[position].first.id, adapter.words[position].first.points)
+//        waitAndUpdateLevel(position, adapter.words[position].first.points) TODO: livedata?
     }
 
     override fun onLevelDown(position: Int) = runBlocking {
-        val newLevel = wordPresenter.levelDown(adapter.words[position].first.id, adapter.words[position].first.level)
-        waitAndUpdateLevel(position, newLevel, 0)
+        wordPresenter.levelDown(adapter.words[position].first.id, adapter.words[position].first.points)
+//        waitAndUpdateLevel(position, adapter.words[position].first.points)
     }
 
     override fun onCloseClick() {
         dialog?.dismiss()
     }
 
-    private fun waitAndUpdateLevel(position: Int, newLevel: Int, points: Int) {
+    private fun waitAndUpdateLevel(position: Int, points: Int) {
+        val newLevel = getLevelFromPoints(points)
         if (newLevel != adapter.words[position].first.level) {
             adapter.words[position].first.level = newLevel
         }

@@ -12,6 +12,7 @@ import com.jehutyno.yomikata.repository.QuizRepository
 import com.jehutyno.yomikata.repository.SentenceRepository
 import com.jehutyno.yomikata.repository.WordRepository
 import com.jehutyno.yomikata.util.Categories
+import com.jehutyno.yomikata.util.getLevelFromPoints
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.StateFlow
@@ -115,26 +116,15 @@ class WordPresenter(
         quizRepository.deleteWordFromQuiz(wordId, selectionId)
     }
 
-    override suspend fun levelUp(id: Long, level: Int): Int {
-        return if (level < 3) {
-            wordRepository.updateWordLevel(id, level + 1)
-            level + 1
-        } else if (level == 3) {
-            wordRepository.updateWordPoints(id, 100)
-            3
-        } else {
-            level
-        }
+    override suspend fun levelUp(id: Long, points: Int) {
+        val newPoints = com.jehutyno.yomikata.util.levelUp(points)
+        wordRepository.updateWordPoints(id, newPoints)
+        wordRepository.updateWordLevel(id, getLevelFromPoints(newPoints))
     }
 
-    override suspend fun levelDown(id: Long, level: Int): Int {
-        return if (level > 0) {
-            wordRepository.updateWordPoints(id, 0)
-            wordRepository.updateWordLevel(id, level - 1)
-            level - 1
-        } else {
-            wordRepository.updateWordPoints(id, 0)
-            level
-        }
+    override suspend fun levelDown(id: Long, points: Int) {
+        val newPoints = com.jehutyno.yomikata.util.levelDown(points)
+        wordRepository.updateWordPoints(id, newPoints)
+        wordRepository.updateWordLevel(id, getLevelFromPoints(newPoints))
     }
 }

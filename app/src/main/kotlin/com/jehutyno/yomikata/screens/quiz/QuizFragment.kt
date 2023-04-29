@@ -584,7 +584,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
         inputMethodManager.hideSoftInputFromWindow(editBinding.hiraganaEdit.windowToken, 0)
     }
 
-    override fun animateColor(position: Int, word: Word, sentence: Sentence, quizType: QuizType, fromLevel: Int, toLevel: Int, fromPoints: Int, toPoints: Int) {
+    override fun animateColor(position: Int, word: Word, sentence: Sentence, quizType: QuizType, fromPoints: Int, toPoints: Int) {
         val view = binding.pager.findViewWithTag<View>("pos_$position")
         val btnFuri = view.findViewById<View>(R.id.btn_furi)
         val furiSentence = view.findViewById<FuriganaView>(R.id.furi_sentence)
@@ -592,8 +592,8 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
         val sound = view.findViewById<ImageButton>(R.id.sound)
         val sentenceNoFuri = sentenceNoFuri(sentence)
         val colorAnimation = ValueAnimator.ofObject(ArgbEvaluator(),
-            getWordColor(requireContext(), fromLevel, fromPoints),
-            getWordColor(requireContext(), toLevel, toPoints))
+            getWordColor(requireContext(), fromPoints),
+            getWordColor(requireContext(), toPoints))
         colorAnimation.addUpdateListener {
             animator ->
             run {
@@ -776,7 +776,8 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
         val dialog = WordDetailDialogFragment(di)
         val bundle = Bundle()
         bundle.putLong(Extras.EXTRA_WORD_ID, adapter!!.words[position].first.id)
-        bundle.putSerializable(Extras.EXTRA_QUIZ_TYPE, if (presenter.hasMistaken()) null else adapter!!.words[position].second)
+        bundle.putSerializable(Extras.EXTRA_QUIZ_TYPE,
+            if (presenter.previousAnswerWrong()) null else adapter!!.words[position].second)
         bundle.putString(Extras.EXTRA_SEARCH_STRING, "")
         dialog.arguments = bundle
         dialog.show(childFragmentManager, "")

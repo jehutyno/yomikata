@@ -90,8 +90,7 @@ interface WordDao {
     @Query("UPDATE words SET points = :points WHERE _id = :wordId")
     suspend fun updateWordPoints(wordId: Long, points: Int)
 
-    @Query("UPDATE words SET level = :level, " +
-                                "points = 0 " +
+    @Query("UPDATE words SET level = :level " +
            "WHERE _id = :wordId")
     suspend fun updateWordLevel(wordId: Long, level: Int)
 

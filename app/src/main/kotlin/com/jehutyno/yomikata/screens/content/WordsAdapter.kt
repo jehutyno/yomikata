@@ -1,14 +1,14 @@
 package com.jehutyno.yomikata.screens.content
 
 import android.content.Context
-import androidx.core.content.ContextCompat
-import androidx.recyclerview.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View.GONE
 import android.view.View.VISIBLE
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
 import androidx.core.graphics.BlendModeColorFilterCompat
 import androidx.core.graphics.BlendModeCompat
+import androidx.recyclerview.widget.RecyclerView
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.databinding.VhWordShortBinding
 import com.jehutyno.yomikata.model.Word
@@ -35,7 +35,7 @@ class WordsAdapter(private val context: Context, private val callback: Callback)
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val word = items[position]
         holder.wordName.text = word.japanese
-        holder.wordName.setTextColor(getWordColor(context, word.level, word.points))
+        holder.wordName.setTextColor(getWordColor(context, word.points))
         holder.categoryIcon.setImageResource(getCategoryIcon(word.baseCategory))
 
         val color = ContextCompat.getColor(context, R.color.content_icon_color)

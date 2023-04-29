@@ -5,6 +5,7 @@ import com.jehutyno.yomikata.dao.WordDao
 import com.jehutyno.yomikata.model.Word
 import com.jehutyno.yomikata.repository.WordRepository
 import com.jehutyno.yomikata.util.HiraganaUtils
+import com.jehutyno.yomikata.util.Level
 import com.jehutyno.yomikata.util.QuizType
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -157,8 +158,8 @@ class WordSource(private val wordDao: WordDao) : WordRepository {
         wordDao.updateWordPoints(wordId, points)
     }
 
-    override suspend fun updateWordLevel(wordId: Long, level: Int) {
-        wordDao.updateWordLevel(wordId, level)
+    override suspend fun updateWordLevel(wordId: Long, level: Level) {
+        wordDao.updateWordLevel(wordId, level.level)
     }
 
     override suspend fun updateWordRepetition(wordId: Long, repetition: Int) {
@@ -193,7 +194,7 @@ class WordSource(private val wordDao: WordDao) : WordRepository {
         } else {
             val newWord = Word(
                 0, updateWord.japanese, updateWord.english, updateWord.french,
-                updateWord.reading, 0, 0, 0, 0,
+                updateWord.reading, Level.LOW, 0, 0, 0,
                 0, 0, 0, 0, 0, 0
             )
             wordDao.updateWord(RoomWords.from(newWord))

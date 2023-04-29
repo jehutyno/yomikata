@@ -48,7 +48,7 @@ class QuizPresenter(
 
     private var ttsSupported = TextToSpeech.LANG_NOT_SUPPORTED
     private var isFuriDisplayed = false
-    private var hasMistaken = false
+    private var previousAnswerWrong = false  // true if and only if wrong choice in the current word
     private var errorMode = false
     private var quizEnded = false
 
@@ -83,7 +83,7 @@ class QuizPresenter(
 
     override fun onSaveInstanceState(outState: Bundle) {
         outState.putParcelableArrayList("errors", answers)
-        outState.putBoolean("hasMistaken", hasMistaken)
+        outState.putBoolean("previousQCMAnswerWrong", previousAnswerWrong)
         if (randoms.size == 4) {
             outState.putParcelable("random0", randoms[0].first)
             outState.putParcelable("random1", randoms[1].first)
@@ -109,7 +109,7 @@ class QuizPresenter(
 
     override fun onRestoreInstanceState(savedInstanceState: Bundle) {
         quizView.reInitUI()
-        hasMistaken = savedInstanceState.getBoolean("hasMistaken")
+        previousAnswerWrong = savedInstanceState.getBoolean("previousQCMAnswerWrong")
 
         val random0: Word?
         val random1: Word?
@@ -155,7 +155,7 @@ class QuizPresenter(
         quizView.displayWords(quizWords)
         currentItem = savedInstanceState.getInt("position") - 1 // -1 because setUpQuiz will do the +1
         quizView.setPagerPosition(currentItem)
-        if (hasMistaken)
+        if (previousAnswerWrong)
             quizView.displayEditDisplayAnswerButton()
         runBlocking {
             setUpNextQuiz()
@@ -378,11 +378,11 @@ class QuizPresenter(
         if (quizTypes.contains(QuizType.TYPE_AUTO.type)) {
             val autoTypes = arrayListOf<Int>()
             when (word.level) {
-                0 -> {
+                Level.LOW -> {
                     autoTypes.add(QuizType.TYPE_PRONUNCIATION_QCM.type)
                     autoTypes.add(QuizType.TYPE_JAP_EN.type)
                 }
-                1 -> {
+                Level.MEDIUM -> {
                     autoTypes.add(QuizType.TYPE_PRONUNCIATION_QCM.type)
                     autoTypes.add(QuizType.TYPE_JAP_EN.type)
                     autoTypes.add(QuizType.TYPE_EN_JAP.type)
@@ -486,7 +486,7 @@ class QuizPresenter(
     }
 
     override fun onEditActionClick() {
-        if (hasMistaken)
+        if (previousAnswerWrong)
             quizView.displayEditAnswer(if (errorMode) errors[currentItem].first.reading else quizWords[currentItem].first.reading)
         else
             quizView.clearEdit()
@@ -519,67 +519,38 @@ class QuizPresenter(
         return result
     }
 
-    suspend fun updateRepetitionAndPoints(word: Word, quizType: QuizType, result: Boolean) {
-        val speed = defaultSharedPreferences.getString("speed", "2")?.toInt()
-        val fromLevel = word.level
-        var toLevel = word.level
-        val fromPoints = word.points
-        var toPoints = word.points
-        if (!hasMistaken) {
-            if (result && word.level < 3) {
-                if (word.points + quizType.points * speed!! >= 200) {
-                    updateRepetitions(word.id, word.level + 2, word.points, result)
-                    updateWordLevel(word.id, word.level + 2)
-                    toLevel = word.level + 2
-                    toPoints = 0
-                } else if (word.points + quizType.points * speed >= 100) {
-                    updateRepetitions(word.id, word.level + 1, word.points, result)
-                    updateWordLevel(word.id, word.level + 1)
-                    toLevel = word.level + 1
-                    toPoints = 0
-                } else {
-                    updateRepetitions(word.id, quizWords[currentItem].first.level, word.points + quizType.points * speed, result)
-                    updateWordPoints(word.id, word.points + quizType.points * speed)
-                    toLevel = word.level + 2
-                    toPoints = word.points + quizType.points * speed
-                }
-            } else if (!result && word.level > 0) {
-                if (word.level == 3 || word.points - quizType.points * speed!! < 0) {
-                    updateRepetitions(word.id, word.level - 1, word.points, result)
-                    updateWordLevel(word.id, word.level - 1)
-                    toLevel = word.level - 1
-                    toPoints = 0
-                } else {
-                    updateRepetitions(word.id, word.level, 0, result)
-                    updateWordPoints(word.id, 0)
-                    toLevel = word.level
-                    toPoints = 0
-                }
-            } else if (result && word.level >= 3) {
-                val points = word.points + quizType.points * speed!!
-                updateRepetitions(word.id, word.level, points, result)
-                updateWordPoints(word.id, points)
-                toLevel = word.level + 1
-                toPoints = points
-            } else {
-                updateRepetitions(word.id, word.level, word.points, result)
-            }
-            word.level = toLevel
-            word.points = toPoints
-            quizView.animateColor(currentItem, word, currentSentence, quizType, fromLevel, toLevel, fromPoints, toPoints)
-        }
+    private suspend fun updateRepetitionAndPoints(word: Word, quizType: QuizType, result: Boolean) {
+        val speed = defaultSharedPreferences.getString("speed", "2")!!.toInt()
 
-        hasMistaken = !result
+        if (previousAnswerWrong) {
+            return  // do not update since the user already got it wrong on this word
+        }
+        previousAnswerWrong = !result
+
+        val newPoints = (word.points + (if (result) 1 else -1) * quizType.points * speed)
+                            .coerceIn(0, Level.MAX.minPoints)   // should be positive and less than MAX
+        val newLevel = getLevelFromPoints(newPoints)
+        val newRepetition = getRepetition(newPoints, result)
+
+        // update database word
+        updateWordLevel(word.id, newLevel)
+        updateRepetitions(word.id, newRepetition)
+
+        quizView.animateColor(currentItem, word, currentSentence, quizType, word.points, newPoints)
+
+        // update in-memory word
+        word.level = newLevel
+        word.points = newPoints
     }
 
     fun addCurrentWordToAnswers(answer: String) {
         val word = quizWords[currentItem].first
-        val color = if (!hasMistaken) "#77d228" else "#d22828'"
+        val color = if (!previousAnswerWrong) "#77d228" else "#d22828'"
         if (answers.size > 0 && answers[0].wordId == word.id) {
             answers[0].answer += "<br><font color='$color'>$answer</font>"
         } else {
             answers.add(0, Answer(
-                if (hasMistaken) 0 else 1,
+                if (previousAnswerWrong) 0 else 1,
                 "<font color='$color'>$answer</font>",
                 word.id,
                 currentSentence.id,
@@ -590,7 +561,7 @@ class QuizPresenter(
 
     override suspend fun onNextWord() {
         sessionCount--
-        hasMistaken = false
+        previousAnswerWrong = false
         quizView.reInitUI()
 
         if (!errorMode) {
@@ -698,7 +669,7 @@ class QuizPresenter(
         wordRepository.updateWordPoints(wordId, points)
     }
 
-    override suspend fun updateWordLevel(wordId: Long, level: Int) {
+    override suspend fun updateWordLevel(wordId: Long, level: Level) {
         wordRepository.updateWordLevel(wordId, level)
     }
 
@@ -734,24 +705,24 @@ class QuizPresenter(
             sentence
     }
 
-    override suspend fun updateRepetitions(id: Long, level: Int, points: Int, result: Boolean) {
-        val newRepetition =
-            if (result) {
-                when (level) {
-                    0 -> if (points > 50) 6 else 4
-                    1 -> if (points > 50) 12 else 8
-                    2 -> if (points > 50) 16 else 14
-                    else -> Math.min(20 + (points / 10), 100)
-                }
-            } else {
-                when (level) {
-                    0 -> if (points > 50) 3 else 2
-                    1 -> if (points > 50) 6 else 4
-                    2 -> if (points > 50) 9 else 7
-                    else -> if (points > 50) 12 else 10
-                }
-            }
-        wordRepository.updateWordRepetition(id, newRepetition)
+    override suspend fun updateRepetitions(id: Long, repetition: Int) {
+//        val newRepetition =
+//            if (result) {
+//                when (level) {
+//                    0 -> if (points > 50) 6 else 4
+//                    1 -> if (points > 50) 12 else 8
+//                    2 -> if (points > 50) 16 else 14
+//                    else -> Math.min(20 + (points / 10), 100)
+//                }
+//            } else {
+//                when (level) {
+//                    0 -> if (points > 50) 3 else 2
+//                    1 -> if (points > 50) 6 else 4
+//                    2 -> if (points > 50) 9 else 7
+//                    else -> if (points > 50) 12 else 10
+//                }
+//            }
+        wordRepository.updateWordRepetition(id, repetition)
     }
 
     override suspend fun decreaseAllRepetitions() {
@@ -790,8 +761,8 @@ class QuizPresenter(
         quizView.reportError(quizWords[position].first, currentSentence)
     }
 
-    override fun hasMistaken(): Boolean {
-        return hasMistaken
+    override fun previousAnswerWrong(): Boolean {
+        return previousAnswerWrong
     }
 
 }
