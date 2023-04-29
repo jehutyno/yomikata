@@ -14,6 +14,9 @@ import android.widget.EditText
 import android.widget.FrameLayout
 import androidx.appcompat.widget.PopupMenu
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -50,6 +53,7 @@ class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, Wo
     private var level = -1
     private var lastPosition = -1
     private lateinit var selections: List<Quiz>
+    private var dialog: WordDetailDialogFragment? = null
 
     // seekBars
     private lateinit var seekBars : SeekBarsManager
@@ -85,19 +89,19 @@ class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, Wo
         setHasOptionsMenu(true)
     }
 
+
+    private val wordsObserver = Observer<List<Word>> {
+        words -> displayWords(words)
+    }
+    private val selectionsObserver = Observer<List<Quiz>> {
+        selections -> selectionLoaded(selections)
+    }
+
     override fun onStart() {
         super.onStart()
         mpresenter?.start()
-        mpresenter?.words?.observe(viewLifecycleOwner) {
-            displayWords(it)
-        }
-        mpresenter?.selections?.observe(viewLifecycleOwner) {
-            if (it.isEmpty()) {
-                noSelections()
-            } else {
-                selectionLoaded(it)
-            }
-        }
+        mpresenter?.words?.observe(viewLifecycleOwner, wordsObserver)
+        mpresenter?.selections?.observe(viewLifecycleOwner, selectionsObserver)
 
         runBlocking {
             displayStats()
@@ -185,10 +189,23 @@ class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, Wo
         bundle.putInt(Extras.EXTRA_WORD_POSITION, position)
         bundle.putString(Extras.EXTRA_SEARCH_STRING, "")
 
-        val dialog = WordDetailDialogFragment(di)
-        dialog.arguments = bundle
-        dialog.show(childFragmentManager, "")
-        dialog.isCancelable = true
+        // unbind observer to prevent word from disappearing while viewing in detail dialog
+        mpresenter?.words?.removeObserver(wordsObserver)
+        mpresenter?.selections?.removeObserver(selectionsObserver)
+
+        dialog = WordDetailDialogFragment(di)
+        dialog!!.arguments = bundle
+        dialog!!.show(childFragmentManager, "")
+        dialog!!.isCancelable = true
+
+        dialog!!.lifecycle.addObserver(object: DefaultLifecycleObserver {
+            override fun onDestroy(owner: LifecycleOwner) {
+                super.onDestroy(owner)
+                // continue observing
+                mpresenter?.words?.observe(viewLifecycleOwner, wordsObserver)
+                mpresenter?.selections?.observe(viewLifecycleOwner, selectionsObserver)
+            }
+        })
     }
 
     override fun onCategoryIconClick(position: Int) {
@@ -342,9 +359,6 @@ class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, Wo
         selections = quizzes
     }
 
-    override fun noSelections() {
-        selections = emptyList()
-    }
 
     override fun onDestroyView() {
         super.onDestroyView()

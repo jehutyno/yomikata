@@ -50,6 +50,8 @@ class WordDetailDialogFragment(private val di: DI) : DialogFragment(), WordContr
     private val voicesManager: VoicesManager by subDI.instance()
 
     private lateinit var adapter: WordPagerAdapter
+    private var locked: Boolean = true     // if locked -> don't adapt to database changes
+    private var initialLoad: Boolean = false    // used if locked = true to make sure initial load happened
     private var wordId: Long = -1
     private var quizIds: LongArray? = null
     private var quizType: QuizType? = null
@@ -148,9 +150,12 @@ class WordDetailDialogFragment(private val di: DI) : DialogFragment(), WordContr
         wordPresenter.start()
         wordPresenter.words?.let {
             it.observe(this) { words ->
+                if (initialLoad && locked)
+                    return@observe
                 lifecycleScope.launch {
                     displayWords(wordPresenter.getWordKanjiSoloRadicalSentenceList(words))
                 }
+                initialLoad = true
             }
         }
         if (wordPresenter.words == null) {

@@ -5,7 +5,6 @@ import com.jehutyno.yomikata.BasePresenter
 import com.jehutyno.yomikata.BaseView
 import com.jehutyno.yomikata.model.Quiz
 import com.jehutyno.yomikata.model.Word
-import java.util.*
 
 
 /**
@@ -17,7 +16,6 @@ interface ContentContract {
         fun displayWords(words: List<Word>)
         suspend fun displayStats()
         fun selectionLoaded(quizzes: List<Quiz>)
-        fun noSelections()
     }
 
     interface Presenter: BasePresenter {
