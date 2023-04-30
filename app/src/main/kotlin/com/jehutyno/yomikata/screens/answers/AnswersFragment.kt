@@ -141,7 +141,7 @@ class AnswersFragment(private val di: DI) : Fragment(), AnswersContract.View, An
 
         requireActivity().alertDialog {
             titleResource = R.string.new_selection
-            setView(input)
+            setView(container)
 
             okButton {
                 lifecycleScope.launch {
