@@ -7,7 +7,6 @@ import android.text.InputType
 import android.view.LayoutInflater
 import android.view.View
 import android.view.View.GONE
-import android.view.View.INVISIBLE
 import android.view.View.VISIBLE
 import android.view.ViewGroup
 import android.widget.EditText
@@ -122,13 +121,8 @@ class QuizzesFragment(di: DI) : Fragment(), QuizzesContract.View, QuizzesAdapter
         super.onPause()
 
         // cancel animation in case it is currently running
-        seekBars.cancelAll()
-
         // set all to zero to prepare for the next animation when the page resumes again
-        binding.seekLow.progress = 0
-        binding.seekMedium.progress = 0
-        binding.seekHigh.progress = 0
-        binding.seekMaster.progress = 0
+        seekBars.resetAll()
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -307,7 +301,6 @@ class QuizzesFragment(di: DI) : Fragment(), QuizzesContract.View, QuizzesAdapter
     }
 
     override fun displayQuizzes(quizzes: List<Quiz>) {
-        binding.recyclerview.visibility
         adapter.replaceData(quizzes, selectedCategory == Categories.CATEGORY_SELECTIONS)
         binding.recyclerview.scrollToPosition(0)
 
@@ -316,24 +309,11 @@ class QuizzesFragment(di: DI) : Fragment(), QuizzesContract.View, QuizzesAdapter
             ids.add(it.id)
         }
 
-        lifecycleScope.launch {
-            seekBars.count = mpresenter.countQuiz(ids.toLongArray())
-            seekBars.low = mpresenter.countLow(ids.toLongArray())
-            seekBars.medium = mpresenter.countMedium(ids.toLongArray())
-            seekBars.high = mpresenter.countHigh(ids.toLongArray())
-            seekBars.master = mpresenter.countMaster(ids.toLongArray())
-
-            binding.textLow.text = seekBars.low.toString()
-            binding.textMedium.text = seekBars.medium.toString()
-            binding.textHigh.text = seekBars.high.toString()
-            binding.textMaster.text = seekBars.master.toString()
-
-            binding.playLow.visibility = if (seekBars.low > 0) VISIBLE else INVISIBLE
-            binding.playMedium.visibility = if (seekBars.medium > 0) VISIBLE else INVISIBLE
-            binding.playHigh.visibility = if (seekBars.high > 0) VISIBLE else INVISIBLE
-            binding.playMaster.visibility = if (seekBars.master > 0) VISIBLE else INVISIBLE
-
-            seekBars.animateAll()
+        seekBars.setTextViews(binding.textLow, binding.textMedium, binding.textHigh, binding.textMaster)
+        seekBars.setPlay(binding.playLow, binding.playMedium, binding.playHigh, binding.playMaster)
+        mpresenter.let {
+            seekBars.setObservers(it.quizCount,
+                it.lowCount, it.mediumCount, it.highCount, it.masterCount, viewLifecycleOwner)
         }
     }
 

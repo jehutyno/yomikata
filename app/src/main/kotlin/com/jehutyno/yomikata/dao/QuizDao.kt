@@ -49,10 +49,10 @@ interface QuizDao {
            "ON quiz_word.word_id = words._id " +
            "AND quiz_word.quiz_id IN (:quizIds) " +
            "AND words.level = :level")
-    suspend fun countWordsForLevel(quizIds: LongArray, level: Int): Int
+    fun countWordsForLevel(quizIds: LongArray, level: Int): Flow<Int>
 
     @Query("SELECT COUNT(*) FROM words JOIN quiz_word " +
            "ON quiz_word.word_id = words._id " +
            "AND quiz_word.quiz_id IN (:quizIds)")
-    suspend fun countWordsForQuizzes(quizIds: LongArray): Int
+    fun countWordsForQuizzes(quizIds: LongArray): Flow<Int>
 }

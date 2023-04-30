@@ -59,11 +59,11 @@ class QuizSource(private val quizDao: QuizDao) : QuizRepository {
         quizDao.deleteWordFromQuiz(wordId, quizId)
     }
 
-    override suspend fun countWordsForLevel(quizIds: LongArray, level: Int): Int {
+    override fun countWordsForLevel(quizIds: LongArray, level: Int): Flow<Int> {
         return quizDao.countWordsForLevel(quizIds, level)
     }
 
-    override suspend fun countWordsForQuizzes(quizIds: LongArray): Int {
+    override fun countWordsForQuizzes(quizIds: LongArray): Flow<Int> {
         return quizDao.countWordsForQuizzes(quizIds)
     }
 }

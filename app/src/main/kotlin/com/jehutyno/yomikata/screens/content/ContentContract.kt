@@ -14,18 +14,18 @@ interface ContentContract {
 
     interface View: BaseView<Presenter> {
         fun displayWords(words: List<Word>)
-        suspend fun displayStats()
+        fun displayStats()
         fun selectionLoaded(quizzes: List<Quiz>)
     }
 
     interface Presenter: BasePresenter {
         val words: LiveData<List<Word>>
         val selections: LiveData<List<Quiz>>
-        suspend fun countLow(ids: LongArray): Int
-        suspend fun countMedium(ids: LongArray): Int
-        suspend fun countHigh(ids: LongArray): Int
-        suspend fun countMaster(ids: LongArray): Int
-        suspend fun countQuiz(ids: LongArray): Int
+        val quizCount: LiveData<Int>
+        val lowCount: LiveData<Int>
+        val mediumCount: LiveData<Int>
+        val highCount: LiveData<Int>
+        val masterCount: LiveData<Int>
         suspend fun updateWordCheck(id: Long, check: Boolean)
         suspend fun isWordInQuiz(wordId: Long, quizId: Long): Boolean
         suspend fun createSelection(quizName: String): Long

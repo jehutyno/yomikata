@@ -26,15 +26,16 @@ interface QuizzesContract {
 
     interface Presenter : BasePresenter {
         val quizList : LiveData<List<Quiz>>
+        val quizCount: LiveData<Int>
+        val lowCount: LiveData<Int>
+        val mediumCount: LiveData<Int>
+        val highCount: LiveData<Int>
+        val masterCount: LiveData<Int>
         suspend fun createQuiz(quizName: String)
         suspend fun updateQuizName(quizId: Long, quizName: String)
         suspend fun deleteQuiz(quizId: Long)
-        suspend fun updateQuizCheck(id: Long, checked: Boolean)
-        suspend fun countLow(ids: LongArray): Int
         suspend fun countQuiz(ids: LongArray): Int
-        suspend fun countMedium(ids: LongArray): Int
-        suspend fun countHigh(ids: LongArray): Int
-        suspend fun countMaster(ids: LongArray): Int
+        suspend fun updateQuizCheck(id: Long, checked: Boolean)
         fun initQuizTypes()
         fun pronunciationQcmSwitch()
         fun pronunciationSwitch()

@@ -3,6 +3,7 @@ package com.jehutyno.yomikata.screens.quizzes
 import android.content.Context
 import android.util.Log
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.asFlow
 import androidx.lifecycle.asLiveData
 import androidx.preference.PreferenceManager
 import com.jehutyno.yomikata.model.Quiz
@@ -14,6 +15,11 @@ import com.jehutyno.yomikata.util.Categories
 import com.jehutyno.yomikata.util.Prefs
 import com.jehutyno.yomikata.util.QuizStrategy
 import com.jehutyno.yomikata.util.QuizType
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
 import mu.KLogging
 import java.util.*
 
@@ -40,6 +46,40 @@ class QuizzesPresenter(
     // from Room
     override val quizList : LiveData<List<Quiz>> = quizRepository.getQuiz(category).asLiveData()
 
+    @ExperimentalCoroutinesApi
+    private fun getLiveData(level: Int?): LiveData<Int> {
+        val function : (List<Quiz>) -> Flow<Int> =
+            if (level == null)
+                { quizzes -> quizRepository.countWordsForQuizzes(
+                    quizzes.map {it.id}.toLongArray()
+                ) }
+            else
+                { quizzes -> quizRepository.countWordsForLevel(
+                    quizzes.map {it.id}.toLongArray(),
+                    level
+                ) }
+
+        return quizList.asFlow().flatMapLatest { quizzes ->
+            function(quizzes)
+        }.asLiveData()
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    override val quizCount: LiveData<Int> = getLiveData(null)
+    @OptIn(ExperimentalCoroutinesApi::class)
+    override val lowCount: LiveData<Int> = getLiveData(0)
+    @OptIn(ExperimentalCoroutinesApi::class)
+    override val mediumCount: LiveData<Int> = getLiveData(1)
+    @OptIn(ExperimentalCoroutinesApi::class)
+    override val highCount: LiveData<Int> = getLiveData(2)
+    @OptIn(ExperimentalCoroutinesApi::class)
+    override val masterCount: LiveData<Int> = getLiveData(3).asFlow().combine(
+        getLiveData(4).asFlow()
+    ) { value3, value4 ->
+        value3 + value4
+    }.asLiveData()
+
+
     override fun start() {
         Log.i("YomikataZK", "Home Presenter start")
     }
@@ -61,23 +101,7 @@ class QuizzesPresenter(
     }
 
     override suspend fun countQuiz(ids: LongArray): Int {
-        return quizRepository.countWordsForQuizzes(ids)
-    }
-
-    override suspend fun countLow(ids: LongArray): Int {
-        return quizRepository.countWordsForLevel(ids, 0)
-    }
-
-    override suspend fun countMedium(ids: LongArray): Int {
-        return quizRepository.countWordsForLevel(ids, 1)
-    }
-
-    override suspend fun countHigh(ids: LongArray): Int {
-        return quizRepository.countWordsForLevel(ids, 2)
-    }
-
-    override suspend fun countMaster(ids: LongArray): Int {
-        return quizRepository.countWordsForLevel(ids, 3) + quizRepository.countWordsForLevel(ids, 4)
+        return quizRepository.countWordsForQuizzes(ids).first()
     }
 
     override fun initQuizTypes() {

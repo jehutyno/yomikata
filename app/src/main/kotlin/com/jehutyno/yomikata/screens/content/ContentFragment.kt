@@ -17,7 +17,6 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.Observer
-import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.jehutyno.yomikata.R
@@ -103,9 +102,7 @@ class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, Wo
         mpresenter?.words?.observe(viewLifecycleOwner, wordsObserver)
         mpresenter?.selections?.observe(viewLifecycleOwner, selectionsObserver)
 
-        runBlocking {
-            displayStats()
-        }
+        displayStats()
     }
 
     override fun onResume() {
@@ -117,41 +114,29 @@ class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, Wo
         mpresenter?.start()
         binding.recyclerviewContent.scrollToPosition(position)
 
-        lifecycleScope.launch {
-            displayStats()
-            seekBars.animateAll()
-        }
+        seekBars.animateAll()
     }
 
     override fun onPause() {
         super.onPause()
 
         // cancel animation in case it is currently running
-        seekBars.cancelAll()
-
         // set all to zero to prepare for the next animation when the page resumes again
-        binding.seekLow.progress = 0
-        binding.seekMedium.progress = 0
-        binding.seekHigh.progress = 0
-        binding.seekMaster.progress = 0
+        seekBars.resetAll()
     }
 
-    override suspend fun displayStats() {
-        seekBars.count = mpresenter!!.countQuiz(quizIds)
-        seekBars.low = mpresenter!!.countLow(quizIds)
-        seekBars.medium = mpresenter!!.countMedium(quizIds)
-        seekBars.high = mpresenter!!.countHigh(quizIds)
-        seekBars.master = mpresenter!!.countMaster(quizIds)
-        if (level > -1) {
+    override fun displayStats() {
+        if (level > -1) {   // no need to update visibilities using LiveData, since it is only set once per fragment
             binding.seekLowContainer.visibility = if (level == 0) VISIBLE else GONE
             binding.seekMediumContainer.visibility = if (level == 1) VISIBLE else GONE
             binding.seekHighContainer.visibility = if (level == 2) VISIBLE else GONE
             binding.seekMasterContainer.visibility = if (level == 3) VISIBLE else GONE
         }
-        binding.textLow.text = seekBars.low.toString()
-        binding.textMedium.text = seekBars.medium.toString()
-        binding.textHigh.text = seekBars.high.toString()
-        binding.textMaster.text = seekBars.master.toString()
+        seekBars.setTextViews(binding.textLow, binding.textMedium, binding.textHigh, binding.textMaster)
+        mpresenter!!.let {
+            seekBars.setObservers(it.quizCount,
+                it.lowCount, it.mediumCount, it.highCount, it.masterCount, viewLifecycleOwner)
+        }
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {

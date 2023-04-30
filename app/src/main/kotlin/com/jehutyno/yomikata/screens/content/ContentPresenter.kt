@@ -7,8 +7,8 @@ import com.jehutyno.yomikata.model.Word
 import com.jehutyno.yomikata.repository.QuizRepository
 import com.jehutyno.yomikata.repository.WordRepository
 import com.jehutyno.yomikata.util.Categories
+import kotlinx.coroutines.flow.combine
 import mu.KLogging
-import java.util.*
 
 
 /**
@@ -29,29 +29,19 @@ class ContentPresenter(
     // define LiveData
     override val words: LiveData<List<Word>> = wordRepository.getWordsByLevel(quizIds, level).asLiveData()
     override val selections: LiveData<List<Quiz>> = quizRepository.getQuiz(Categories.CATEGORY_SELECTIONS).asLiveData()
+    override val quizCount: LiveData<Int> = quizRepository.countWordsForQuizzes(quizIds).asLiveData()
+    override val lowCount: LiveData<Int> = quizRepository.countWordsForLevel(quizIds, 0).asLiveData()
+    override val mediumCount: LiveData<Int> = quizRepository.countWordsForLevel(quizIds, 1).asLiveData()
+    override val highCount: LiveData<Int> = quizRepository.countWordsForLevel(quizIds, 2).asLiveData()
+    override val masterCount: LiveData<Int> = quizRepository.countWordsForLevel(quizIds, 3).combine(
+                                                        quizRepository.countWordsForLevel(quizIds, 4)
+                                                    ) {
+                                                        value3, value4 -> value3 + value4
+                                                    }.asLiveData()
+
 
     override fun start() {
         logger.info("Content presenter start")
-    }
-
-    override suspend fun countQuiz(ids: LongArray): Int {
-        return quizRepository.countWordsForQuizzes(ids)
-    }
-
-    override suspend fun countLow(ids: LongArray): Int {
-        return quizRepository.countWordsForLevel(ids, 0)
-    }
-
-    override suspend fun countMedium(ids: LongArray): Int {
-        return quizRepository.countWordsForLevel(ids, 1)
-    }
-
-    override suspend fun countHigh(ids: LongArray): Int {
-        return quizRepository.countWordsForLevel(ids, 2)
-    }
-
-    override suspend fun countMaster(ids: LongArray): Int {
-        return quizRepository.countWordsForLevel(ids, 3) + quizRepository.countWordsForLevel(ids, 4)
     }
 
     override suspend fun updateWordCheck(id: Long, check: Boolean) {
