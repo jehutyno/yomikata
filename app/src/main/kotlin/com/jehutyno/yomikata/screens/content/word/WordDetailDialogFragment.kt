@@ -20,10 +20,9 @@ import com.jehutyno.yomikata.model.KanjiSoloRadical
 import com.jehutyno.yomikata.model.Sentence
 import com.jehutyno.yomikata.model.Word
 import com.jehutyno.yomikata.util.*
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withContext
 import org.kodein.di.*
 import splitties.alertdialog.appcompat.*
 
@@ -243,12 +242,12 @@ class WordDetailDialogFragment(private val di: DI) : DialogFragment(), WordContr
 
     override fun onLevelUp(position: Int) = runBlocking {
         wordPresenter.levelUp(adapter.words[position].first.id, adapter.words[position].first.points)
-//        waitAndUpdateLevel(position, adapter.words[position].first.points) TODO: livedata?
+        waitAndUpdateLevel(position, levelUp(adapter.words[position].first.points))
     }
 
     override fun onLevelDown(position: Int) = runBlocking {
         wordPresenter.levelDown(adapter.words[position].first.id, adapter.words[position].first.points)
-//        waitAndUpdateLevel(position, adapter.words[position].first.points)
+        waitAndUpdateLevel(position, levelDown(adapter.words[position].first.points))
     }
 
     override fun onCloseClick() {
@@ -256,18 +255,11 @@ class WordDetailDialogFragment(private val di: DI) : DialogFragment(), WordContr
     }
 
     private fun waitAndUpdateLevel(position: Int, points: Int) {
-        val newLevel = getLevelFromPoints(points)
-        if (newLevel != adapter.words[position].first.level) {
-            adapter.words[position].first.level = newLevel
-        }
         adapter.words[position].first.points = points
+        adapter.words[position].first.level = getLevelFromPoints(points)
         lifecycleScope.launch {
-            withContext(Dispatchers.IO) {
-                Thread.sleep(300)
-            }
-            withContext(Dispatchers.Main) {
-                adapter.notifyDataSetChanged()
-            }
+            delay(300L)
+            adapter.notifyDataSetChanged()
         }
     }
 

@@ -34,6 +34,12 @@ interface WordDao {
            "AND words.repetition = :repetition ORDER BY words._id LIMIT :limit")
     suspend fun getWordsByRepetition(quizIds: LongArray, repetition: Int, limit: Int): List<RoomWords>
 
+    @Query("SELECT words.* FROM words JOIN quiz_word " +
+            "ON quiz_word.word_id = words._id " +
+            "AND quiz_word.quiz_id IN (:quizIds) " +
+            "AND words.repetition >= :minRepetition ORDER BY words.repetition, words._id LIMIT :limit")
+    suspend fun getWordsByMinRepetition(quizIds: LongArray, minRepetition: Int, limit: Int): List<RoomWords>
+
     @Query("SELECT words._id FROM words JOIN quiz_word " +
            "ON quiz_word.word_id = words._id " +
            "AND quiz_word.quiz_id IN (:quizIds) " +

@@ -533,6 +533,7 @@ class QuizPresenter(
         val newRepetition = getRepetition(newPoints, result)
 
         // update database word
+        updateWordPoints(word.id, newPoints)
         updateWordLevel(word.id, newLevel)
         updateRepetitions(word.id, newRepetition)
 
@@ -678,16 +679,14 @@ class QuizPresenter(
     }
 
     override suspend fun getNextWords(): List<Pair<Word, QuizType>> {
+        // first get words that need to be reviewed (rep = 0)
         val words = wordRepository.getWordsByRepetition(quizIds, 0, sessionLength!!)
+        // if session length not reached yet, get completely new words (rep = -1)
         if (words.size < sessionLength!!) {
             words.addAll(wordRepository.getWordsByRepetition(quizIds, -1, sessionLength!! - words.size))
         }
-        for (i in 1..101) {
-            if (words.size < sessionLength!!) {
-                words.addAll(wordRepository.getWordsByRepetition(quizIds, i, sessionLength!! - words.size))
-            } else
-                break
-        }
+        // fill up to session length with other words (rep >= 1)
+        words.addAll(wordRepository.getWordsByMinRepetition(quizIds, 1, sessionLength!! - words.size))
         shuffle(words)
 
         return createWordTypePair(words)

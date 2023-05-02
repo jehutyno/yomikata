@@ -64,13 +64,12 @@ class WordSource(private val wordDao: WordDao) : WordRepository {
         }
     }
 
-    override suspend fun getWordsByRepetition(
-        quizIds: LongArray,
-        repetition: Int,
-        limit: Int
-    ): ArrayList<Word> {
-        return wordDao.getWordsByRepetition(quizIds, repetition, limit)
-            .map { it.toWord() } as ArrayList<Word>
+    override suspend fun getWordsByRepetition(quizIds: LongArray, repetition: Int, limit: Int): ArrayList<Word> {
+        return wordDao.getWordsByRepetition(quizIds, repetition, limit).map { it.toWord() } as ArrayList<Word>
+    }
+
+    override suspend fun getWordsByMinRepetition(quizIds: LongArray, minRepetition: Int, limit: Int): ArrayList<Word> {
+        return wordDao.getWordsByMinRepetition(quizIds, minRepetition, limit).map { it.toWord() } as ArrayList<Word>
     }
 
     override suspend fun getRandomWords(

@@ -21,6 +21,7 @@ interface WordRepository {
     suspend fun getRandomWords(wordId: Long, answer: String, wordSize: Int, limit: Int, quizType: QuizType): ArrayList<Word>
     suspend fun updateWordPoints(wordId: Long, points: Int)
     suspend fun getWordsByRepetition(quizIds: LongArray, repetition: Int, limit: Int): ArrayList<Word>
+    suspend fun getWordsByMinRepetition(quizIds: LongArray, minRepetition: Int, limit: Int): ArrayList<Word>
     suspend fun updateWordRepetition(wordId: Long, repetition: Int)
     suspend fun decreaseWordsRepetition(quizIds: LongArray)
     suspend fun updateWordSelected(wordId: Long, check: Boolean)
