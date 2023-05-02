@@ -635,12 +635,12 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
 
         requireContext().alertDialog {
             message = getString(R.string.alert_session_finished, sessionLength)
-            neutralButton(R.string.alert_continue) {
+            positiveButton(R.string.alert_continue) {
                 runBlocking {
                     presenter.onLaunchNextProgressiveSession()
                 }
             }
-            positiveButton(R.string.alert_quit) { finishQuiz() }
+            neutralButton(R.string.alert_quit) { finishQuiz() }
             setCancelable(false)    // avoid accidental click out of session
         }.show()
     }
@@ -699,7 +699,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
     override fun showAlertQuizEnd(proposeErrors: Boolean) {
         requireContext().alertDialog {
             messageResource = R.string.alert_quiz_finished
-            neutralButton(R.string.alert_restart) {
+            positiveButton(R.string.alert_restart) {
                 runBlocking {
                     presenter.onRestartQuiz()
                 }
@@ -711,7 +711,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
                     }
                 }
             }
-            positiveButton(R.string.alert_quit) {
+            neutralButton(R.string.alert_quit) {
                 finishQuiz()
             }
             setCancelable(false)    // avoid accidental click out of session
