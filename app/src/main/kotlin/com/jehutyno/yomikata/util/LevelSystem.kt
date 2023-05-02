@@ -147,6 +147,25 @@ fun levelDown(points: Int): Int {
 }
 
 /**
+ * Add points
+ *
+ * Returns the new number of points after answering a question based on QuizType and speed.
+ *
+ * @param points Current number of points
+ * @param answerIsCorrect True if the answer was correct, false otherwise
+ * @param quizType The QuizType of the answered quiz, used to rate the difficulty
+ * @param speed The speed setting,  slow = 1, default = 2, fast = 3
+ * @return The new points
+ */
+fun addPoints(points: Int, answerIsCorrect: Boolean, quizType: QuizType, speed: Int): Int {
+    // if correct, simply add the points, if wrong add
+    val plusOrMinus = (if (answerIsCorrect) 1 else -1)
+    return (
+        points + plusOrMinus * (BASE_POINTS + quizType.extraPoints) * speed
+    ).coerceIn(0, Level.MAX.minPoints)   // should be positive and less than MAX
+}
+
+/**
  * Get repetition
  *
  * Gives the repetition using an exponential growth.

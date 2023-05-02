@@ -520,15 +520,14 @@ class QuizPresenter(
     }
 
     private suspend fun updateRepetitionAndPoints(word: Word, quizType: QuizType, result: Boolean) {
-        val speed = defaultSharedPreferences.getString("speed", "2")!!.toInt()
-
         if (previousAnswerWrong) {
             return  // do not update since the user already got it wrong on this word
         }
         previousAnswerWrong = !result
 
-        val newPoints = (word.points + (if (result) 1 else -1) * quizType.points * speed)
-                            .coerceIn(0, Level.MAX.minPoints)   // should be positive and less than MAX
+        val speed = defaultSharedPreferences.getString("speed", "2")!!.toInt()
+
+        val newPoints = addPoints(word.points, result, quizType, speed)
         val newLevel = getLevelFromPoints(newPoints)
         val newRepetition = getRepetition(newPoints, result)
 
