@@ -165,7 +165,7 @@ class QuizDaoTest {
         quizDao.addQuizWord(quizWord)
         val level = test.level
         assert (
-            quizDao.countWordsForLevel(longArrayOf(quizId), level) == 1
+            quizDao.countWordsForLevel(longArrayOf(quizId), level).first() == 1
         )
     }
 
@@ -176,7 +176,7 @@ class QuizDaoTest {
         val quizIds = longArrayOf(1, 2)
         val actualCount = coupledSamples.countWordsForQuizzes(quizIds)
         assert (
-            actualCount == quizDao.countWordsForQuizzes(quizIds)
+            actualCount == quizDao.countWordsForQuizzes(quizIds).first()
         )
     }
 
