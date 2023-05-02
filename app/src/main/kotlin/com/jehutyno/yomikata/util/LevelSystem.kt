@@ -1,13 +1,19 @@
 package com.jehutyno.yomikata.util
 
 import kotlin.math.ceil
-import kotlin.math.exp
+import kotlin.math.pow
+
 
 /**
- * Levels are used to sort words in separate lists that the user can easily select which
+ * Level
+ *
+ * Levels are used to sort words in separate lists so that the user can easily select which
  * words to study based on how well they know them.
+ *
+ * @property level Integer value corresponding to the level, should be usable as indices for an
+ * array, so: 0, 1, 2, ...
+ * @property minPoints The minimum number of points for a word to be in this Level.
  */
-
 enum class Level(val level: Int, val minPoints: Int) {
     // level ints must be declared as array indices (see Int.toLevel)
     LOW(0, 0),
@@ -15,7 +21,7 @@ enum class Level(val level: Int, val minPoints: Int) {
     HIGH(2, 250),            // 100 -> 250   diff = 150
     MASTER(3, 475),          // 250 -> 475   diff = 225
     MAX(4, 700)              // 700 gives repetition of about 1200 (see getRepetition)
-}
+}   // MAX represents the maximum level, so its "minPoints" is also the maxPoints
 
 fun Int.toLevel(): Level {
     return Level.values()[this]
@@ -24,7 +30,7 @@ fun Int.toLevel(): Level {
 /**
  * Get next level
  *
- * WARNING: remember to update the points as well!
+ * WARNING: remember to update the points as well! (see levelUp)
  *
  * @param level Current level
  * @return The next level, or MAX if level is the MAX level
@@ -38,7 +44,7 @@ fun getNextLevel(level: Level): Level {
 /**
  * Get previous level
  *
- * WARNING: remember to update the points as well!
+ * WARNING: remember to update the points as well! (see levelDown)
  *
  * @param level Current level
  * @return The previous level, or LOW if current level is LOW
@@ -50,13 +56,17 @@ fun getPreviousLevel(level: Level): Level {
 }
 
 /**
- * The points of a word decides how well the user knows the word. The level is uniquely set by
+ * Get level from points
+ *
+ * The points of a word decides how well the user knows the word. The level is uniquely determined by
  * the points based on exponentially spaced intervals. The gap between each interval is
  * multiplied by 1.5 each level up. This means higher levels get harder and harder to
  * reach. This goes along with the repetition values, which also grow exponentially so that
  * the high level words become rare in progressive study.
+ *
+ * @param points Integer
+ * @return Level corresponding to the points
  */
-
 fun getLevelFromPoints(points: Int): Level {
     return if (points < Level.MEDIUM.minPoints) {
         Level.LOW
@@ -113,7 +123,7 @@ fun levelUp(points: Int): Int {
     val level = getLevelFromPoints(points)
     val higherLevel = getNextLevel(level)
     if (higherLevel == level)
-        return Level.MAX.minPoints    // no change in level --> lowest level --> return 0
+        return Level.MAX.minPoints    // no change in level --> highest level --> return max points
 
     return getPointsWithSameProgress(points, higherLevel)
 }
@@ -136,13 +146,25 @@ fun levelDown(points: Int): Int {
     return getPointsWithSameProgress(points, lowerLevel)
 }
 
+/**
+ * Get repetition
+ *
+ * Gives the repetition using an exponential growth.
+ *
+ * @param points Integer of current points
+ * @param answerIsCorrect True if the given answer was correct, false otherwise. Used to create
+ * shorter repetition to allow incorrect words to be studied faster in progressive study.
+ * @return
+ */
 fun getRepetition(points: Int, answerIsCorrect: Boolean): Int {
     val maxRepetition = 1000
-    val base =
+    val norm =      // used to normalize the exponent: big norm -> small changes to repetition
         if (answerIsCorrect)
             100f    // for a correct answer: apply standard normalization factor
         else
             200f    // for a wrong answer: apply larger factor to reduce time to next word encounter
-    val exponent: Float = points.toFloat() / base
-    return ceil(exp(exponent)).toInt().coerceAtMost(maxRepetition)
+    val exponent: Float = points.toFloat() / norm
+    // value to multiply the repetition by if delta-points / jump = 1
+    val base = 2f
+    return ceil(base.pow(exponent)).toInt().coerceAtMost(maxRepetition)
 }
