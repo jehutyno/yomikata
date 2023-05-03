@@ -200,7 +200,7 @@
     <string name="restoring_progress">Restaurer votre sauvegarde</string>
     <string name="do_not_close_app">Ne pas fermer l\'application</string>
     <string name="backup_progress">Créer une sauvegarde</string>
-    <string name="migrating">Migrating your database</string>
+    <string name="migrating">Migration de la base de données</string>
     <string name="may_take_a_while">Cela peut prendre un certain temps</string>
     <string name="invalid_file">Fichier invalide</string>
     <string name="migration_error">Erreur de migration</string>
