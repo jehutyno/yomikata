@@ -1,5 +1,6 @@
 package com.jehutyno.yomikata.repository.migration
 
+
 /**
  * Created by valentin on 13/10/2016.
  */

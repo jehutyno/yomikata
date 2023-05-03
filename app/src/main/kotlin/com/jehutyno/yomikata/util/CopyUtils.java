@@ -1,13 +1,6 @@
 package com.jehutyno.yomikata.util;
 
 import android.annotation.SuppressLint;
-import android.app.Activity;
-import android.app.AlertDialog;
-import android.content.Context;
-import android.os.Environment;
-
-import com.jehutyno.yomikata.R;
-import com.jehutyno.yomikata.repository.local.SQLiteHelper;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -26,59 +19,6 @@ import javax.crypto.spec.SecretKeySpec;
  */
 
 public class CopyUtils {
-
-
-    static public void reinitDataBase(Context context) throws IOException {
-        // Open your local db as the input stream
-        InputStream myInput = context.getAssets().open(SQLiteHelper.Companion.getDATABASE_NAME());
-        // Path to the just created empty db
-        String outFileName = context.getString(R.string.db_path) + SQLiteHelper.Companion.getDATABASE_NAME();
-        // Open the empty db as the output stream
-        FileOutputStream myOutput = new FileOutputStream(outFileName);
-        // transfer bytes from the inputfile to the outputfile
-        byte[] buffer = new byte[1024];
-        int length = myInput.read(buffer);
-        while (length > 0) {
-            myOutput.write(buffer, 0, length);
-            length = myInput.read(buffer);
-        }
-        // Close the streams
-        myOutput.flush();
-        myOutput.close();
-        myInput.close();
-    }
-
-    static public void copyEncryptedBddToSd(Activity activity) {
-        // Check if we have write permission
-        String db_name = SQLiteHelper.Companion.getDATABASE_NAME();
-        String db_path = activity.getString(R.string.db_path);
-        File input = new File(db_path + db_name);
-        try {
-            SecretKeySpec yourKey = generateKey("jaimemangerdesgrossespatat&s!!!!!!!!!trololo");
-            byte[] filesBytes = encodeFile(yourKey, fileToByteArray(input));
-            File sdCard = Environment.getExternalStorageDirectory();
-            File dir = new File(sdCard.getAbsolutePath() + "/Yomikata/");
-            dir.mkdirs();
-            File bitch = new File(dir + "/" + "backup.yomikataz");
-            bitch.createNewFile();
-            OutputStream myOutput;
-            myOutput = new FileOutputStream(bitch);
-            myOutput.write(filesBytes);
-            myOutput.flush();
-            myOutput.close();
-            new AlertDialog.Builder(activity).setTitle(R.string.backup_success)
-                .setMessage(activity.getString(R.string.backup_saved_here, bitch.getAbsolutePath()))
-                .setPositiveButton(R.string.ok, null)
-                .show();
-        } catch (Exception e) {
-            new AlertDialog.Builder(activity).setTitle(R.string.backup_error)
-                .setMessage(R.string.backup_error_message)
-                .setPositiveButton(R.string.ok, null)
-                .show();
-            e.printStackTrace();
-        }
-    }
-
 
     static public void restoreEncryptedBdd(File file, String toPath) throws Exception {
         byte[] filesBytes = fileToByteArray(file);

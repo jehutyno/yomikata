@@ -9,18 +9,19 @@ import com.jehutyno.yomikata.util.Categories
 import java.io.Serializable
 import java.util.*
 
+
 /**
  * Created by valentin on 26/09/2016.
  */
 open class Word(var id: Long, var japanese: String, var english: String, var french: String,
                 var reading: String, var level: Int, var countTry: Int, var countSuccess: Int,
                 var countFail: Int, var isKana: Int, var repetition: Int, var points: Int,
-                var baseCategory: Int, var isSelected: Int, var sentenceId: Long) : Parcelable, Serializable {
+                var baseCategory: Int, var isSelected: Int, var sentenceId: Long?) : Parcelable, Serializable {
 
     constructor(source: Parcel): this(source.readLong(), source.readString()!!,
         source.readString()!!, source.readString()!!, source.readString()!!, source.readInt(),
         source.readInt(), source.readInt(), source.readInt(), source.readInt(), source.readInt(),
-        source.readInt(), source.readInt(), source.readInt(), source.readLong())
+        source.readInt(), source.readInt(), source.readInt(), source.readLong().takeIf { it != -1L } )
 
     override fun writeToParcel(dest: Parcel, flags: Int) {
         dest.writeLong(id)
@@ -37,7 +38,7 @@ open class Word(var id: Long, var japanese: String, var english: String, var fre
         dest.writeInt(points)
         dest.writeInt(baseCategory)
         dest.writeInt(isSelected)
-        dest.writeLong(sentenceId)
+        dest.writeLong(sentenceId ?: -1L)   // write as -1 if null
     }
 
     override fun describeContents(): Int {

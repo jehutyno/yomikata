@@ -534,10 +534,11 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
 
     override fun displayQCMNormalTextViews() {
         val pref = PreferenceManager.getDefaultSharedPreferences(requireContext())
-        qcmBinding.option1Tv.textSize = pref.getString("font_size", "18")!!.toFloat()
-        qcmBinding.option2Tv.textSize = pref.getString("font_size", "18")!!.toFloat()
-        qcmBinding.option3Tv.textSize = pref.getString("font_size", "18")!!.toFloat()
-        qcmBinding.option4Tv.textSize = pref.getString("font_size", "18")!!.toFloat()
+
+        qcmBinding.option1Tv.textSize = pref.getString("font_size", "23")!!.toFloat()
+        qcmBinding.option2Tv.textSize = pref.getString("font_size", "23")!!.toFloat()
+        qcmBinding.option3Tv.textSize = pref.getString("font_size", "23")!!.toFloat()
+        qcmBinding.option4Tv.textSize = pref.getString("font_size", "23")!!.toFloat()
         qcmBinding.option1Tv.visibility = VISIBLE
         qcmBinding.option2Tv.visibility = VISIBLE
         qcmBinding.option3Tv.visibility = VISIBLE

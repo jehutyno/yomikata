@@ -7,7 +7,7 @@ import com.jehutyno.yomikata.model.Word
 import com.jehutyno.yomikata.repository.QuizRepository
 import com.jehutyno.yomikata.repository.SentenceRepository
 import com.jehutyno.yomikata.repository.WordRepository
-import com.jehutyno.yomikata.repository.local.KanjiSoloRepository
+import com.jehutyno.yomikata.repository.KanjiSoloRepository
 import com.jehutyno.yomikata.util.Categories
 import mu.KLogging
 import java.util.*
@@ -38,7 +38,7 @@ class WordPresenter(
                 override fun onWordsLoaded(words: List<Word>) {
                     val wordsRad = mutableListOf<Triple<Word, List<KanjiSoloRadical?>, Sentence>>()
                     words.forEach {
-                        val sentence = sentenceRepository.getSentenceById(it.sentenceId)
+                        val sentence = sentenceRepository.getSentenceById(it.sentenceId!!)
                         wordsRad.add(Triple(it, loadRadicals(it.japanese), sentence))
                     }
                     contentView.displayWords(wordsRad)
@@ -54,7 +54,7 @@ class WordPresenter(
                 override fun onWordsLoaded(words: List<Word>) {
                     val wordsRad = mutableListOf<Triple<Word, List<KanjiSoloRadical?>, Sentence>>()
                     words.forEach {
-                        val sentence = sentenceRepository.getSentenceById(it.sentenceId)
+                        val sentence = sentenceRepository.getSentenceById(it.sentenceId!!)
                         wordsRad.add(Triple(it, loadRadicals(it.japanese), sentence))
                     }
                     contentView.displayWords(wordsRad)
@@ -71,7 +71,7 @@ class WordPresenter(
 
     override fun loadWord(wordId: Long) {
         val word = wordRepository.getWordById(wordId)
-        val sentence = sentenceRepository.getSentenceById(word.sentenceId)
+        val sentence = sentenceRepository.getSentenceById(word.sentenceId!!)
         val wordsRad = mutableListOf<Triple<Word, List<KanjiSoloRadical?>, Sentence>>()
         wordsRad.add(Triple(word, loadRadicals(word.japanese), sentence))
         contentView.displayWords(wordsRad)
@@ -82,7 +82,7 @@ class WordPresenter(
             override fun onWordsLoaded(words: List<Word>) {
                 val wordsRad = mutableListOf<Triple<Word, List<KanjiSoloRadical?>, Sentence>>()
                 words.forEach {
-                    val sentence = sentenceRepository.getSentenceById(it.sentenceId)
+                    val sentence = sentenceRepository.getSentenceById(it.sentenceId!!)
                     wordsRad.add(Triple(it, loadRadicals(it.japanese), sentence))
                 }
                 contentView.displayWords(wordsRad)

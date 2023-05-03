@@ -240,7 +240,7 @@ class QuizzesFragment(di: DI) : Fragment(), QuizzesContract.View, QuizzesAdapter
     override fun launchQuiz(strategy: QuizStrategy, selectedTypes: IntArray, title: String) {
         val ids = mutableListOf<Long>()
         adapter.items.forEach {
-            if (it.isSelected == 1)
+            if (it.isSelected)
                 ids.add(it.id)
         }
 

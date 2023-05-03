@@ -56,7 +56,7 @@ class QuizzesAdapter(val context: Context, val category: Int, private val callba
                     holder.quizSubtitle.text = ""
                 }
                 flag = true
-                holder.quizCheck.isChecked = quiz.isSelected == 1
+                holder.quizCheck.isChecked = quiz.isSelected
                 flag = false
                 holder.itemView.setOnClickListener {
                     callback.onItemClick(position)
@@ -71,14 +71,14 @@ class QuizzesAdapter(val context: Context, val category: Int, private val callba
                         if (!flag) {
                             run {
                                 callback.onItemChecked(position, b)
-                                items[position].isSelected = if (b) 1 else 0
+                                items[position].isSelected = b
                                 notifyItemChanged(position)
                             }
                         }
                     } else {
                         if (!flag) {
                             run {
-                                items[position].isSelected = 0
+                                items[position].isSelected = false
                                 notifyItemChanged(position)
                             }
                         }

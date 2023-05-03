@@ -17,6 +17,11 @@ enum class Prefs(val pref: String) {
     DB_UPDATE_ONGOING("db_update_ongoing"),
     DB_UPDATE_FILE("db_update_file"),
     DB_UPDATE_OLD_VERSION("db_update_old_version"),
+
+    // set to true when starting a restore process
+    // from the PrefsActivity, if app unexpectedly closes -> continue the migration at startup
+    // if error happens and this is set to true -> restore the local backup
+    DB_RESTORE_ONGOING("db_restore_ongoing"),
     VOICE_DOWNLOADED_LEVEL_V("voice_downloaded_level_V"),
     DONT_SHOW_VOICES_POPUP("dont_show_voices_popup")
 }

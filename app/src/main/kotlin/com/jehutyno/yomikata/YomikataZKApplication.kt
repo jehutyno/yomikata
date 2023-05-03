@@ -24,13 +24,13 @@ class YomikataZKApplication : MultiDexApplication(), DIAware {
     }
 
     override val di: DI by DI.lazy {
-        import(repositoryModule())
         import(applicationModule(this@YomikataZKApplication))
-        bind<QuizRepository>() with singleton { QuizSource(instance()) }
-        bind<WordRepository>() with singleton { WordSource(instance()) }
-        bind<StatsRepository>() with singleton { StatsSource(instance()) }
-        bind<KanjiSoloRepository>() with singleton { KanjiSoloSource(instance()) }
-        bind<SentenceRepository>() with singleton { SentenceSource(instance()) }
+        import(databaseModule(this@YomikataZKApplication))
+        bind<QuizRepository>() with provider { QuizSource(instance()) }
+        bind<WordRepository>() with provider { WordSource(instance()) }
+        bind<StatsRepository>() with provider { StatsSource(instance()) }
+        bind<KanjiSoloRepository>() with provider { KanjiSoloSource(instance()) }
+        bind<SentenceRepository>() with provider { SentenceSource(instance()) }
     }
 
     override fun onCreate() {
@@ -48,9 +48,6 @@ class YomikataZKApplication : MultiDexApplication(), DIAware {
                                 .setDefaultFontPath("fonts/Roboto-RobotoRegular.ttf")
                                 .build()))
                 .build())
-        database.open()
-        database.close()
     }
 
 }
-
