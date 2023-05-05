@@ -51,7 +51,7 @@ interface QuizContract {
     interface Presenter : BasePresenter {
         suspend fun getWords(): List<Word>
         suspend fun getSelections(): List<Quiz>
-        suspend fun loadWords()
+        suspend fun loadWords(): List<Pair<Word, QuizType>>
         suspend fun createSelection(quizName: String): Long
         suspend fun addWordToSelection(wordId: Long, quizId: Long)
         suspend fun isWordInQuiz(wordId: Long, quizId: Long): Boolean
@@ -60,7 +60,7 @@ interface QuizContract {
         suspend fun updateWordLevel(wordId: Long, level: Level)
         suspend fun getRandomWords(wordId: Long, answer: String, wordSize: Int, limit: Int, quizType: QuizType): ArrayList<Word>
         suspend fun updateWordPoints(wordId: Long, points: Int)
-        suspend fun getNextWords(): List<Pair<Word, QuizType>>
+        suspend fun getNextProgressiveWords(): List<Pair<Word, QuizType>>
         suspend fun getWord(id: Long): Word?
         suspend fun initQuiz()
         suspend fun updateRepetitions(id: Long, repetition: Int)

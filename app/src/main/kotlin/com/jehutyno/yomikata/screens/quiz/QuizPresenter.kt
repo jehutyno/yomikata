@@ -31,7 +31,7 @@ class QuizPresenter(
     val context: Context,
     private val quizRepository: QuizRepository, private val wordRepository: WordRepository, private val sentenceRepository: SentenceRepository,
     private val statsRepository: StatsRepository, private val quizView: QuizContract.View,
-    private var quizIds: LongArray, private var strategy: QuizStrategy, private val quizTypes: IntArray,
+    private var quizIds: LongArray, private var strategy: QuizStrategy, private val quizTypes: List<QuizType>,
     coroutineScope: CoroutineScope) : QuizContract.Presenter {
 
     private val defaultSharedPreferences: SharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
@@ -151,7 +151,7 @@ class QuizPresenter(
             Log.e("Failed cast", "Some items in the read list of quiz types were not of the type QuizType")
         }
 
-        quizWords = (0..words.size - 1).map { Pair(words[it], types[it]) }
+        quizWords = words.indices.map { i -> Pair(words[i], types[i]) }
         quizView.displayWords(quizWords)
         currentItem = savedInstanceState.getInt("position") - 1 // -1 because setUpQuiz will do the +1
         quizView.setPagerPosition(currentItem)
@@ -165,45 +165,50 @@ class QuizPresenter(
 
     override suspend fun initQuiz() {
         sessionCount = defaultSharedPreferences.getString("length", "10")!!.toInt()
-        when (strategy) {
+        quizWords = when (strategy) {
             QuizStrategy.STRAIGHT, QuizStrategy.SHUFFLE, QuizStrategy.LOW_STRAIGHT, QuizStrategy.MEDIUM_STRAIGHT,
             QuizStrategy.HIGH_STRAIGHT, QuizStrategy.MASTER_STRAIGHT, QuizStrategy.LOW_SHUFFLE,
             QuizStrategy.MEDIUM_SHUFFLE, QuizStrategy.HIGH_SHUFFLE, QuizStrategy.MASTER_SHUFFLE -> {
                 loadWords()
             }
             QuizStrategy.PROGRESSIVE -> {
-                quizWords = getNextWords()
-                quizView.displayWords(quizWords)
-                setUpNextQuiz()
+                getNextProgressiveWords()
             }
         }
+        quizView.displayWords(quizWords)
+        setUpNextQuiz()
     }
 
-    override suspend fun loadWords() {
+    /**
+     * Load words
+     *
+     * Get the Words and QuizTypes for a non-progressive style quiz.
+     *
+     * @return Pairs of Words and QuizTypes, shuffled if required by strategy.
+     */
+    override suspend fun loadWords(): List<Pair<Word, QuizType>> {
         val words = getWords()
         if (words.isEmpty()) {
             quizView.noWords()
-            return
+            return listOf()
         }
-        quizWords = if (getQuizLevelIfAny(strategy) != -1) {
+        quizWords =
             createWordTypePair(
-                if (strategy == QuizStrategy.LOW_SHUFFLE || strategy == QuizStrategy.MEDIUM_SHUFFLE
-                    || strategy == QuizStrategy.HIGH_SHUFFLE || strategy == QuizStrategy.MASTER_SHUFFLE)
-                    shuffle(words.toMutableList()) else words
+                if (strategy.isShuffleType())
+                    words.shuffled()
+                else
+                    words
             )
-        } else {
-            createWordTypePair(
-                if (strategy == QuizStrategy.SHUFFLE)
-                    shuffle(words.toMutableList()) else words
-            )
-        }
 
-        quizView.displayWords(quizWords)
-        runBlocking {
-            setUpNextQuiz()
-        }
+        return quizWords
     }
 
+    /**
+     * Set up next quiz
+     *
+     * Moves to the next item in the pager adapter and shows the keyboard / multiple choice
+     * depending on the QuizType of the next word.
+     */
     override suspend fun setUpNextQuiz() {
         if (!errorMode && currentItem != -1) decreaseAllRepetitions()
         currentItem++
@@ -275,7 +280,7 @@ class QuizPresenter(
             saveWordSeenStat(word)
     }
 
-    fun setupQCMPronunciationQuiz() {
+    private fun setupQCMPronunciationQuiz() {
         quizView.displayQCMNormalTextViews()
         for (i in 0..3) {
             quizView.displayQCMTv(i + 1,
@@ -285,7 +290,7 @@ class QuizPresenter(
         }
     }
 
-    fun setupQCMQAudioQuiz() {
+    private fun setupQCMQAudioQuiz() {
         quizView.displayQCMNormalTextViews()
         for (i in 0..3) {
             quizView.displayQCMTv(i + 1,
@@ -295,7 +300,7 @@ class QuizPresenter(
         }
     }
 
-    suspend fun setupQCMEnJapQuiz() {
+    private suspend fun setupQCMEnJapQuiz() {
         quizView.displayQCMFuriTextViews()
         for (i in 0..3) {
             val word = getQCMDisPlayForEnJap(randoms[i].first)
@@ -330,7 +335,7 @@ class QuizPresenter(
         return word.japanese.trim().length + 1
     }
 
-    suspend fun generateQCMRandoms(word: Word, quizType: QuizType, answerToAvoid: String): ArrayList<Pair<Word, Int>> {
+    private suspend fun generateQCMRandoms(word: Word, quizType: QuizType, answerToAvoid: String): ArrayList<Pair<Word, Int>> {
         // Generate 3 different random words
         val random = getRandomWords(word.id, answerToAvoid, word.japanese.length, 3, quizType)
         val randoms = arrayListOf<Pair<Word, Int>>()
@@ -361,48 +366,50 @@ class QuizPresenter(
         }
     }
 
-    fun createWordTypePair(words: List<Word>): List<Pair<Word, QuizType>> {
+    /**
+     * Create word type pair
+     *
+     * @param words List of Words
+     * @return The original Words paired with a random [QuizType] (see [getQuizType])
+     */
+    private fun createWordTypePair(words: List<Word>): List<Pair<Word, QuizType>> {
         if (words.size < sessionLength!! || words.size < sessionCount) {
             sessionLength = words.size // To be sure the session length is not bigger than the number of words
             sessionCount = words.size
         }
-        val quizWordsPair = arrayListOf<Pair<Word, QuizType>>()
-        words.forEach {
-            quizWordsPair.add(Pair(it, getQuizType(it)))
+        return words.map { word ->
+            Pair(word, getQuizType(word))
         }
-        return quizWordsPair
     }
 
-    fun getQuizType(word: Word): QuizType {
-        val returnTypes: IntArray
-        if (quizTypes.contains(QuizType.TYPE_AUTO.type)) {
-            val autoTypes = arrayListOf<Int>()
-            when (word.level) {
-                Level.LOW -> {
-                    autoTypes.add(QuizType.TYPE_PRONUNCIATION_QCM.type)
-                    autoTypes.add(QuizType.TYPE_JAP_EN.type)
-                }
-                Level.MEDIUM -> {
-                    autoTypes.add(QuizType.TYPE_PRONUNCIATION_QCM.type)
-                    autoTypes.add(QuizType.TYPE_JAP_EN.type)
-                    autoTypes.add(QuizType.TYPE_EN_JAP.type)
-                    if (ttsSupported != TextToSpeech.LANG_MISSING_DATA && ttsSupported != TextToSpeech.LANG_NOT_SUPPORTED)
-                        autoTypes.add(QuizType.TYPE_AUDIO.type)
-                }
-                else -> {
-                    autoTypes.add(QuizType.TYPE_PRONUNCIATION_QCM.type)
-                    autoTypes.add(QuizType.TYPE_JAP_EN.type)
-                    autoTypes.add(QuizType.TYPE_EN_JAP.type)
-                    autoTypes.add(QuizType.TYPE_PRONUNCIATION.type)
-                    if (ttsSupported != TextToSpeech.LANG_MISSING_DATA && ttsSupported != TextToSpeech.LANG_NOT_SUPPORTED)
-                        autoTypes.add(QuizType.TYPE_AUDIO.type)
-                }
-            }
-            returnTypes = autoTypes.toIntArray()
-        } else {
-            returnTypes = quizTypes
+    /**
+     * Get quiz type
+     *
+     * @param word A word for which to generate a QuizType.
+     * @return A randomly chosen type from the quizTypes. If AUTO is one of the selected quizTypes,
+     * then a random type is chosen based on the difficulty of the type compared to the Word Level.
+     */
+    private fun getQuizType(word: Word): QuizType {
+        if (!quizTypes.contains(QuizType.TYPE_AUTO))
+            return quizTypes.random()
+
+        // AUTO is selected
+        // add types depending on difficulty
+        val autoTypes = mutableListOf<QuizType>()
+        if (word.level.atLeast(Level.LOW)) {
+            autoTypes.add(QuizType.TYPE_PRONUNCIATION_QCM)
+            autoTypes.add(QuizType.TYPE_JAP_EN)
         }
-        return QuizType.values()[returnTypes[Random().nextInt(returnTypes.size)]]
+        if (word.level.atLeast(Level.MEDIUM)) {
+            autoTypes.add(QuizType.TYPE_EN_JAP)
+            if (ttsSupported != TextToSpeech.LANG_MISSING_DATA && ttsSupported != TextToSpeech.LANG_NOT_SUPPORTED)
+                autoTypes.add(QuizType.TYPE_AUDIO)
+        }
+        if (word.level.atLeast(Level.HIGH)) {
+            autoTypes.add(QuizType.TYPE_PRONUNCIATION)
+        }
+
+        return autoTypes.random()
     }
 
     override suspend fun onOptionClick(choice: Int) {
@@ -421,7 +428,7 @@ class QuizPresenter(
         quizView.launchSpeakSentence(currentSentence)
     }
 
-    suspend fun onAnswerGiven(choice: Int) {
+    private suspend fun onAnswerGiven(choice: Int) {
         val option = randoms[choice]
         when (if (errorMode) errors[currentItem].second else quizWords[currentItem].second) {
             QuizType.TYPE_PRONUNCIATION_QCM -> onAnswerGiven(option.first.reading.trim(), choice)
@@ -441,7 +448,7 @@ class QuizPresenter(
         onAnswerGiven(answer, -1)
     }
 
-    suspend fun onAnswerGiven(answer: String, choice: Int) {
+    private suspend fun onAnswerGiven(answer: String, choice: Int) {
         val word = if (errorMode) errors[currentItem].first else quizWords[currentItem].first
         val quizType = if (errorMode) errors[currentItem].second else quizWords[currentItem].second
         val result = checkWord(word, quizType, answer)
@@ -543,7 +550,7 @@ class QuizPresenter(
         word.points = newPoints
     }
 
-    fun addCurrentWordToAnswers(answer: String) {
+    private fun addCurrentWordToAnswers(answer: String) {
         val word = quizWords[currentItem].first
         val color = if (!previousAnswerWrong) "#77d228" else "#d22828'"
         if (answers.size > 0 && answers[0].wordId == word.id) {
@@ -602,7 +609,7 @@ class QuizPresenter(
         sessionCount = errors.size
         currentItem = -1
         errorMode = true
-        quizView.displayWords(shuffle(errors))
+        quizView.displayWords(errors.shuffled())
         setUpNextQuiz()
     }
 
@@ -617,7 +624,7 @@ class QuizPresenter(
         errorMode = false
         sessionCount = if (quizWords.size < defaultSharedPreferences.getString("length", "10")!!.toInt()) quizWords.size else defaultSharedPreferences.getString("length", "10")!!.toInt()
         if (strategy == QuizStrategy.PROGRESSIVE) {
-            quizWords = getNextWords()
+            quizWords = getNextProgressiveWords()
             quizView.displayWords(quizWords)
             currentItem = -1
         } else {
@@ -677,7 +684,15 @@ class QuizPresenter(
         return wordRepository.getRandomWords(wordId, answer, wordSize, limit, quizType)
     }
 
-    override suspend fun getNextWords(): List<Pair<Word, QuizType>> {
+    /**
+     * Get next progressive words
+     *
+     * Returned words are shuffled.
+     *
+     * @return Pairs of Words and QuizTypes based on their repetition value. Zero-repetition words and
+     * new words are returned, along with enough other words to fill the [sessionLength].
+     */
+    override suspend fun getNextProgressiveWords(): List<Pair<Word, QuizType>> {
         // first get words that need to be reviewed (rep = 0)
         val words = wordRepository.getWordsByRepetition(quizIds, 0, sessionLength!!)
         // if session length not reached yet, get completely new words (rep = -1)
@@ -686,7 +701,7 @@ class QuizPresenter(
         }
         // fill up to session length with other words (rep >= 1)
         words.addAll(wordRepository.getWordsByMinRepetition(quizIds, 1, sessionLength!! - words.size))
-        shuffle(words)
+        words.shuffle()
 
         return createWordTypePair(words)
     }
@@ -695,6 +710,12 @@ class QuizPresenter(
         return wordRepository.getWordById(id)
     }
 
+    /**
+     * Get random sentence
+     *
+     * @param word Word to find a sentence for
+     * @return A random sentence containing the Word.
+     */
     override suspend fun getRandomSentence(word: Word): Sentence {
         val sentence = sentenceRepository.getRandomSentence(word, getCategoryLevel(word.baseCategory))
         return if (word.isKana == 2 || sentence == null)
@@ -704,22 +725,6 @@ class QuizPresenter(
     }
 
     override suspend fun updateRepetitions(id: Long, repetition: Int) {
-//        val newRepetition =
-//            if (result) {
-//                when (level) {
-//                    0 -> if (points > 50) 6 else 4
-//                    1 -> if (points > 50) 12 else 8
-//                    2 -> if (points > 50) 16 else 14
-//                    else -> Math.min(20 + (points / 10), 100)
-//                }
-//            } else {
-//                when (level) {
-//                    0 -> if (points > 50) 3 else 2
-//                    1 -> if (points > 50) 6 else 4
-//                    2 -> if (points > 50) 9 else 7
-//                    else -> if (points > 50) 12 else 10
-//                }
-//            }
         wordRepository.updateWordRepetition(id, repetition)
     }
 

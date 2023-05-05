@@ -2,7 +2,6 @@ package com.jehutyno.yomikata.util
 
 import android.os.Parcel
 import android.os.Parcelable
-import java.util.Random
 
 
 /**
@@ -23,8 +22,7 @@ enum class QuizType(val type: Int, val extraPoints: Int): Parcelable {
     }
 
     fun getRandomType(): QuizType {
-        val random = Random()
-        return values()[random.nextInt(values().size)]
+        return values().random()
     }
 
     override fun describeContents(): Int {

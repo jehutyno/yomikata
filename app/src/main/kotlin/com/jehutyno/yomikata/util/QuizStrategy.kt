@@ -14,5 +14,15 @@ enum class QuizStrategy(val value: Int) {
     LOW_SHUFFLE(7),
     MEDIUM_SHUFFLE(8),
     HIGH_SHUFFLE(9),
-    MASTER_SHUFFLE(10)
+    MASTER_SHUFFLE(10);
+
+    /**
+     * Is shuffle type
+     *
+     * @return true if a strategy that should be shuffled, false otherwise
+     */
+    fun isShuffleType(): Boolean {
+        return (this == LOW_SHUFFLE || this == MEDIUM_SHUFFLE || this == HIGH_SHUFFLE
+                                    || this == MASTER_SHUFFLE || this == SHUFFLE)
+    }
 }
