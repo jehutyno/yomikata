@@ -41,7 +41,7 @@ class ContentActivity : AppCompatActivity(), DIAware {
     companion object : KLogging()
 
     private var quizIds = longArrayOf()
-    private lateinit var selectedTypes: IntArray
+    private lateinit var selectedTypes: ArrayList<QuizType>
     private lateinit var quizzes: List<Quiz>
 
     private var category: Int = -1
@@ -92,7 +92,12 @@ class ContentActivity : AppCompatActivity(), DIAware {
         category = intent.getIntExtra(Extras.EXTRA_CATEGORY, -1)
         level = intent.getIntExtra(Extras.EXTRA_LEVEL, -1)
         val quizPosition = intent.getIntExtra(Extras.EXTRA_QUIZ_POSITION, -1)
-        selectedTypes = intent.getIntArrayExtra(Extras.EXTRA_QUIZ_TYPES) ?: intArrayOf()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            selectedTypes = intent.getParcelableArrayListExtra(Extras.EXTRA_QUIZ_TYPES, QuizType::class.java) ?: arrayListOf()
+        } else {
+            @Suppress("DEPRECATION")
+            selectedTypes = intent.getParcelableArrayListExtra(Extras.EXTRA_QUIZ_TYPES) ?: arrayListOf()
+        }
 
         setSupportActionBar(findViewById(R.id.toolbar))
 

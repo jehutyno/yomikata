@@ -43,3 +43,7 @@ enum class QuizType(val type: Int, val extraPoints: Int): Parcelable {
     }
 
 }
+
+fun Int.toQuizType(): QuizType {
+    return QuizType.values()[this]
+}

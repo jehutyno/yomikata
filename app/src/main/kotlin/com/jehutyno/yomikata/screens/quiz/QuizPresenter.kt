@@ -31,7 +31,7 @@ class QuizPresenter(
     val context: Context,
     private val quizRepository: QuizRepository, private val wordRepository: WordRepository, private val sentenceRepository: SentenceRepository,
     private val statsRepository: StatsRepository, private val quizView: QuizContract.View,
-    private var quizIds: LongArray, private var strategy: QuizStrategy, private val quizTypes: List<QuizType>,
+    private var quizIds: LongArray, private var strategy: QuizStrategy, private val quizTypes: ArrayList<QuizType>,
     coroutineScope: CoroutineScope) : QuizContract.Presenter {
 
     private val defaultSharedPreferences: SharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)

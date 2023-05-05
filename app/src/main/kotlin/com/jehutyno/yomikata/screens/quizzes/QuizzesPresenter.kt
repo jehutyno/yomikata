@@ -16,6 +16,7 @@ import com.jehutyno.yomikata.util.Categories
 import com.jehutyno.yomikata.util.Prefs
 import com.jehutyno.yomikata.util.QuizStrategy
 import com.jehutyno.yomikata.util.QuizType
+import com.jehutyno.yomikata.util.toQuizType
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
@@ -41,7 +42,7 @@ class QuizzesPresenter(
         quizzesView.setPresenter(this)
     }
 
-    private lateinit var selectedTypes: ArrayList<Int>
+    private lateinit var selectedTypes: ArrayList<QuizType>
 
     // define LiveData
     // from Room
@@ -107,62 +108,62 @@ class QuizzesPresenter(
     }
 
     override fun initQuizTypes() {
-        selectedTypes = getIntArrayFromPrefs(Prefs.SELECTED_QUIZ_TYPES.pref, QuizType.TYPE_AUTO.type)
+        selectedTypes = getQuizTypeArrayFromPrefs(Prefs.SELECTED_QUIZ_TYPES.pref, QuizType.TYPE_AUTO)
         selectTypes()
     }
 
-    private fun switchOthers(type: Int) {
+    private fun switchOthers(type: QuizType) {
         if (!selectedTypes.contains(type)) {
-            if (selectedTypes.contains(QuizType.TYPE_AUTO.type))
-                selectedTypes.remove(QuizType.TYPE_AUTO.type)
+            if (selectedTypes.contains(QuizType.TYPE_AUTO))
+                selectedTypes.remove(QuizType.TYPE_AUTO)
             selectedTypes.add(type)
         } else {
             selectedTypes.remove(type)
             if (selectedTypes.size == 0)
-                selectedTypes.add(QuizType.TYPE_AUTO.type)
+                selectedTypes.add(QuizType.TYPE_AUTO)
         }
     }
 
     override fun pronunciationQcmSwitch() {
-        switchOthers(QuizType.TYPE_PRONUNCIATION_QCM.type)
-        saveIntArrayInPrefs(Prefs.SELECTED_QUIZ_TYPES.pref, selectedTypes)
+        switchOthers(QuizType.TYPE_PRONUNCIATION_QCM)
+        saveQuizTypeArrayInPrefs(Prefs.SELECTED_QUIZ_TYPES.pref, selectedTypes)
         selectTypes()
     }
 
     override fun pronunciationSwitch() {
-        switchOthers(QuizType.TYPE_PRONUNCIATION.type)
-        saveIntArrayInPrefs(Prefs.SELECTED_QUIZ_TYPES.pref, selectedTypes)
+        switchOthers(QuizType.TYPE_PRONUNCIATION)
+        saveQuizTypeArrayInPrefs(Prefs.SELECTED_QUIZ_TYPES.pref, selectedTypes)
         selectTypes()
     }
 
     override fun audioSwitch() {
-        switchOthers(QuizType.TYPE_AUDIO.type)
-        saveIntArrayInPrefs(Prefs.SELECTED_QUIZ_TYPES.pref, selectedTypes)
+        switchOthers(QuizType.TYPE_AUDIO)
+        saveQuizTypeArrayInPrefs(Prefs.SELECTED_QUIZ_TYPES.pref, selectedTypes)
         selectTypes()
     }
 
     override fun enJapSwitch() {
-        switchOthers(QuizType.TYPE_EN_JAP.type)
-        saveIntArrayInPrefs(Prefs.SELECTED_QUIZ_TYPES.pref, selectedTypes)
+        switchOthers(QuizType.TYPE_EN_JAP)
+        saveQuizTypeArrayInPrefs(Prefs.SELECTED_QUIZ_TYPES.pref, selectedTypes)
         selectTypes()
     }
 
     override fun japEnSwitch() {
-        switchOthers(QuizType.TYPE_JAP_EN.type)
-        saveIntArrayInPrefs(Prefs.SELECTED_QUIZ_TYPES.pref, selectedTypes)
+        switchOthers(QuizType.TYPE_JAP_EN)
+        saveQuizTypeArrayInPrefs(Prefs.SELECTED_QUIZ_TYPES.pref, selectedTypes)
         selectTypes()
     }
 
     override fun autoSwitch() {
-        if (selectedTypes.contains(QuizType.TYPE_AUTO.type)) {
+        if (selectedTypes.contains(QuizType.TYPE_AUTO)) {
             selectedTypes.clear()
-            selectedTypes = getIntArrayFromPrefs(Prefs.WAS_SELECTED_QUIZ_TYPES.pref, QuizType.TYPE_PRONUNCIATION.type)
+            selectedTypes = getQuizTypeArrayFromPrefs(Prefs.WAS_SELECTED_QUIZ_TYPES.pref, QuizType.TYPE_PRONUNCIATION)
         } else {
-            saveIntArrayInPrefs(Prefs.WAS_SELECTED_QUIZ_TYPES.pref, selectedTypes)
+            saveQuizTypeArrayInPrefs(Prefs.WAS_SELECTED_QUIZ_TYPES.pref, selectedTypes)
             selectedTypes.clear()
-            selectedTypes.add(QuizType.TYPE_AUTO.type)
+            selectedTypes.add(QuizType.TYPE_AUTO)
         }
-        saveIntArrayInPrefs(Prefs.SELECTED_QUIZ_TYPES.pref, selectedTypes)
+        saveQuizTypeArrayInPrefs(Prefs.SELECTED_QUIZ_TYPES.pref, selectedTypes)
         selectTypes()
     }
 
@@ -175,28 +176,23 @@ class QuizzesPresenter(
         quizzesView.selectJapEn(false)
         selectedTypes.forEach {
             when (it) {
-                QuizType.TYPE_AUTO.type -> quizzesView.selectAuto(true)
-                QuizType.TYPE_PRONUNCIATION.type -> quizzesView.selectPronunciation(true)
-                QuizType.TYPE_PRONUNCIATION_QCM.type -> quizzesView.selectPronunciationQcm(true)
-                QuizType.TYPE_AUDIO.type -> quizzesView.selectAudio(true)
-                QuizType.TYPE_EN_JAP.type -> quizzesView.selectEnJap(true)
-                QuizType.TYPE_JAP_EN.type -> quizzesView.selectJapEn(true)
+                QuizType.TYPE_AUTO -> quizzesView.selectAuto(true)
+                QuizType.TYPE_PRONUNCIATION -> quizzesView.selectPronunciation(true)
+                QuizType.TYPE_PRONUNCIATION_QCM -> quizzesView.selectPronunciationQcm(true)
+                QuizType.TYPE_AUDIO -> quizzesView.selectAudio(true)
+                QuizType.TYPE_EN_JAP -> quizzesView.selectEnJap(true)
+                QuizType.TYPE_JAP_EN -> quizzesView.selectJapEn(true)
 
             }
         }
     }
 
-
-    private fun getIntArrayFromPrefs(key: String): ArrayList<Int> {
-        return getIntArrayFromPrefs(key, -1)
-    }
-
-    private fun getIntArrayFromPrefs(key: String, default: Int): ArrayList<Int> {
+    private fun getQuizTypeArrayFromPrefs(key: String, default: QuizType): ArrayList<QuizType> {
         val pref = PreferenceManager.getDefaultSharedPreferences(context)
         val savedString = pref.getString(key, "")
         val savedList = ArrayList<Int>(5)
-        if (savedString == "" && default != -1) {
-            savedList.add(default)
+        if (savedString == "") {
+            savedList.add(default.type)
         } else {
             val st = StringTokenizer(savedString, ",")
             for (i in 0 until st.countTokens()) {
@@ -204,10 +200,11 @@ class QuizzesPresenter(
             }
         }
 
-        return savedList
+        return savedList.map { it.toQuizType() } as ArrayList<QuizType>
     }
 
-    private fun saveIntArrayInPrefs(key: String, list: ArrayList<Int>) {
+    private fun saveQuizTypeArrayInPrefs(key: String, types: ArrayList<QuizType>) {
+        val list = types.map { it.type }
         val str = StringBuilder()
         list.forEach {
             str.append(it).append(",")
@@ -225,10 +222,10 @@ class QuizzesPresenter(
             pref.edit().putInt(Prefs.LATEST_CATEGORY_2.pref, cat1).apply()
             pref.edit().putInt(Prefs.LATEST_CATEGORY_1.pref, category).apply()
         }
-        quizzesView.launchQuiz(strategy, selectedTypes.toIntArray(), title)
+        quizzesView.launchQuiz(strategy, selectedTypes, title)
     }
 
-    override fun getSelectedTypes(): IntArray {
-        return selectedTypes.toIntArray()
+    override fun getSelectedTypes(): ArrayList<QuizType> {
+        return selectedTypes
     }
 }

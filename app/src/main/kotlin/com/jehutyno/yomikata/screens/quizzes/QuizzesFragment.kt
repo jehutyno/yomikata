@@ -27,6 +27,7 @@ import com.jehutyno.yomikata.util.DimensionHelper
 import com.jehutyno.yomikata.util.Extras
 import com.jehutyno.yomikata.util.Prefs
 import com.jehutyno.yomikata.util.QuizStrategy
+import com.jehutyno.yomikata.util.QuizType
 import com.jehutyno.yomikata.util.SeekBarsManager
 import com.jehutyno.yomikata.util.SpeechAvailability
 import com.jehutyno.yomikata.util.TextValidator
@@ -265,7 +266,7 @@ class QuizzesFragment(di: DI) : Fragment(), QuizzesContract.View, QuizzesAdapter
         binding.btnAutoSwitch.isSelected = isSelected
     }
 
-    override fun launchQuiz(strategy: QuizStrategy, selectedTypes: IntArray, title: String) {
+    override fun launchQuiz(strategy: QuizStrategy, selectedTypes: ArrayList<QuizType>, title: String) {
         val ids = mutableListOf<Long>()
         adapter.items.forEach {
             if (it.isSelected)
