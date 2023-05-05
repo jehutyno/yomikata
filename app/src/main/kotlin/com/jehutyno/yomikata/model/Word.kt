@@ -71,34 +71,16 @@ open class Word(var id: Long, var japanese: String, var english: String, var fre
 }
 
 fun getCategoryIcon(category: Int): Int {
-    when (category) {
-        Categories.CATEGORY_HIRAGANA -> {
-            return R.drawable.ic_hiragana
-        }
-        Categories.CATEGORY_KATAKANA -> {
-            return R.drawable.ic_katakana
-        }
-        Categories.CATEGORY_COUNTERS -> {
-            return R.drawable.ic_counters
-        }
-        Categories.CATEGORY_JLPT_1 -> {
-            return R.drawable.ic_jlpt1
-        }
-        Categories.CATEGORY_JLPT_2 -> {
-            return R.drawable.ic_jlpt2
-        }
-        Categories.CATEGORY_JLPT_3 -> {
-            return R.drawable.ic_jlpt3
-        }
-        Categories.CATEGORY_JLPT_4 -> {
-            return R.drawable.ic_jlpt4
-        }
-        Categories.CATEGORY_JLPT_5 -> {
-            return R.drawable.ic_jlpt5
-        }
-        else -> {
-            return R.drawable.ic_kanji
-        }
+    return when (category) {
+        Categories.CATEGORY_HIRAGANA -> R.drawable.ic_hiragana
+        Categories.CATEGORY_KATAKANA -> R.drawable.ic_katakana
+        Categories.CATEGORY_COUNTERS -> R.drawable.ic_counters
+        Categories.CATEGORY_JLPT_1   -> R.drawable.ic_jlpt1
+        Categories.CATEGORY_JLPT_2   -> R.drawable.ic_jlpt2
+        Categories.CATEGORY_JLPT_3   -> R.drawable.ic_jlpt3
+        Categories.CATEGORY_JLPT_4   -> R.drawable.ic_jlpt4
+        Categories.CATEGORY_JLPT_5   -> R.drawable.ic_jlpt5
+        else                         -> R.drawable.ic_kanji
     }
 }
 
