@@ -17,11 +17,32 @@ import kotlin.math.pow
 enum class Level(val level: Int, val minPoints: Int) {
     // level ints must be declared as array indices (see Int.toLevel)
     LOW(0, 0),
-    MEDIUM(1, 100),          // 0 -> 100     diff = 100
-    HIGH(2, 250),            // 100 -> 250   diff = 150
-    MASTER(3, 475),          // 250 -> 475   diff = 225
-    MAX(4, 700)              // 700 gives repetition of about 1200 (see getRepetition)
-}   // MAX represents the maximum level, so its "minPoints" is also the maxPoints
+    MEDIUM(1, 200),         // rep = 6
+    HIGH(2, 400),           // rep = 28
+    MASTER(3, 600),         // rep = 149
+    MAX(4, 850);            // 850 gives repetition of about 1200 (see getRepetition)
+    // MAX represents the maximum level, so its "minPoints" is also the maxPoints
+
+    /**
+     * At least
+     *
+     * @param minLevel Level to compare to
+     * @return true if level >= minLevel, false otherwise
+     */
+    fun atLeast(minLevel: Level): Boolean {
+        return this.level >= minLevel.level
+    }
+
+    /**
+     * At most
+     *
+     * @param maxLevel Level to compare to
+     * @return true if level <= maxLevel, false otherwise
+     */
+    fun atMost(maxLevel: Level): Boolean {
+        return this.level <= maxLevel.level
+    }
+}
 
 fun Int.toLevel(): Level {
     return Level.values()[this]
@@ -51,18 +72,17 @@ fun getNextLevel(level: Level): Level {
  */
 fun getPreviousLevel(level: Level): Level {
     // subtract one, but don't go below min level
-    val levelPlusOne = (level.level - 1).coerceAtLeast(Level.LOW.level)
-    return levelPlusOne.toLevel()
+    val levelMinusOne = (level.level - 1).coerceAtLeast(Level.LOW.level)
+    return levelMinusOne.toLevel()
 }
 
 /**
  * Get level from points
  *
  * The points of a word decides how well the user knows the word. The level is uniquely determined by
- * the points based on exponentially spaced intervals. The gap between each interval is
- * multiplied by 1.5 each level up. This means higher levels get harder and harder to
- * reach. This goes along with the repetition values, which also grow exponentially so that
- * the high level words become rare in progressive study.
+ * the points based on linearly spaced intervals.
+ * The repetition values grow exponentially so that words will come up frequently at the lower
+ * levels, but the high level words become rare in progressive study.
  *
  * @param points Integer
  * @return Level corresponding to the points
@@ -158,10 +178,10 @@ fun levelDown(points: Int): Int {
  * @return The new points
  */
 fun addPoints(points: Int, answerIsCorrect: Boolean, quizType: QuizType, speed: Int): Int {
-    // if correct, simply add the points, if wrong add
+    // if correct: simply add the points, if wrong: subtract base but add extra points
     val plusOrMinus = (if (answerIsCorrect) 1 else -1)
     return (
-        points + plusOrMinus * (BASE_POINTS + quizType.extraPoints) * speed
+        points + (plusOrMinus * BASE_POINTS + quizType.extraPoints) * speed
     ).coerceIn(0, Level.MAX.minPoints)   // should be positive and less than MAX
 }
 
@@ -183,7 +203,8 @@ fun getRepetition(points: Int, answerIsCorrect: Boolean): Int {
         else
             200f    // for a wrong answer: apply larger factor to reduce time to next word encounter
     val exponent: Float = points.toFloat() / norm
-    // value to multiply the repetition by if delta-points / jump = 1
-    val base = 2f
+    // value to multiply the repetition by if delta-points / norm = 1
+    // for example: if delta-points = BASE_POINTS * default_speed = 50 * 2 = 100 and norm = 100
+    val base = 2.3f
     return ceil(base.pow(exponent)).toInt().coerceAtMost(maxRepetition)
 }
