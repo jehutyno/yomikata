@@ -2,6 +2,7 @@ package com.jehutyno.yomikata.screens.home
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.asLiveData
+import androidx.lifecycle.distinctUntilChanged
 import com.jehutyno.yomikata.model.StatAction
 import com.jehutyno.yomikata.model.StatEntry
 import com.jehutyno.yomikata.model.StatResult
@@ -24,10 +25,14 @@ class HomePresenter(
 
     // define livedata
     // from Room database & exposed to fragment:
-    override val todayStatList: LiveData<List<StatEntry>> = statsRepository.getTodayStatEntries().asLiveData()
-    override val thisWeekStatList: LiveData<List<StatEntry>> = statsRepository.getThisWeekStatEntries().asLiveData()
-    override val thisMonthStatList: LiveData<List<StatEntry>> = statsRepository.getThisMonthStatEntries().asLiveData()
-    override val totalStatList: LiveData<List<StatEntry>> = statsRepository.getAllStatEntries().asLiveData()
+    override val todayStatList: LiveData<List<StatEntry>> = statsRepository.getTodayStatEntries()
+                                                                .asLiveData().distinctUntilChanged()
+    override val thisWeekStatList: LiveData<List<StatEntry>> = statsRepository.getThisWeekStatEntries()
+                                                                .asLiveData().distinctUntilChanged()
+    override val thisMonthStatList: LiveData<List<StatEntry>> = statsRepository.getThisMonthStatEntries()
+                                                                .asLiveData().distinctUntilChanged()
+    override val totalStatList: LiveData<List<StatEntry>> = statsRepository.getAllStatEntries()
+                                                                .asLiveData().distinctUntilChanged()
 
     override fun start() {
 

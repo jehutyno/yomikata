@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.asFlow
 import androidx.lifecycle.asLiveData
+import androidx.lifecycle.distinctUntilChanged
 import androidx.preference.PreferenceManager
 import com.jehutyno.yomikata.model.Quiz
 import com.jehutyno.yomikata.model.StatAction
@@ -44,7 +45,8 @@ class QuizzesPresenter(
 
     // define LiveData
     // from Room
-    override val quizList : LiveData<List<Quiz>> = quizRepository.getQuiz(category).asLiveData()
+    override val quizList : LiveData<List<Quiz>> =
+        quizRepository.getQuiz(category).asLiveData().distinctUntilChanged()
 
     @ExperimentalCoroutinesApi
     private fun getLiveData(level: Int?): LiveData<Int> {
@@ -61,7 +63,7 @@ class QuizzesPresenter(
 
         return quizList.asFlow().flatMapLatest { quizzes ->
             function(quizzes)
-        }.asLiveData()
+        }.asLiveData().distinctUntilChanged()
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -77,7 +79,7 @@ class QuizzesPresenter(
         getLiveData(4).asFlow()
     ) { value3, value4 ->
         value3 + value4
-    }.asLiveData()
+    }.asLiveData().distinctUntilChanged()
 
 
     override fun start() {

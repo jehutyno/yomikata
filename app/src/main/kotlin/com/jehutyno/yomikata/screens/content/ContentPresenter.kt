@@ -2,6 +2,7 @@ package com.jehutyno.yomikata.screens.content
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.asLiveData
+import androidx.lifecycle.distinctUntilChanged
 import com.jehutyno.yomikata.model.Quiz
 import com.jehutyno.yomikata.model.Word
 import com.jehutyno.yomikata.repository.QuizRepository
@@ -27,17 +28,24 @@ class ContentPresenter(
     }
 
     // define LiveData
-    override val words: LiveData<List<Word>> = wordRepository.getWordsByLevel(quizIds, level).asLiveData()
-    override val selections: LiveData<List<Quiz>> = quizRepository.getQuiz(Categories.CATEGORY_SELECTIONS).asLiveData()
-    override val quizCount: LiveData<Int> = quizRepository.countWordsForQuizzes(quizIds).asLiveData()
-    override val lowCount: LiveData<Int> = quizRepository.countWordsForLevel(quizIds, 0).asLiveData()
-    override val mediumCount: LiveData<Int> = quizRepository.countWordsForLevel(quizIds, 1).asLiveData()
-    override val highCount: LiveData<Int> = quizRepository.countWordsForLevel(quizIds, 2).asLiveData()
-    override val masterCount: LiveData<Int> = quizRepository.countWordsForLevel(quizIds, 3).combine(
+    override val words: LiveData<List<Word>> =
+        wordRepository.getWordsByLevel(quizIds, level).asLiveData().distinctUntilChanged()
+    override val selections: LiveData<List<Quiz>> =
+        quizRepository.getQuiz(Categories.CATEGORY_SELECTIONS).asLiveData().distinctUntilChanged()
+    override val quizCount: LiveData<Int> =
+        quizRepository.countWordsForQuizzes(quizIds).asLiveData().distinctUntilChanged()
+    override val lowCount: LiveData<Int> =
+        quizRepository.countWordsForLevel(quizIds, 0).asLiveData().distinctUntilChanged()
+    override val mediumCount: LiveData<Int> =
+        quizRepository.countWordsForLevel(quizIds, 1).asLiveData().distinctUntilChanged()
+    override val highCount: LiveData<Int> =
+        quizRepository.countWordsForLevel(quizIds, 2).asLiveData().distinctUntilChanged()
+    override val masterCount: LiveData<Int> =
+        quizRepository.countWordsForLevel(quizIds, 3).combine(
                                                         quizRepository.countWordsForLevel(quizIds, 4)
                                                     ) {
                                                         value3, value4 -> value3 + value4
-                                                    }.asLiveData()
+                                                    }.asLiveData().distinctUntilChanged()
 
 
     override fun start() {

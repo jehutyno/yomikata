@@ -2,14 +2,15 @@ package com.jehutyno.yomikata.screens.content.word
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.asLiveData
+import androidx.lifecycle.distinctUntilChanged
 import com.jehutyno.yomikata.model.KanjiSoloRadical
 import com.jehutyno.yomikata.model.Quiz
 import com.jehutyno.yomikata.model.Sentence
 import com.jehutyno.yomikata.model.Word
+import com.jehutyno.yomikata.repository.KanjiSoloRepository
 import com.jehutyno.yomikata.repository.QuizRepository
 import com.jehutyno.yomikata.repository.SentenceRepository
 import com.jehutyno.yomikata.repository.WordRepository
-import com.jehutyno.yomikata.repository.KanjiSoloRepository
 import com.jehutyno.yomikata.util.Categories
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -17,7 +18,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import mu.KLogging
-import java.util.*
 
 
 /**
@@ -50,10 +50,10 @@ class WordPresenter(
     // in that case, call the getWord method
     override val words : LiveData<List<Word>>? =
         if (quizIds != null && quizIds.isNotEmpty()) {
-            wordRepository.getWordsByLevel(quizIds, level).asLiveData()
+            wordRepository.getWordsByLevel(quizIds, level).asLiveData().distinctUntilChanged()
         }
         else if (searchString.isNotEmpty())
-            wordRepository.searchWords(searchString).asLiveData()
+            wordRepository.searchWords(searchString).asLiveData().distinctUntilChanged()
         else
             null
 

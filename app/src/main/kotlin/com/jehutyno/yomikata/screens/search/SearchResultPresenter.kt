@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.asFlow
 import androidx.lifecycle.asLiveData
+import androidx.lifecycle.distinctUntilChanged
 import com.jehutyno.yomikata.model.Quiz
 import com.jehutyno.yomikata.model.Word
 import com.jehutyno.yomikata.repository.QuizRepository
@@ -44,7 +45,7 @@ class SearchResultPresenter(
     @kotlinx.coroutines.ExperimentalCoroutinesApi
     override val words : LiveData<List<Word>> = searchString.asFlow().flatMapLatest{
         wordRepository.searchWords(it)
-    }.asLiveData()
+    }.asLiveData().distinctUntilChanged()
     override fun start() {
 
     }
