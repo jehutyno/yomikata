@@ -12,6 +12,7 @@ import com.jehutyno.yomikata.repository.QuizRepository
 import com.jehutyno.yomikata.repository.SentenceRepository
 import com.jehutyno.yomikata.repository.WordRepository
 import com.jehutyno.yomikata.util.Categories
+import com.jehutyno.yomikata.util.Level
 import com.jehutyno.yomikata.util.getLevelFromPoints
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -31,7 +32,7 @@ class WordPresenter(
     private val sentenceRepository: SentenceRepository,
     contentView: WordContract.View,
     coroutineScope: CoroutineScope,
-    quizIds: LongArray?, level: Int, searchString: String) : WordContract.Presenter {
+    quizIds: LongArray?, level: Level?, searchString: String) : WordContract.Presenter {
 
     companion object : KLogging()
 

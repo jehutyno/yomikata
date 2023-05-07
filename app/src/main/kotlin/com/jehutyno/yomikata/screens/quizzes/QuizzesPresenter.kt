@@ -13,6 +13,7 @@ import com.jehutyno.yomikata.model.StatResult
 import com.jehutyno.yomikata.repository.QuizRepository
 import com.jehutyno.yomikata.repository.StatsRepository
 import com.jehutyno.yomikata.util.Categories
+import com.jehutyno.yomikata.util.Level
 import com.jehutyno.yomikata.util.Prefs
 import com.jehutyno.yomikata.util.QuizStrategy
 import com.jehutyno.yomikata.util.QuizType
@@ -50,7 +51,7 @@ class QuizzesPresenter(
         quizRepository.getQuiz(category).asLiveData().distinctUntilChanged()
 
     @ExperimentalCoroutinesApi
-    private fun getLiveData(level: Int?): LiveData<Int> {
+    private fun getLiveData(level: Level?): LiveData<Int> {
         val function : (List<Quiz>) -> Flow<Int> =
             if (level == null)
                 { quizzes -> quizRepository.countWordsForQuizzes(
@@ -70,14 +71,14 @@ class QuizzesPresenter(
     @OptIn(ExperimentalCoroutinesApi::class)
     override val quizCount: LiveData<Int> = getLiveData(null)
     @OptIn(ExperimentalCoroutinesApi::class)
-    override val lowCount: LiveData<Int> = getLiveData(0)
+    override val lowCount: LiveData<Int> = getLiveData(Level.LOW)
     @OptIn(ExperimentalCoroutinesApi::class)
-    override val mediumCount: LiveData<Int> = getLiveData(1)
+    override val mediumCount: LiveData<Int> = getLiveData(Level.MEDIUM)
     @OptIn(ExperimentalCoroutinesApi::class)
-    override val highCount: LiveData<Int> = getLiveData(2)
+    override val highCount: LiveData<Int> = getLiveData(Level.HIGH)
     @OptIn(ExperimentalCoroutinesApi::class)
-    override val masterCount: LiveData<Int> = getLiveData(3).asFlow().combine(
-        getLiveData(4).asFlow()
+    override val masterCount: LiveData<Int> = getLiveData(Level.MASTER).asFlow().combine(
+        getLiveData(Level.MAX).asFlow()
     ) { value3, value4 ->
         value3 + value4
     }.asLiveData().distinctUntilChanged()

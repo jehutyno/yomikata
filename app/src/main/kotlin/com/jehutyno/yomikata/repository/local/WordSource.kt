@@ -7,6 +7,7 @@ import com.jehutyno.yomikata.repository.WordRepository
 import com.jehutyno.yomikata.util.HiraganaUtils
 import com.jehutyno.yomikata.util.Level
 import com.jehutyno.yomikata.util.QuizType
+import com.jehutyno.yomikata.util.getNextLevel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -42,21 +43,20 @@ class WordSource(private val wordDao: WordDao) : WordRepository {
      * Get words by level
      *
      * @param quizIds Ids of the quiz of the returned words
-     * @param level The level of the word. If level = -1, words of any level are returned
+     * @param level The level of the word. If level = null, words of any level are returned
      * @return Flow of List of Words with the specified level in a quiz of the given quizIds
      */
-    override fun getWordsByLevel(quizIds: LongArray, level: Int) : Flow<List<Word>> {
-        if (level == -1) {
+    override fun getWordsByLevel(quizIds: LongArray, level: Level?) : Flow<List<Word>> {
+        if (level == null) {
             return getWords(quizIds)
         }
 
-        val levelsArray =
-            if (level == 3)
-                intArrayOf(level, level + 1)
-            else
-                intArrayOf(level)
+        val levelsArray = arrayListOf(level)
+        // includes maxed words together with previous category
+        if (level != Level.MAX && getNextLevel(level) == Level.MAX)
+            levelsArray.add(Level.MAX)
 
-        val roomWordsList = wordDao.getWordsByLevels(quizIds, levelsArray)
+        val roomWordsList = wordDao.getWordsByLevels(quizIds, levelsArray.map { it.level }.toIntArray())
         return roomWordsList.map { list ->
             list.map {
                 it.toWord()

@@ -352,17 +352,17 @@ class QuizPresenter(
      * @return The level of a strategy, or -1 if strategy does not correspond to any specific level
      * such as QuizStrategy.SHUFFLE
      */
-    private fun getQuizLevelIfAny(strategy: QuizStrategy): Int {
+    private fun getQuizLevelIfAny(strategy: QuizStrategy): Level? {
         return when(strategy) {
-            QuizStrategy.LOW_STRAIGHT -> 0
-            QuizStrategy.MEDIUM_STRAIGHT -> 1
-            QuizStrategy.HIGH_STRAIGHT -> 2
-            QuizStrategy.MASTER_STRAIGHT -> 3
-            QuizStrategy.LOW_SHUFFLE -> 0
-            QuizStrategy.MEDIUM_SHUFFLE -> 1
-            QuizStrategy.HIGH_SHUFFLE -> 2
-            QuizStrategy.MASTER_SHUFFLE -> 3
-            else -> -1
+            QuizStrategy.LOW_STRAIGHT -> Level.LOW
+            QuizStrategy.MEDIUM_STRAIGHT -> Level.MEDIUM
+            QuizStrategy.HIGH_STRAIGHT -> Level.HIGH
+            QuizStrategy.MASTER_STRAIGHT -> Level.MASTER
+            QuizStrategy.LOW_SHUFFLE -> Level.LOW
+            QuizStrategy.MEDIUM_SHUFFLE -> Level.MEDIUM
+            QuizStrategy.HIGH_SHUFFLE -> Level.HIGH
+            QuizStrategy.MASTER_SHUFFLE -> Level.MASTER
+            else -> null
         }
     }
 

@@ -1,5 +1,6 @@
 package com.jehutyno.yomikata.screens.content
 
+import android.os.Build
 import android.os.Bundle
 import android.view.ActionMode
 import android.view.LayoutInflater
@@ -26,6 +27,7 @@ import com.jehutyno.yomikata.model.Word
 import com.jehutyno.yomikata.screens.content.word.WordDetailDialogFragment
 import com.jehutyno.yomikata.util.DimensionHelper
 import com.jehutyno.yomikata.util.Extras
+import com.jehutyno.yomikata.util.Level
 import com.jehutyno.yomikata.util.SeekBarsManager
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
@@ -49,7 +51,7 @@ class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, Wo
     private lateinit var adapter: WordsAdapter
     private lateinit var quizIds: LongArray
     private var quizTitle: String = ""
-    private var level = -1
+    private var level: Level? = null
     private var lastPosition = -1
     private lateinit var selections: List<Quiz>
     private var dialog: WordDetailDialogFragment? = null
@@ -77,7 +79,12 @@ class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, Wo
         if (arguments != null) {
             quizIds = requireArguments().getLongArray(Extras.EXTRA_QUIZ_IDS)!!
             quizTitle = requireArguments().getString(Extras.EXTRA_QUIZ_TITLE)!!
-            level = requireArguments().getInt(Extras.EXTRA_LEVEL, -1)
+            level = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                requireArguments().getSerializable(Extras.EXTRA_LEVEL, Level::class.java)
+            } else {
+                @Suppress("DEPRECATION")
+                requireArguments().getSerializable(Extras.EXTRA_LEVEL) as Level?
+            }
         }
 
         if (savedInstanceState != null) {
@@ -126,11 +133,12 @@ class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, Wo
     }
 
     override fun displayStats() {
-        if (level > -1) {   // no need to update visibilities using LiveData, since it is only set once per fragment
-            binding.seekLowContainer.visibility = if (level == 0) VISIBLE else GONE
-            binding.seekMediumContainer.visibility = if (level == 1) VISIBLE else GONE
-            binding.seekHighContainer.visibility = if (level == 2) VISIBLE else GONE
-            binding.seekMasterContainer.visibility = if (level == 3) VISIBLE else GONE
+        if (level != null) {   // no need to update visibilities using LiveData, since it is only set once per fragment
+            binding.seekLowContainer.visibility = if (level == Level.LOW) VISIBLE else GONE
+            binding.seekMediumContainer.visibility = if (level == Level.MEDIUM) VISIBLE else GONE
+            binding.seekHighContainer.visibility = if (level == Level.HIGH) VISIBLE else GONE
+            binding.seekMasterContainer.visibility = if (level == Level.MASTER || level == Level.MAX)
+                                                                                VISIBLE else GONE
         }
         seekBars.setTextViews(binding.textLow, binding.textMedium, binding.textHigh, binding.textMaster)
         mpresenter!!.let {
@@ -170,7 +178,7 @@ class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, Wo
         val bundle = Bundle()
         bundle.putLongArray(Extras.EXTRA_QUIZ_IDS, quizIds)
         bundle.putString(Extras.EXTRA_QUIZ_TITLE, quizTitle)
-        bundle.putInt(Extras.EXTRA_LEVEL, level)
+        bundle.putSerializable(Extras.EXTRA_LEVEL, level)
         bundle.putInt(Extras.EXTRA_WORD_POSITION, position)
         bundle.putString(Extras.EXTRA_SEARCH_STRING, "")
 

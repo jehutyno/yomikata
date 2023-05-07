@@ -57,7 +57,7 @@ class WordDetailDialogFragment(private val di: DI) : DialogFragment(), WordContr
     private var wordPosition: Int = -1
     private var searchString: String = ""
     private var quizTitle: String? = ""
-    private var level: Int = -1
+    private var level: Level? = null
     private lateinit var viewPager: ViewPager
     private lateinit var arrowLeft: ImageView
     private lateinit var arrowRight: ImageView
@@ -103,7 +103,12 @@ class WordDetailDialogFragment(private val di: DI) : DialogFragment(), WordContr
             quizTitle = requireArguments().getString(Extras.EXTRA_QUIZ_TITLE)
             wordPosition = requireArguments().getInt(Extras.EXTRA_WORD_POSITION)
             searchString = requireArguments().getString(Extras.EXTRA_SEARCH_STRING) ?: ""
-            level = requireArguments().getInt(Extras.EXTRA_LEVEL)
+            level = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                requireArguments().getSerializable(Extras.EXTRA_LEVEL, Level::class.java)
+            } else {
+                @Suppress("DEPRECATION")
+                requireArguments().getSerializable(Extras.EXTRA_LEVEL) as Level?
+            }
         }
 
         if (savedInstanceState != null) {
