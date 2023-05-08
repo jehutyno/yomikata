@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData
 import com.jehutyno.yomikata.BasePresenter
 import com.jehutyno.yomikata.BaseView
 import com.jehutyno.yomikata.model.Quiz
+import com.jehutyno.yomikata.util.Level
 import com.jehutyno.yomikata.util.QuizStrategy
 import com.jehutyno.yomikata.util.QuizType
 
@@ -22,7 +23,7 @@ interface QuizzesContract {
         fun selectEnJap(isSelected: Boolean)
         fun selectJapEn(isSelected: Boolean)
         fun selectAuto(isSelected: Boolean)
-        fun launchQuiz(strategy: QuizStrategy, selectedTypes: ArrayList<QuizType>, title: String)
+        fun launchQuiz(strategy: QuizStrategy, level: Level?, selectedTypes: ArrayList<QuizType>, title: String)
     }
 
     interface Presenter : BasePresenter {
@@ -44,7 +45,7 @@ interface QuizzesContract {
         fun enJapSwitch()
         fun japEnSwitch()
         fun autoSwitch()
-        suspend fun launchQuizClick(strategy: QuizStrategy, title: String, category: Int)
+        suspend fun launchQuizClick(strategy: QuizStrategy, level: Level?, title: String, category: Int)
         fun getSelectedTypes(): ArrayList<QuizType>
     }
 }

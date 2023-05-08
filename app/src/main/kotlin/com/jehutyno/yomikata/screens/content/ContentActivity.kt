@@ -126,24 +126,10 @@ class ContentActivity : AppCompatActivity(), DIAware {
             launchQuiz(QuizStrategy.PROGRESSIVE)
         }
         binding.normalPlay.setOnClickListener {
-            when (level) {
-                Level.LOW -> launchQuiz(QuizStrategy.LOW_STRAIGHT)
-                Level.MEDIUM -> launchQuiz(QuizStrategy.MEDIUM_STRAIGHT)
-                Level.HIGH -> launchQuiz(QuizStrategy.HIGH_STRAIGHT)
-                Level.MASTER -> launchQuiz(QuizStrategy.MASTER_STRAIGHT)
-                Level.MAX -> launchQuiz(QuizStrategy.MASTER_STRAIGHT)
-                null -> launchQuiz(QuizStrategy.STRAIGHT)
-            }
+            launchQuiz(QuizStrategy.STRAIGHT)
         }
         binding.shufflePlay.setOnClickListener {
-            when (level) {
-                Level.LOW -> launchQuiz(QuizStrategy.LOW_SHUFFLE)
-                Level.MEDIUM -> launchQuiz(QuizStrategy.MEDIUM_SHUFFLE)
-                Level.HIGH -> launchQuiz(QuizStrategy.HIGH_SHUFFLE)
-                Level.MASTER -> launchQuiz(QuizStrategy.MASTER_SHUFFLE)
-                Level.MAX -> launchQuiz(QuizStrategy.MASTER_SHUFFLE)
-                null -> launchQuiz(QuizStrategy.SHUFFLE)
-            }
+            launchQuiz(QuizStrategy.SHUFFLE)
         }
 
         /**
@@ -260,6 +246,7 @@ class ContentActivity : AppCompatActivity(), DIAware {
             putExtra(EXTRA_QUIZ_IDS, quizIds)
             putExtra(EXTRA_QUIZ_TITLE, title)
             putExtra(EXTRA_QUIZ_STRATEGY, strategy)
+            putExtra(EXTRA_LEVEL, level)
             putExtra(EXTRA_QUIZ_TYPES, selectedTypes)
         }
         startActivity(intent)

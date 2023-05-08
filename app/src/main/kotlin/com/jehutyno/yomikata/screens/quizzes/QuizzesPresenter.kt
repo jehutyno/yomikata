@@ -214,7 +214,7 @@ class QuizzesPresenter(
         pref.edit().putString(key, str.toString()).apply()
     }
 
-    override suspend fun launchQuizClick(strategy: QuizStrategy, title: String, category: Int) {
+    override suspend fun launchQuizClick(strategy: QuizStrategy, level: Level?, title: String, category: Int) {
         statsRepository.addStatEntry(StatAction.LAUNCH_QUIZ_FROM_CATEGORY, category.toLong(), Calendar.getInstance().timeInMillis, StatResult.OTHER)
         val pref = PreferenceManager.getDefaultSharedPreferences(context)
         val cat1 = pref.getInt(Prefs.LATEST_CATEGORY_1.pref, -1)
@@ -223,7 +223,7 @@ class QuizzesPresenter(
             pref.edit().putInt(Prefs.LATEST_CATEGORY_2.pref, cat1).apply()
             pref.edit().putInt(Prefs.LATEST_CATEGORY_1.pref, category).apply()
         }
-        quizzesView.launchQuiz(strategy, selectedTypes, title)
+        quizzesView.launchQuiz(strategy, level, selectedTypes, title)
     }
 
     override fun getSelectedTypes(): ArrayList<QuizType> {

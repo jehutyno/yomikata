@@ -14,6 +14,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.util.Extras
+import com.jehutyno.yomikata.util.Level
 import com.jehutyno.yomikata.util.Prefs
 import com.jehutyno.yomikata.util.QuizStrategy
 import com.jehutyno.yomikata.util.QuizType
@@ -39,7 +40,7 @@ class QuizActivity : AppCompatActivity(), DIAware {
         import(quizPresenterModule(quizFragment))
         bind<QuizContract.Presenter>() with provider {
             QuizPresenter(instance(), instance(), instance(), instance(), instance(), instance(),
-                            quizIds, quizStrategy, quizTypes, lifecycleScope)
+                            quizIds, quizStrategy, level, quizTypes, lifecycleScope)
         }
     }
     // trigger when quizFragment is set (see subDI)
@@ -51,6 +52,7 @@ class QuizActivity : AppCompatActivity(), DIAware {
 
     private lateinit var quizIds: LongArray
     private lateinit var quizStrategy: QuizStrategy
+    private var level: Level? = null
     private lateinit var quizTypes: ArrayList<QuizType>
 
     override fun attachBaseContext(newBase: Context) {
@@ -80,10 +82,15 @@ class QuizActivity : AppCompatActivity(), DIAware {
 
             quizStrategy = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 savedInstanceState.getSerializable("quiz_strategy", QuizStrategy::class.java)!!
-            }
-            else {
+            } else {
                 @Suppress("DEPRECATION")
                 savedInstanceState.getSerializable("quiz_strategy") as QuizStrategy
+            }
+            level = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                savedInstanceState.getSerializable("level", Level::class.java)
+            } else {
+                @Suppress("DEPRECATION")
+                savedInstanceState.getSerializable("level") as Level?
             }
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -100,6 +107,13 @@ class QuizActivity : AppCompatActivity(), DIAware {
             } else {
                 @Suppress("DEPRECATION")
                 intent.getSerializableExtra(Extras.EXTRA_QUIZ_STRATEGY) as QuizStrategy
+            }
+
+            level = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                intent.getSerializableExtra(Extras.EXTRA_LEVEL, Level::class.java)
+            } else {
+                @Suppress("DEPRECATION")
+                intent.getSerializableExtra(Extras.EXTRA_LEVEL) as Level?
             }
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -156,6 +170,7 @@ class QuizActivity : AppCompatActivity(), DIAware {
         supportFragmentManager.putFragment(outState, "quizFragment", quizFragment)
         outState.putLongArray("quiz_ids", quizIds)
         outState.putSerializable("quiz_strategy", quizStrategy)
+        outState.putSerializable("level", level)
         outState.putParcelableArrayList("quiz_types", quizTypes)
     }
 

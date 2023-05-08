@@ -29,9 +29,11 @@ import java.util.*
  */
 class QuizPresenter(
     val context: Context,
-    private val quizRepository: QuizRepository, private val wordRepository: WordRepository, private val sentenceRepository: SentenceRepository,
-    private val statsRepository: StatsRepository, private val quizView: QuizContract.View,
-    private var quizIds: LongArray, private var strategy: QuizStrategy, private val quizTypes: ArrayList<QuizType>,
+    private val quizRepository: QuizRepository, private val wordRepository: WordRepository,
+    private val sentenceRepository: SentenceRepository, private val statsRepository: StatsRepository,
+    private val quizView: QuizContract.View, private var quizIds: LongArray,
+    private val strategy: QuizStrategy, private val level: Level?,
+    private val quizTypes: ArrayList<QuizType>,
     coroutineScope: CoroutineScope) : QuizContract.Presenter {
 
     private val defaultSharedPreferences: SharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
@@ -59,7 +61,7 @@ class QuizPresenter(
 
     init {
         wordsFlowJob = coroutineScope.launch {
-            words = wordRepository.getWordsByLevel(quizIds, getQuizLevelIfAny(strategy)).stateIn(coroutineScope)
+            words = wordRepository.getWordsByLevel(quizIds, level).stateIn(coroutineScope)
         }
         selectionsFlowJob = coroutineScope.launch {
             selections = quizRepository.getQuiz(Categories.CATEGORY_SELECTIONS).stateIn(coroutineScope)
@@ -166,13 +168,12 @@ class QuizPresenter(
     override suspend fun initQuiz() {
         sessionCount = defaultSharedPreferences.getString("length", "10")!!.toInt()
         quizWords = when (strategy) {
-            QuizStrategy.STRAIGHT, QuizStrategy.SHUFFLE, QuizStrategy.LOW_STRAIGHT, QuizStrategy.MEDIUM_STRAIGHT,
-            QuizStrategy.HIGH_STRAIGHT, QuizStrategy.MASTER_STRAIGHT, QuizStrategy.LOW_SHUFFLE,
-            QuizStrategy.MEDIUM_SHUFFLE, QuizStrategy.HIGH_SHUFFLE, QuizStrategy.MASTER_SHUFFLE -> {
-                loadWords()
-            }
             QuizStrategy.PROGRESSIVE -> {
                 getNextProgressiveWords()
+            }
+            QuizStrategy.STRAIGHT,
+            QuizStrategy.SHUFFLE -> {
+                loadWords()
             }
         }
         quizView.displayWords(quizWords)
@@ -194,7 +195,7 @@ class QuizPresenter(
         }
         quizWords =
             createWordTypePair(
-                if (strategy.isShuffleType())
+                if (strategy == QuizStrategy.SHUFFLE)
                     words.shuffled()
                 else
                     words
@@ -344,26 +345,6 @@ class QuizPresenter(
         randoms.add(Random().nextInt(4), Pair(word, android.R.color.white))
 
         return randoms
-    }
-
-    /**
-     * Get quiz level if any
-     *
-     * @return The level of a strategy, or -1 if strategy does not correspond to any specific level
-     * such as QuizStrategy.SHUFFLE
-     */
-    private fun getQuizLevelIfAny(strategy: QuizStrategy): Level? {
-        return when(strategy) {
-            QuizStrategy.LOW_STRAIGHT -> Level.LOW
-            QuizStrategy.MEDIUM_STRAIGHT -> Level.MEDIUM
-            QuizStrategy.HIGH_STRAIGHT -> Level.HIGH
-            QuizStrategy.MASTER_STRAIGHT -> Level.MASTER
-            QuizStrategy.LOW_SHUFFLE -> Level.LOW
-            QuizStrategy.MEDIUM_SHUFFLE -> Level.MEDIUM
-            QuizStrategy.HIGH_SHUFFLE -> Level.HIGH
-            QuizStrategy.MASTER_SHUFFLE -> Level.MASTER
-            else -> null
-        }
     }
 
     /**
