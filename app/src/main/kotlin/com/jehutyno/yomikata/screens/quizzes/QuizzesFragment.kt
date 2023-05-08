@@ -103,6 +103,13 @@ class QuizzesFragment(di: DI) : Fragment(), QuizzesContract.View, QuizzesAdapter
         super.onStart()
         mpresenter.start()
         subscribeDisplayQuizzes()
+        // setup seekBars observers
+        seekBars.setTextViews(binding.textLow, binding.textMedium, binding.textHigh, binding.textMaster)
+        seekBars.setPlay(binding.playLow, binding.playMedium, binding.playHigh, binding.playMaster)
+        mpresenter.let {
+            seekBars.setObservers(it.quizCount,
+                it.lowCount, it.mediumCount, it.highCount, it.masterCount, viewLifecycleOwner)
+        }
     }
 
     override fun onResume() {
@@ -303,18 +310,6 @@ class QuizzesFragment(di: DI) : Fragment(), QuizzesContract.View, QuizzesAdapter
     override fun displayQuizzes(quizzes: List<Quiz>) {
         adapter.replaceData(quizzes, selectedCategory == Categories.CATEGORY_SELECTIONS)
         binding.recyclerview.scrollToPosition(0)
-
-        val ids = arrayListOf<Long>()
-        quizzes.forEach {
-            ids.add(it.id)
-        }
-
-        seekBars.setTextViews(binding.textLow, binding.textMedium, binding.textHigh, binding.textMaster)
-        seekBars.setPlay(binding.playLow, binding.playMedium, binding.playHigh, binding.playMaster)
-        mpresenter.let {
-            seekBars.setObservers(it.quizCount,
-                it.lowCount, it.mediumCount, it.highCount, it.masterCount, viewLifecycleOwner)
-        }
     }
 
     private fun openContent(position: Int, level: Int) {
