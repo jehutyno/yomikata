@@ -23,6 +23,7 @@ interface WordRepository {
     suspend fun updateWordRepetition(wordId: Long, repetition: Int)
     suspend fun decreaseWordsRepetition(quizIds: LongArray)
     suspend fun updateWordSelected(wordId: Long, check: Boolean)
+    suspend fun updateWordsSelected(wordIds: LongArray, check: Boolean)
     fun getWordsByLevel(quizIds: LongArray, level: Int): Flow<List<Word>>
     suspend fun getAllWords() : List<Word>
     suspend fun getWordById(wordId: Long): Word

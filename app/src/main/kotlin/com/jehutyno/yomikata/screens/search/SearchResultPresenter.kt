@@ -63,6 +63,10 @@ class SearchResultPresenter(
         wordRepository.updateWordSelected(id, check)
     }
 
+    override suspend fun updateWordsCheck(ids: LongArray, check: Boolean) {
+        wordRepository.updateWordsSelected(ids, check)
+    }
+
     override suspend fun isWordInQuiz(wordId: Long, quizId: Long) : Boolean {
         return wordRepository.isWordInQuiz(wordId, quizId)
     }

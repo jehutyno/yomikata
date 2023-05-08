@@ -27,6 +27,7 @@ interface ContentContract {
         val highCount: LiveData<Int>
         val masterCount: LiveData<Int>
         suspend fun updateWordCheck(id: Long, check: Boolean)
+        suspend fun updateWordsCheck(ids: LongArray, check: Boolean)
         suspend fun isWordInQuiz(wordId: Long, quizId: Long): Boolean
         suspend fun createSelection(quizName: String): Long
         suspend fun addWordToSelection(wordId: Long, quizId: Long)

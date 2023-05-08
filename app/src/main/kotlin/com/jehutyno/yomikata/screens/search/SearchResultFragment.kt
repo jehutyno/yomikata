@@ -229,11 +229,21 @@ class SearchResultFragment(private val di: DI) : Fragment(), SearchResultContrac
                     popup.show()
                 }
                 SELECT_ALL -> {
-                    adapter.items.forEach { it.isSelected = 1 }
+                    runBlocking {
+                        searchResultPresenter.updateWordsCheck(adapter.items.map{it.id}.toLongArray(), true)
+                    }
+                    adapter.items.forEach {
+                        it.isSelected = 1
+                    }
                     adapter.notifyItemRangeChanged(0, adapter.items.size)
                 }
                 UNSELECT_ALL -> {
-                    adapter.items.forEach { it.isSelected = 0 }
+                    runBlocking {
+                        searchResultPresenter.updateWordsCheck(adapter.items.map{it.id}.toLongArray(), false)
+                    }
+                    adapter.items.forEach {
+                        it.isSelected = 0
+                    }
                     adapter.notifyItemRangeChanged(0, adapter.items.size)
                 }
             }

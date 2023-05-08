@@ -278,11 +278,21 @@ class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, Wo
 
                 }
                 SELECT_ALL -> {
-                    adapter.items.forEach { it.isSelected = 1 }
+                    runBlocking {
+                        mpresenter!!.updateWordsCheck(adapter.items.map{it.id}.toLongArray(), true)
+                    }
+                    adapter.items.forEach {
+                        it.isSelected = 1
+                    }
                     adapter.notifyItemRangeChanged(0, adapter.items.size)
                 }
                 UNSELECT_ALL -> {
-                    adapter.items.forEach { it.isSelected = 0 }
+                    runBlocking {
+                        mpresenter!!.updateWordsCheck(adapter.items.map{it.id}.toLongArray(), false)
+                    }
+                    adapter.items.forEach {
+                        it.isSelected = 0
+                    }
                     adapter.notifyItemRangeChanged(0, adapter.items.size)
                 }
             }

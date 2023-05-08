@@ -225,6 +225,10 @@ class WordSource(private val wordDao: WordDao) : WordRepository {
         wordDao.updateWordSelected(wordId, check)
     }
 
+    override suspend fun updateWordsSelected(wordIds: LongArray, check: Boolean) {
+        wordDao.updateWordsSelected(wordIds, check)
+    }
+
     override suspend fun addQuizWord(quizId: Long, wordId: Long) {
         wordDao.addQuizWord(RoomQuizWord(quizId, wordId))
     }

@@ -27,6 +27,7 @@ interface SearchResultContract {
         suspend fun isWordInQuizzes(wordId: Long, quizIds: Array<Long>): ArrayList<Boolean>
         suspend fun deleteWordFromSelection(wordId: Long, selectionId: Long)
         suspend fun updateWordCheck(id: Long, check: Boolean)
+        suspend fun updateWordsCheck(ids: LongArray, check: Boolean)
     }
 
 }
