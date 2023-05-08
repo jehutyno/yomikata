@@ -309,7 +309,6 @@ class QuizzesFragment(di: DI) : Fragment(), QuizzesContract.View, QuizzesAdapter
 
     override fun displayQuizzes(quizzes: List<Quiz>) {
         adapter.replaceData(quizzes, selectedCategory == Categories.CATEGORY_SELECTIONS)
-        binding.recyclerview.scrollToPosition(0)
     }
 
     private fun openContent(position: Int, level: Int) {
