@@ -71,9 +71,9 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
 
 
     override fun onInit(status: Int) {
+        ttsSupported = onTTSinit(activity, status, tts)
+        presenter.setTTSSupported(ttsSupported)
         if (adapter != null && adapter!!.words.isNotEmpty()) {
-            ttsSupported = onTTSinit(activity, status, tts)
-            presenter.setTTSSupported(ttsSupported)
             val pref = PreferenceManager.getDefaultSharedPreferences(requireContext())
             val noPlayStart = pref.getBoolean("play_start", false)
             if (adapter!!.words[binding.pager.currentItem].second == QuizType.TYPE_AUDIO || noPlayStart) {
