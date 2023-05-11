@@ -1,9 +1,13 @@
 package com.jehutyno.yomikata.presenters
 
+import com.jehutyno.yomikata.model.Word
 import com.jehutyno.yomikata.repository.WordRepository
 
 
 class WordInQuizPresenter(private val wordRepository: WordRepository): WordInQuizInterface {
+    override suspend fun getWordById(id: Long): Word {
+        return wordRepository.getWordById(id)
+    }
 
     override suspend fun isWordInQuiz(wordId: Long, quizId: Long) : Boolean {
         return wordRepository.isWordInQuiz(wordId, quizId)

@@ -19,7 +19,6 @@ interface AnswersContract {
     }
 
     interface Presenter: BasePresenter, SelectionsInterface, WordInQuizInterface {
-        suspend fun getWordById(id: Long): Word
         suspend fun getAnswersWordsSentences(answers: List<Answer>): List<Triple<Answer, Word, Sentence>>
         suspend fun getSentenceById(id: Long): Sentence
     }
