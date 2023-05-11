@@ -1,6 +1,7 @@
-package com.jehutyno.yomikata.presenters
+package com.jehutyno.yomikata.presenters.source
 
 import com.jehutyno.yomikata.model.Word
+import com.jehutyno.yomikata.presenters.WordInQuizInterface
 import com.jehutyno.yomikata.repository.WordRepository
 
 

@@ -1,5 +1,8 @@
 package com.jehutyno.yomikata.presenters
 
+import com.jehutyno.yomikata.presenters.source.SelectionsPresenter
+import com.jehutyno.yomikata.presenters.source.WordCountPresenter
+import com.jehutyno.yomikata.presenters.source.WordInQuizPresenter
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import org.kodein.di.DI

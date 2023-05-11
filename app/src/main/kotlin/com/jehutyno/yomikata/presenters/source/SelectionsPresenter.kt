@@ -1,6 +1,7 @@
-package com.jehutyno.yomikata.presenters
+package com.jehutyno.yomikata.presenters.source
 
 import com.jehutyno.yomikata.model.Quiz
+import com.jehutyno.yomikata.presenters.SelectionsInterface
 import com.jehutyno.yomikata.repository.QuizRepository
 import com.jehutyno.yomikata.util.Categories
 import kotlinx.coroutines.CoroutineScope
