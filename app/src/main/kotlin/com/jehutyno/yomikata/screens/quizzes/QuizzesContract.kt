@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData
 import com.jehutyno.yomikata.BasePresenter
 import com.jehutyno.yomikata.BaseView
 import com.jehutyno.yomikata.model.Quiz
+import com.jehutyno.yomikata.presenters.WordCountInterface
 import com.jehutyno.yomikata.util.Level
 import com.jehutyno.yomikata.util.QuizStrategy
 import com.jehutyno.yomikata.util.QuizType
@@ -26,13 +27,8 @@ interface QuizzesContract {
         fun launchQuiz(strategy: QuizStrategy, level: Level?, selectedTypes: ArrayList<QuizType>, title: String)
     }
 
-    interface Presenter : BasePresenter {
+    interface Presenter : BasePresenter, WordCountInterface {
         val quizList : LiveData<List<Quiz>>
-        val quizCount: LiveData<Int>
-        val lowCount: LiveData<Int>
-        val mediumCount: LiveData<Int>
-        val highCount: LiveData<Int>
-        val masterCount: LiveData<Int>
         suspend fun createQuiz(quizName: String)
         suspend fun updateQuizName(quizId: Long, quizName: String)
         suspend fun deleteQuiz(quizId: Long)

@@ -38,8 +38,11 @@ class WordDetailDialogFragment(private val di: DI) : DialogFragment(), WordContr
         import(wordPresenterModule(this@WordDetailDialogFragment))
 //            import(voicesManagerModule(activity))
         bind<WordContract.Presenter>() with provider {
-            WordPresenter(instance(), instance(), instance(), instance(), instance(),
-                            lifecycleScope, quizIds, level, searchString)
+            WordPresenter (
+                instance(), instance(), instance(), instance(),
+                instance(arg = lifecycleScope), instance(),
+                quizIds, level, searchString
+            )
         }
         bind<VoicesManager>() with singleton { VoicesManager(requireActivity()) }
     }

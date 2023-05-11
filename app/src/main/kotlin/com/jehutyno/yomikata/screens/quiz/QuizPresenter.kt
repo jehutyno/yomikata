@@ -9,7 +9,8 @@ import android.util.Log
 import androidx.preference.PreferenceManager
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.model.*
-import com.jehutyno.yomikata.repository.QuizRepository
+import com.jehutyno.yomikata.presenters.SelectionsInterface
+import com.jehutyno.yomikata.presenters.WordInQuizInterface
 import com.jehutyno.yomikata.repository.SentenceRepository
 import com.jehutyno.yomikata.repository.StatsRepository
 import com.jehutyno.yomikata.repository.WordRepository
@@ -29,12 +30,15 @@ import java.util.Random
  */
 class QuizPresenter(
     val context: Context,
-    private val quizRepository: QuizRepository, private val wordRepository: WordRepository,
+    private val wordRepository: WordRepository,
     private val sentenceRepository: SentenceRepository, private val statsRepository: StatsRepository,
     private val quizView: QuizContract.View, private var quizIds: LongArray,
     private val strategy: QuizStrategy, private val level: Level?,
     private val quizTypes: ArrayList<QuizType>, private val rng: Random,
-    coroutineScope: CoroutineScope) : QuizContract.Presenter {
+    selectionsInterface: SelectionsInterface,
+    wordInQuizInterface: WordInQuizInterface,
+    coroutineScope: CoroutineScope) : QuizContract.Presenter,
+            SelectionsInterface by selectionsInterface, WordInQuizInterface by wordInQuizInterface {
 
     private val defaultSharedPreferences: SharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
 
@@ -118,15 +122,10 @@ class QuizPresenter(
 
     private val wordsFlowJob: Job
     private lateinit var words: StateFlow<List<Word>>
-    private val selectionsFlowJob: Job
-    private lateinit var selections: StateFlow<List<Quiz>>
 
     init {
         wordsFlowJob = coroutineScope.launch {
             words = wordRepository.getWordsByLevel(quizIds, level).stateIn(coroutineScope)
-        }
-        selectionsFlowJob = coroutineScope.launch {
-            selections = quizRepository.getQuiz(Categories.CATEGORY_SELECTIONS).stateIn(coroutineScope)
         }
         isFuriDisplayed = defaultSharedPreferences.getBoolean(Prefs.FURI_DISPLAYED.pref, true)
         quizView.setPresenter(this)
@@ -138,11 +137,6 @@ class QuizPresenter(
     override suspend fun getWords() : List<Word> {
         wordsFlowJob.join()
         return words.value
-    }
-
-    override suspend fun getSelections(): List<Quiz> {
-        selectionsFlowJob.join()
-        return selections.value
     }
 
     // TODO: also save errorMode, errors
@@ -795,26 +789,6 @@ class QuizPresenter(
         quizView.finishQuiz()
     }
 
-
-    override suspend fun createSelection(quizName: String): Long {
-        return quizRepository.saveQuiz(quizName, Categories.CATEGORY_SELECTIONS)
-    }
-
-    override suspend fun addWordToSelection(wordId: Long, quizId: Long) {
-        quizRepository.addWordToQuiz(wordId, quizId)
-    }
-
-    override suspend fun isWordInQuiz(wordId: Long, quizId: Long): Boolean {
-        return wordRepository.isWordInQuiz(wordId, quizId)
-    }
-
-    override suspend fun isWordInQuizzes(wordId: Long, quizIds: Array<Long>): ArrayList<Boolean> {
-        return wordRepository.isWordInQuizzes(wordId, quizIds)
-    }
-
-    override suspend fun deleteWordFromSelection(wordId: Long, selectionId: Long) {
-        quizRepository.deleteWordFromQuiz(wordId, selectionId)
-    }
 
     override suspend fun updateWordPoints(wordId: Long, points: Int) {
         wordRepository.updateWordPoints(wordId, points)

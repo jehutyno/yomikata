@@ -29,7 +29,7 @@ class AnswersActivity : AppCompatActivity(), DIAware {
         extend(di)
         import(answersPresenterModule(answersFragment))
         bind<AnswersContract.Presenter>() with provider {
-            AnswersPresenter(instance(), instance(), instance(), instance(), lifecycleScope)
+            AnswersPresenter(instance(), instance(arg = lifecycleScope), instance(), instance(), instance())
         }
     }
     private val trigger = DITrigger()

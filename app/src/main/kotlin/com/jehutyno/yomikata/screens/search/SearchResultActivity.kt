@@ -22,7 +22,7 @@ class SearchResultActivity : AppCompatActivity(), DIAware {
         extend(di)
         import(searchResultPresenterModule(searchResultFragment))
         bind<SearchResultContract.Presenter>() with provider {
-            SearchResultPresenter(instance(), instance(), instance(), lifecycleScope)
+            SearchResultPresenter(instance(), instance(arg = lifecycleScope), instance(), instance())
         }
     }
     private val trigger = DITrigger()

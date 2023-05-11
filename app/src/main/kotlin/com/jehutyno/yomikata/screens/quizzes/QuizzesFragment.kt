@@ -20,6 +20,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.databinding.FragmentQuizzesBinding
 import com.jehutyno.yomikata.model.Quiz
+import com.jehutyno.yomikata.repository.QuizRepository
 import com.jehutyno.yomikata.screens.content.ContentActivity
 import com.jehutyno.yomikata.screens.quiz.QuizActivity
 import com.jehutyno.yomikata.util.Categories
@@ -41,6 +42,7 @@ import com.jehutyno.yomikata.util.onTTSinit
 import com.jehutyno.yomikata.util.speechNotSupportedAlert
 import com.jehutyno.yomikata.util.spotlightTuto
 import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
@@ -63,7 +65,13 @@ class QuizzesFragment(di: DI) : Fragment(), QuizzesContract.View, QuizzesAdapter
 
     // kodein
     private val mpresenter: QuizzesContract.Presenter by di.newInstance {
-        QuizzesPresenter(instance(), instance(), instance(), this@QuizzesFragment, selectedCategory)
+        QuizzesPresenter(instance(), instance(), instance(), this@QuizzesFragment,
+            instance ( arg =
+                instance<QuizRepository>().getQuiz(selectedCategory).map {
+                    lst -> lst.map{ it.id }.toLongArray()
+                }
+            ), selectedCategory
+        )
     }
 
     val REQUEST_TUTO: Int = 55
