@@ -21,8 +21,6 @@ interface SearchResultContract {
     interface Presenter: BasePresenter, SelectionsInterface, WordInQuizInterface {
         val words : LiveData<List<Word>>
         fun updateSearchString(newSearchString: String)
-        suspend fun updateWordCheck(id: Long, check: Boolean)
-        suspend fun updateWordsCheck(ids: LongArray, check: Boolean)
     }
 
 }
