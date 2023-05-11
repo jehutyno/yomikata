@@ -59,7 +59,7 @@ class ContentActivity : AppCompatActivity(), DIAware {
         import(contentPresenterModule(contentLevelFragment!!))
         bind<ContentContract.Presenter>() with provider {
             ContentPresenter (
-                instance(), instance(), instance(),
+                instance(), instance(),
                 instance(arg = lifecycleScope), instance(arg = quizIds), instance(),
                 quizIds, level
             )

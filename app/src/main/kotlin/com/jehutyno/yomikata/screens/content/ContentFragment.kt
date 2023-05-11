@@ -54,7 +54,6 @@ class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, Wo
     private var quizTitle: String = ""
     private var level: Level? = null
     private var lastPosition = -1
-    private lateinit var selections: List<Quiz>
     private var dialog: WordDetailDialogFragment? = null
 
     // seekBars
@@ -100,15 +99,11 @@ class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, Wo
     private val wordsObserver = Observer<List<Word>> {
         words -> displayWords(words)
     }
-    private val selectionsObserver = Observer<List<Quiz>> {
-        selections -> selectionLoaded(selections)
-    }
 
     override fun onStart() {
         super.onStart()
         mpresenter?.start()
         mpresenter?.words?.observe(viewLifecycleOwner, wordsObserver)
-        mpresenter?.selections?.observe(viewLifecycleOwner, selectionsObserver)
 
         displayStats()
     }
@@ -158,7 +153,7 @@ class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, Wo
 
         if (mpresenter == null) {
             mpresenter = ContentPresenter (
-                di.direct.instance(), di.direct.instance(),
+                di.direct.instance(),
                 this@ContentFragment,
                 di.direct.instance(arg = lifecycleScope), di.direct.instance(arg = quizIds), di.direct.instance(),
                 quizIds, level
@@ -189,7 +184,6 @@ class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, Wo
 
         // unbind observer to prevent word from disappearing while viewing in detail dialog
         mpresenter?.words?.removeObserver(wordsObserver)
-        mpresenter?.selections?.removeObserver(selectionsObserver)
 
         dialog = WordDetailDialogFragment(di)
         dialog!!.arguments = bundle
@@ -201,7 +195,6 @@ class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, Wo
                 super.onDestroy(owner)
                 // continue observing
                 mpresenter?.words?.observe(viewLifecycleOwner, wordsObserver)
-                mpresenter?.selections?.observe(viewLifecycleOwner, selectionsObserver)
             }
         })
     }
@@ -242,6 +235,10 @@ class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, Wo
         private val UNSELECT_ALL = 4
 
         override fun onActionItemClicked(mode: ActionMode, item: MenuItem): Boolean {
+            val selections: List<Quiz>
+            runBlocking {
+                selections = mpresenter!!.getSelections()
+            }
             when (item.itemId) {
                 ADD_TO_SELECTIONS -> {
                     val popup = PopupMenu(activity!!, activity!!.findViewById(item.itemId))
@@ -361,10 +358,6 @@ class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, Wo
             adapter.checkMode = false
             adapter.notifyItemRangeChanged(0, adapter.items.size)
         }
-    }
-
-    override fun selectionLoaded(quizzes: List<Quiz>) {
-        selections = quizzes
     }
 
 
