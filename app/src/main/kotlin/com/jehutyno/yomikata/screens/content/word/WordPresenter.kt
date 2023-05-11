@@ -4,21 +4,15 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.distinctUntilChanged
 import com.jehutyno.yomikata.model.KanjiSoloRadical
-import com.jehutyno.yomikata.model.Quiz
 import com.jehutyno.yomikata.model.Sentence
 import com.jehutyno.yomikata.model.Word
+import com.jehutyno.yomikata.presenters.SelectionsInterface
+import com.jehutyno.yomikata.presenters.WordInQuizInterface
 import com.jehutyno.yomikata.repository.KanjiSoloRepository
-import com.jehutyno.yomikata.repository.QuizRepository
 import com.jehutyno.yomikata.repository.SentenceRepository
 import com.jehutyno.yomikata.repository.WordRepository
-import com.jehutyno.yomikata.util.Categories
 import com.jehutyno.yomikata.util.Level
 import com.jehutyno.yomikata.util.getLevelFromPoints
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
 import mu.KLogging
 
 
@@ -27,24 +21,18 @@ import mu.KLogging
  */
 class WordPresenter(
     private val wordRepository: WordRepository,
-    private val quizRepository: QuizRepository,
     private val radicalSource: KanjiSoloRepository,
     private val sentenceRepository: SentenceRepository,
     contentView: WordContract.View,
-    coroutineScope: CoroutineScope,
-    quizIds: LongArray?, level: Level?, searchString: String) : WordContract.Presenter {
+    selectionsInterface: SelectionsInterface,
+    wordInQuizInterface: WordInQuizInterface,
+    quizIds: LongArray?, level: Level?, searchString: String) : WordContract.Presenter,
+            SelectionsInterface by selectionsInterface, WordInQuizInterface by wordInQuizInterface {
 
     companion object : KLogging()
 
-    // use of StateFlow doesn't require observers, unlike LiveData
-    private val job: Job
-    private lateinit var selections : StateFlow<List<Quiz>>
-
     init {
         contentView.setPresenter(this)
-        job = coroutineScope.launch {
-            selections = quizRepository.getQuiz(Categories.CATEGORY_SELECTIONS).stateIn(coroutineScope)
-        }
     }
 
     // LiveData to get word list to load
@@ -78,43 +66,13 @@ class WordPresenter(
         return wordRepository.getWordById(wordId)
     }
 
-    /**
-     * Get selections
-     *
-     * @return The current selections as a List of Quiz objects
-     */
-    override suspend fun getSelections(): List<Quiz> {
-        job.join()
-        return selections.value
-    }
-
-    suspend fun loadRadicals(kanjis: String): List<KanjiSoloRadical?> {
+    private suspend fun loadRadicals(kanjis: String): List<KanjiSoloRadical?> {
         val radicals = mutableListOf<KanjiSoloRadical?>()
         kanjis.forEach {
             radicals.add(radicalSource.getSoloByKanjiRadical(it.toString()))
         }
 
         return radicals
-    }
-
-    override suspend fun createSelection(quizName: String): Long {
-        return quizRepository.saveQuiz(quizName, Categories.CATEGORY_SELECTIONS)
-    }
-
-    override suspend fun addWordToSelection(wordId: Long, quizId: Long) {
-        quizRepository.addWordToQuiz(wordId, quizId)
-    }
-
-    override suspend fun isWordInQuiz(wordId: Long, quizId: Long): Boolean {
-        return wordRepository.isWordInQuiz(wordId, quizId)
-    }
-
-    override suspend fun isWordInQuizzes(wordId: Long, quizIds: Array<Long>): ArrayList<Boolean> {
-        return wordRepository.isWordInQuizzes(wordId, quizIds)
-    }
-
-    override suspend fun deleteWordFromSelection(wordId: Long, selectionId: Long) {
-        quizRepository.deleteWordFromQuiz(wordId, selectionId)
     }
 
     override suspend fun levelUp(id: Long, points: Int) {

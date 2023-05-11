@@ -3,13 +3,13 @@ package com.jehutyno.yomikata.screens.quizzes
 import android.content.Context
 import android.util.Log
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.asFlow
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.distinctUntilChanged
 import androidx.preference.PreferenceManager
 import com.jehutyno.yomikata.model.Quiz
 import com.jehutyno.yomikata.model.StatAction
 import com.jehutyno.yomikata.model.StatResult
+import com.jehutyno.yomikata.presenters.WordCountInterface
 import com.jehutyno.yomikata.repository.QuizRepository
 import com.jehutyno.yomikata.repository.StatsRepository
 import com.jehutyno.yomikata.util.Categories
@@ -18,13 +18,10 @@ import com.jehutyno.yomikata.util.Prefs
 import com.jehutyno.yomikata.util.QuizStrategy
 import com.jehutyno.yomikata.util.QuizType
 import com.jehutyno.yomikata.util.toQuizType
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flatMapLatest
 import mu.KLogging
-import java.util.*
+import java.util.Calendar
+import java.util.StringTokenizer
 
 
 /**
@@ -35,7 +32,8 @@ class QuizzesPresenter(
     private val quizRepository: QuizRepository,
     private val statsRepository: StatsRepository,
     private val quizzesView: QuizzesContract.View,
-    category: Int) : QuizzesContract.Presenter {
+    wordCountInterface: WordCountInterface,
+    category: Int) : QuizzesContract.Presenter, WordCountInterface by wordCountInterface {
 
     companion object : KLogging()
 
@@ -47,42 +45,8 @@ class QuizzesPresenter(
 
     // define LiveData
     // from Room
-    override val quizList : LiveData<List<Quiz>> =
-        quizRepository.getQuiz(category).asLiveData().distinctUntilChanged()
-
-    @ExperimentalCoroutinesApi
-    private fun getLiveData(level: Level?): LiveData<Int> {
-        val function : (List<Quiz>) -> Flow<Int> =
-            if (level == null)
-                { quizzes -> quizRepository.countWordsForQuizzes(
-                    quizzes.map {it.id}.toLongArray()
-                ) }
-            else
-                { quizzes -> quizRepository.countWordsForLevel(
-                    quizzes.map {it.id}.toLongArray(),
-                    level
-                ) }
-
-        return quizList.asFlow().flatMapLatest { quizzes ->
-            function(quizzes)
-        }.asLiveData().distinctUntilChanged()
-    }
-
-    @OptIn(ExperimentalCoroutinesApi::class)
-    override val quizCount: LiveData<Int> = getLiveData(null)
-    @OptIn(ExperimentalCoroutinesApi::class)
-    override val lowCount: LiveData<Int> = getLiveData(Level.LOW)
-    @OptIn(ExperimentalCoroutinesApi::class)
-    override val mediumCount: LiveData<Int> = getLiveData(Level.MEDIUM)
-    @OptIn(ExperimentalCoroutinesApi::class)
-    override val highCount: LiveData<Int> = getLiveData(Level.HIGH)
-    @OptIn(ExperimentalCoroutinesApi::class)
-    override val masterCount: LiveData<Int> = getLiveData(Level.MASTER).asFlow().combine(
-        getLiveData(Level.MAX).asFlow()
-    ) { value3, value4 ->
-        value3 + value4
-    }.asLiveData().distinctUntilChanged()
-
+    override val quizList : LiveData<List<Quiz>> = quizRepository.getQuiz(category)
+                                                                 .asLiveData().distinctUntilChanged()
 
     override fun start() {
         Log.i("YomikataZK", "Home Presenter start")

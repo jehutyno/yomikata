@@ -39,8 +39,11 @@ class QuizActivity : AppCompatActivity(), DIAware {
         extend(di)
         import(quizPresenterModule(quizFragment))
         bind<QuizContract.Presenter>() with provider {
-            QuizPresenter(instance(), instance(), instance(), instance(), instance(), instance(),
-                            quizIds, quizStrategy, level, quizTypes, lifecycleScope)
+            QuizPresenter (
+                instance(), instance(), instance(), instance(), instance(),
+                quizIds, quizStrategy, level, quizTypes,
+                instance(arg = lifecycleScope), instance(), lifecycleScope
+            )
         }
     }
     // trigger when quizFragment is set (see subDI)

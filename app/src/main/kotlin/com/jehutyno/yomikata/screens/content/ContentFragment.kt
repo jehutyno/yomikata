@@ -18,6 +18,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.Observer
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.jehutyno.yomikata.R
@@ -156,8 +157,12 @@ class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, Wo
         super.onViewCreated(view, savedInstanceState)
 
         if (mpresenter == null) {
-            mpresenter = ContentPresenter(di.direct.instance(), di.direct.instance(),
-                this@ContentFragment, quizIds, level)
+            mpresenter = ContentPresenter (
+                di.direct.instance(), di.direct.instance(),
+                this@ContentFragment,
+                di.direct.instance(arg = lifecycleScope), di.direct.instance(arg = quizIds), di.direct.instance(),
+                quizIds, level
+            )
         }
 
         binding.recyclerviewContent.let {

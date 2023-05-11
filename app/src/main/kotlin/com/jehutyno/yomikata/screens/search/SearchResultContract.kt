@@ -3,8 +3,9 @@ package com.jehutyno.yomikata.screens.search
 import androidx.lifecycle.LiveData
 import com.jehutyno.yomikata.BasePresenter
 import com.jehutyno.yomikata.BaseView
-import com.jehutyno.yomikata.model.Quiz
 import com.jehutyno.yomikata.model.Word
+import com.jehutyno.yomikata.presenters.SelectionsInterface
+import com.jehutyno.yomikata.presenters.WordInQuizInterface
 
 
 /**
@@ -17,15 +18,9 @@ interface SearchResultContract {
         fun displayNoResults()
     }
 
-    interface Presenter: BasePresenter {
+    interface Presenter: BasePresenter, SelectionsInterface, WordInQuizInterface {
         val words : LiveData<List<Word>>
-        suspend fun getSelections(): List<Quiz>
         fun updateSearchString(newSearchString: String)
-        suspend fun isWordInQuiz(wordId: Long, quizId: Long): Boolean
-        suspend fun createSelection(quizName: String): Long
-        suspend fun addWordToSelection(wordId: Long, quizId: Long)
-        suspend fun isWordInQuizzes(wordId: Long, quizIds: Array<Long>): ArrayList<Boolean>
-        suspend fun deleteWordFromSelection(wordId: Long, selectionId: Long)
         suspend fun updateWordCheck(id: Long, check: Boolean)
         suspend fun updateWordsCheck(ids: LongArray, check: Boolean)
     }
