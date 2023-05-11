@@ -16,7 +16,7 @@ import mu.KLogging
  * Created by valentin on 29/09/2016.
  */
 class ContentPresenter(
-    private val wordRepository: WordRepository,
+    wordRepository: WordRepository,
     contentView: ContentContract.View,
     selectionsInterface: SelectionsInterface,
     wordCountInterface: WordCountInterface,
@@ -38,14 +38,6 @@ class ContentPresenter(
 
     override fun start() {
         logger.info("Content presenter start")
-    }
-
-    override suspend fun updateWordCheck(id: Long, check: Boolean) {
-        wordRepository.updateWordSelected(id, check)
-    }
-
-    override suspend fun updateWordsCheck(ids: LongArray, check: Boolean) {
-        wordRepository.updateWordsSelected(ids, check)
     }
 
 }

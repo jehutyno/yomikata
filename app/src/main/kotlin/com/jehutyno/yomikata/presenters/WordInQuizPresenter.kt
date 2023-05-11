@@ -12,4 +12,12 @@ class WordInQuizPresenter(private val wordRepository: WordRepository): WordInQui
     override suspend fun isWordInQuizzes(wordId: Long, quizIds: Array<Long>) : ArrayList<Boolean> {
         return wordRepository.isWordInQuizzes(wordId, quizIds)
     }
+
+    override suspend fun updateWordCheck(id: Long, check: Boolean) {
+        wordRepository.updateWordSelected(id, check)
+    }
+
+    override suspend fun updateWordsCheck(ids: LongArray, check: Boolean) {
+        wordRepository.updateWordsSelected(ids, check)
+    }
 }

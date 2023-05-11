@@ -47,12 +47,4 @@ class SearchResultPresenter(
         searchString.value = newSearchString
     }
 
-    override suspend fun updateWordCheck(id: Long, check: Boolean) {
-        wordRepository.updateWordSelected(id, check)
-    }
-
-    override suspend fun updateWordsCheck(ids: LongArray, check: Boolean) {
-        wordRepository.updateWordsSelected(ids, check)
-    }
-
 }

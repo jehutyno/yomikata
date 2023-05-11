@@ -21,8 +21,6 @@ interface ContentContract {
 
     interface Presenter: BasePresenter, SelectionsInterface, WordCountInterface, WordInQuizInterface {
         val words: LiveData<List<Word>>
-        suspend fun updateWordCheck(id: Long, check: Boolean)
-        suspend fun updateWordsCheck(ids: LongArray, check: Boolean)
     }
 
 }
