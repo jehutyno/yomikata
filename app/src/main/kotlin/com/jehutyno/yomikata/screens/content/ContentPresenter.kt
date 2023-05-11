@@ -3,14 +3,11 @@ package com.jehutyno.yomikata.screens.content
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.distinctUntilChanged
-import com.jehutyno.yomikata.model.Quiz
 import com.jehutyno.yomikata.model.Word
 import com.jehutyno.yomikata.presenters.SelectionsInterface
 import com.jehutyno.yomikata.presenters.WordCountInterface
 import com.jehutyno.yomikata.presenters.WordInQuizInterface
-import com.jehutyno.yomikata.repository.QuizRepository
 import com.jehutyno.yomikata.repository.WordRepository
-import com.jehutyno.yomikata.util.Categories
 import com.jehutyno.yomikata.util.Level
 import mu.KLogging
 
@@ -20,7 +17,6 @@ import mu.KLogging
  */
 class ContentPresenter(
     private val wordRepository: WordRepository,
-    quizRepository: QuizRepository,
     contentView: ContentContract.View,
     selectionsInterface: SelectionsInterface,
     wordCountInterface: WordCountInterface,
@@ -39,8 +35,6 @@ class ContentPresenter(
     // define LiveData
     override val words: LiveData<List<Word>> =
         wordRepository.getWordsByLevel(quizIds, level).asLiveData().distinctUntilChanged()
-    override val selections: LiveData<List<Quiz>> =
-        quizRepository.getQuiz(Categories.CATEGORY_SELECTIONS).asLiveData().distinctUntilChanged()
 
     override fun start() {
         logger.info("Content presenter start")
