@@ -4,13 +4,27 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.multidex.MultiDexApplication
 import androidx.preference.PreferenceManager
 import com.facebook.stetho.Stetho
-import com.jehutyno.yomikata.repository.*
-import com.jehutyno.yomikata.repository.local.*
+import com.jehutyno.yomikata.presenters.presenterModule
+import com.jehutyno.yomikata.repository.KanjiSoloRepository
+import com.jehutyno.yomikata.repository.QuizRepository
+import com.jehutyno.yomikata.repository.SentenceRepository
+import com.jehutyno.yomikata.repository.StatsRepository
+import com.jehutyno.yomikata.repository.WordRepository
+import com.jehutyno.yomikata.repository.local.KanjiSoloSource
+import com.jehutyno.yomikata.repository.local.QuizSource
+import com.jehutyno.yomikata.repository.local.SentenceSource
+import com.jehutyno.yomikata.repository.local.StatsSource
+import com.jehutyno.yomikata.repository.local.WordSource
+import com.jehutyno.yomikata.repository.local.databaseModule
 import com.jehutyno.yomikata.util.Prefs
 import io.github.inflationx.calligraphy3.CalligraphyConfig
 import io.github.inflationx.calligraphy3.CalligraphyInterceptor
 import io.github.inflationx.viewpump.ViewPump
-import org.kodein.di.*
+import org.kodein.di.DI
+import org.kodein.di.DIAware
+import org.kodein.di.bind
+import org.kodein.di.instance
+import org.kodein.di.provider
 
 
 /**
@@ -31,6 +45,7 @@ class YomikataZKApplication : MultiDexApplication(), DIAware {
         bind<StatsRepository>() with provider { StatsSource(instance()) }
         bind<KanjiSoloRepository>() with provider { KanjiSoloSource(instance()) }
         bind<SentenceRepository>() with provider { SentenceSource(instance()) }
+        import(presenterModule())
     }
 
     override fun onCreate() {
