@@ -25,7 +25,6 @@ interface WordContract {
                                             : List<Triple<Word, List<KanjiSoloRadical?>, Sentence>>
         suspend fun levelUp(id: Long, points: Int)
         suspend fun levelDown(id: Long, points: Int)
-        suspend fun getWord(wordId: Long): Word
     }
 
 }

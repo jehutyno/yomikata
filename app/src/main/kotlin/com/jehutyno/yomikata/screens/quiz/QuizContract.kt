@@ -59,7 +59,6 @@ interface QuizContract {
         suspend fun getRandomWords(wordId: Long, answer: String, wordSize: Int, limit: Int, quizType: QuizType): ArrayList<Word>
         suspend fun updateWordPoints(wordId: Long, points: Int)
         suspend fun getNextProgressiveWords(): List<Pair<Word, QuizType>>
-        suspend fun getWord(id: Long): Word?
         suspend fun initQuiz()
         suspend fun updateRepetitions(id: Long, repetition: Int)
         suspend fun decreaseAllRepetitions()

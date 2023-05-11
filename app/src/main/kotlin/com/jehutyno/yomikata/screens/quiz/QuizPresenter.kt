@@ -835,10 +835,6 @@ class QuizPresenter(
         return createWordTypePair(words)
     }
 
-    override suspend fun getWord(id: Long): Word {
-        return wordRepository.getWordById(id)
-    }
-
     /**
      * Get random sentence
      *

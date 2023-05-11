@@ -18,7 +18,7 @@ import mu.KLogging
  * Created by valentin on 13/10/2016.
  */
 class SearchResultPresenter(
-    private val wordRepository: WordRepository,
+    wordRepository : WordRepository,
     selectionsInterface: SelectionsInterface,
     wordInQuizInterface: WordInQuizInterface,
     searchResultView: SearchResultContract.View) : SearchResultContract.Presenter,

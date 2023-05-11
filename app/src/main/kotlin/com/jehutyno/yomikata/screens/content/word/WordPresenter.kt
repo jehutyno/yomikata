@@ -62,10 +62,6 @@ class WordPresenter(
         return wordsRad
     }
 
-    override suspend fun getWord(wordId: Long): Word {
-        return wordRepository.getWordById(wordId)
-    }
-
     private suspend fun loadRadicals(kanjis: String): List<KanjiSoloRadical?> {
         val radicals = mutableListOf<KanjiSoloRadical?>()
         kanjis.forEach {

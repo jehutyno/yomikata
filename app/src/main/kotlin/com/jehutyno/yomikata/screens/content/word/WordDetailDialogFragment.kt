@@ -167,7 +167,7 @@ class WordDetailDialogFragment(private val di: DI) : DialogFragment(), WordContr
         }
         if (wordPresenter.words == null) {
             lifecycleScope.launch {
-                val oneWordList = listOf(wordPresenter.getWord(wordId))
+                val oneWordList = listOf(wordPresenter.getWordById(wordId))
                 displayWords(wordPresenter.getWordKanjiSoloRadicalSentenceList(oneWordList))
             }
         }
