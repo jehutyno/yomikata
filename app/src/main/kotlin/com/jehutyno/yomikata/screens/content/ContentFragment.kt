@@ -1,6 +1,5 @@
 package com.jehutyno.yomikata.screens.content
 
-import android.os.Build
 import android.os.Bundle
 import android.view.ActionMode
 import android.view.LayoutInflater
@@ -25,6 +24,7 @@ import com.jehutyno.yomikata.screens.content.word.WordDetailDialogFragment
 import com.jehutyno.yomikata.util.Extras
 import com.jehutyno.yomikata.util.Level
 import com.jehutyno.yomikata.util.SeekBarsManager
+import com.jehutyno.yomikata.util.getSerializableHelper
 import com.jehutyno.yomikata.view.WordSelectorActionModeCallback
 import kotlinx.coroutines.runBlocking
 import org.kodein.di.DI
@@ -77,12 +77,7 @@ class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, Wo
         if (arguments != null) {
             quizIds = requireArguments().getLongArray(Extras.EXTRA_QUIZ_IDS)!!
             quizTitle = requireArguments().getString(Extras.EXTRA_QUIZ_TITLE)!!
-            level = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                requireArguments().getSerializable(Extras.EXTRA_LEVEL, Level::class.java)
-            } else {
-                @Suppress("DEPRECATION")
-                requireArguments().getSerializable(Extras.EXTRA_LEVEL) as Level?
-            }
+            level = requireArguments().getSerializableHelper(Extras.EXTRA_LEVEL, Level::class.java)
         }
 
         if (savedInstanceState != null) {
