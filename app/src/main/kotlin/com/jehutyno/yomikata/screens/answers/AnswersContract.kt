@@ -1,7 +1,6 @@
 package com.jehutyno.yomikata.screens.answers
 
 import com.jehutyno.yomikata.BasePresenter
-import com.jehutyno.yomikata.BaseView
 import com.jehutyno.yomikata.model.Answer
 import com.jehutyno.yomikata.model.Sentence
 import com.jehutyno.yomikata.model.Word
@@ -14,7 +13,7 @@ import com.jehutyno.yomikata.presenters.WordInQuizInterface
  */
 interface AnswersContract {
 
-    interface View: BaseView<Presenter> {
+    interface View {
         fun displayAnswers()
     }
 

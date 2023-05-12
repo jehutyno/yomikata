@@ -88,14 +88,6 @@ class QuizzesFragment(di: DI) : Fragment(), QuizzesContract.View, QuizzesAdapter
     private val binding get() = _binding!!
 
 
-    override fun setPresenter(presenter: QuizzesContract.Presenter) {
-        // no need in this case since this is only used to set a reference to the mpresenter
-        // that is explicitly created in this class already.
-        // if this method is ever called because QuizzesPresenter was initialized from some
-        // other activity/fragment, then this should be set (see ContentFragment for an example)
-//        mpresenter = presenter
-    }
-
     override fun onInit(status: Int) {
         ttsSupported = onTTSinit(context, status, tts)
     }

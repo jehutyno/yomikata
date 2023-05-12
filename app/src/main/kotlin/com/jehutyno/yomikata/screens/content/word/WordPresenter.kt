@@ -23,17 +23,12 @@ class WordPresenter(
     private val wordRepository: WordRepository,
     private val radicalSource: KanjiSoloRepository,
     private val sentenceRepository: SentenceRepository,
-    contentView: WordContract.View,
     selectionsInterface: SelectionsInterface,
     wordInQuizInterface: WordInQuizInterface,
     quizIds: LongArray?, level: Level?, searchString: String) : WordContract.Presenter,
             SelectionsInterface by selectionsInterface, WordInQuizInterface by wordInQuizInterface {
 
     companion object : KLogging()
-
-    init {
-        contentView.setPresenter(this)
-    }
 
     // LiveData to get word list to load
     // will be null if only a single word needs to be loaded

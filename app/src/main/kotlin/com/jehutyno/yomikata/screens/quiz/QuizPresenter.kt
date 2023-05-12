@@ -129,7 +129,6 @@ class QuizPresenter(
             words = wordRepository.getWordsByLevel(quizIds, level).stateIn(coroutineScope)
         }
         isFuriDisplayed = defaultSharedPreferences.getBoolean(Prefs.FURI_DISPLAYED.pref, true)
-        quizView.setPresenter(this)
     }
 
     override fun start() {

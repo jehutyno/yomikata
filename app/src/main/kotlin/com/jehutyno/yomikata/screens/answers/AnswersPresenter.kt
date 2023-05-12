@@ -14,14 +14,9 @@ import com.jehutyno.yomikata.repository.SentenceRepository
 class AnswersPresenter(
     selectionsInterface: SelectionsInterface,
     wordInQuizInterface: WordInQuizInterface,
-    private val sentenceRepository: SentenceRepository,
-    answersView: AnswersContract.View)
+    private val sentenceRepository: SentenceRepository)
                 : AnswersContract.Presenter, SelectionsInterface by selectionsInterface,
                                              WordInQuizInterface by wordInQuizInterface{
-
-    init {
-        answersView.setPresenter(this)
-    }
 
     override fun start() {
     }

@@ -2,7 +2,6 @@ package com.jehutyno.yomikata.screens.content.word
 
 import androidx.lifecycle.LiveData
 import com.jehutyno.yomikata.BasePresenter
-import com.jehutyno.yomikata.BaseView
 import com.jehutyno.yomikata.model.KanjiSoloRadical
 import com.jehutyno.yomikata.model.Sentence
 import com.jehutyno.yomikata.model.Word
@@ -15,7 +14,7 @@ import com.jehutyno.yomikata.presenters.WordInQuizInterface
  */
 interface WordContract {
 
-    interface View : BaseView<Presenter> {
+    interface View {
         fun displayWords(words: List<Triple<Word, List<KanjiSoloRadical?>, Sentence>>)
     }
 

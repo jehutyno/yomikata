@@ -51,7 +51,7 @@ class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, Wo
         extend(di)
         bind<ContentContract.Presenter>() with provider {
             ContentPresenter (
-                instance(), this@ContentFragment,
+                instance(),
                 instance(arg = lifecycleScope), instance(arg = quizIds), instance(),
                 quizIds, level
             )
@@ -65,11 +65,6 @@ class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, Wo
     // View Binding
     private var _binding: FragmentContentGraphBinding? = null
     private val binding get() = _binding!!
-
-
-    override fun setPresenter(presenter: ContentContract.Presenter) {
-//        mpresenter = presenter
-    }
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)

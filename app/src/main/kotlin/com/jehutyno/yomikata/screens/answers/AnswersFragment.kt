@@ -36,7 +36,7 @@ class AnswersFragment(private val di: DI) : Fragment(), AnswersContract.View, An
     private val subDI by DI.lazy {
         extend(di)
         bind<AnswersContract.Presenter>() with provider {
-            AnswersPresenter(instance(arg = lifecycleScope), instance(), instance(), this@AnswersFragment)
+            AnswersPresenter(instance(arg = lifecycleScope), instance(), instance())
         }
         bind<VoicesManager>() with singleton { VoicesManager(requireActivity()) }
     }
@@ -57,10 +57,6 @@ class AnswersFragment(private val di: DI) : Fragment(), AnswersContract.View, An
 
     override fun onInit(status: Int) {
         ttsSupported = onTTSinit(activity, status, tts)
-    }
-
-    override fun setPresenter(presenter: AnswersContract.Presenter) {
-//        this.presenter = presenter
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {

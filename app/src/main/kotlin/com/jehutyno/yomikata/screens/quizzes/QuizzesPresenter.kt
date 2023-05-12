@@ -37,9 +37,6 @@ class QuizzesPresenter(
 
     companion object : KLogging()
 
-    init {
-        quizzesView.setPresenter(this)
-    }
 
     private lateinit var selectedTypes: ArrayList<QuizType>
 

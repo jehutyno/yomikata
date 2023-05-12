@@ -2,7 +2,6 @@ package com.jehutyno.yomikata.screens.quizzes
 
 import androidx.lifecycle.LiveData
 import com.jehutyno.yomikata.BasePresenter
-import com.jehutyno.yomikata.BaseView
 import com.jehutyno.yomikata.model.Quiz
 import com.jehutyno.yomikata.presenters.WordCountInterface
 import com.jehutyno.yomikata.util.Level
@@ -15,7 +14,7 @@ import com.jehutyno.yomikata.util.QuizType
  */
 interface QuizzesContract {
 
-    interface View : BaseView<Presenter> {
+    interface View {
         fun displayQuizzes(quizzes: List<Quiz>)
         fun displayNoData()
         fun selectPronunciationQcm(isSelected: Boolean)

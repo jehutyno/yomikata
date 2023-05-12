@@ -2,7 +2,6 @@ package com.jehutyno.yomikata.screens.quiz
 
 import android.os.Bundle
 import com.jehutyno.yomikata.BasePresenter
-import com.jehutyno.yomikata.BaseView
 import com.jehutyno.yomikata.model.Answer
 import com.jehutyno.yomikata.model.Sentence
 import com.jehutyno.yomikata.model.Word
@@ -17,7 +16,7 @@ import com.jehutyno.yomikata.util.QuizType
  */
 interface QuizContract {
 
-    interface View : BaseView<Presenter> {
+    interface View {
         fun displayWords(quizWordsPair: List<Pair<Word, QuizType>>)
         fun noWords()
         fun setHiraganaConversion(enabled: Boolean)
