@@ -54,22 +54,8 @@ class ContentActivity : AppCompatActivity(), DIAware {
 
     // kodein
     override val di by di()
-    private val subDI by DI.lazy {
-        extend(di)
-        import(contentPresenterModule(contentLevelFragment!!))
-        bind<ContentContract.Presenter>() with provider {
-            ContentPresenter (
-                instance(), instance(),
-                instance(arg = lifecycleScope), instance(arg = quizIds), instance(),
-                quizIds, level
-            )
-        }
-    }
+
     private lateinit var statsRepository: StatsSource
-    // use trigger because contentLevelFragment may not be set yet
-    private val trigger = DITrigger()
-    @Suppress("unused")
-    private val contentPresenter: ContentContract.Presenter by subDI.on(trigger = trigger).instance()
 
     private var contentPagerAdapter: ContentPagerAdapter? = null
 
@@ -207,8 +193,6 @@ class ContentActivity : AppCompatActivity(), DIAware {
                 quizIds = ids.toLongArray()
             }
             addOrReplaceFragment(R.id.fragment_container, contentLevelFragment!!)
-            // contentLevelFragment is set now, so safely pull trigger
-            trigger.trigger()
 
         } else {
             contentPagerAdapter = ContentPagerAdapter(this@ContentActivity, quizzes, di)

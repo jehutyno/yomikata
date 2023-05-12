@@ -51,8 +51,8 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
     }
     @Suppress("unused")
     private val voicesManager: VoicesManager by subDI.instance()
+    private val presenter: QuizContract.Presenter by subDI.instance(arg = this@QuizFragment)
 
-    private lateinit var presenter: QuizContract.Presenter
     private var adapter: QuizItemPagerAdapter? = null
     private var tts: TextToSpeech? = null
     private var ttsSupported = SPEECH_NOT_INITALIZED
@@ -100,7 +100,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
     }
 
     override fun setPresenter(presenter: QuizContract.Presenter) {
-        this.presenter = presenter
+//        this.presenter = presenter
     }
 
     /**

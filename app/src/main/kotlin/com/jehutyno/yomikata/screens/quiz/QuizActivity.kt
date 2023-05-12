@@ -37,19 +37,15 @@ class QuizActivity : AppCompatActivity(), DIAware {
     override val di by di()
     private val subDI by DI.lazy {
         extend(di)
-        import(quizPresenterModule(quizFragment))
-        bind<QuizContract.Presenter>() with provider {
+        bind<QuizContract.Presenter>() with factory {
+            view: QuizContract.View ->
             QuizPresenter (
-                instance(), instance(), instance(), instance(), instance(),
+                instance(), instance(), instance(), instance(), view,
                 quizIds, quizStrategy, level, quizTypes,
                 instance(arg = lifecycleScope), instance(), lifecycleScope
             )
         }
     }
-    // trigger when quizFragment is set (see subDI)
-    private val trigger = DITrigger()
-    @Suppress("unused")
-    private val quizPresenter: QuizContract.Presenter by subDI.on(trigger = trigger).instance()
 
     private lateinit var quizFragment: QuizFragment
 
@@ -131,13 +127,10 @@ class QuizActivity : AppCompatActivity(), DIAware {
             bundle.putSerializable(Extras.EXTRA_QUIZ_STRATEGY, quizStrategy)
             bundle.putParcelableArrayList(Extras.EXTRA_QUIZ_TYPES, quizTypes)
 
-            quizFragment = QuizFragment(di)
+            quizFragment = QuizFragment(subDI)
             quizFragment.arguments = bundle
         }
         addOrReplaceFragment(R.id.container_content, quizFragment)
-
-        // quizFragment has been set so trigger injection
-        trigger.trigger()
 
         fun askToQuitSession() {
             alertDialog(getString(R.string.quit_quiz)) {

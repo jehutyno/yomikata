@@ -11,6 +11,7 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.appcompat.widget.SearchView
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.jehutyno.yomikata.R
@@ -22,17 +23,28 @@ import com.jehutyno.yomikata.util.Extras
 import com.jehutyno.yomikata.view.WordSelectorActionModeCallback
 import kotlinx.coroutines.runBlocking
 import org.kodein.di.DI
+import org.kodein.di.bind
+import org.kodein.di.instance
+import org.kodein.di.provider
 
 
 /**
  * Created by valentin on 13/10/2016.
  */
 class SearchResultFragment(private val di: DI) : Fragment(), SearchResultContract.View, WordsAdapter.Callback {
-    private lateinit var searchResultPresenter : SearchResultContract.Presenter
     private lateinit var adapter: WordsAdapter
     private lateinit var actionModeCallback: ActionMode.Callback
     private lateinit var layoutManager: LinearLayoutManager
     private var searchString = ""
+
+    // kodein
+    private val subDI by DI.lazy {
+        extend(di)
+        bind<SearchResultContract.Presenter>() with provider {
+            SearchResultPresenter(instance(), instance(arg = lifecycleScope), instance(), this@SearchResultFragment)
+        }
+    }
+    private val searchResultPresenter : SearchResultContract.Presenter by subDI.instance()
 
     // View Binding
     private var _binding: FragmentContentBinding? = null
@@ -40,7 +52,7 @@ class SearchResultFragment(private val di: DI) : Fragment(), SearchResultContrac
 
 
     override fun setPresenter(presenter: SearchResultContract.Presenter) {
-        searchResultPresenter = presenter
+//        searchResultPresenter = presenter
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {

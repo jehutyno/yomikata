@@ -35,12 +35,15 @@ class AnswersFragment(private val di: DI) : Fragment(), AnswersContract.View, An
     // kodein
     private val subDI by DI.lazy {
         extend(di)
+        bind<AnswersContract.Presenter>() with provider {
+            AnswersPresenter(instance(arg = lifecycleScope), instance(), instance(), this@AnswersFragment)
+        }
         bind<VoicesManager>() with singleton { VoicesManager(requireActivity()) }
     }
     @Suppress("unused")
     private val voicesManager: VoicesManager by subDI.instance()
+    private val presenter: AnswersContract.Presenter by subDI.instance()
 
-    private lateinit var presenter: AnswersContract.Presenter
     private lateinit var layoutManager: LinearLayoutManager
     private lateinit var adapter: AnswersAdapter
 
@@ -57,7 +60,7 @@ class AnswersFragment(private val di: DI) : Fragment(), AnswersContract.View, An
     }
 
     override fun setPresenter(presenter: AnswersContract.Presenter) {
-        this.presenter = presenter
+//        this.presenter = presenter
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
