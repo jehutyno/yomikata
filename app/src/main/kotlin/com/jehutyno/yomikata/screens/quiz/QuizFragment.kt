@@ -99,10 +99,6 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
         voicesManager.speakSentence(sentence, ttsSupported, tts)
     }
 
-    override fun setPresenter(presenter: QuizContract.Presenter) {
-//        this.presenter = presenter
-    }
-
     /**
      * Activity Methods
      */

@@ -38,7 +38,7 @@ class WordDetailDialogFragment(private val di: DI) : DialogFragment(), WordContr
 //            import(voicesManagerModule(activity))
         bind<WordContract.Presenter>() with provider {
             WordPresenter (
-                instance(), instance(), instance(), this@WordDetailDialogFragment,
+                instance(), instance(), instance(),
                 instance(arg = lifecycleScope), instance(),
                 quizIds, level, searchString
             )
@@ -177,10 +177,6 @@ class WordDetailDialogFragment(private val di: DI) : DialogFragment(), WordContr
         adapter.replaceData(words)
         viewPager.currentItem = wordPosition
         setArrowDisplay(wordPosition)
-    }
-
-    override fun setPresenter(presenter: WordContract.Presenter) {
-
     }
 
     override fun onSelectionClick(view: View, position: Int) = runBlocking {

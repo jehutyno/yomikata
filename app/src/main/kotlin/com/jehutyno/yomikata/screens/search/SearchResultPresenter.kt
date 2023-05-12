@@ -20,16 +20,11 @@ import mu.KLogging
 class SearchResultPresenter(
     wordRepository : WordRepository,
     selectionsInterface: SelectionsInterface,
-    wordInQuizInterface: WordInQuizInterface,
-    searchResultView: SearchResultContract.View) : SearchResultContract.Presenter,
+    wordInQuizInterface: WordInQuizInterface) : SearchResultContract.Presenter,
             SelectionsInterface by selectionsInterface, WordInQuizInterface by wordInQuizInterface {
 
 
     companion object : KLogging()
-
-    init {
-        searchResultView.setPresenter(this)
-    }
 
     // LiveData
     private val searchString : MutableLiveData<String> by lazy { MutableLiveData<String>() }

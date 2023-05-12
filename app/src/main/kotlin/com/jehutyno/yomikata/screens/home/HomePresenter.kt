@@ -14,14 +14,9 @@ import mu.KLogging
  * Created by valentin on 26/12/2016.
  */
 class HomePresenter(
-    statsRepository: StatsRepository,
-    homeView: HomeContract.View) : HomeContract.Presenter {
+    statsRepository: StatsRepository) : HomeContract.Presenter {
 
     companion object : KLogging()
-
-    init {
-        homeView.setPresenter(this)
-    }
 
     // define livedata
     // from Room database & exposed to fragment:

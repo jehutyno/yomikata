@@ -2,7 +2,6 @@ package com.jehutyno.yomikata.screens.search
 
 import androidx.lifecycle.LiveData
 import com.jehutyno.yomikata.BasePresenter
-import com.jehutyno.yomikata.BaseView
 import com.jehutyno.yomikata.model.Word
 import com.jehutyno.yomikata.presenters.SelectionsInterface
 import com.jehutyno.yomikata.presenters.WordInQuizInterface
@@ -13,7 +12,7 @@ import com.jehutyno.yomikata.presenters.WordInQuizInterface
  */
 interface SearchResultContract {
 
-    interface View: BaseView<Presenter> {
+    interface View {
         fun displayResults(words: List<Word>)
         fun displayNoResults()
     }

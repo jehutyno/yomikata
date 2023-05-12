@@ -2,7 +2,6 @@ package com.jehutyno.yomikata.screens.content
 
 import androidx.lifecycle.LiveData
 import com.jehutyno.yomikata.BasePresenter
-import com.jehutyno.yomikata.BaseView
 import com.jehutyno.yomikata.model.Word
 import com.jehutyno.yomikata.presenters.SelectionsInterface
 import com.jehutyno.yomikata.presenters.WordCountInterface
@@ -14,7 +13,7 @@ import com.jehutyno.yomikata.presenters.WordInQuizInterface
  */
 interface ContentContract {
 
-    interface View: BaseView<Presenter> {
+    interface View {
         fun displayWords(words: List<Word>)
         fun displayStats()
     }

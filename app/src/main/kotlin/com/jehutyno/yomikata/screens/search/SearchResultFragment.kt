@@ -41,7 +41,7 @@ class SearchResultFragment(private val di: DI) : Fragment(), SearchResultContrac
     private val subDI by DI.lazy {
         extend(di)
         bind<SearchResultContract.Presenter>() with provider {
-            SearchResultPresenter(instance(), instance(arg = lifecycleScope), instance(), this@SearchResultFragment)
+            SearchResultPresenter(instance(), instance(arg = lifecycleScope), instance())
         }
     }
     private val searchResultPresenter : SearchResultContract.Presenter by subDI.instance()
@@ -49,11 +49,6 @@ class SearchResultFragment(private val di: DI) : Fragment(), SearchResultContrac
     // View Binding
     private var _binding: FragmentContentBinding? = null
     private val binding get() = _binding!!
-
-
-    override fun setPresenter(presenter: SearchResultContract.Presenter) {
-//        searchResultPresenter = presenter
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

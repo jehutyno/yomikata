@@ -17,7 +17,6 @@ import mu.KLogging
  */
 class ContentPresenter(
     wordRepository: WordRepository,
-    contentView: ContentContract.View,
     selectionsInterface: SelectionsInterface,
     wordCountInterface: WordCountInterface,
     wordInQuizInterface: WordInQuizInterface,
@@ -27,10 +26,6 @@ class ContentPresenter(
                                            WordInQuizInterface by wordInQuizInterface {
 
     companion object : KLogging()
-
-    init {
-        contentView.setPresenter(this)
-    }
 
     // define LiveData
     override val words: LiveData<List<Word>> =
