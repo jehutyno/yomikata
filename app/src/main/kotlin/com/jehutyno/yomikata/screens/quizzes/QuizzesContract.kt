@@ -28,6 +28,7 @@ interface QuizzesContract {
 
     interface Presenter : BasePresenter, WordCountInterface {
         val quizList : LiveData<List<Quiz>>
+        val selectedTypes: LiveData<ArrayList<QuizType>>
         suspend fun createQuiz(quizName: String)
         suspend fun updateQuizName(quizId: Long, quizName: String)
         suspend fun deleteQuiz(quizId: Long)
@@ -40,7 +41,7 @@ interface QuizzesContract {
         fun enJapSwitch()
         fun japEnSwitch()
         fun autoSwitch()
-        suspend fun launchQuizClick(strategy: QuizStrategy, level: Level?, title: String, category: Int)
+        suspend fun onLaunchQuizClick(category: Int)
         fun getSelectedTypes(): ArrayList<QuizType>
     }
 }

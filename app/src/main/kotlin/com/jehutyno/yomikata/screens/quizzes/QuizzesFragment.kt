@@ -65,7 +65,7 @@ class QuizzesFragment(di: DI) : Fragment(), QuizzesContract.View, QuizzesAdapter
 
     // kodein
     private val mpresenter: QuizzesContract.Presenter by di.newInstance {
-        QuizzesPresenter(instance(), instance(), instance(), this@QuizzesFragment,
+        QuizzesPresenter(instance(), instance(), instance(),
             instance ( arg =
                 instance<QuizRepository>().getQuiz(selectedCategory).map {
                     lst -> lst.map{ it.id }.toLongArray()
@@ -148,6 +148,25 @@ class QuizzesFragment(di: DI) : Fragment(), QuizzesContract.View, QuizzesAdapter
         }
 
         mpresenter.initQuizTypes()
+        mpresenter.selectedTypes.observe(viewLifecycleOwner) { types ->
+            selectAuto(false)
+            selectPronunciation(false)
+            selectPronunciationQcm(false)
+            selectAudio(false)
+            selectEnJap(false)
+            selectJapEn(false)
+            types.forEach {
+                when (it) {
+                    QuizType.TYPE_AUTO -> selectAuto(true)
+                    QuizType.TYPE_PRONUNCIATION -> selectPronunciation(true)
+                    QuizType.TYPE_PRONUNCIATION_QCM -> selectPronunciationQcm(true)
+                    QuizType.TYPE_AUDIO -> selectAudio(true)
+                    QuizType.TYPE_EN_JAP -> selectEnJap(true)
+                    QuizType.TYPE_JAP_EN -> selectJapEn(true)
+
+                }
+            }
+        }
 
         binding.btnPronunciationQcmSwitch.setOnClickListener {
             mpresenter.pronunciationQcmSwitch()
@@ -163,7 +182,9 @@ class QuizzesFragment(di: DI) : Fragment(), QuizzesContract.View, QuizzesAdapter
             spotlightTuto(requireActivity(), binding.btnAudioSwitch, getString(R.string.tutos_audio_quiz), getString(R.string.tutos_audio_quiz_message)
             ) { }
             when (checkSpeechAvailability(requireActivity(), ttsSupported, getCategoryLevel(selectedCategory))) {
-                SpeechAvailability.NOT_AVAILABLE -> speechNotSupportedAlert(requireActivity(), getCategoryLevel(selectedCategory)) { (activity as QuizzesActivity).quizzesAdapter.notifyDataSetChanged() }
+                SpeechAvailability.NOT_AVAILABLE -> speechNotSupportedAlert(requireActivity(), getCategoryLevel(selectedCategory)) {
+                    (activity as QuizzesActivity).quizzesAdapter.notifyDataSetChanged()
+                }
                 else -> mpresenter.audioSwitch()
             }
         }
@@ -299,8 +320,11 @@ class QuizzesFragment(di: DI) : Fragment(), QuizzesContract.View, QuizzesAdapter
         startActivity(intent)
     }
 
-    fun launchQuizClick(strategy: QuizStrategy, level: Level?, title: String) = runBlocking {
-        mpresenter.launchQuizClick(strategy, level, title, selectedCategory)
+    fun launchQuizClick(strategy: QuizStrategy, level: Level?, title: String) {
+        lifecycleScope.launch {
+            mpresenter.onLaunchQuizClick(selectedCategory)
+        }
+        launchQuiz(strategy, level, mpresenter.getSelectedTypes(), title)
     }
 
     private fun subscribeDisplayQuizzes() {
