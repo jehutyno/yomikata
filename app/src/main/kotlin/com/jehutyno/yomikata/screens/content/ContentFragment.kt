@@ -28,8 +28,9 @@ import com.jehutyno.yomikata.util.SeekBarsManager
 import com.jehutyno.yomikata.view.WordSelectorActionModeCallback
 import kotlinx.coroutines.runBlocking
 import org.kodein.di.DI
-import org.kodein.di.direct
+import org.kodein.di.bind
 import org.kodein.di.instance
+import org.kodein.di.provider
 
 
 /**
@@ -37,7 +38,6 @@ import org.kodein.di.instance
  */
 class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, WordsAdapter.Callback {
 
-    private var mpresenter: ContentContract.Presenter? = null
     private lateinit var adapter: WordsAdapter
     private lateinit var actionModeCallback: ActionMode.Callback
     private lateinit var quizIds: LongArray
@@ -45,6 +45,19 @@ class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, Wo
     private var level: Level? = null
     private var lastPosition = -1
     private var dialog: WordDetailDialogFragment? = null
+
+    // kodein
+    private val subDI by DI.lazy {
+        extend(di)
+        bind<ContentContract.Presenter>() with provider {
+            ContentPresenter (
+                instance(), this@ContentFragment,
+                instance(arg = lifecycleScope), instance(arg = quizIds), instance(),
+                quizIds, level
+            )
+        }
+    }
+    private val mpresenter: ContentContract.Presenter by subDI.instance()
 
     // seekBars
     private lateinit var seekBars : SeekBarsManager
@@ -55,7 +68,7 @@ class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, Wo
 
 
     override fun setPresenter(presenter: ContentContract.Presenter) {
-        mpresenter = presenter
+//        mpresenter = presenter
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -83,7 +96,7 @@ class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, Wo
 
         adapter = WordsAdapter(requireActivity(), this)
         actionModeCallback = WordSelectorActionModeCallback (
-            ::requireActivity, adapter, {mpresenter!!}, {mpresenter!!}
+            ::requireActivity, adapter, {mpresenter}, {mpresenter}
         )
         setHasOptionsMenu(true)
     }
@@ -95,8 +108,8 @@ class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, Wo
 
     override fun onStart() {
         super.onStart()
-        mpresenter?.start()
-        mpresenter?.words?.observe(viewLifecycleOwner, wordsObserver)
+        mpresenter.start()
+        mpresenter.words.observe(viewLifecycleOwner, wordsObserver)
 
         displayStats()
     }
@@ -107,7 +120,7 @@ class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, Wo
             if (lastPosition != -1) lastPosition
             else (binding.recyclerviewContent.layoutManager as GridLayoutManager).findFirstVisibleItemPosition()
         lastPosition = -1
-        mpresenter?.start()
+        mpresenter.start()
         binding.recyclerviewContent.scrollToPosition(position)
 
         seekBars.animateAll()
@@ -129,7 +142,7 @@ class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, Wo
             binding.seekMasterContainer.visibility = if (level == Level.MASTER) VISIBLE else GONE
         }
         seekBars.setTextViews(binding.textLow, binding.textMedium, binding.textHigh, binding.textMaster)
-        mpresenter!!.let {
+        mpresenter.let {
             seekBars.setObservers(it.quizCount,
                 it.lowCount, it.mediumCount, it.highCount, it.masterCount, viewLifecycleOwner)
         }
@@ -142,15 +155,6 @@ class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, Wo
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        if (mpresenter == null) {
-            mpresenter = ContentPresenter (
-                di.direct.instance(),
-                this@ContentFragment,
-                di.direct.instance(arg = lifecycleScope), di.direct.instance(arg = quizIds), di.direct.instance(),
-                quizIds, level
-            )
-        }
 
         binding.recyclerviewContent.let {
             it.adapter = adapter
@@ -175,7 +179,7 @@ class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, Wo
         bundle.putString(Extras.EXTRA_SEARCH_STRING, "")
 
         // unbind observer to prevent word from disappearing while viewing in detail dialog
-        mpresenter?.words?.removeObserver(wordsObserver)
+        mpresenter.words.removeObserver(wordsObserver)
 
         dialog = WordDetailDialogFragment(di)
         dialog!!.arguments = bundle
@@ -186,7 +190,7 @@ class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, Wo
             override fun onDestroy(owner: LifecycleOwner) {
                 super.onDestroy(owner)
                 // continue observing
-                mpresenter?.words?.observe(viewLifecycleOwner, wordsObserver)
+                mpresenter.words.observe(viewLifecycleOwner, wordsObserver)
             }
         })
     }
@@ -196,7 +200,7 @@ class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, Wo
     }
 
     override fun onCheckChange(position: Int, check: Boolean) = runBlocking {
-        mpresenter!!.updateWordCheck(adapter.items[position].id, check)
+        mpresenter.updateWordCheck(adapter.items[position].id, check)
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {

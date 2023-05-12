@@ -35,11 +35,10 @@ class WordDetailDialogFragment(private val di: DI) : DialogFragment(), WordContr
     // kodein
     private val subDI = DI.lazy {
         extend(di)
-        import(wordPresenterModule(this@WordDetailDialogFragment))
 //            import(voicesManagerModule(activity))
         bind<WordContract.Presenter>() with provider {
             WordPresenter (
-                instance(), instance(), instance(), instance(),
+                instance(), instance(), instance(), this@WordDetailDialogFragment,
                 instance(arg = lifecycleScope), instance(),
                 quizIds, level, searchString
             )

@@ -6,13 +6,12 @@ import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.widget.Toolbar
-import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.util.Prefs
 import com.jehutyno.yomikata.util.addOrReplaceFragment
 import mu.KLogging
-import org.kodein.di.*
+import org.kodein.di.DIAware
 import org.kodein.di.android.di
 
 
@@ -25,16 +24,6 @@ class AnswersActivity : AppCompatActivity(), DIAware {
 
     // kodein
     override val di by di()
-    private val subDI by DI.lazy {
-        extend(di)
-        import(answersPresenterModule(answersFragment))
-        bind<AnswersContract.Presenter>() with provider {
-            AnswersPresenter(instance(arg = lifecycleScope), instance(), instance(), instance())
-        }
-    }
-    private val trigger = DITrigger()
-    @Suppress("UNUSED")
-    val answersPresenter: AnswersContract.Presenter by subDI.on(trigger = trigger).instance()
 
     private lateinit var answersFragment: AnswersFragment
 
@@ -65,10 +54,6 @@ class AnswersActivity : AppCompatActivity(), DIAware {
             AnswersFragment(di)
         }
         addOrReplaceFragment(R.id.container_content, answersFragment)
-
-        // answersFragment has been set, so pull trigger
-        trigger.trigger()
-
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
