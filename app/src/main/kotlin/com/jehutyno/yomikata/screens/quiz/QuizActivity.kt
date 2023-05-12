@@ -19,10 +19,18 @@ import com.jehutyno.yomikata.util.Prefs
 import com.jehutyno.yomikata.util.QuizStrategy
 import com.jehutyno.yomikata.util.QuizType
 import com.jehutyno.yomikata.util.addOrReplaceFragment
+import com.jehutyno.yomikata.util.getParcelableArrayListExtraHelper
+import com.jehutyno.yomikata.util.getParcelableArrayListHelper
+import com.jehutyno.yomikata.util.getSerializableExtraHelper
+import com.jehutyno.yomikata.util.getSerializableHelper
 import io.github.inflationx.viewpump.ViewPumpContextWrapper
 import mu.KLogging
-import org.kodein.di.*
+import org.kodein.di.DI
+import org.kodein.di.DIAware
 import org.kodein.di.android.di
+import org.kodein.di.bind
+import org.kodein.di.factory
+import org.kodein.di.instance
 import splitties.alertdialog.appcompat.alertDialog
 import splitties.alertdialog.appcompat.cancelButton
 import splitties.alertdialog.appcompat.okButton
@@ -80,48 +88,18 @@ class QuizActivity : AppCompatActivity(), DIAware {
             quizFragment = supportFragmentManager.getFragment(savedInstanceState, "quizFragment") as QuizFragment
             quizIds = savedInstanceState.getLongArray("quiz_ids")?: longArrayOf()
 
-            quizStrategy = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                savedInstanceState.getSerializable("quiz_strategy", QuizStrategy::class.java)!!
-            } else {
-                @Suppress("DEPRECATION")
-                savedInstanceState.getSerializable("quiz_strategy") as QuizStrategy
-            }
-            level = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                savedInstanceState.getSerializable("level", Level::class.java)
-            } else {
-                @Suppress("DEPRECATION")
-                savedInstanceState.getSerializable("level") as Level?
-            }
+            quizStrategy = savedInstanceState.getSerializableHelper("quiz_strategy", QuizStrategy::class.java)!!
+            level = savedInstanceState.getSerializableHelper("level", Level::class.java)
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                quizTypes = savedInstanceState.getParcelableArrayList("quiz_types", QuizType::class.java)?: arrayListOf()
-            } else {
-                @Suppress("DEPRECATION")
-                quizTypes = savedInstanceState.getParcelableArrayList("quiz_types")?: arrayListOf()
-            }
+            quizTypes = savedInstanceState.getParcelableArrayListHelper("quiz_types", QuizType::class.java)?: arrayListOf()
         } else {
             quizIds = intent.getLongArrayExtra(Extras.EXTRA_QUIZ_IDS) ?: longArrayOf()
 
-            quizStrategy = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                intent.getSerializableExtra(Extras.EXTRA_QUIZ_STRATEGY, QuizStrategy::class.java)!!
-            } else {
-                @Suppress("DEPRECATION")
-                intent.getSerializableExtra(Extras.EXTRA_QUIZ_STRATEGY) as QuizStrategy
-            }
+            quizStrategy = intent.getSerializableExtraHelper(Extras.EXTRA_QUIZ_STRATEGY, QuizStrategy::class.java)!!
 
-            level = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                intent.getSerializableExtra(Extras.EXTRA_LEVEL, Level::class.java)
-            } else {
-                @Suppress("DEPRECATION")
-                intent.getSerializableExtra(Extras.EXTRA_LEVEL) as Level?
-            }
+            level = intent.getSerializableExtraHelper(Extras.EXTRA_LEVEL, Level::class.java)
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                quizTypes = intent.getParcelableArrayListExtra(Extras.EXTRA_QUIZ_TYPES, QuizType::class.java) ?: arrayListOf()
-            } else {
-                @Suppress("DEPRECATION")
-                quizTypes = intent.getParcelableArrayListExtra(Extras.EXTRA_QUIZ_TYPES) ?: arrayListOf()
-            }
+            quizTypes = intent.getParcelableArrayListExtraHelper(Extras.EXTRA_QUIZ_TYPES, QuizType::class.java) ?: arrayListOf()
 
             val bundle = Bundle()
             bundle.putLongArray(Extras.EXTRA_QUIZ_IDS, quizIds)

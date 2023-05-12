@@ -23,20 +23,30 @@ import com.jehutyno.yomikata.model.StatResult
 import com.jehutyno.yomikata.repository.QuizRepository
 import com.jehutyno.yomikata.repository.local.StatsSource
 import com.jehutyno.yomikata.screens.quiz.QuizActivity
-import com.jehutyno.yomikata.util.*
+import com.jehutyno.yomikata.util.Extras
 import com.jehutyno.yomikata.util.Extras.EXTRA_LEVEL
 import com.jehutyno.yomikata.util.Extras.EXTRA_QUIZ_IDS
 import com.jehutyno.yomikata.util.Extras.EXTRA_QUIZ_POSITION
 import com.jehutyno.yomikata.util.Extras.EXTRA_QUIZ_STRATEGY
 import com.jehutyno.yomikata.util.Extras.EXTRA_QUIZ_TITLE
 import com.jehutyno.yomikata.util.Extras.EXTRA_QUIZ_TYPES
+import com.jehutyno.yomikata.util.Level
+import com.jehutyno.yomikata.util.Prefs
+import com.jehutyno.yomikata.util.QuizStrategy
+import com.jehutyno.yomikata.util.QuizType
+import com.jehutyno.yomikata.util.addOrReplaceFragment
+import com.jehutyno.yomikata.util.getParcelableArrayListExtraHelper
+import com.jehutyno.yomikata.util.getSerializableExtraHelper
 import io.github.inflationx.viewpump.ViewPumpContextWrapper
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import mu.KLogging
-import org.kodein.di.*
+import org.kodein.di.DIAware
 import org.kodein.di.android.di
-import java.util.*
+import org.kodein.di.direct
+import org.kodein.di.instance
+import org.kodein.di.newInstance
+import java.util.Calendar
 
 
 class ContentActivity : AppCompatActivity(), DIAware {
@@ -83,19 +93,10 @@ class ContentActivity : AppCompatActivity(), DIAware {
         }
 
         category = intent.getIntExtra(Extras.EXTRA_CATEGORY, -1)
-        level = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            intent.getSerializableExtra(EXTRA_LEVEL, Level::class.java)
-        } else {
-            @Suppress("DEPRECATION")
-            intent.getSerializableExtra(EXTRA_LEVEL) as Level?
-        }
+        level = intent.getSerializableExtraHelper(EXTRA_LEVEL, Level::class.java)
+
         val quizPosition = intent.getIntExtra(EXTRA_QUIZ_POSITION, -1)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            selectedTypes = intent.getParcelableArrayListExtra(EXTRA_QUIZ_TYPES, QuizType::class.java) ?: arrayListOf()
-        } else {
-            @Suppress("DEPRECATION")
-            selectedTypes = intent.getParcelableArrayListExtra(EXTRA_QUIZ_TYPES) ?: arrayListOf()
-        }
+        selectedTypes = intent.getParcelableArrayListExtraHelper(EXTRA_QUIZ_TYPES, QuizType::class.java) ?: arrayListOf()
 
         setSupportActionBar(findViewById(R.id.toolbar))
 

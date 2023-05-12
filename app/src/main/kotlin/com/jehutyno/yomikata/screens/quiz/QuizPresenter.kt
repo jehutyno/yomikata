@@ -2,19 +2,33 @@ package com.jehutyno.yomikata.screens.quiz
 
 import android.content.Context
 import android.content.SharedPreferences
-import android.os.Build
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
 import android.util.Log
 import androidx.preference.PreferenceManager
 import com.jehutyno.yomikata.R
-import com.jehutyno.yomikata.model.*
+import com.jehutyno.yomikata.model.Answer
+import com.jehutyno.yomikata.model.Sentence
+import com.jehutyno.yomikata.model.StatAction
+import com.jehutyno.yomikata.model.StatResult
+import com.jehutyno.yomikata.model.Word
 import com.jehutyno.yomikata.presenters.SelectionsInterface
 import com.jehutyno.yomikata.presenters.WordInQuizInterface
 import com.jehutyno.yomikata.repository.SentenceRepository
 import com.jehutyno.yomikata.repository.StatsRepository
 import com.jehutyno.yomikata.repository.WordRepository
-import com.jehutyno.yomikata.util.*
+import com.jehutyno.yomikata.util.Level
+import com.jehutyno.yomikata.util.LocalPersistence
+import com.jehutyno.yomikata.util.Prefs
+import com.jehutyno.yomikata.util.QuizStrategy
+import com.jehutyno.yomikata.util.QuizType
+import com.jehutyno.yomikata.util.addPoints
+import com.jehutyno.yomikata.util.getCategoryLevel
+import com.jehutyno.yomikata.util.getLevelFromPoints
+import com.jehutyno.yomikata.util.getParcelableArrayListHelper
+import com.jehutyno.yomikata.util.getParcelableHelper
+import com.jehutyno.yomikata.util.getRepetition
+import com.jehutyno.yomikata.util.sentenceNoFuri
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.StateFlow
@@ -32,8 +46,8 @@ class QuizPresenter(
     val context: Context,
     private val wordRepository: WordRepository,
     private val sentenceRepository: SentenceRepository, private val statsRepository: StatsRepository,
-    private val quizView: QuizContract.View, private var quizIds: LongArray,
-    private val strategy: QuizStrategy, private val level: Level?,
+    private val quizView: QuizContract.View, private val quizIds: LongArray,
+    private val strategy: QuizStrategy, level: Level?,
     private val quizTypes: ArrayList<QuizType>, private val rng: Random,
     selectionsInterface: SelectionsInterface,
     wordInQuizInterface: WordInQuizInterface,
@@ -169,28 +183,12 @@ class QuizPresenter(
         quizView.reInitUI()
         previousAnswerWrong = savedInstanceState.getBoolean("previousQCMAnswerWrong")
 
-        val random0: Word?
-        val random1: Word?
-        val random2: Word?
-        val random3: Word?
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            answers = savedInstanceState.getParcelableArrayList("answers", Answer::class.java)!!
-            random0 = savedInstanceState.getParcelable("random0", Word::class.java)
-            random1 = savedInstanceState.getParcelable("random1", Word::class.java)
-            random2 = savedInstanceState.getParcelable("random2", Word::class.java)
-            random3 = savedInstanceState.getParcelable("random3", Word::class.java)
-        } else {
-            @Suppress("DEPRECATION")
-            answers = savedInstanceState.getParcelableArrayList("answers")!!
-            @Suppress("DEPRECATION")
-            random0 = savedInstanceState.getParcelable("random0")
-            @Suppress("DEPRECATION")
-            random1 = savedInstanceState.getParcelable("random1")
-            @Suppress("DEPRECATION")
-            random2 = savedInstanceState.getParcelable("random2")
-            @Suppress("DEPRECATION")
-            random3 = savedInstanceState.getParcelable("random3")
-        }
+        answers = savedInstanceState.getParcelableArrayListHelper("answers", Answer::class.java)!!
+        val random0 = savedInstanceState.getParcelableHelper("random0", Word::class.java)
+        val random1 = savedInstanceState.getParcelableHelper("random1", Word::class.java)
+        val random2 = savedInstanceState.getParcelableHelper("random2", Word::class.java)
+        val random3 = savedInstanceState.getParcelableHelper("random3", Word::class.java)
+
         if (random0 != null) randoms.add(Pair(random0, savedInstanceState.getInt("random0_color")))
         if (random1 != null) randoms.add(Pair(random1, savedInstanceState.getInt("random1_color")))
         if (random2 != null) randoms.add(Pair(random2, savedInstanceState.getInt("random2_color")))

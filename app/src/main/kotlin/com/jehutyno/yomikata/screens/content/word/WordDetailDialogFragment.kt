@@ -2,7 +2,6 @@ package com.jehutyno.yomikata.screens.content.word
 
 import android.app.Dialog
 import android.content.DialogInterface
-import android.os.Build
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
 import android.view.View
@@ -93,24 +92,13 @@ class WordDetailDialogFragment(private val di: DI) : DialogFragment(), WordContr
         if (arguments != null) {
             wordId = requireArguments().getLong(Extras.EXTRA_WORD_ID, -1L)
 
-            quizType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                requireArguments().getSerializable(Extras.EXTRA_QUIZ_TYPE, QuizType::class.java)
-            }
-            else {
-                @Suppress("DEPRECATION")
-                requireArguments().getSerializable(Extras.EXTRA_QUIZ_TYPE) as QuizType?
-            }
+            quizType = requireArguments().getSerializableHelper(Extras.EXTRA_QUIZ_TYPE, QuizType::class.java)
 
             quizIds = requireArguments().getLongArray(Extras.EXTRA_QUIZ_IDS)
             quizTitle = requireArguments().getString(Extras.EXTRA_QUIZ_TITLE)
             wordPosition = requireArguments().getInt(Extras.EXTRA_WORD_POSITION)
             searchString = requireArguments().getString(Extras.EXTRA_SEARCH_STRING) ?: ""
-            level = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                requireArguments().getSerializable(Extras.EXTRA_LEVEL, Level::class.java)
-            } else {
-                @Suppress("DEPRECATION")
-                requireArguments().getSerializable(Extras.EXTRA_LEVEL) as Level?
-            }
+            level = requireArguments().getSerializableHelper(Extras.EXTRA_LEVEL, Level::class.java)
         }
 
         if (savedInstanceState != null) {
