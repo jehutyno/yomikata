@@ -4,9 +4,6 @@ import android.app.Activity
 import android.view.ActionMode
 import android.view.Menu
 import android.view.MenuItem
-import android.view.ViewGroup
-import android.widget.EditText
-import android.widget.FrameLayout
 import androidx.appcompat.widget.PopupMenu
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.model.Quiz
@@ -14,15 +11,11 @@ import com.jehutyno.yomikata.model.Word
 import com.jehutyno.yomikata.presenters.SelectionsInterface
 import com.jehutyno.yomikata.presenters.WordInQuizInterface
 import com.jehutyno.yomikata.screens.content.WordsAdapter
-import com.jehutyno.yomikata.util.DimensionHelper
+import com.jehutyno.yomikata.util.createNewSelectionDialog
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
-import splitties.alertdialog.appcompat.alertDialog
-import splitties.alertdialog.appcompat.cancelButton
-import splitties.alertdialog.appcompat.okButton
-import splitties.alertdialog.appcompat.titleResource
 
 
 /**
@@ -32,16 +25,12 @@ import splitties.alertdialog.appcompat.titleResource
  */
 class WordSelectorActionModeCallback (
     private val activityProvider: () -> Activity, private val adapter: WordsAdapter,
-    private val selectionsPresenterProvider: () -> SelectionsInterface,
-    private val wordsPresenterProvider: () -> WordInQuizInterface
+    private val selectionsPresenter: SelectionsInterface,
+    private val wordsPresenter: WordInQuizInterface
     ) : ActionMode.Callback {
 
     private val activity: Activity
         get() = activityProvider.invoke()
-    private val selectionsPresenter: SelectionsInterface
-        get() = selectionsPresenterProvider.invoke()
-    private val wordsPresenter: WordInQuizInterface
-        get() = wordsPresenterProvider.invoke()
 
     override fun onPrepareActionMode(mode: ActionMode, menu: Menu): Boolean {
         adapter.checkMode = true
@@ -133,35 +122,19 @@ class WordSelectorActionModeCallback (
     }
 
     private fun addSelection(selectedWords: ArrayList<Word>) {
-        val input = EditText(activity)
-        input.setSingleLine()
-        input.hint = activity.getString(R.string.selection_name)
-
-        val container = FrameLayout(activity)
-        val params = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-        params.leftMargin = DimensionHelper.getPixelFromDip(activity, 20)
-        params.rightMargin = DimensionHelper.getPixelFromDip(activity, 20)
-        input.layoutParams = params
-        container.addView(input)
-
-        activity.alertDialog {
-            titleResource = R.string.new_selection
-            setView(container)
-
-            okButton {
-                MainScope().launch {// don't use lifecycle since creation might
-                    // take a while, and we don't want the quiz selection to stop even if the activity stops
-                    // use time out to prevent unexpected problems
-                    withTimeout(2000L) {
-                        val selectionId = selectionsPresenter.createSelection(input.text.toString())
-                        selectedWords.forEach {
-                            selectionsPresenter.addWordToSelection(it.id, selectionId)
-                        }
+        activity.createNewSelectionDialog("", { selectionName ->
+            // don't use lifecycle since creation might
+            // take a while, and we don't want the quiz selection to stop even if the activity stops
+            // use time out to prevent unexpected problems
+            MainScope().launch {
+                withTimeout(2000L) {
+                    val selectionId = selectionsPresenter.createSelection(selectionName)
+                    selectedWords.forEach {
+                        selectionsPresenter.addWordToSelection(it.id, selectionId)
                     }
                 }
             }
-            cancelButton { }
-        }.show()
+        }, null)
     }
 
     override fun onCreateActionMode(mode: ActionMode, menu: Menu): Boolean {

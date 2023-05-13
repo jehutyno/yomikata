@@ -3,15 +3,11 @@ package com.jehutyno.yomikata.screens.quizzes
 import android.content.Intent
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
-import android.text.InputType
 import android.view.LayoutInflater
 import android.view.View
 import android.view.View.GONE
 import android.view.View.VISIBLE
 import android.view.ViewGroup
-import android.widget.EditText
-import android.widget.FrameLayout
-import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
@@ -24,7 +20,6 @@ import com.jehutyno.yomikata.repository.QuizRepository
 import com.jehutyno.yomikata.screens.content.ContentActivity
 import com.jehutyno.yomikata.screens.quiz.QuizActivity
 import com.jehutyno.yomikata.util.Categories
-import com.jehutyno.yomikata.util.DimensionHelper
 import com.jehutyno.yomikata.util.Extras
 import com.jehutyno.yomikata.util.Level
 import com.jehutyno.yomikata.util.Prefs
@@ -32,9 +27,9 @@ import com.jehutyno.yomikata.util.QuizStrategy
 import com.jehutyno.yomikata.util.QuizType
 import com.jehutyno.yomikata.util.SeekBarsManager
 import com.jehutyno.yomikata.util.SpeechAvailability
-import com.jehutyno.yomikata.util.TextValidator
 import com.jehutyno.yomikata.util.animateSeekBar
 import com.jehutyno.yomikata.util.checkSpeechAvailability
+import com.jehutyno.yomikata.util.createNewSelectionDialog
 import com.jehutyno.yomikata.util.getCategoryLevel
 import com.jehutyno.yomikata.util.getLevelDownloadSize
 import com.jehutyno.yomikata.util.getLevelDownloadVersion
@@ -52,7 +47,6 @@ import org.kodein.di.newInstance
 import splitties.alertdialog.appcompat.alertDialog
 import splitties.alertdialog.appcompat.cancelButton
 import splitties.alertdialog.appcompat.message
-import splitties.alertdialog.appcompat.neutralButton
 import splitties.alertdialog.appcompat.okButton
 import splitties.alertdialog.appcompat.titleResource
 import java.lang.Thread.sleep
@@ -373,94 +367,37 @@ class QuizzesFragment(di: DI) : Fragment(), QuizzesContract.View, QuizzesAdapter
             // TODO propose to add all words to selections
             return
         }
-        val input = EditText(activity)
-        input.setSingleLine()
-        input.hint = getString(R.string.selection_name)
-        input.setText(adapter.items[position].getName())
+        requireActivity().createNewSelectionDialog(
+            adapter.items[position].getName(),
 
-        val container = FrameLayout(requireActivity())
-        val params = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-        params.leftMargin = DimensionHelper.getPixelFromDip(activity, 20)
-        params.rightMargin = DimensionHelper.getPixelFromDip(activity, 20)
-        input.layoutParams = params
+            { selectionName ->
+                if (adapter.items[position].getName() == selectionName)
+                    // name didn't change -> do nothing
+                    return@createNewSelectionDialog
 
-        input.addTextChangedListener(object : TextValidator(input) {
-            override fun validate(textView: TextView, text: String) {
-                if (text.isEmpty())
-                    input.error = getString(R.string.selection_not_empty_name)
-                else
-                    input.error = null
-            }
-        })
-        container.addView(input)
+                runBlocking {
+                    mpresenter.updateQuizName(adapter.items[position].id, selectionName)
+                }
+                adapter.items[position].nameFr = selectionName
+                adapter.items[position].nameEn = selectionName
+                adapter.notifyItemChanged(position)
+            },
 
-        requireContext().alertDialog {
-            titleResource = R.string.selection_edit
-            setView(container)
-
-            neutralButton(R.string.action_delete) {
-                requireContext().alertDialog {
-                    titleResource = R.string.selection_delete_sure
-                    okButton {
-                        runBlocking {
-                            mpresenter.deleteQuiz(adapter.items[position].id)
-                            adapter.deleteItem(position)
-                        }
-                    }
-                    cancelButton { }
-                }.show()
-            }
-            okButton {
-                if (adapter.items[position].getName() != input.text.toString() && input.error == null) {
-                    runBlocking {
-                        mpresenter.updateQuizName(adapter.items[position].id, input.text.toString())
-                    }
-                    adapter.items[position].nameFr = input.text.toString()
-                    adapter.items[position].nameEn = input.text.toString()
-                    adapter.notifyItemChanged(position)
+            {
+                runBlocking {
+                    mpresenter.deleteQuiz(adapter.items[position].id)
+                    adapter.deleteItem(position)
                 }
             }
-            cancelButton { }
-        }.show()
+        )
     }
 
     override fun addSelection() {
-        val input = EditText(activity)
-        input.setSingleLine()
-        input.inputType = InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
-        input.hint = getString(R.string.selection_name)
-
-        val container = FrameLayout(requireActivity())
-        val params = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-        params.leftMargin = DimensionHelper.getPixelFromDip(activity, 20)
-        params.rightMargin = DimensionHelper.getPixelFromDip(activity, 20)
-        input.layoutParams = params
-
-        input.addTextChangedListener(object : TextValidator(input) {
-            override fun validate(textView: TextView, text: String) {
-                if (text.isEmpty()) {
-                    input.error = getString(R.string.selection_not_empty_name)
-                } else {
-                    input.error = null
+        requireActivity().createNewSelectionDialog("", { selectionName ->
+                runBlocking {
+                    mpresenter.createQuiz(selectionName)
                 }
-            }
-        })
-        input.error = getString(R.string.selection_not_empty_name)
-        container.addView(input)
-
-        requireContext().alertDialog {
-            titleResource = R.string.new_selection
-            setView(container)
-
-            okButton {
-                if (input.error == null) {
-                    runBlocking {
-                        mpresenter.createQuiz(input.text.toString())
-                    }
-                }
-            }
-            cancelButton { }
-        }.show()
+            }, null)
     }
 
     override fun onDestroy() {
