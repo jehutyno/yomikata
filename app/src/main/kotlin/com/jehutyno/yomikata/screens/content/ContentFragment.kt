@@ -86,7 +86,7 @@ class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, Wo
 
         adapter = WordsAdapter(requireActivity(), this)
         actionModeCallback = WordSelectorActionModeCallback (
-            ::requireActivity, adapter, {mpresenter}, {mpresenter}
+            ::requireActivity, adapter, mpresenter, mpresenter
         )
         setHasOptionsMenu(true)
     }

@@ -5,9 +5,6 @@ import android.content.DialogInterface
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
 import android.view.View
-import android.view.ViewGroup
-import android.widget.EditText
-import android.widget.FrameLayout
 import android.widget.ImageView
 import androidx.appcompat.widget.PopupMenu
 import androidx.fragment.app.DialogFragment
@@ -193,29 +190,12 @@ class WordDetailDialogFragment(private val di: DI) : DialogFragment(), WordContr
     }
 
     private fun addSelection(wordId: Long) {
-        val input = EditText(activity)
-        input.setSingleLine()
-        input.hint = getString(R.string.selection_name)
-
-        val container = FrameLayout(requireActivity())
-        val params = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-        params.leftMargin = DimensionHelper.getPixelFromDip(activity, 20)
-        params.rightMargin = DimensionHelper.getPixelFromDip(activity, 20)
-        input.layoutParams = params
-        container.addView(input)
-
-        requireContext().alertDialog {
-            titleResource = R.string.new_selection
-            setView(container)
-
-            okButton {
-                lifecycleScope.launch {
-                    val selectionId = wordPresenter.createSelection(input.text.toString())
-                    wordPresenter.addWordToSelection(wordId, selectionId)
-                }
+        requireActivity().createNewSelectionDialog("", { selectionName ->
+            lifecycleScope.launch {
+                val selectionId = wordPresenter.createSelection(selectionName)
+                wordPresenter.addWordToSelection(wordId, selectionId)
             }
-            cancelButton { }
-        }.show()
+        }, null)
     }
 
     override fun onReportClick(position: Int) {

@@ -853,28 +853,12 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
     }
 
     private fun addSelection(wordId: Long) {
-        val input = EditText(activity)
-        input.setSingleLine()
-        input.hint = getString(R.string.selection_name)
-
-        val container = FrameLayout(requireActivity())
-        val params = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-        params.leftMargin = DimensionHelper.getPixelFromDip(activity, 20)
-        params.rightMargin = DimensionHelper.getPixelFromDip(activity, 20)
-        input.layoutParams = params
-        container.addView(input)
-
-        requireContext().alertDialog {
-            titleResource = R.string.new_selection
-            setView(container)
-            okButton {
-                lifecycleScope.launch {
-                    val selectionId = presenter.createSelection(input.text.toString())
-                    presenter.addWordToSelection(wordId, selectionId)
-                }
+        requireActivity().createNewSelectionDialog("", { selectionName ->
+            lifecycleScope.launch {
+                val selectionId = presenter.createSelection(selectionName)
+                presenter.addWordToSelection(wordId, selectionId)
             }
-            cancelButton()
-        }.show()
+        }, null)
     }
 
     override fun incrementInfiniteCount() {
