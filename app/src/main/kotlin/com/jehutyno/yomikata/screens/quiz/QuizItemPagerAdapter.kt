@@ -31,6 +31,7 @@ class QuizItemPagerAdapter(var context: Context, var callback: Callback) : Pager
 
     var words: ArrayList<Pair<Word, QuizType>> = arrayListOf()
     var sentence: Sentence = Sentence()
+    var isInfiniteSize: Int? = null
 
     override fun isViewFromObject(view: View, any: Any): Boolean {
         return view == any
@@ -43,68 +44,72 @@ class QuizItemPagerAdapter(var context: Context, var callback: Callback) : Pager
     override fun instantiateItem(container: ViewGroup, position: Int): Any {
         val view = LayoutInflater.from(container.context).inflate(R.layout.vh_quiz_item, container, false)
         val word = words[position].first
-        val whole_sentence_layout = view.findViewById<View>(R.id.whole_sentence_layout)
-        val btn_furi = view.findViewById<View>(R.id.btn_furi)
-        val btn_trad = view.findViewById<View>(R.id.btn_trad)
-        val btn_copy = view.findViewById<View>(R.id.btn_copy)
-        val btn_selection = view.findViewById<View>(R.id.btn_selection)
-        val btn_report = view.findViewById<View>(R.id.btn_report)
-        val btn_tts = view.findViewById<View>(R.id.btn_tts)
-        val trad_sentence = view.findViewById<TextView>(R.id.trad_sentence)
-        val furi_sentence = view.findViewById<FuriganaView>(R.id.furi_sentence)
+        val wholeSentenceLayout = view.findViewById<View>(R.id.whole_sentence_layout)
+        val btnFuri = view.findViewById<View>(R.id.btn_furi)
+        val btnTrad = view.findViewById<View>(R.id.btn_trad)
+        val btnCopy = view.findViewById<View>(R.id.btn_copy)
+        val btnSelection = view.findViewById<View>(R.id.btn_selection)
+        val btnReport = view.findViewById<View>(R.id.btn_report)
+        val btnTts = view.findViewById<View>(R.id.btn_tts)
+        val tradSentence = view.findViewById<TextView>(R.id.trad_sentence)
+        val furiSentence = view.findViewById<FuriganaView>(R.id.furi_sentence)
         val sound = view.findViewById<ImageButton>(R.id.sound)
-        val session_count = view.findViewById<TextView>(R.id.session_count)
+        val sessionCount = view.findViewById<TextView>(R.id.session_count)
 
-        session_count.text = "${position + 1} / ${words.size}"
+        sessionCount.text =
+            if (isInfiniteSize != null)
+                "${isInfiniteSize!!}"
+            else
+                "${position + 1} / ${words.size}"
 
         val pref = PreferenceManager.getDefaultSharedPreferences(context)
-        btn_furi.isSelected = pref.getBoolean(Prefs.FURI_DISPLAYED.pref, true)
-        btn_trad.isSelected = pref.getBoolean(Prefs.TRAD_DISPLAYED.pref, true)
+        btnFuri.isSelected = pref.getBoolean(Prefs.FURI_DISPLAYED.pref, true)
+        btnTrad.isSelected = pref.getBoolean(Prefs.TRAD_DISPLAYED.pref, true)
 
         when (words[position].second) {
             QuizType.TYPE_PRONUNCIATION, QuizType.TYPE_PRONUNCIATION_QCM, QuizType.TYPE_JAP_EN -> {
                 sound.visibility = View.GONE
-                btn_trad.visibility = View.VISIBLE
-                trad_sentence.visibility = View.VISIBLE
-                trad_sentence.textSize = 16f
-                trad_sentence.setTextColor(ContextCompat.getColor(context, R.color.lighter_gray))
+                btnTrad.visibility = View.VISIBLE
+                tradSentence.visibility = View.VISIBLE
+                tradSentence.textSize = 16f
+                tradSentence.setTextColor(ContextCompat.getColor(context, R.color.lighter_gray))
                 val sentenceNoFuri = sentenceNoFuri(sentence)
                 val colorEntireWord = word.isKana == 2 && words[position].second == QuizType.TYPE_JAP_EN
                 val wordTruePosition = if (colorEntireWord) 0 else getWordPositionInFuriSentence(sentence.jap, word)
-                if (btn_furi.isSelected) {
-                    furi_sentence.text_set(
+                if (btnFuri.isSelected) {
+                    furiSentence.text_set(
                         if (colorEntireWord) sentence.jap else sentenceNoAnswerFuri(sentence, word),
                         if (colorEntireWord) 0 else wordTruePosition,
                         if (colorEntireWord) sentence.jap.length else wordTruePosition + word.japanese.length,
                         getWordColor(context, word.points))
                 } else {
-                    furi_sentence.text_set(
+                    furiSentence.text_set(
                         sentenceNoFuri,
                         if (colorEntireWord) 0 else wordTruePosition,
                         if (colorEntireWord) sentence.jap.length else wordTruePosition + word.japanese.length,
                         getWordColor(context, word.points))
                 }
-                btn_trad.visibility = if (words[position].second != QuizType.TYPE_JAP_EN) View.VISIBLE else View.GONE
-                trad_sentence.text = if (words[position].first.isKana == 2) "" else sentence.getTrad()
-                trad_sentence.visibility = if (btn_trad.isSelected && words[position].second != QuizType.TYPE_JAP_EN) View.VISIBLE else View.INVISIBLE
+                btnTrad.visibility = if (words[position].second != QuizType.TYPE_JAP_EN) View.VISIBLE else View.GONE
+                tradSentence.text = if (words[position].first.isKana == 2) "" else sentence.getTrad()
+                tradSentence.visibility = if (btnTrad.isSelected && words[position].second != QuizType.TYPE_JAP_EN) View.VISIBLE else View.INVISIBLE
             }
             QuizType.TYPE_EN_JAP -> {
                 sound.visibility = View.GONE
-                btn_furi.visibility = View.VISIBLE
-                furi_sentence.visibility = View.INVISIBLE
-                btn_trad.visibility = View.GONE
-                trad_sentence.visibility = View.VISIBLE
-                trad_sentence.movementMethod = ScrollingMovementMethod()
-                trad_sentence.setTextColor(getWordColor(context, word.points))
-                trad_sentence.textSize = PreferenceManager.getDefaultSharedPreferences(context).getString("font_size", "18")!!.toFloat()
-                trad_sentence.text = word.getTrad()
+                btnFuri.visibility = View.VISIBLE
+                furiSentence.visibility = View.INVISIBLE
+                btnTrad.visibility = View.GONE
+                tradSentence.visibility = View.VISIBLE
+                tradSentence.movementMethod = ScrollingMovementMethod()
+                tradSentence.setTextColor(getWordColor(context, word.points))
+                tradSentence.textSize = PreferenceManager.getDefaultSharedPreferences(context).getString("font_size", "18")!!.toFloat()
+                tradSentence.text = word.getTrad()
             }
             QuizType.TYPE_AUDIO -> {
                 sound.visibility = View.VISIBLE
-                furi_sentence.visibility = View.GONE
-                btn_trad.visibility = View.GONE
-                btn_furi.visibility = View.GONE
-                btn_tts.visibility = View.GONE
+                furiSentence.visibility = View.GONE
+                btnTrad.visibility = View.GONE
+                btnFuri.visibility = View.GONE
+                btnTts.visibility = View.GONE
                 sound.setColorFilter(getWordColor(context, word.points))
             }
             else -> {
@@ -112,7 +117,7 @@ class QuizItemPagerAdapter(var context: Context, var callback: Callback) : Pager
         }
 
         if (words[position].second != QuizType.TYPE_EN_JAP && words[position].second != QuizType.TYPE_AUDIO) {
-            whole_sentence_layout.setOnClickListener {
+            wholeSentenceLayout.setOnClickListener {
                 callback.onItemClick(position)
             }
         }
@@ -121,34 +126,34 @@ class QuizItemPagerAdapter(var context: Context, var callback: Callback) : Pager
             callback.onSoundClick(sound, position)
         }
 
-        btn_furi.setOnClickListener {
-            btn_furi.isSelected = !btn_furi.isSelected
-            pref.edit().putBoolean(Prefs.FURI_DISPLAYED.pref, btn_furi.isSelected).apply()
+        btnFuri.setOnClickListener {
+            btnFuri.isSelected = !btnFuri.isSelected
+            pref.edit().putBoolean(Prefs.FURI_DISPLAYED.pref, btnFuri.isSelected).apply()
             notifyDataSetChanged()
-            callback.onFuriClick(position, btn_furi.isSelected)
+            callback.onFuriClick(position, btnFuri.isSelected)
         }
 
-        btn_trad.setOnClickListener {
-            btn_trad.isSelected = !btn_trad.isSelected
-            pref.edit().putBoolean(Prefs.TRAD_DISPLAYED.pref, btn_trad.isSelected).apply()
+        btnTrad.setOnClickListener {
+            btnTrad.isSelected = !btnTrad.isSelected
+            pref.edit().putBoolean(Prefs.TRAD_DISPLAYED.pref, btnTrad.isSelected).apply()
             notifyDataSetChanged()
             callback.onTradClick(position)
         }
 
-        btn_selection.setOnClickListener {
+        btnSelection.setOnClickListener {
             callback.onSelectionClick(it, position)
         }
 
-        btn_report.setOnClickListener {
+        btnReport.setOnClickListener {
             callback.onReportClick(position)
         }
 
-        btn_tts.setOnClickListener {
+        btnTts.setOnClickListener {
             callback.onSentenceTTSClick(position)
         }
 
-        btn_copy.setOnClickListener {
-            val popup = PopupMenu(context, btn_copy)
+        btnCopy.setOnClickListener {
+            val popup = PopupMenu(context, btnCopy)
             popup.menuInflater.inflate(R.menu.popup_copy, popup.menu)
             popup.setOnMenuItemClickListener {
                 when (it.itemId) {

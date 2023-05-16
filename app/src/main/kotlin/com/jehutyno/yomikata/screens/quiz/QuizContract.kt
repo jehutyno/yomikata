@@ -46,6 +46,7 @@ interface QuizContract {
         fun reportError(word: Word, sentence: Sentence)
         fun speakWord(word: Word)
         fun launchSpeakSentence(sentence: Sentence)
+        fun incrementInfiniteCount()
     }
 
     interface Presenter : BasePresenter {

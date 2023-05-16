@@ -859,4 +859,8 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
         }.show()
     }
 
+    override fun incrementInfiniteCount() {
+        adapter!!.isInfiniteSize = (adapter!!.isInfiniteSize?: 0) + 1
+    }
+
 }
