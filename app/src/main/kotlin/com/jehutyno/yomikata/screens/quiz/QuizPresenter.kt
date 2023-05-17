@@ -6,7 +6,6 @@ import android.os.Build
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
 import android.util.Log
-import androidx.core.content.ContextCompat
 import androidx.preference.PreferenceManager
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.model.*
@@ -104,7 +103,8 @@ class QuizPresenter(
     private var randoms = arrayListOf<Pair<Word, Int>>() // We store the word and the color in order to be able to change it and keep it saved as well
     private var answers = arrayListOf<Answer>()
     private var currentSentence = Sentence() // TODO save instance state
-    /** Active count to keep track of remaining words in current session */
+    /** Active count to keep track of remaining words in current session.
+     *  Keep in mind that a quiz could run out of words before this counter reaches 0. */
     private var sessionCount = -1
     /** Total length of current session */
     private var sessionLength = defaultSharedPreferences.getString("length", "10")!!.toInt()
@@ -352,39 +352,34 @@ class QuizPresenter(
 
     private fun setupQCMPronunciationQuiz() {
         quizView.displayQCMNormalTextViews()
-        for (i in 0..3) {
-            quizView.displayQCMTv(i + 1,
-                randoms[i].first.reading.split("/")[0].split(";")[0].trim(),
-                randoms[i].second
-            )
-        }
+        quizView.displayQCMTv(
+            randoms.map { it.first.reading.split("/")[0].split(";")[0].trim() },
+            randoms.map { it.second }
+        )
     }
 
     private fun setupQCMQAudioQuiz() {
         quizView.displayQCMNormalTextViews()
-        for (i in 0..3) {
-            quizView.displayQCMTv(i + 1,
-                randoms[i].first.japanese.split("/")[0].split(";")[0].trim(),
-                randoms[i].second
-            )
-        }
+        quizView.displayQCMTv(
+            randoms.map { it.first.japanese.split("/")[0].split(";")[0].trim() },
+            randoms.map { it.second }
+        )
     }
 
     private suspend fun setupQCMEnJapQuiz() {
         quizView.displayQCMFuriTextViews()
-        for (i in 0..3) {
-            val word = getQCMDisPlayForEnJap(randoms[i].first)
-            quizView.displayQCMFuri(i + 1,
-                word, 0, word.length, ContextCompat.getColor(context, randoms[i].second)
-            )
-        }
+        val words = randoms.map { getQCMDisPlayForEnJap(it.first) }
+        quizView.displayQCMFuri(
+            words,
+            words.map { 0 },
+            words.map { it.length },
+            randoms.map { it.second }
+        )
     }
 
     private fun setupQCMJapEnQuiz() {
         quizView.displayQCMNormalTextViews()
-        for (i in 0..3) {
-            quizView.displayQCMTv(i + 1, randoms[i].first.getTrad().trim(), randoms[i].second)
-        }
+        quizView.displayQCMTv(randoms.map{ it.first.getTrad().trim() }, randoms.map{ it.second })
     }
 
     private suspend fun getQCMDisPlayForEnJap(word: Word): String {
