@@ -177,7 +177,6 @@ fun addPoints(points: Int, answerIsCorrect: Boolean, quizType: QuizType, speed: 
  * @return
  */
 fun getRepetition(points: Int, answerIsCorrect: Boolean): Int {
-    val maxRepetition = 1000
     val norm =      // used to normalize the exponent: big norm -> small changes to repetition
         if (answerIsCorrect)
             100f    // for a correct answer: apply standard normalization factor
@@ -187,5 +186,5 @@ fun getRepetition(points: Int, answerIsCorrect: Boolean): Int {
     // value to multiply the repetition by if delta-points / norm = 1
     // for example: if delta-points = BASE_POINTS * default_speed = 50 * 2 = 100 and norm = 100
     val base = 2.3f
-    return ceil(base.pow(exponent)).toInt().coerceAtMost(maxRepetition)
+    return ceil(base.pow(exponent)).toInt()
 }
