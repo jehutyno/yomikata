@@ -122,7 +122,7 @@ class SqliteTestHelper(context: Context?, databaseName: String?, version: Int? =
 
     private fun clearDatabase(db: SQLiteDatabase) {
         val dropTableQueries = listOf(
-            "DROP TABLE IF EXISTS NEW_words",
+            "DROP TABLE IF EXISTS words",
             "DROP TABLE IF EXISTS quiz",
             "DROP TABLE IF EXISTS quiz_word",
             "DROP TABLE IF EXISTS stat_entry",
