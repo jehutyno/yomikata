@@ -283,7 +283,7 @@ abstract class YomikataDataBase : RoomDatabase() {
 
                     // change to new values
                     val difference = getPointsForLevel(currentLevel + 1) - getPointsForLevel(currentLevel)
-                    val newPoints = basePoints + (difference.toFloat() * percent).toInt()
+                    val newPoints = basePoints + (difference.toFloat() * percent / 100f).toInt()
 
                     newIdLevelPoints.add(Triple(
                         it.first,

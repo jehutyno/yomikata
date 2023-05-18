@@ -1,5 +1,6 @@
 package com.jehutyno.yomikata.repository.local
 
+import androidx.collection.arraySetOf
 import androidx.room.Room
 import androidx.room.testing.MigrationTestHelper
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -41,17 +42,42 @@ class RoomMigrationTest {
 
     @Test
     fun migrate14To15() {
+        // test values for points and levels
+        class Values(val id: Long, val level: Int, val points: Int, val newLevel: Int, val newPoints: Int) {
+            fun toArray(): Array<Any> {
+                return arrayOf(id, level, points)
+            }
+        }
+        val values = listOf(
+            Values(3658, 0, 0, 0, 0),
+            Values(6328, 1, 0, 1, 200),
+            Values(47, 1, 25, 1, 250),
+            Values(93, 4, 100, 4, 850)
+        )
+
         @Suppress("VARIABLE_WITH_REDUNDANT_INITIALIZER")
         var database = migrationHelper.createDatabase(TEST_DB_NAME, 14).apply {
 
             // insert some data to test
             execSQL("""
-                INSERT INTO "words" ("_id", "japanese", "english", "french", "reading",
-                "level", "count_try", "count_success", "count_fail", "is_kana", "repetition",
-                "points", "base_category", "isSelected", "sentence_id")
-                VALUES ('3658', '重力', '(n) gravity;(P)', '(n) gravité;pesanteur', 'じゅうりょく',
-                '0', '0', '0', '0', '0', '-1', '0', '4', '0', NULL);
-            """.trimIndent())
+                INSERT INTO words
+                VALUES (?, '重力', '(n) gravity;(P)', '(n) gravité;pesanteur', 'じゅうりょく',
+                ?, '0', '0', '0', '0', '-1', ?, '4', '0', NULL);
+            """.trimIndent(), values[0].toArray())
+            execSQL("""
+                INSERT INTO words
+                VALUES (?, '感触',
+                '(n,vs) feel (i.e. tactile sensation);touch;feeling;sensation;texture (e.g. food, cloth);(P)',
+                '(n) toucher (sens);sensation', 'かんしょく', ?, '0', '0', '0', '0', '-1', ?, '3', '0', NULL);
+            """.trimIndent(), values[1].toArray())
+            execSQL("""
+                INSERT INTO words
+                VALUES (?, '目', 'eye', 'oeil', 'め', ?, '0', '0', '0', '0', '-1', ?, '2', '0', NULL);
+            """.trimIndent(), values[2].toArray())
+            execSQL("""
+                INSERT INTO words
+                VALUES (?, '小さい', 'small', 'petit', 'ちいさい', ?, '0', '0', '0', '0', '-1', ?, '2', '0', NULL);
+            """.trimIndent(), values[3].toArray())
 
             close()
         }
@@ -60,10 +86,18 @@ class RoomMigrationTest {
                             true, YomikataDataBase.MIGRATION_14_15)
 
         // test that inserted data was processed properly
-        val cursor = database.query("""SELECT level, points FROM words""")
-        assert ( cursor.moveToNext() )  // one entity should exist
-        assert ( cursor.getInt(cursor.getColumnIndex("level")) == 0 )
-        assert ( cursor.getInt(cursor.getColumnIndex("points")) == 0 )
+        val cursor = database.query("""SELECT _id, level, points FROM words""")
+
+        val foundIds = arraySetOf<Long>()
+        while (cursor.moveToNext()) {
+            val id = cursor.getLong(cursor.getColumnIndex("_id"))
+            foundIds.add(id)
+            val value = values.find { it.id == id }!!
+            assert ( cursor.getInt(cursor.getColumnIndex("level")) == value.newLevel )
+            assert ( cursor.getInt(cursor.getColumnIndex("points")) == value.newPoints )
+        }
+        // make sure all inserted rows were found
+        assert ( foundIds == values.map { it.id }.toSet() )
     }
 
     @Test
