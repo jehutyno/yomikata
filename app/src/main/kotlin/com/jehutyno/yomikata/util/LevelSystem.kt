@@ -16,32 +16,13 @@ import kotlin.math.pow
  */
 enum class Level(val level: Int, val minPoints: Int) {
     // level ints must be declared as array indices (see Int.toLevel)
+    // make sure the declaration order is from lowest to highest
     LOW(0, 0),
     MEDIUM(1, 200),         // rep = 6
     HIGH(2, 400),           // rep = 28
     MASTER(3, 600),         // rep = 149
     MAX(4, 850);            // 850 gives repetition of about 1200 (see getRepetition)
     // MAX represents the maximum level, so its "minPoints" is also the maxPoints
-
-    /**
-     * At least
-     *
-     * @param minLevel Level to compare to
-     * @return true if level >= minLevel, false otherwise
-     */
-    fun atLeast(minLevel: Level): Boolean {
-        return this.level >= minLevel.level
-    }
-
-    /**
-     * At most
-     *
-     * @param maxLevel Level to compare to
-     * @return true if level <= maxLevel, false otherwise
-     */
-    fun atMost(maxLevel: Level): Boolean {
-        return this.level <= maxLevel.level
-    }
 }
 
 fun Int.toLevel(): Level {

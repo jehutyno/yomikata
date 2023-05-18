@@ -442,16 +442,18 @@ class QuizPresenter(
         // AUTO is selected
         // add types depending on difficulty
         val autoTypes = mutableListOf<QuizType>()
-        if (word.level.atLeast(Level.LOW)) {
-            autoTypes.add(QuizType.TYPE_PRONUNCIATION_QCM)
-            autoTypes.add(QuizType.TYPE_JAP_EN)
-        }
-        if (word.level.atLeast(Level.MEDIUM)) {
+
+        // always add simplest quiz types
+        autoTypes.add(QuizType.TYPE_PRONUNCIATION_QCM)
+        autoTypes.add(QuizType.TYPE_JAP_EN)
+
+        // add more more difficult quiz types depending on level
+        if (word.level >= Level.MEDIUM) {
             autoTypes.add(QuizType.TYPE_EN_JAP)
             if (ttsSupported != TextToSpeech.LANG_MISSING_DATA && ttsSupported != TextToSpeech.LANG_NOT_SUPPORTED)
                 autoTypes.add(QuizType.TYPE_AUDIO)
         }
-        if (word.level.atLeast(Level.HIGH)) {
+        if (word.level >= Level.HIGH) {
             autoTypes.add(QuizType.TYPE_PRONUNCIATION)
         }
 
