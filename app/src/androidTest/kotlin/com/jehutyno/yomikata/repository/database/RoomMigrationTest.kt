@@ -1,4 +1,4 @@
-package com.jehutyno.yomikata.repository.local
+package com.jehutyno.yomikata.repository.database
 
 import androidx.collection.arraySetOf
 import androidx.room.Room
@@ -6,7 +6,6 @@ import androidx.room.testing.MigrationTestHelper
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
 import androidx.test.platform.app.InstrumentationRegistry
-import com.jehutyno.yomikata.repository.database.YomikataDatabase
 import org.junit.Assert.*
 import org.junit.Rule
 import org.junit.Test
