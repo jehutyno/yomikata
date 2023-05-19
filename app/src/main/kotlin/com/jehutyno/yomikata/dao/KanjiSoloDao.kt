@@ -3,9 +3,9 @@ package com.jehutyno.yomikata.dao
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
-import com.jehutyno.yomikata.repository.local.RoomKanjiSolo
-import com.jehutyno.yomikata.repository.local.RoomKanjiSoloRadical
-import com.jehutyno.yomikata.repository.local.RoomRadicals
+import com.jehutyno.yomikata.repository.database.RoomKanjiSolo
+import com.jehutyno.yomikata.repository.database.RoomKanjiSoloRadical
+import com.jehutyno.yomikata.repository.database.RoomRadicals
 
 
 @Dao

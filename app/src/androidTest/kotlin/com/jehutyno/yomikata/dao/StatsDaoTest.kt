@@ -4,8 +4,8 @@ import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SmallTest
-import com.jehutyno.yomikata.repository.local.RoomStatEntry
-import com.jehutyno.yomikata.repository.local.YomikataDataBase
+import com.jehutyno.yomikata.repository.database.RoomStatEntry
+import com.jehutyno.yomikata.repository.database.YomikataDatabase
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.After
@@ -19,14 +19,14 @@ import org.junit.runner.RunWith
 @SmallTest
 class StatsDaoTest {
 
-    private lateinit var database: YomikataDataBase
+    private lateinit var database: YomikataDatabase
     private lateinit var statsDao: StatsDao
 
     @Before
     fun setupDatabase() {
         database = Room.inMemoryDatabaseBuilder(
             ApplicationProvider.getApplicationContext(),
-            YomikataDataBase::class.java
+            YomikataDatabase::class.java
         ).allowMainThreadQueries().build()
 
         statsDao = database.statsDao()

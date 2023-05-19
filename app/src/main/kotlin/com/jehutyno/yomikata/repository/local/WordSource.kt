@@ -4,6 +4,8 @@ import androidx.sqlite.db.SimpleSQLiteQuery
 import com.jehutyno.yomikata.dao.WordDao
 import com.jehutyno.yomikata.model.Word
 import com.jehutyno.yomikata.repository.WordRepository
+import com.jehutyno.yomikata.repository.database.RoomQuizWord
+import com.jehutyno.yomikata.repository.database.RoomWords
 import com.jehutyno.yomikata.util.HiraganaUtils
 import com.jehutyno.yomikata.util.Level
 import com.jehutyno.yomikata.util.QuizType

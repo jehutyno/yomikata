@@ -3,7 +3,7 @@ package com.jehutyno.yomikata.util
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteException
-import com.jehutyno.yomikata.repository.local.DATABASE_VERSION
+import com.jehutyno.yomikata.repository.database.DATABASE_VERSION
 import com.jehutyno.yomikata.repository.migration.MigrationTable
 import com.jehutyno.yomikata.repository.migration.MigrationTables
 import java.io.File

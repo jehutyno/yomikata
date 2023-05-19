@@ -1,8 +1,8 @@
-package com.jehutyno.yomikata.presenters
+package com.jehutyno.yomikata.presenters.source
 
-import com.jehutyno.yomikata.presenters.source.SelectionsPresenter
-import com.jehutyno.yomikata.presenters.source.WordCountPresenter
-import com.jehutyno.yomikata.presenters.source.WordInQuizPresenter
+import com.jehutyno.yomikata.presenters.SelectionsInterface
+import com.jehutyno.yomikata.presenters.WordCountInterface
+import com.jehutyno.yomikata.presenters.WordInQuizInterface
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import org.kodein.di.DI
@@ -12,7 +12,7 @@ import org.kodein.di.instance
 import org.kodein.di.provider
 
 
-fun presenterModule() = DI.Module("PresenterModule") {
+fun presenterModule() = DI.Module("presenterModule") {
     bind<SelectionsInterface>() with factory {
         coroutineScope: CoroutineScope -> SelectionsPresenter(instance(), coroutineScope)
     }

@@ -1,6 +1,13 @@
 package com.jehutyno.yomikata.dao
 
-import com.jehutyno.yomikata.repository.local.*
+import com.jehutyno.yomikata.repository.database.RoomKanjiSolo
+import com.jehutyno.yomikata.repository.database.RoomKanjiSoloRadical
+import com.jehutyno.yomikata.repository.database.RoomQuiz
+import com.jehutyno.yomikata.repository.database.RoomQuizWord
+import com.jehutyno.yomikata.repository.database.RoomRadicals
+import com.jehutyno.yomikata.repository.database.RoomSentences
+import com.jehutyno.yomikata.repository.database.RoomStatEntry
+import com.jehutyno.yomikata.repository.database.RoomWords
 import kotlinx.coroutines.runBlocking
 
 
