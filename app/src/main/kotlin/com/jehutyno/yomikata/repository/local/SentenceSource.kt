@@ -4,6 +4,7 @@ import com.jehutyno.yomikata.dao.SentenceDao
 import com.jehutyno.yomikata.model.Sentence
 import com.jehutyno.yomikata.model.Word
 import com.jehutyno.yomikata.repository.SentenceRepository
+import com.jehutyno.yomikata.repository.database.RoomSentences
 
 
 /**

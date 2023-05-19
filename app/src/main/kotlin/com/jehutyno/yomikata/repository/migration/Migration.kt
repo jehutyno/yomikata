@@ -5,7 +5,7 @@ import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteDatabase.OPEN_READONLY
 import android.database.sqlite.SQLiteDatabase.OPEN_READWRITE
 import androidx.sqlite.db.SupportSQLiteDatabase
-import com.jehutyno.yomikata.repository.local.YomikataDataBase
+import com.jehutyno.yomikata.repository.database.YomikataDatabase
 import com.jehutyno.yomikata.util.CopyUtils
 import com.jehutyno.yomikata.util.UpdateProgressDialog
 import java.io.File
@@ -28,8 +28,8 @@ import kotlin.io.path.writeBytes
 @Synchronized
 private fun handleOldEncryptedDatabase(context: Context, filePathEncrypted: String) {
     // backup!
-    YomikataDataBase.createLocalBackup(context)
-    val filePath = YomikataDataBase.getDatabaseFile(context).absolutePath
+    YomikataDatabase.createLocalBackup(context)
+    val filePath = YomikataDatabase.getDatabaseFile(context).absolutePath
     if (filePathEncrypted.isNotEmpty()) {
         val file = File(filePathEncrypted)
         try {
@@ -124,7 +124,7 @@ fun importYomikata(context: Context, data: ByteArray,
         }
 
         // overwrite the real database file with the new version
-        YomikataDataBase.overwriteDatabase(context, v13File.absolutePath, create_backup)
+        YomikataDatabase.overwriteDatabase(context, v13File.absolutePath, create_backup)
     } finally {
         oldDatabase.close()
         oldDecryptedPath.deleteIfExists()

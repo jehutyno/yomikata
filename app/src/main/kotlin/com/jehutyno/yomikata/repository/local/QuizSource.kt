@@ -3,6 +3,8 @@ package com.jehutyno.yomikata.repository.local
 import com.jehutyno.yomikata.dao.QuizDao
 import com.jehutyno.yomikata.model.Quiz
 import com.jehutyno.yomikata.repository.QuizRepository
+import com.jehutyno.yomikata.repository.database.RoomQuiz
+import com.jehutyno.yomikata.repository.database.RoomQuizWord
 import com.jehutyno.yomikata.util.Level
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map

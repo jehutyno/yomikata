@@ -12,7 +12,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.preference.PreferenceManager
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.databinding.ActivitySplashBinding
-import com.jehutyno.yomikata.repository.local.YomikataDataBase
+import com.jehutyno.yomikata.repository.database.YomikataDatabase
 import com.jehutyno.yomikata.screens.quizzes.QuizzesActivity
 import com.jehutyno.yomikata.util.Prefs
 import com.jehutyno.yomikata.util.RestartDialogMessage
@@ -24,7 +24,10 @@ import com.jehutyno.yomikata.util.getRestartDialog
 import com.jehutyno.yomikata.util.getRestoreLauncher
 import com.jehutyno.yomikata.util.restoreProgress
 import com.jehutyno.yomikata.util.triggerRebirth
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import splitties.alertdialog.appcompat.alertDialog
 import splitties.alertdialog.appcompat.cancelButton
 import splitties.alertdialog.appcompat.message
@@ -74,8 +77,8 @@ class SplashActivity : AppCompatActivity() {
                 alertDialog {
                     messageResource = R.string.prefs_reinit_sure
                     okButton {
-                        YomikataDataBase.resetDatabase(this@SplashActivity)
-                        YomikataDataBase.forceLoadDatabase(this@SplashActivity)
+                        YomikataDatabase.resetDatabase(this@SplashActivity)
+                        YomikataDatabase.forceLoadDatabase(this@SplashActivity)
                         getRestartDialog(RestartDialogMessage.RESET, null).show()
                     }
                     cancelButton()
@@ -115,10 +118,10 @@ class SplashActivity : AppCompatActivity() {
         var success = false
         val job = CoroutineScope(Dispatchers.Main).launch {
             // do migration
-            YomikataDataBase.setUpdateProgressDialog(updateProgressDialogMigrate)
+            YomikataDatabase.setUpdateProgressDialog(updateProgressDialogMigrate)
             success = withContext(Dispatchers.IO) {
                 try {
-                    YomikataDataBase.forceLoadDatabase(this@SplashActivity)
+                    YomikataDatabase.forceLoadDatabase(this@SplashActivity)
                     return@withContext true
                 } catch (e: Exception) {
                     return@withContext false
@@ -153,7 +156,7 @@ class SplashActivity : AppCompatActivity() {
                     // finish the migration & destroy progress dialog (if it was shown at all)
                     job.join()
                     updateProgressDialogMigrate.destroy()
-                    YomikataDataBase.setUpdateProgressDialog(null)
+                    YomikataDatabase.setUpdateProgressDialog(null)
 
                     if (!success) { // failure -> show error dialog and don't load main activity
                         // if the error was caused due to loading a bad database from PrefsActivity,
@@ -161,7 +164,7 @@ class SplashActivity : AppCompatActivity() {
                         var restoredSuccessfully = false
                         if (prefs.getBoolean(Prefs.DB_RESTORE_ONGOING.pref, false)) {
                             restoredSuccessfully =
-                                YomikataDataBase.restoreLocalBackup(this@SplashActivity)
+                                YomikataDatabase.restoreLocalBackup(this@SplashActivity)
                         }
                         prefs.edit().putBoolean(Prefs.DB_RESTORE_ONGOING.pref, false).apply()
                         if (!restoredSuccessfully) {

@@ -4,9 +4,9 @@ import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
-import com.jehutyno.yomikata.repository.local.RoomQuizWord
-import com.jehutyno.yomikata.repository.local.RoomWords
-import com.jehutyno.yomikata.repository.local.YomikataDataBase
+import com.jehutyno.yomikata.repository.database.RoomQuizWord
+import com.jehutyno.yomikata.repository.database.RoomWords
+import com.jehutyno.yomikata.repository.database.YomikataDatabase
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.After
@@ -20,7 +20,7 @@ import org.junit.runner.RunWith
 @MediumTest
 class WordDaoTest {
 
-    private lateinit var database: YomikataDataBase
+    private lateinit var database: YomikataDatabase
     private lateinit var quizDao: QuizDao
     private lateinit var wordDao: WordDao
 
@@ -28,7 +28,7 @@ class WordDaoTest {
     fun setupDatabase() {
         database = Room.inMemoryDatabaseBuilder(
             ApplicationProvider.getApplicationContext(),
-            YomikataDataBase::class.java
+            YomikataDatabase::class.java
         ).allowMainThreadQueries().build()
 
         quizDao = database.quizDao()

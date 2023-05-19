@@ -4,11 +4,13 @@ import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
+import com.jehutyno.yomikata.repository.database.RoomKanjiSolo
+import com.jehutyno.yomikata.repository.database.RoomRadicals
+import com.jehutyno.yomikata.repository.database.YomikataDatabase
 import com.jehutyno.yomikata.repository.local.*
 import kotlinx.coroutines.runBlocking
-import org.junit.Assert.*
-
 import org.junit.After
+import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -18,14 +20,14 @@ import org.junit.runner.RunWith
 @MediumTest
 class KanjiSoloDaoTest {
 
-    private lateinit var database: YomikataDataBase
+    private lateinit var database: YomikataDatabase
     private lateinit var kanjiSoloDao: KanjiSoloDao
 
     @Before
     fun setupDatabase() {
         database = Room.inMemoryDatabaseBuilder(
             ApplicationProvider.getApplicationContext(),
-            YomikataDataBase::class.java
+            YomikataDatabase::class.java
         ).allowMainThreadQueries().build()
 
         kanjiSoloDao = database.kanjiSoloDao()
