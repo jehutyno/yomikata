@@ -686,7 +686,7 @@ class QuizPresenter(
             // use answers with result == 0 <-> error
             wordHandler.errors.clear()
             answers.filter { it.result == 0 }
-                   .mapTo(wordHandler.errors) { Pair(getWord(it.wordId), it.quizType) }
+                   .mapTo(wordHandler.errors) { Pair(getWordById(it.wordId), it.quizType) }
             quizView.showAlertQuizEnd(errors.size > 0)
             return
         }
