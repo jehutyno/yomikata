@@ -20,7 +20,7 @@ import java.io.OutputStream
 import java.nio.channels.FileLock
 
 
-const val DATABASE_VERSION = 15
+const val DATABASE_VERSION = 16
 
 @Database(entities = [RoomKanjiSolo::class, RoomQuiz::class, RoomSentences::class,
                       RoomStatEntry::class, RoomWords::class, RoomQuizWord::class,
@@ -55,7 +55,7 @@ abstract class YomikataDatabase : RoomDatabase() {
                             .addMigrations(
                                 *OldMigrations.getOldMigrations(),
                                 OldMigrations.MIGRATION_12_13(context),
-                                MIGRATION_13_14, MIGRATION_14_15
+                                MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16
                             )
                             .build()
                 }
@@ -208,6 +208,41 @@ abstract class YomikataDatabase : RoomDatabase() {
 
         ///////// DEFINE MIGRATIONS /////////
         // do not use values, constants, entities, daos, etc. that may be changed externally
+
+        // clean up english and french translations of words
+        val MIGRATION_15_16 = object: Migration(15, 16) {
+            /**
+             * Remove ";(P)" at the end of many english translations
+             */
+            override fun migrate(database: SupportSQLiteDatabase) {
+                var idAndEnglish = arrayListOf<Pair<Long, String>>()
+                database.query("SELECT _id, english FROM words").use {
+                    val idIndex = it.getColumnIndexOrThrow("_id")
+                    val englishIndex = it.getColumnIndexOrThrow("english")
+
+                    while (it.moveToNext()) {
+                        idAndEnglish.add(Pair(
+                            it.getLong(idIndex),
+                            it.getString(englishIndex)
+                        ))
+                    }
+                }
+
+                /**
+                 * @param str String
+                 * @return New string with trailing ;(P) removed
+                 */
+                fun removeP(str: String): String {
+                    val regex = Regex(";?\\(P\\)$")
+                    return regex.replace(str, "")
+                }
+
+                idAndEnglish = idAndEnglish.map { (id, english) ->
+                    Pair(id, removeP(english))
+                } as ArrayList
+
+            }
+        }
 
         // migrate points and level system
         val MIGRATION_14_15 = object: Migration(14, 15) {
