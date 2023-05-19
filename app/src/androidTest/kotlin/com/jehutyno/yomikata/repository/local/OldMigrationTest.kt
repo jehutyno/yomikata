@@ -5,6 +5,7 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
 import androidx.test.platform.app.InstrumentationRegistry
+import com.jehutyno.yomikata.repository.database.YomikataDatabase
 import com.jehutyno.yomikata.repository.migration.SqliteTestHelper
 import com.jehutyno.yomikata.repository.migration.Wordv13
 import org.junit.After
@@ -34,7 +35,7 @@ class OldMigrationTest {
     @get:Rule
     val mMigrationTestHelper = MigrationTestHelper(
         InstrumentationRegistry.getInstrumentation(),
-        YomikataDataBase::class.java
+        YomikataDatabase::class.java
     )
 
     // Helper for creating SQLite database in version 13
@@ -72,12 +73,12 @@ class OldMigrationTest {
 
         mMigrationTestHelper.runMigrationsAndValidate(
             TEST_DB_NAME, 14, true,
-            YomikataDataBase.MIGRATION_13_14
+            YomikataDatabase.MIGRATION_13_14
         )
 
         // Get the latest, migrated, version of the database
         val latestDb = mMigrationTestHelper.runMigrationsAndValidate(TEST_DB_NAME, 14,
-                        true, YomikataDataBase.MIGRATION_13_14)
+                        true, YomikataDatabase.MIGRATION_13_14)
         mMigrationTestHelper.closeWhenFinished(latestDb)
 
         // Check that the correct data is in the database
