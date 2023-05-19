@@ -17,12 +17,7 @@ interface QuizzesContract {
     interface View {
         fun displayQuizzes(quizzes: List<Quiz>)
         fun displayNoData()
-        fun selectPronunciationQcm(isSelected: Boolean)
-        fun selectPronunciation(isSelected: Boolean)
-        fun selectAudio(isSelected: Boolean)
-        fun selectEnJap(isSelected: Boolean)
-        fun selectJapEn(isSelected: Boolean)
-        fun selectAuto(isSelected: Boolean)
+        fun selectQuizType(quizType: QuizType, isSelected: Boolean)
         fun launchQuiz(strategy: QuizStrategy, level: Level?, selectedTypes: ArrayList<QuizType>, title: String)
     }
 
@@ -35,12 +30,7 @@ interface QuizzesContract {
         suspend fun countQuiz(ids: LongArray): Int
         suspend fun updateQuizCheck(id: Long, checked: Boolean)
         fun initQuizTypes()
-        fun pronunciationQcmSwitch()
-        fun pronunciationSwitch()
-        fun audioSwitch()
-        fun enJapSwitch()
-        fun japEnSwitch()
-        fun autoSwitch()
+        fun quizTypeSwitch(quizType: QuizType)
         suspend fun onLaunchQuizClick(category: Int)
         fun getSelectedTypes(): ArrayList<QuizType>
     }

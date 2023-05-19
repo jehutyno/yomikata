@@ -37,6 +37,7 @@ class QuizzesPresenter(
 
 
     private var _selectedTypes = MutableLiveData<ArrayList<QuizType>>()
+    /** the quizTypes that are selected by the user */
     override val selectedTypes: LiveData<ArrayList<QuizType>>
         get() = _selectedTypes
 
@@ -76,18 +77,18 @@ class QuizzesPresenter(
 
     @Synchronized
     private fun switchOthers(type: QuizType) {
-        if (selectedTypes.value == null)
-            return
         val newSelectedTypes = selectedTypes.value!!
         selectedTypes.value!!.also { types ->
             if (!types.contains(type)) {
                 if (types.contains(QuizType.TYPE_AUTO)) {
+                    // auto cannot be selected simultaneously with other types -> unselect it
                     newSelectedTypes.remove(QuizType.TYPE_AUTO)
                 }
                 newSelectedTypes.add(type)
             } else {
                 newSelectedTypes.remove(type)
                 if (newSelectedTypes.size == 0) {
+                    // if no types are selected -> automatically select the auto type
                     newSelectedTypes.add(QuizType.TYPE_AUTO)
                 }
             }
@@ -95,45 +96,28 @@ class QuizzesPresenter(
         _selectedTypes.value = newSelectedTypes
     }
 
-    override fun pronunciationQcmSwitch() {
-        switchOthers(QuizType.TYPE_PRONUNCIATION_QCM)
-        saveQuizTypeArrayInPrefs(Prefs.SELECTED_QUIZ_TYPES.pref, selectedTypes.value!!)
-    }
-
-    override fun pronunciationSwitch() {
-        switchOthers(QuizType.TYPE_PRONUNCIATION)
-        saveQuizTypeArrayInPrefs(Prefs.SELECTED_QUIZ_TYPES.pref, selectedTypes.value!!)
-    }
-
-    override fun audioSwitch() {
-        switchOthers(QuizType.TYPE_AUDIO)
-        saveQuizTypeArrayInPrefs(Prefs.SELECTED_QUIZ_TYPES.pref, selectedTypes.value!!)
-    }
-
-    override fun enJapSwitch() {
-        switchOthers(QuizType.TYPE_EN_JAP)
-        saveQuizTypeArrayInPrefs(Prefs.SELECTED_QUIZ_TYPES.pref, selectedTypes.value!!)
-    }
-
-    override fun japEnSwitch() {
-        switchOthers(QuizType.TYPE_JAP_EN)
-        saveQuizTypeArrayInPrefs(Prefs.SELECTED_QUIZ_TYPES.pref, selectedTypes.value!!)
-    }
-
     @Synchronized
-    override fun autoSwitch() {
-        if (selectedTypes.value == null)
-            return
+    private fun switchAuto() {
         val newSelectedTypes =
             selectedTypes.value!!.let { types ->
                 if (types.contains(QuizType.TYPE_AUTO)) {
+                    // if auto is unselected -> get saved selection from preferences
                     getQuizTypeArrayFromPrefs(Prefs.WAS_SELECTED_QUIZ_TYPES.pref, QuizType.TYPE_PRONUNCIATION)
                 } else {
                     arrayListOf(QuizType.TYPE_AUTO)
                 }
             }
-        saveQuizTypeArrayInPrefs(Prefs.SELECTED_QUIZ_TYPES.pref, newSelectedTypes)
         _selectedTypes.value = newSelectedTypes
+    }
+
+    override fun quizTypeSwitch(quizType: QuizType) {
+        if (quizType == QuizType.TYPE_AUTO) {
+            switchAuto()
+        } else {
+            switchOthers(quizType)
+        }
+        // save new selection in preferences
+        saveQuizTypeArrayInPrefs(Prefs.SELECTED_QUIZ_TYPES.pref, selectedTypes.value!!)
     }
 
     private fun getQuizTypeArrayFromPrefs(key: String, default: QuizType): ArrayList<QuizType> {

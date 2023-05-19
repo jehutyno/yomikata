@@ -68,7 +68,6 @@ class QuizzesFragment(di: DI) : Fragment(), QuizzesContract.View, QuizzesAdapter
         )
     }
 
-    val REQUEST_TUTO: Int = 55
     private lateinit var adapter: QuizzesAdapter
     private var selectedCategory: Int = 0
     private var tts: TextToSpeech? = null
@@ -142,33 +141,21 @@ class QuizzesFragment(di: DI) : Fragment(), QuizzesContract.View, QuizzesAdapter
         }
 
         mpresenter.initQuizTypes()
-        mpresenter.selectedTypes.observe(viewLifecycleOwner) { types ->
-            selectAuto(false)
-            selectPronunciation(false)
-            selectPronunciationQcm(false)
-            selectAudio(false)
-            selectEnJap(false)
-            selectJapEn(false)
-            types.forEach {
-                when (it) {
-                    QuizType.TYPE_AUTO -> selectAuto(true)
-                    QuizType.TYPE_PRONUNCIATION -> selectPronunciation(true)
-                    QuizType.TYPE_PRONUNCIATION_QCM -> selectPronunciationQcm(true)
-                    QuizType.TYPE_AUDIO -> selectAudio(true)
-                    QuizType.TYPE_EN_JAP -> selectEnJap(true)
-                    QuizType.TYPE_JAP_EN -> selectJapEn(true)
-
-                }
+        mpresenter.selectedTypes.observe(viewLifecycleOwner) { selectedTypes ->
+            // go through all existing types and change selection status
+            // according to the selectedTypes
+            QuizType.values().forEach { type ->
+                selectQuizType(type, type in selectedTypes)
             }
         }
 
         binding.btnPronunciationQcmSwitch.setOnClickListener {
-            mpresenter.pronunciationQcmSwitch()
+            mpresenter.quizTypeSwitch(QuizType.TYPE_PRONUNCIATION_QCM)
             spotlightTuto(requireActivity(), binding.btnPronunciationQcmSwitch, getString(R.string.tutos_pronunciation_mcq), getString(R.string.tutos_pronunciation_mcq_message)
             ) { }
         }
         binding.btnPronunciationSwitch.setOnClickListener {
-            mpresenter.pronunciationSwitch()
+            mpresenter.quizTypeSwitch(QuizType.TYPE_PRONUNCIATION)
             spotlightTuto(requireActivity(), binding.btnPronunciationSwitch, getString(R.string.tutos_pronunciation_quiz), getString(R.string.tutos_pronunciation_quiz_message)
             ) { }
         }
@@ -179,21 +166,21 @@ class QuizzesFragment(di: DI) : Fragment(), QuizzesContract.View, QuizzesAdapter
                 SpeechAvailability.NOT_AVAILABLE -> speechNotSupportedAlert(requireActivity(), getCategoryLevel(selectedCategory)) {
                     (activity as QuizzesActivity).quizzesAdapter.notifyDataSetChanged()
                 }
-                else -> mpresenter.audioSwitch()
+                else -> mpresenter.quizTypeSwitch(QuizType.TYPE_AUDIO)
             }
         }
         binding.btnEnJapSwitch.setOnClickListener {
-            mpresenter.enJapSwitch()
+            mpresenter.quizTypeSwitch(QuizType.TYPE_EN_JAP)
             spotlightTuto(requireActivity(), binding.btnEnJapSwitch, getString(R.string.tutos_en_jp), getString(R.string.tutos_en_jp_message)
             ) { }
         }
         binding.btnJapEnSwitch.setOnClickListener {
-            mpresenter.japEnSwitch()
+            mpresenter.quizTypeSwitch(QuizType.TYPE_JAP_EN)
             spotlightTuto(requireActivity(), binding.btnJapEnSwitch, getString(R.string.tutos_jp_en), getString(R.string.tutos_jp_en_message)
             ) { }
         }
         binding.btnAutoSwitch.setOnClickListener {
-            mpresenter.autoSwitch()
+            mpresenter.quizTypeSwitch(QuizType.TYPE_AUTO)
             spotlightTuto(requireActivity(), binding.btnAutoSwitch, getString(R.string.tutos_auto_quiz), getString(R.string.tutos_auto_quiz_message)
             ) { }
         }
@@ -258,28 +245,29 @@ class QuizzesFragment(di: DI) : Fragment(), QuizzesContract.View, QuizzesAdapter
         }
     }
 
-    override fun selectPronunciationQcm(isSelected: Boolean) {
-        binding.btnPronunciationQcmSwitch.isSelected = isSelected
-    }
-
-    override fun selectPronunciation(isSelected: Boolean) {
-        binding.btnPronunciationSwitch.isSelected = isSelected
-    }
-
-    override fun selectAudio(isSelected: Boolean) {
-        binding.btnAudioSwitch.isSelected = isSelected
-    }
-
-    override fun selectEnJap(isSelected: Boolean) {
-        binding.btnEnJapSwitch.isSelected = isSelected
-    }
-
-    override fun selectJapEn(isSelected: Boolean) {
-        binding.btnJapEnSwitch.isSelected = isSelected
-    }
-
-    override fun selectAuto(isSelected: Boolean) {
-        binding.btnAutoSwitch.isSelected = isSelected
+    /**
+     * Select quiz type
+     *
+     * Set the selection status of a QuizType button to the given value.
+     *
+     * @param quizType QuizType to change selection status
+     * @param isSelected True if it should be selected, False if it should not be selected
+     */
+    override fun selectQuizType(quizType: QuizType, isSelected: Boolean) {
+        when (quizType) {
+            QuizType.TYPE_AUTO ->
+                binding.btnAutoSwitch.isSelected = isSelected
+            QuizType.TYPE_PRONUNCIATION ->
+                binding.btnPronunciationSwitch.isSelected = isSelected
+            QuizType.TYPE_PRONUNCIATION_QCM ->
+                binding.btnPronunciationQcmSwitch.isSelected = isSelected
+            QuizType.TYPE_AUDIO ->
+                binding.btnAudioSwitch.isSelected = isSelected
+            QuizType.TYPE_EN_JAP ->
+                binding.btnEnJapSwitch.isSelected = isSelected
+            QuizType.TYPE_JAP_EN ->
+                binding.btnJapEnSwitch.isSelected = isSelected
+        }
     }
 
     override fun launchQuiz(strategy: QuizStrategy, level: Level?, selectedTypes: ArrayList<QuizType>, title: String) {
