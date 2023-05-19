@@ -223,20 +223,9 @@ abstract class YomikataDataBase : RoomDatabase() {
                 val idLevelPoints = mutableListOf<Triple<Long, Int, Int>>()
 
                 database.query("""SELECT _id, level, points FROM words""").use {
-                    val idIndex = it.getColumnIndex("_id")
-                    val levelIndex = it.getColumnIndex("level")
-                    val pointsIndex = it.getColumnIndex("points")
-
-                    val errorMessage = "Could not access %s in words table"
-                    if (idIndex == -1) {
-                        throw Exception(errorMessage.format("_id"))
-                    }
-                    if (levelIndex == -1) {
-                        throw Exception(errorMessage.format("level"))
-                    }
-                    if (pointsIndex == -1) {
-                        throw Exception(errorMessage.format("points"))
-                    }
+                    val idIndex = it.getColumnIndexOrThrow("_id")
+                    val levelIndex = it.getColumnIndexOrThrow("level")
+                    val pointsIndex = it.getColumnIndexOrThrow("points")
 
                     // add all words to list
                     while (it.moveToNext()) {
@@ -294,8 +283,7 @@ abstract class YomikataDataBase : RoomDatabase() {
 
                 // update database
                 val update = "UPDATE words SET level = ?, points = ? WHERE _id = ?"
-                newIdLevelPoints.forEach {
-                    val (id, level, points) = it
+                newIdLevelPoints.forEach { (id, level, points) ->
                     database.execSQL(update, arrayOf(level, points, id))
                 }
             }
