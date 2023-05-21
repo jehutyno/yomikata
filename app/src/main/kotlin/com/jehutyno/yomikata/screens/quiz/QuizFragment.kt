@@ -538,7 +538,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
      */
     override fun displayQCMTv(tvNum: Int, option: String, colorId: Int) {
         QCMtvs[tvNum - 1].also { tv ->
-            tv.text = option
+            tv.text = cleanForQCM(option)
             tv.setTextColor(ContextCompat.getColor(requireContext(), colorId))
         }
     }
@@ -553,7 +553,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
      */
     override fun displayQCMTv(options: List<String>, colorIds: List<Int>) {
         QCMtvs.forEachIndexed { i, tv ->
-            tv.text = options[i]
+            tv.text = cleanForQCM(options[i])
             tv.setTextColor(ContextCompat.getColor(requireContext(), colorIds[i]))
         }
     }

@@ -19,6 +19,7 @@ import com.jehutyno.yomikata.model.Word
 import com.jehutyno.yomikata.model.getWordColor
 import com.jehutyno.yomikata.util.Prefs
 import com.jehutyno.yomikata.util.QuizType
+import com.jehutyno.yomikata.util.cleanForQCM
 import com.jehutyno.yomikata.util.getWordPositionInFuriSentence
 import com.jehutyno.yomikata.util.sentenceNoAnswerFuri
 import com.jehutyno.yomikata.util.sentenceNoFuri
@@ -103,7 +104,7 @@ class QuizItemPagerAdapter(var context: Context, var callback: Callback) : Pager
                 tradSentence.movementMethod = ScrollingMovementMethod()
                 tradSentence.setTextColor(getWordColor(context, word.points))
                 tradSentence.textSize = PreferenceManager.getDefaultSharedPreferences(context).getString("font_size", "18")!!.toFloat()
-                tradSentence.text = word.getTrad()
+                tradSentence.text = cleanForQCM(word.getTrad())
             }
             QuizType.TYPE_AUDIO -> {
                 sound.visibility = View.VISIBLE
