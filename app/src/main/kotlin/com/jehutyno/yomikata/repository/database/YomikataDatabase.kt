@@ -241,6 +241,11 @@ abstract class YomikataDatabase : RoomDatabase() {
                     Pair(id, removeP(english))
                 } as ArrayList
 
+
+                val update = """UPDATE words SET english = ? WHERE _id = ?"""
+                idAndEnglish.forEach { (id, english) ->
+                    database.execSQL(update, arrayOf(english, id))
+                }
             }
         }
 
