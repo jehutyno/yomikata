@@ -8,6 +8,33 @@ package com.jehutyno.yomikata.util
  */
 
 
+/** single character used to identify which ending a godan (五段) verb has.
+ * e.g. yomu (読む) is 'm' */
+private const val godanEndings = "utrnbmkgs"
+/** all possible strings that appear in parts of speech (pop) info */
+private val possiblePopTokens = arrayOf(
+    "n", "n-suf", "n-adv",                  // types of noun
+    "pn",                                   // pronoun
+    "vs", "vi", "vt",                       // types of verb
+    "adj-na", "adj-no", "adj-i", "adj-t",   // types of adjective
+    "adv", "adv-to",                        // adverb, adverb taking と (to) particle
+    "pref", "suf",                          // prefix, suffix
+    "exp",                                  // expression
+    "num", "ctr",                           // number, counter
+    "pol", "hum",                           // polite speech, humble speech
+    "abbr",                                 // abbreviation
+    "int",                                  // ???
+    "v1", "vz",                             // ichidan verb, zuru verb (ichidan ending in ずる (zuru))
+    "aux-v", "aux-adj" ,                    // auxiliary verb, auxiliary adjective
+    *godanEndings.map{ "v5$it" }.toTypedArray()    // godan verbs
+)
+
+private val concatenatedPopTokens = possiblePopTokens.joinToString("|")
+
+/** finds the pop tokens in parentheses (), or comma separated,
+ *  e.g. it will match (n)   or    (v1,vt)    or    (n,n-suf,adj-na)  */
+private val regexPopTokens = Regex("\\(($concatenatedPopTokens)(,($concatenatedPopTokens))*\\)")
+
 /**
  * Remove parts of speech info
  *
@@ -16,33 +43,7 @@ package com.jehutyno.yomikata.util
  * @return New string with the parts of speech removed
  */
 fun String.removePartsOfSpeechInfo(): String {
-    /** single character used to identify which ending a godan (五段) verb has.
-     * e.g. yomu (読む) is 'm' */
-    val godanEndings = "utrnbmkgs"
-    /** all possible strings that appear in parts of speech (pop) info */
-    val possiblePopTokens = arrayOf(
-        "n", "n-suf", "n-adv",                  // types of noun
-        "pn",                                   // pronoun
-        "vs", "vi", "vt",                       // types of verb
-        "adj-na", "adj-no", "adj-i", "adj-t",   // types of adjective
-        "adv", "adv-to",                        // adverb, adverb taking と (to) particle
-        "pref", "suf",                          // prefix, suffix
-        "exp",                                  // expression
-        "num", "ctr",                           // number, counter
-        "pol", "hum",                           // polite speech, humble speech
-        "abbr",                                 // abbreviation
-        "int",                                  // ???
-        "v1", "vz",                             // ichidan verb, zuru verb (ichidan ending in ずる (zuru))
-        "aux-v", "aux-adj" ,                    // auxiliary verb, auxiliary adjective
-        *godanEndings.map{ "v5$it" }.toTypedArray()    // godan verbs
-    )
-
-    val regexPopTokens = possiblePopTokens.joinToString("|")
-    /** finds the pop tokens in parentheses (), or comma separated,
-     *  e.g. it will match (n)   or    (v1,vt)    or    (n,n-suf,adj-na)  */
-    val regex = Regex("\\(($regexPopTokens)(,($regexPopTokens))*\\)")
-
-    return regex.replace(this, "")   // remove all matched substrings
+    return regexPopTokens.replace(this, "")   // remove all matched substrings
 }
 
 
@@ -68,6 +69,8 @@ fun String.removeAnyJapanese(): String {
     return Regex("\\P{InBasicLatin}").replace(newString, "")
 }
 
+/** Regex for indexes which mark different translations / meaning for words that have many */
+private val indexRegex = Regex("\\(\\d+\\)")
 
 /**
  * Remove synonyms
@@ -80,9 +83,7 @@ fun String.removeAnyJapanese(): String {
  * @return String with any translations marked by an integer (i) with i > maxLevel removed
  */
 fun String.removeSynonyms(maxLevel: Int = 2): String {
-    val regex = Regex("\\(\\d+\\)")
-
-    val matches = regex.findAll(this)
+    val matches = indexRegex.findAll(this)
     var smallestNumberBiggerThanMaxLevel: Pair<Int, MatchResult?> = Pair(Int.MAX_VALUE, null)
     matches.forEach { match ->
         val number = match.value.removePrefix("(").removeSuffix(")").toInt()
@@ -120,4 +121,32 @@ private fun String.ensureSingleSpace(): String {
  */
 fun String.cleanForQCM(): String {
     return this.removePartsOfSpeechInfo().removeAnyJapanese().trim().ensureSingleSpace()
+}
+
+
+/**
+ * Readable translation format
+ *
+ * Turns semicolons into commas with spaces.
+ * Adds newline characters if many synonyms / meanings are present.
+ *
+ * @return A new string which is easier to read
+ */
+fun String.readableTranslationFormat(): String {
+    // find all semicolons, including following index (i), and potentially pps info
+    val regex = Regex(";+\\s*(?<popIndexGroup>($regexPopTokens)?\\s*($indexRegex)?)")
+
+    fun getReplacement(matchResult: MatchResult): String {
+        // if the semicolon is followed by a `(i)` (with i a number), then turn it into a newline
+        // otherwise make it a `, `
+        return matchResult.groups["popIndexGroup"].let {
+            // also check that it.value contains ")" to avoid unwanted match with only \\s* part
+            if (it != null && it.value.contains(")"))
+                "\n${it.value}"        // make sure to keep the popIndexGroup
+            else
+                ", "
+        }
+    }
+
+    return regex.replace(this, ::getReplacement).ensureSingleSpace()
 }
