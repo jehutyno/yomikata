@@ -267,7 +267,9 @@ abstract class YomikataDataBase : RoomDatabase() {
                     val currentLevel = it.second
                     if (currentLevel == -1)
                         return@forEach
-                    val percent = it.third.toFloat()  // use points as percent between 0 and 100
+                    val percent = it.third
+                        .coerceAtLeast(0)   // make sure points are not negative
+                        .toFloat()                      // use points as percent between 0 and 100
                     val basePoints = getPointsForLevel(currentLevel)
 
                     // change to new values
