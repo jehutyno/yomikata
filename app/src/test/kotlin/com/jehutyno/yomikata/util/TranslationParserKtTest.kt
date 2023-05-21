@@ -21,31 +21,32 @@ class TranslationParserKtTest {
 
     @Test
     fun removePartsOfSpeechInfo() {
-        assert( removePartsOfSpeechInfo(samples[0]) ==
+        assert( samples[0].removePartsOfSpeechInfo() ==
                 " (1) deep blue;bright blue;(2) ghastly pale;pallid;white as a sheet;(P)" )
-        assert( removePartsOfSpeechInfo(samples[1]) ==
+        assert( samples[1].removePartsOfSpeechInfo() ==
                 " (1) physiology;(2) (See 月経) menstruation;one's period;menses;(P)" )
-        assert( removePartsOfSpeechInfo(samples[2]) ==
+        assert( samples[2].removePartsOfSpeechInfo() ==
                 " to lay in stock;to replenish stock;to procure;to learn something that might be useful later;(P)" )
-        assert( removePartsOfSpeechInfo(samples[7]) == samples[7] )
-        assert( removePartsOfSpeechInfo(samples[10]) == samples[10] )
+        assert( samples[7].removePartsOfSpeechInfo() == samples[7] )
+        assert( samples[10].removePartsOfSpeechInfo() == samples[10] )
 
-        assert( removePartsOfSpeechInfo("(v5s,vt) (1) to roll;(2) to turn over;to tip over;to throw down;(3) to leave;(4) to buy and sell (quickly for a profit)")
+        assert( "(v5s,vt) (1) to roll;(2) to turn over;to tip over;to throw down;(3) to leave;(4) to buy and sell (quickly for a profit)"
+            .removePartsOfSpeechInfo()
         == " (1) to roll;(2) to turn over;to tip over;to throw down;(3) to leave;(4) to buy and sell (quickly for a profit)")
     }
 
     @Test
     fun removeAnyJapanese() {
-        assert( removeAnyJapanese(samples[0]) == samples[0] )
-        assert( removeAnyJapanese(samples[1]) ==
+        assert( samples[0].removeAnyJapanese() == samples[0] )
+        assert( samples[1].removeAnyJapanese() ==
                 "(n,adj-no) (1) physiology;(2)  menstruation;one's period;menses;(P)" )
-        assert( removeAnyJapanese(samples[10]) == samples[10] )
+        assert( samples[10].removeAnyJapanese() == samples[10] )
     }
 
     @Test
     fun removeSynonyms() {
-        assert( removeSynonyms(samples[0], 2) == samples[0] )
-        assert( removeSynonyms(samples[0], 1) == "(adj-na,n) (1) deep blue;bright blue;" )
-        assert( removeSynonyms(samples[0], 0) == "(adj-na,n) " )
+        assert( samples[0].removeSynonyms(2) == samples[0] )
+        assert( samples[0].removeSynonyms(1) == "(adj-na,n) (1) deep blue;bright blue;" )
+        assert( samples[0].removeSynonyms(0) == "(adj-na,n) " )
     }
 }

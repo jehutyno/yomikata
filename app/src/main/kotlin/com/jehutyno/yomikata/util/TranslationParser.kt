@@ -13,10 +13,9 @@ package com.jehutyno.yomikata.util
  *
  * Parts of speech specifies what 'type' a word is, such as v for verb or n for noun.
  *
- * @param str String to parse
  * @return New string with the parts of speech removed
  */
-fun removePartsOfSpeechInfo(str: String): String {
+fun String.removePartsOfSpeechInfo(): String {
     /** single character used to identify which ending a godan (五段) verb has.
      * e.g. yomu (読む) is 'm' */
     val godanEndings = "utrnbmkgs"
@@ -43,7 +42,7 @@ fun removePartsOfSpeechInfo(str: String): String {
      *  e.g. it will match (n)   or    (v1,vt)    or    (n,n-suf,adj-na)  */
     val regex = Regex("\\(($regexPopTokens)(,($regexPopTokens))*\\)")
 
-    return regex.replace(str, "")   // remove all matched substrings
+    return regex.replace(this, "")   // remove all matched substrings
 }
 
 
@@ -58,13 +57,12 @@ fun removePartsOfSpeechInfo(str: String): String {
  * WARNING: This will also remove other special characters that are not part of the standard
  * latin character set.
  *
- * @param str String to parse
  * @return New string with any non-latin characters removed
  */
-fun removeAnyJapanese(str: String): String {
+fun String.removeAnyJapanese(): String {
     /** Finds any text inside of parentheses () that also contains non-latin characters */
     val regex = Regex("\\([^()]*\\P{InBasicLatin}[^()]*\\)")
-    val newString = regex.replace(str, "")
+    val newString = regex.replace(this, "")
 
     // also remove any stray japanese that is not in brackets
     return Regex("\\P{InBasicLatin}").replace(newString, "")
@@ -78,14 +76,13 @@ fun removeAnyJapanese(str: String): String {
  * Tries to find numbers (1), (2), etc., and then removes any part of the string
  * past (maxLevel) (maxLevel itself is not removed).
  *
- * @param str String to parse
  * @param maxLevel Maximum value to still allow in the string
  * @return String with any translations marked by an integer (i) with i > maxLevel removed
  */
-fun removeSynonyms(str: String, maxLevel: Int = 2): String {
+fun String.removeSynonyms(maxLevel: Int = 2): String {
     val regex = Regex("\\(\\d+\\)")
 
-    val matches = regex.findAll(str)
+    val matches = regex.findAll(this)
     var smallestNumberBiggerThanMaxLevel: Pair<Int, MatchResult?> = Pair(Int.MAX_VALUE, null)
     matches.forEach { match ->
         val number = match.value.removePrefix("(").removeSuffix(")").toInt()
@@ -93,12 +90,34 @@ fun removeSynonyms(str: String, maxLevel: Int = 2): String {
             smallestNumberBiggerThanMaxLevel = Pair(number, match)
         }
     }
-    val match = smallestNumberBiggerThanMaxLevel.second ?: return str
+    val match = smallestNumberBiggerThanMaxLevel.second ?: return this
 
-    return str.removeRange(match.range.first, str.length)
+    return this.removeRange(match.range.first, this.length)
 }
 
 
-fun cleanForQCM(str: String): String {
-    return removeAnyJapanese(removePartsOfSpeechInfo(str))
+/**
+ * Ensure single space
+ *
+ * e.g. "Say Hello    World  " -> "Say Hello World ".
+ *
+ * Does not apply to tabs, newlines, etc.
+ *
+ * @return A new string where any consecutive spaces are replaced with exactly one space
+ */
+private fun String.ensureSingleSpace(): String {
+    return Regex(" +").replace(this, " ")
+}
+
+
+/**
+ * Clean for QCM
+ *
+ * Used to display translations in a simpler format which avoids giving away the answer
+ * by hiding information that may be present in the full translation.
+ *
+ * @return A new string with Parts Of Speech info remove, and any Japanese removed.
+ */
+fun String.cleanForQCM(): String {
+    return this.removePartsOfSpeechInfo().removeAnyJapanese().trim().ensureSingleSpace()
 }
