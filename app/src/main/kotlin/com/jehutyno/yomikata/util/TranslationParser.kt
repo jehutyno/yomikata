@@ -17,7 +17,7 @@ private val possiblePopTokens = arrayOf(
     "pn",                                   // pronoun
     "vs", "vi", "vt",                       // types of verb
     "adj-na", "adj-no", "adj-i", "adj-t",   // types of adjective
-    "adv", "adv-to",                        // adverb, adverb taking と (to) particle
+    "adv", "adv-to", "n-adv", "n-t",        // adverb, adverb taking と (to) particle
     "pref", "suf",                          // prefix, suffix
     "exp",                                  // expression
     "num", "ctr",                           // number, counter
@@ -31,9 +31,9 @@ private val possiblePopTokens = arrayOf(
 
 private val concatenatedPopTokens = possiblePopTokens.joinToString("|")
 
-/** finds the pop tokens in parentheses (), or comma separated,
+/** finds the pop tokens in parentheses (), or comma separated, includes trailing whitespaces
  *  e.g. it will match (n)   or    (v1,vt)    or    (n,n-suf,adj-na)  */
-private val regexPopTokens = Regex("\\(($concatenatedPopTokens)(,($concatenatedPopTokens))*\\)")
+private val regexPopTokens = Regex("""\(($concatenatedPopTokens)(,($concatenatedPopTokens))*\)\s*""")
 
 /**
  * Remove parts of speech info
@@ -54,6 +54,7 @@ fun String.removePartsOfSpeechInfo(): String {
  * characters. Also removes any other characters within the same parentheses () as the
  * removed japanese text. e.g. `(hello 先輩)` will be remove completely since the hello
  * is also in the brackets.
+ * Also removes any trailing whitespaces.
  *
  * WARNING: This will also remove other special characters that are not part of the standard
  * latin character set.
@@ -61,16 +62,17 @@ fun String.removePartsOfSpeechInfo(): String {
  * @return New string with any non-latin characters removed
  */
 fun String.removeAnyJapanese(): String {
-    /** Finds any text inside of parentheses () that also contains non-latin characters */
-    val regex = Regex("\\([^()]*\\P{InBasicLatin}[^()]*\\)")
+    /** Finds any text inside of parentheses () that also contains non-latin characters, and
+     * any trailing whitespaces */
+    val regex = Regex("""\([^()]*\P{InBasicLatin}[^()]*\)\s*""")
     val newString = regex.replace(this, "")
 
     // also remove any stray japanese that is not in brackets
-    return Regex("\\P{InBasicLatin}").replace(newString, "")
+    return Regex("""\P{InBasicLatin}""").replace(newString, "")
 }
 
 /** Regex for indexes which mark different translations / meaning for words that have many */
-private val indexRegex = Regex("\\(\\d+\\)")
+private val indexRegex = Regex("""\(\d+\)""")
 
 /**
  * Remove synonyms
@@ -134,7 +136,7 @@ fun String.cleanForQCM(): String {
  */
 fun String.readableTranslationFormat(): String {
     // find all semicolons, including following index (i), and potentially pps info
-    val regex = Regex(";+\\s*(?<popIndexGroup>($regexPopTokens)?\\s*($indexRegex)?)")
+    val regex = Regex(""";+\s*(?<popIndexGroup>($regexPopTokens)?($indexRegex)?)""")
 
     fun getReplacement(matchResult: MatchResult): String {
         // if the semicolon is followed by a `(i)` (with i a number), then turn it into a newline
