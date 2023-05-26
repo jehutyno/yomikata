@@ -218,6 +218,9 @@ abstract class YomikataDataBase : RoomDatabase() {
              *      Points keep increasing and level is determined by points uniquely
              */
             override fun migrate(database: SupportSQLiteDatabase) {
+                // fix a small issue with foreign key constraints
+                database.execSQL("""UPDATE words SET sentence_id = NULL WHERE _id = 3537""")
+
                 // go through all words and change level and words
                 // repetition is kept, it will be recalculated when the word is tested anyway
                 val idLevelPoints = mutableListOf<Triple<Long, Int, Int>>()
