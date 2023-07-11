@@ -20,7 +20,6 @@ import com.jehutyno.yomikata.util.QuizType
 import com.jehutyno.yomikata.util.toQuizType
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import mu.KLogging
@@ -77,12 +76,7 @@ class QuizzesPresenter(
     @OptIn(ExperimentalCoroutinesApi::class)
     override val highCount: LiveData<Int> = getLiveData(Level.HIGH)
     @OptIn(ExperimentalCoroutinesApi::class)
-    override val masterCount: LiveData<Int> = getLiveData(Level.MASTER).asFlow().combine(
-        getLiveData(Level.MAX).asFlow()
-    ) { value3, value4 ->
-        value3 + value4
-    }.asLiveData().distinctUntilChanged()
-
+    override val masterCount: LiveData<Int> = getLiveData(Level.MASTER)
 
     override fun start() {
         Log.i("YomikataZK", "Home Presenter start")

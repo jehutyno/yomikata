@@ -137,8 +137,7 @@ class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, Wo
             binding.seekLowContainer.visibility = if (level == Level.LOW) VISIBLE else GONE
             binding.seekMediumContainer.visibility = if (level == Level.MEDIUM) VISIBLE else GONE
             binding.seekHighContainer.visibility = if (level == Level.HIGH) VISIBLE else GONE
-            binding.seekMasterContainer.visibility = if (level == Level.MASTER || level == Level.MAX)
-                                                                                VISIBLE else GONE
+            binding.seekMasterContainer.visibility = if (level == Level.MASTER) VISIBLE else GONE
         }
         seekBars.setTextViews(binding.textLow, binding.textMedium, binding.textHigh, binding.textMaster)
         mpresenter!!.let {

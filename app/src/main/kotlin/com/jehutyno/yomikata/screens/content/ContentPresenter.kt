@@ -9,7 +9,6 @@ import com.jehutyno.yomikata.repository.QuizRepository
 import com.jehutyno.yomikata.repository.WordRepository
 import com.jehutyno.yomikata.util.Categories
 import com.jehutyno.yomikata.util.Level
-import kotlinx.coroutines.flow.combine
 import mu.KLogging
 
 
@@ -42,12 +41,7 @@ class ContentPresenter(
     override val highCount: LiveData<Int> =
         quizRepository.countWordsForLevel(quizIds, Level.HIGH).asLiveData().distinctUntilChanged()
     override val masterCount: LiveData<Int> =
-        quizRepository.countWordsForLevel(quizIds, Level.MASTER).combine(
-                                                        quizRepository.countWordsForLevel(quizIds, Level.MAX)
-                                                    ) {
-                                                        value3, value4 -> value3 + value4
-                                                    }.asLiveData().distinctUntilChanged()
-
+        quizRepository.countWordsForLevel(quizIds, Level.MASTER).asLiveData().distinctUntilChanged()
 
     override fun start() {
         logger.info("Content presenter start")

@@ -20,10 +20,10 @@ enum class Level(val level: Int, val minPoints: Int) {
     LOW(0, 0),
     MEDIUM(1, 200),         // rep = 6
     HIGH(2, 400),           // rep = 28
-    MASTER(3, 600),         // rep = 149
-    MAX(4, 850);            // 850 gives repetition of about 1200 (see getRepetition)
-    // MAX represents the maximum level, so its "minPoints" is also the maxPoints
+    MASTER(3, 600)          // rep = 149
 }
+private const val MAX_POINTS = 850  // 850 gives repetition of about 1200 (see getRepetition)
+
 
 fun Int.toLevel(): Level {
     return Level.values()[this]
@@ -39,7 +39,7 @@ fun Int.toLevel(): Level {
  */
 fun getNextLevel(level: Level): Level {
     // add one, but cap at max level
-    val levelPlusOne = (level.level + 1).coerceAtMost(Level.MAX.level)
+    val levelPlusOne = (level.level + 1).coerceAtMost(Level.MASTER.level)
     return levelPlusOne.toLevel()
 }
 
@@ -75,10 +75,8 @@ fun getLevelFromPoints(points: Int): Level {
         Level.MEDIUM
     } else if (points < Level.MASTER.minPoints) {
         Level.HIGH
-    } else if (points < Level.MAX.minPoints) {
-        Level.MASTER
     } else {
-        Level.MAX
+        Level.MASTER
     }
 }
 
@@ -115,7 +113,7 @@ private fun getPointsWithSameProgress(points: Int, newLevel: Level): Int {
  * Level up
  *
  * Returns new points by leveling up while keeping points progress the same.
- * If level is MAX, then points will be set to the MAX.minPoints (which is the max amount).
+ * If current level is MASTER, then points are set to the maximum value.
  *
  * @param points Current points
  * @return The new points
@@ -124,7 +122,7 @@ fun levelUp(points: Int): Int {
     val level = getLevelFromPoints(points)
     val higherLevel = getNextLevel(level)
     if (higherLevel == level)
-        return Level.MAX.minPoints    // no change in level --> highest level --> return max points
+        return MAX_POINTS    // no change in level --> highest level --> return max points
 
     return getPointsWithSameProgress(points, higherLevel)
 }
@@ -163,7 +161,7 @@ fun addPoints(points: Int, answerIsCorrect: Boolean, quizType: QuizType, speed: 
     val plusOrMinus = (if (answerIsCorrect) 1 else -1)
     return (
         points + (plusOrMinus * BASE_POINTS + quizType.extraPoints) * speed
-    ).coerceIn(0, Level.MAX.minPoints)   // should be positive and less than MAX
+    ).coerceIn(0, MAX_POINTS)   // should be positive and less than MAX
 }
 
 /**

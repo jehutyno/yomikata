@@ -253,7 +253,6 @@ abstract class YomikataDataBase : RoomDatabase() {
                         1 -> medium
                         2 -> high
                         3 -> master
-                        4 -> max
                         else -> max
                     }
                 }
@@ -261,8 +260,7 @@ abstract class YomikataDataBase : RoomDatabase() {
                     return   if (points < medium)   0
                         else if (points < high)     1
                         else if (points < master)   2
-                        else if (points < max)      3
-                        else                        4
+                        else                        3
                 }
                 val newIdLevelPoints = mutableListOf<Triple<Long, Int, Int>>()
                 // change the level & points for each word
@@ -276,8 +274,9 @@ abstract class YomikataDataBase : RoomDatabase() {
                     val basePoints = getPointsForLevel(currentLevel)
 
                     // change to new values
-                    val difference = getPointsForLevel(currentLevel + 1) - getPointsForLevel(currentLevel)
-                    val newPoints = basePoints + (difference.toFloat() * percent / 100f).toInt()
+                    val difference = getPointsForLevel(currentLevel + 1) - basePoints
+                    val newPoints = (basePoints + (difference.toFloat() * percent / 100f).toInt())
+                                    .coerceIn(0, max)  // make sure points are in valid range
 
                     newIdLevelPoints.add(Triple(
                         it.first,
