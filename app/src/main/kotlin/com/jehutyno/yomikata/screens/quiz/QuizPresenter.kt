@@ -106,10 +106,10 @@ class QuizPresenter(
     /** Active count to keep track of remaining words in current session.
      *  Keep in mind that a quiz could run out of words before this counter reaches 0. */
     private var sessionCount = -1
-    /** Total length of current session */
-    private var sessionLength = defaultSharedPreferences.getString("length", "10")!!.toInt()
     /** Session length of choice in user preferences */
     private val prefSessionLength = defaultSharedPreferences.getString("length", "10")!!.toInt()
+    /** Total length of current session */
+    private var sessionLength = prefSessionLength
 
     private var ttsSupported = TextToSpeech.LANG_NOT_SUPPORTED
     private var isFuriDisplayed = false
@@ -229,8 +229,14 @@ class QuizPresenter(
         sessionCount = savedInstanceState.getInt("session_count")
     }
 
+    /**
+     * Init quiz
+     *
+     * Called when a new list of words is needed to start a quiz.
+     *
+     * (it is never called in errorMode)
+     */
     override suspend fun initQuiz() {
-        sessionCount = prefSessionLength
         wordHandler.quizWords = when (strategy) {
             QuizStrategy.PROGRESSIVE -> {
                 getNextProgressiveWords()
@@ -241,6 +247,25 @@ class QuizPresenter(
             }
         }
         quizView.displayWords(quizWords)
+
+        // To be sure the session length is not bigger than the number of words
+        sessionLength = prefSessionLength.coerceAtMost(quizWords.size)
+        sessionCount = sessionLength    // initialize count
+
+        if (prefSessionLength == -1) {
+            // -1 => infinite session
+            if (strategy == QuizStrategy.PROGRESSIVE) {
+                // set length, count to 1
+                sessionLength = 1
+                sessionCount = 1
+                quizView.incrementInfiniteCount()
+            } else {
+                // use size
+                sessionLength = quizWords.size
+                sessionCount = sessionLength
+            }
+        }
+
         setUpNextQuiz()
     }
 
@@ -419,10 +444,6 @@ class QuizPresenter(
      * @return The original Words paired with a random [QuizType] (see [getQuizType])
      */
     private fun createWordTypePair(words: List<Word>): List<Pair<Word, QuizType>> {
-        if (words.size < sessionLength || words.size < sessionCount) {
-            sessionLength = words.size // To be sure the session length is not bigger than the number of words
-            sessionCount = words.size
-        }
         return words.map { word ->
             Pair(word, getQuizType(word))
         }
@@ -808,10 +829,6 @@ class QuizPresenter(
                 words.clear()
                 words.add(first)
             }
-            // set length, count to 1
-            sessionLength = 1
-            sessionCount = 1
-            quizView.incrementInfiniteCount()
         }
 
         words.shuffle()
