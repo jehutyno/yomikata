@@ -77,7 +77,7 @@ class QuizzesPresenter(
 
     @Synchronized
     private fun switchOthers(type: QuizType) {
-        val newSelectedTypes = selectedTypes.value!!
+        val newSelectedTypes = ArrayList(selectedTypes.value!!) // makes copy
         selectedTypes.value!!.also { types ->
             if (!types.contains(type)) {
                 if (types.contains(QuizType.TYPE_AUTO)) {
@@ -89,6 +89,7 @@ class QuizzesPresenter(
                 newSelectedTypes.remove(type)
                 if (newSelectedTypes.size == 0) {
                     // if no types are selected -> automatically select the auto type
+                    saveQuizTypeArrayInPrefs(Prefs.WAS_SELECTED_QUIZ_TYPES.pref, types)
                     newSelectedTypes.add(QuizType.TYPE_AUTO)
                 }
             }
@@ -104,6 +105,8 @@ class QuizzesPresenter(
                     // if auto is unselected -> get saved selection from preferences
                     getQuizTypeArrayFromPrefs(Prefs.WAS_SELECTED_QUIZ_TYPES.pref, QuizType.TYPE_PRONUNCIATION)
                 } else {
+                    // if auto is selected -> save the current preferences to be restored later
+                    saveQuizTypeArrayInPrefs(Prefs.WAS_SELECTED_QUIZ_TYPES.pref, types)
                     arrayListOf(QuizType.TYPE_AUTO)
                 }
             }
