@@ -652,7 +652,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
         colorAnimation.start()
     }
 
-    override fun showAlertProgressiveSessionEnd(proposeErrors: Boolean) {
+    override fun showAlertProgressiveSessionEnd() {
         val sessionLength = adapter!!.words.size
 
         requireContext().alertDialog {
