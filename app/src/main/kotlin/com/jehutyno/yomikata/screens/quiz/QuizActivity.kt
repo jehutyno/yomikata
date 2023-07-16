@@ -27,6 +27,7 @@ import splitties.alertdialog.appcompat.alertDialog
 import splitties.alertdialog.appcompat.cancelButton
 import splitties.alertdialog.appcompat.okButton
 import splitties.alertdialog.appcompat.titleResource
+import java.util.Random
 
 
 class QuizActivity : AppCompatActivity(), DIAware {
@@ -40,7 +41,7 @@ class QuizActivity : AppCompatActivity(), DIAware {
         import(quizPresenterModule(quizFragment))
         bind<QuizContract.Presenter>() with provider {
             QuizPresenter(instance(), instance(), instance(), instance(), instance(), instance(),
-                            quizIds, quizStrategy, level, quizTypes, lifecycleScope)
+                            quizIds, quizStrategy, level, quizTypes, Random(), lifecycleScope)
         }
     }
     // trigger when quizFragment is set (see subDI)

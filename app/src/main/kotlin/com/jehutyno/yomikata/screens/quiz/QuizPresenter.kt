@@ -20,7 +20,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import java.util.*
+import java.util.Calendar
+import java.util.Random
 
 
 /**
@@ -32,7 +33,7 @@ class QuizPresenter(
     private val sentenceRepository: SentenceRepository, private val statsRepository: StatsRepository,
     private val quizView: QuizContract.View, private var quizIds: LongArray,
     private val strategy: QuizStrategy, private val level: Level?,
-    private val quizTypes: ArrayList<QuizType>,
+    private val quizTypes: ArrayList<QuizType>, private val rng: Random,
     coroutineScope: CoroutineScope) : QuizContract.Presenter {
 
     private val defaultSharedPreferences: SharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
@@ -429,7 +430,7 @@ class QuizPresenter(
         val randoms = arrayListOf<Pair<Word, Int>>()
         random.forEach { randoms.add(Pair(it, android.R.color.white)) }
         // Add the good answer at a random place
-        randoms.add(Random().nextInt(4), Pair(word, android.R.color.white))
+        randoms.add(rng.nextInt(4), Pair(word, android.R.color.white))
 
         return randoms
     }
@@ -538,7 +539,7 @@ class QuizPresenter(
                 addCurrentWordToAnswers(answer, result)
                 if (!result) {
                     // add to errors if answer is wrong, but is not a repeated mistake
-                    errors.add(Pair(word, quizType))
+                    wordHandler.errors.add(Pair(word, quizType))
                 }
             }
             saveAnswerResultStat(word, result)
