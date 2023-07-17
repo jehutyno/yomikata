@@ -119,10 +119,15 @@ private fun String.ensureSingleSpace(): String {
  * Used to display translations in a simpler format which avoids giving away the answer
  * by hiding information that may be present in the full translation.
  *
+ * @param isJapanese True if the text is supposed to be Japanese,
+ *                   False if you want to remove any Japanese that may be present
  * @return A new string with Parts Of Speech info remove, and any Japanese removed.
  */
-fun String.cleanForQCM(): String {
-    return this.removePartsOfSpeechInfo().removeAnyJapanese().trim().ensureSingleSpace()
+fun String.cleanForQCM(isJapanese: Boolean): String {
+    var cleanString = this.removePartsOfSpeechInfo()
+    if (!isJapanese)
+        cleanString = cleanString.removeAnyJapanese()
+    return cleanString.trim().ensureSingleSpace()
 }
 
 
