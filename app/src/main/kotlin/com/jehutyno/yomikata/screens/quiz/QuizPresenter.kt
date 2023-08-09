@@ -292,6 +292,52 @@ class QuizPresenter(
     }
 
     /**
+     * Quiz type config
+     *
+     * @property showKeyboard True if keyboard should be shown. If false, multiple choice quiz is loaded.
+     * @property convertHiragana Only applies if showKeyboard = true: convert user input to hiragana.
+     * @property forceAudioAtStart If true: play audio at start regardless of user preference.
+     * @property qcmDisplayHint String to display a hint, currently only applies to qcm (showKeyboard = false)
+     * (e.g. what type of answer is expected from the user)
+     */
+    private inner class QuizTypeConfig(
+        private val showKeyboard: Boolean, private val convertHiragana: Boolean,
+        private val forceAudioAtStart: Boolean, private val qcmDisplayHint: String?
+    ) {
+
+        suspend fun setUpQuiz(quizType: QuizType, word: Word) {
+            if (showKeyboard) {
+                if (convertHiragana) {
+                    quizView.setHiraganaConversion(word.isKana == 0)
+                }
+                quizView.showKeyboard()
+                quizView.displayEditMode()
+            } else {
+                quizView.hideKeyboard()
+                randoms = generateQCMRandoms(word, quizType, word.reading)
+
+                qcmDisplayHint.let { text ->
+                    quizView.displayQCMMode(text)
+                }
+            }
+
+            if (forceAudioAtStart || defaultSharedPreferences.getBoolean("play_start", false)) {
+                quizView.speakWord(word)
+            }
+
+            when (quizType) {
+                QuizType.TYPE_PRONUNCIATION -> {}
+                QuizType.TYPE_PRONUNCIATION_QCM -> setupQCMPronunciationQuiz()
+                QuizType.TYPE_AUDIO -> setupQCMQAudioQuiz()
+                QuizType.TYPE_EN_JAP -> setupQCMEnJapQuiz()
+                QuizType.TYPE_JAP_EN -> setupQCMJapEnQuiz()
+                QuizType.TYPE_AUTO -> TODO()
+            }
+        }
+
+    }
+
+    /**
      * Set up next quiz
      *
      * Moves to the next item in the pager adapter and shows the keyboard / multiple choice
@@ -312,62 +358,41 @@ class QuizPresenter(
 
         when (quizType) {
             QuizType.TYPE_PRONUNCIATION -> {
-                // Keyboard
-                quizView.showKeyboard()
-                quizView.setHiraganaConversion(word.isKana == 0)
-                quizView.displayEditMode()
-                // TTS at start
-                if (defaultSharedPreferences.getBoolean("play_start", false))
-                    quizView.speakWord(word)
+                QuizTypeConfig(
+                    true, true, false, null
+                )
             }
             QuizType.TYPE_PRONUNCIATION_QCM -> {
-                // Keyboard
-                quizView.hideKeyboard()
-                quizView.displayQCMMode(if (word.isKana == 0)
-                                            context.getString(R.string.give_hiragana_reading_hint)
-                                        else
-                                            context.getString(R.string.give_romaji_hint))
-                // TTS at start
-                if (defaultSharedPreferences.getBoolean("play_start", false))
-                    quizView.speakWord(word)
-                // QCM options
-                randoms = generateQCMRandoms(word, quizType, word.reading)
-                setupQCMPronunciationQuiz()
+                QuizTypeConfig(
+                    false, false, false,
+                    context.getString(
+                        if (word.isKana == 0)
+                            R.string.give_hiragana_reading_hint
+                        else
+                            R.string.give_romaji_hint
+                    )
+                )
             }
             QuizType.TYPE_AUDIO -> {
-                // Keyboard
-                quizView.hideKeyboard()
-                quizView.displayQCMMode(context.getString(R.string.give_word_or_kanji_hint))
-                // TTS at start
-                quizView.speakWord(word)
-                // QCM options
-                randoms = generateQCMRandoms(word, quizType, word.japanese)
-                setupQCMQAudioQuiz()
+                QuizTypeConfig(
+                    false, false, true,
+                    context.getString(R.string.give_word_or_kanji_hint)
+                )
             }
             QuizType.TYPE_EN_JAP -> {
-                // Keyboard
-                quizView.hideKeyboard()
-                quizView.displayQCMMode(context.getString(R.string.translate_to_japanese_hint))
-                // TTS at stat
-                if (defaultSharedPreferences.getBoolean("play_start", false))
-                    quizView.speakWord(word)
-                // QCM options
-                randoms = generateQCMRandoms(word, quizType, word.japanese)
-                setupQCMEnJapQuiz()
+                QuizTypeConfig(
+                    false, false, false,
+                    context.getString(R.string.translate_to_japanese_hint)
+                )
             }
             QuizType.TYPE_JAP_EN -> {
-                // Keyboard
-                quizView.hideKeyboard()
-                quizView.displayQCMMode(context.getString(R.string.translate_to_english_hint))
-                // TTS at start
-                if (defaultSharedPreferences.getBoolean("play_start", false))
-                    quizView.speakWord(word)
-                // QCM Options
-                randoms = generateQCMRandoms(word, quizType, word.japanese)
-                setupQCMJapEnQuiz()
+                QuizTypeConfig(
+                    false, false, false,
+                    context.getString(R.string.translate_to_english_hint)
+                )
             }
             QuizType.TYPE_AUTO -> TODO()
-        }
+        }.setUpQuiz(quizType, word)
 
         if (!wordHandler.errorMode)
             saveWordSeenStat(word)
