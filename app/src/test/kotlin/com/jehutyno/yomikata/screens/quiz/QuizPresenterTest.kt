@@ -3,15 +3,13 @@ package com.jehutyno.yomikata.screens.quiz
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.preference.PreferenceManager
-import com.jehutyno.yomikata.model.Quiz
 import com.jehutyno.yomikata.model.Word
-import com.jehutyno.yomikata.repository.QuizRepository
+import com.jehutyno.yomikata.presenters.source.SelectionsPresenter
+import com.jehutyno.yomikata.presenters.source.WordInQuizPresenter
 import com.jehutyno.yomikata.repository.SentenceRepository
 import com.jehutyno.yomikata.repository.StatsRepository
 import com.jehutyno.yomikata.repository.WordRepository
-import com.jehutyno.yomikata.repository.local.RoomQuiz
-import com.jehutyno.yomikata.repository.local.RoomWords
-import com.jehutyno.yomikata.util.Categories
+import com.jehutyno.yomikata.repository.database.RoomWords
 import com.jehutyno.yomikata.util.Prefs
 import com.jehutyno.yomikata.util.QuizStrategy
 import com.jehutyno.yomikata.util.QuizType
@@ -58,17 +56,14 @@ class QuizPresenterTest(private val length: Int, private val type: QuizType) {
         )
     }
 
-    private lateinit var quizRepoMock: QuizRepository
     private lateinit var wordRepoMock: WordRepository
     private lateinit var sentenceRepoMock: SentenceRepository
     private lateinit var statsRepoMock: StatsRepository
     private lateinit var quizViewMock: QuizContract.View
+    private lateinit var selectionsMock: SelectionsPresenter
+    private lateinit var wordInQuizMock: WordInQuizPresenter
     private lateinit var scope: CoroutineScope
     private lateinit var quizPresenter: QuizPresenter
-
-    private fun createQuiz(id: Long): Quiz {
-        return RoomQuiz(id, "", "", 0, false).toQuiz()
-    }
 
     private fun createWord(id: Long, correct: Boolean = true): Word {
         val str = if (correct) "correct" else "wrong"
@@ -86,11 +81,12 @@ class QuizPresenterTest(private val length: Int, private val type: QuizType) {
     @Before
     fun setUp() {
         // mocks for repositories
-        quizRepoMock = mockk(relaxed = true)
         wordRepoMock = mockk(relaxed = true)
         sentenceRepoMock = mockk(relaxed = true)
         statsRepoMock = mockk(relaxed = true)
         quizViewMock = mockk(relaxed = true)
+        selectionsMock = mockk(relaxed = true)
+        wordInQuizMock = mockk(relaxed = true)
 
         every {
             quizViewMock.showAlertNonProgressiveSessionEnd(any())
@@ -98,13 +94,6 @@ class QuizPresenterTest(private val length: Int, private val type: QuizType) {
             quizPresenter.onContinueAfterNonProgressiveSessionEnd()
         }}
 
-        every { quizRepoMock.getQuiz(Categories.CATEGORY_SELECTIONS) } returns flow {
-            emit(
-                listOf(
-                    createQuiz(0), createQuiz(1)
-                )
-            )
-        }
         every { wordRepoMock.getWordsByLevel(any(), any()) } returns flow {
             emit(
                 words
@@ -134,9 +123,9 @@ class QuizPresenterTest(private val length: Int, private val type: QuizType) {
         val rngMock = mockk<Random>()
         every { rngMock.nextInt(4) } returns 0
 
-        quizPresenter = QuizPresenter(context, quizRepoMock, wordRepoMock, sentenceRepoMock,
+        quizPresenter = QuizPresenter(context, wordRepoMock, sentenceRepoMock,
             statsRepoMock, quizViewMock, longArrayOf(), QuizStrategy.STRAIGHT, null,
-            arrayListOf(type), rngMock, scope
+            arrayListOf(type), rngMock, selectionsMock, wordInQuizMock, scope
         )
     }
 
