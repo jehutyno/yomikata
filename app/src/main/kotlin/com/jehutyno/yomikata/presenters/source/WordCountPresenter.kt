@@ -1,7 +1,6 @@
 package com.jehutyno.yomikata.presenters.source
 
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.asFlow
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.distinctUntilChanged
 import com.jehutyno.yomikata.presenters.WordCountInterface
@@ -9,7 +8,6 @@ import com.jehutyno.yomikata.repository.QuizRepository
 import com.jehutyno.yomikata.util.Level
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 
@@ -43,8 +41,6 @@ class WordCountPresenter(quizRepository: QuizRepository, quizIdsFlow: Flow<LongA
     @OptIn(ExperimentalCoroutinesApi::class)
     override val highCount = getCountFlatMap(quizRepository, quizIdsFlow, Level.HIGH)
     @OptIn(ExperimentalCoroutinesApi::class)
-    override val masterCount = getCountFlatMap(quizRepository, quizIdsFlow, Level.MASTER).asFlow().combine(
-                getCountFlatMap(quizRepository, quizIdsFlow, Level.MAX).asFlow()
-        ) { master, max -> master + max }.asLiveData().distinctUntilChanged()
+    override val masterCount = getCountFlatMap(quizRepository, quizIdsFlow, Level.MASTER)
 
 }
