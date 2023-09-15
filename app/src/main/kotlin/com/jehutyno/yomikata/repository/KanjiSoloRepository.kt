@@ -9,11 +9,11 @@ import com.jehutyno.yomikata.model.Radical
  * Created by valentin on 10/01/2017.
  */
 interface KanjiSoloRepository {
-    fun kanjiSoloCount(): Int
-    fun addKanjiSolo(kanjiSolo: KanjiSolo)
-    fun getSoloByKanji(kanji: String): KanjiSolo?
-    fun radicalsCount(): Int
-    fun addRadical(radical: Radical)
-    fun getKanjiRadical(radicalString: String): Radical?
-    fun getSoloByKanjiRadical(kanji: String): KanjiSoloRadical?
+    suspend fun kanjiSoloCount(): Int
+    suspend fun addKanjiSolo(kanjiSolo: KanjiSolo)
+    suspend fun getSoloByKanji(kanji: String): KanjiSolo?
+    suspend fun radicalsCount(): Int
+    suspend fun addRadical(radical: Radical)
+    suspend fun getKanjiRadical(radicalString: String): Radical?
+    suspend fun getSoloByKanjiRadical(kanji: String): KanjiSoloRadical?
 }

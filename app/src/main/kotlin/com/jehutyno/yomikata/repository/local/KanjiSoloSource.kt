@@ -11,35 +11,35 @@ import com.jehutyno.yomikata.repository.KanjiSoloRepository
  * Created by valentin on 10/01/2017.
  */
 class KanjiSoloSource(private val kanjiSoloDao: KanjiSoloDao) : KanjiSoloRepository {
-    override fun kanjiSoloCount(): Int {
+    override suspend fun kanjiSoloCount(): Int {
         return kanjiSoloDao.kanjiSoloCount()
     }
 
-    override fun radicalsCount(): Int {
+    override suspend fun radicalsCount(): Int {
         return kanjiSoloDao.radicalsCount()
     }
 
-    override fun addKanjiSolo(kanjiSolo: KanjiSolo) {
+    override suspend fun addKanjiSolo(kanjiSolo: KanjiSolo) {
         val roomKanjiSolo = RoomKanjiSolo.from(kanjiSolo)
         kanjiSoloDao.addKanjiSolo(roomKanjiSolo)
     }
 
-    override fun addRadical(radical: Radical) {
+    override suspend fun addRadical(radical: Radical) {
         val roomRadical = RoomRadicals.from(radical)
         kanjiSoloDao.addRadical(roomRadical)
     }
 
-    override fun getSoloByKanji(kanji: String): KanjiSolo? {
+    override suspend fun getSoloByKanji(kanji: String): KanjiSolo? {
         val roomKanjiSolo = kanjiSoloDao.getSoloByKanji(kanji)
         return roomKanjiSolo?.toKanjiSolo()
     }
 
-    override fun getSoloByKanjiRadical(kanji: String): KanjiSoloRadical? {
+    override suspend fun getSoloByKanjiRadical(kanji: String): KanjiSoloRadical? {
         val roomKanjiSoloRadical = kanjiSoloDao.getSoloByKanjiRadical(kanji)
         return roomKanjiSoloRadical?.toKanjiSoloRadical()
     }
 
-    override fun getKanjiRadical(radicalString: String): Radical? {
+    override suspend fun getKanjiRadical(radicalString: String): Radical? {
         val roomRadical = kanjiSoloDao.getKanjiRadical(radicalString)
         return roomRadical?.toRadical()
     }

@@ -1,10 +1,11 @@
 package com.jehutyno.yomikata.screens.content
 
+import androidx.lifecycle.LiveData
 import com.jehutyno.yomikata.BasePresenter
 import com.jehutyno.yomikata.BaseView
 import com.jehutyno.yomikata.model.Quiz
 import com.jehutyno.yomikata.model.Word
-import java.util.*
+
 
 /**
  * Created by valentin on 27/09/2016.
@@ -15,23 +16,23 @@ interface ContentContract {
         fun displayWords(words: List<Word>)
         fun displayStats()
         fun selectionLoaded(quizzes: List<Quiz>)
-        fun noSelections()
     }
 
     interface Presenter: BasePresenter {
-        fun loadWords(quizIds: LongArray, level: Int)
-        fun countLow(ids: LongArray): Int
-        fun countMedium(ids: LongArray): Int
-        fun countHigh(ids: LongArray): Int
-        fun countMaster(ids: LongArray): Int
-        fun countQuiz(ids: LongArray): Int
-        fun updateWordCheck(id: Long, check: Boolean)
-        fun loadSelections()
-        fun isWordInQuiz(wordId: Long, quizId: Long): Boolean
-        fun createSelection(quizName: String): Long
-        fun addWordToSelection(wordId: Long, quizId: Long)
-        fun isWordInQuizzes(wordId: Long, quizIds: Array<Long>): ArrayList<Boolean>
-        fun deleteWordFromSelection(wordId: Long, selectionId: Long)
+        val words: LiveData<List<Word>>
+        val selections: LiveData<List<Quiz>>
+        val quizCount: LiveData<Int>
+        val lowCount: LiveData<Int>
+        val mediumCount: LiveData<Int>
+        val highCount: LiveData<Int>
+        val masterCount: LiveData<Int>
+        suspend fun updateWordCheck(id: Long, check: Boolean)
+        suspend fun updateWordsCheck(ids: LongArray, check: Boolean)
+        suspend fun isWordInQuiz(wordId: Long, quizId: Long): Boolean
+        suspend fun createSelection(quizName: String): Long
+        suspend fun addWordToSelection(wordId: Long, quizId: Long)
+        suspend fun isWordInQuizzes(wordId: Long, quizIds: Array<Long>): ArrayList<Boolean>
+        suspend fun deleteWordFromSelection(wordId: Long, selectionId: Long)
     }
 
 }

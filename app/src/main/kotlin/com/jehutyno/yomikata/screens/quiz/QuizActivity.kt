@@ -4,12 +4,13 @@ import android.content.Context
 import android.content.pm.ActivityInfo
 import android.os.Build
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.app.AppCompatDelegate
 import android.view.KeyEvent
 import android.view.MenuItem
 import android.window.OnBackInvokedDispatcher
 import androidx.activity.addCallback
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.util.Extras
@@ -25,6 +26,7 @@ import splitties.alertdialog.appcompat.cancelButton
 import splitties.alertdialog.appcompat.okButton
 import splitties.alertdialog.appcompat.titleResource
 
+
 class QuizActivity : AppCompatActivity(), DIAware {
 
     companion object : KLogging()
@@ -35,7 +37,8 @@ class QuizActivity : AppCompatActivity(), DIAware {
         extend(di)
         import(quizPresenterModule(quizFragment))
         bind<QuizContract.Presenter>() with provider {
-            QuizPresenter(instance(), instance(), instance(), instance(), instance(), instance(), quizIds, quizStrategy, quizTypes)
+            QuizPresenter(instance(), instance(), instance(), instance(), instance(), instance(),
+                            quizIds, quizStrategy, quizTypes, lifecycleScope)
         }
     }
     // trigger when quizFragment is set (see subDI)

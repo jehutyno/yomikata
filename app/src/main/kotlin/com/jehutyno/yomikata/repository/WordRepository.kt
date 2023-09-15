@@ -2,37 +2,32 @@ package com.jehutyno.yomikata.repository
 
 import com.jehutyno.yomikata.model.Word
 import com.jehutyno.yomikata.util.QuizType
+import kotlinx.coroutines.flow.Flow
 
 
 /**
  * Created by valentin on 27/09/2016.
  */
 interface WordRepository {
-    interface LoadWordsCallback {
-        fun onWordsLoaded(words: List<Word>)
-        fun onDataNotAvailable()
-    }
-    interface GetWordsCallback {
-        fun onWordsLoaded(task:Word)
-        fun onDataNotAvailable()
-    }
-    fun getWords(quizId: Long, callback: LoadWordsCallback)
-    fun getWords(quizIds: LongArray, callback: LoadWordsCallback)
-    fun searchWords(searchString: String, callback: LoadWordsCallback)
-    fun deleteAllWords()
-    fun deleteWord(wordId: Long)
-    fun isWordInQuiz(wordId:Long, quizId:Long) : Boolean
-    fun isWordInQuizzes(wordId: Long, quizIds: Array<Long>) : ArrayList<Boolean>
-    fun updateWordLevel(wordId: Long, level: Int)
-    fun getRandomWords(wordId: Long, answer: String, wordSize: Int, limit: Int, quizType: QuizType): ArrayList<Word>
-    fun updateWordPoints(wordId: Long, points: Int)
-    fun getWordsByRepetition(quizIds: LongArray, repetition: Int, limit: Int): ArrayList<Word>
-    fun updateWordRepetition(wordId: Long, repetition: Int)
-    fun decreaseWordsRepetition(quizIds: LongArray)
-    fun updateWordSelected(wordId: Long, check: Boolean)
-    fun getWordsByLevel(quizIds: LongArray, level: Int, callback: LoadWordsCallback)
-    fun getAllWords() : List<Word>
-    fun getWordById(wordId: Long): Word
-    fun updateWord(updateWord: Word, word: Word?)
-    fun updateWordProgression(updateWord: Word, word: Word)
+    fun getWords(quizId: Long): Flow<List<Word>>
+    fun getWords(quizIds: LongArray): Flow<List<Word>>
+    fun searchWords(searchString: String): Flow<List<Word>>
+    suspend fun deleteAllWords()
+    suspend fun deleteWord(wordId: Long)
+    suspend fun isWordInQuiz(wordId:Long, quizId:Long) : Boolean
+    suspend fun isWordInQuizzes(wordId: Long, quizIds: Array<Long>) : ArrayList<Boolean>
+    suspend fun updateWordLevel(wordId: Long, level: Int)
+    suspend fun getRandomWords(wordId: Long, answer: String, wordSize: Int, limit: Int, quizType: QuizType): ArrayList<Word>
+    suspend fun updateWordPoints(wordId: Long, points: Int)
+    suspend fun getWordsByRepetition(quizIds: LongArray, repetition: Int, limit: Int): ArrayList<Word>
+    suspend fun updateWordRepetition(wordId: Long, repetition: Int)
+    suspend fun decreaseWordsRepetition(quizIds: LongArray)
+    suspend fun updateWordSelected(wordId: Long, check: Boolean)
+    suspend fun updateWordsSelected(wordIds: LongArray, check: Boolean)
+    fun getWordsByLevel(quizIds: LongArray, level: Int): Flow<List<Word>>
+    suspend fun getAllWords() : List<Word>
+    suspend fun getWordById(wordId: Long): Word
+    suspend fun updateWord(updateWord: Word, word: Word?)
+    suspend fun updateWordProgression(updateWord: Word, word: Word)
+    suspend fun addQuizWord(quizId: Long, wordId: Long)
 }

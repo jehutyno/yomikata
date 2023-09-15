@@ -2,6 +2,10 @@ package com.jehutyno.yomikata.screens.quizzes
 
 import android.content.Context
 import android.util.Log
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.asFlow
+import androidx.lifecycle.asLiveData
+import androidx.lifecycle.distinctUntilChanged
 import androidx.preference.PreferenceManager
 import com.jehutyno.yomikata.model.Quiz
 import com.jehutyno.yomikata.model.StatAction
@@ -12,8 +16,14 @@ import com.jehutyno.yomikata.util.Categories
 import com.jehutyno.yomikata.util.Prefs
 import com.jehutyno.yomikata.util.QuizStrategy
 import com.jehutyno.yomikata.util.QuizType
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
 import mu.KLogging
 import java.util.*
+
 
 /**
  * Created by valentin on 29/09/2016.
@@ -22,7 +32,8 @@ class QuizzesPresenter(
     private val context: Context,
     private val quizRepository: QuizRepository,
     private val statsRepository: StatsRepository,
-    private val quizzesView: QuizzesContract.View) : QuizzesContract.Presenter {
+    private val quizzesView: QuizzesContract.View,
+    category: Int) : QuizzesContract.Presenter {
 
     companion object : KLogging()
 
@@ -32,57 +43,67 @@ class QuizzesPresenter(
 
     private lateinit var selectedTypes: ArrayList<Int>
 
+    // define LiveData
+    // from Room
+    override val quizList : LiveData<List<Quiz>> =
+        quizRepository.getQuiz(category).asLiveData().distinctUntilChanged()
+
+    @ExperimentalCoroutinesApi
+    private fun getLiveData(level: Int?): LiveData<Int> {
+        val function : (List<Quiz>) -> Flow<Int> =
+            if (level == null)
+                { quizzes -> quizRepository.countWordsForQuizzes(
+                    quizzes.map {it.id}.toLongArray()
+                ) }
+            else
+                { quizzes -> quizRepository.countWordsForLevel(
+                    quizzes.map {it.id}.toLongArray(),
+                    level
+                ) }
+
+        return quizList.asFlow().flatMapLatest { quizzes ->
+            function(quizzes)
+        }.asLiveData().distinctUntilChanged()
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    override val quizCount: LiveData<Int> = getLiveData(null)
+    @OptIn(ExperimentalCoroutinesApi::class)
+    override val lowCount: LiveData<Int> = getLiveData(0)
+    @OptIn(ExperimentalCoroutinesApi::class)
+    override val mediumCount: LiveData<Int> = getLiveData(1)
+    @OptIn(ExperimentalCoroutinesApi::class)
+    override val highCount: LiveData<Int> = getLiveData(2)
+    @OptIn(ExperimentalCoroutinesApi::class)
+    override val masterCount: LiveData<Int> = getLiveData(3).asFlow().combine(
+        getLiveData(4).asFlow()
+    ) { value3, value4 ->
+        value3 + value4
+    }.asLiveData().distinctUntilChanged()
+
+
     override fun start() {
         Log.i("YomikataZK", "Home Presenter start")
     }
 
-    override fun loadQuizzes(category: Int) {
-        quizRepository.getQuiz(category, object : QuizRepository.LoadQuizCallback {
-            override fun onQuizLoaded(quizzes: List<Quiz>) {
-                quizzesView.displayQuizzes(quizzes)
-            }
-
-            override fun onDataNotAvailable() {
-                quizzesView.displayNoData()
-            }
-
-        })
-    }
-
-    override fun createQuiz(quizName: String) {
+    override suspend fun createQuiz(quizName: String) {
         quizRepository.saveQuiz(quizName, Categories.CATEGORY_SELECTIONS)
     }
 
-    override fun updateQuizName(quizId: Long, quizName: String) {
+    override suspend fun updateQuizName(quizId: Long, quizName: String) {
         quizRepository.updateQuizName(quizId, quizName)
     }
 
-    override fun updateQuizCheck(id: Long, checked: Boolean) {
+    override suspend fun updateQuizCheck(id: Long, checked: Boolean) {
         quizRepository.updateQuizSelected(id, checked)
     }
 
-    override fun deleteQuiz(quizId: Long) {
+    override suspend fun deleteQuiz(quizId: Long) {
         quizRepository.deleteQuiz(quizId)
     }
 
-    override fun countQuiz(ids: LongArray): Int {
-        return quizRepository.countWordsForQuizzes(ids)
-    }
-
-    override fun countLow(ids: LongArray): Int {
-        return quizRepository.countWordsForLevel(ids, 0)
-    }
-
-    override fun countMedium(ids: LongArray): Int {
-        return quizRepository.countWordsForLevel(ids, 1)
-    }
-
-    override fun countHigh(ids: LongArray): Int {
-        return quizRepository.countWordsForLevel(ids, 2)
-    }
-
-    override fun countMaster(ids: LongArray): Int {
-        return quizRepository.countWordsForLevel(ids, 3) + quizRepository.countWordsForLevel(ids, 4)
+    override suspend fun countQuiz(ids: LongArray): Int {
+        return quizRepository.countWordsForQuizzes(ids).first()
     }
 
     override fun initQuizTypes() {
@@ -195,7 +216,7 @@ class QuizzesPresenter(
         pref.edit().putString(key, str.toString()).apply()
     }
 
-    override fun launchQuizClick(strategy: QuizStrategy, title: String, category: Int) {
+    override suspend fun launchQuizClick(strategy: QuizStrategy, title: String, category: Int) {
         statsRepository.addStatEntry(StatAction.LAUNCH_QUIZ_FROM_CATEGORY, category.toLong(), Calendar.getInstance().timeInMillis, StatResult.OTHER)
         val pref = PreferenceManager.getDefaultSharedPreferences(context)
         val cat1 = pref.getInt(Prefs.LATEST_CATEGORY_1.pref, -1)

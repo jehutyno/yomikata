@@ -9,9 +9,6 @@ import android.media.AudioManager
 import android.os.Bundle
 import android.os.Parcelable
 import android.speech.tts.TextToSpeech
-import androidx.fragment.app.Fragment
-import androidx.core.content.ContextCompat
-import androidx.viewpager.widget.ViewPager
 import android.text.Editable
 import android.text.InputType
 import android.text.TextWatcher
@@ -22,7 +19,11 @@ import android.view.View.VISIBLE
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.*
+import androidx.core.content.ContextCompat
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
+import androidx.viewpager.widget.ViewPager
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.databinding.FragmentQuizBinding
 import com.jehutyno.yomikata.furigana.FuriganaView
@@ -32,6 +33,8 @@ import com.jehutyno.yomikata.screens.answers.AnswersActivity
 import com.jehutyno.yomikata.screens.content.word.WordDetailDialogFragment
 import com.jehutyno.yomikata.util.*
 import com.jehutyno.yomikata.view.SwipeDirection
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.kodein.di.*
 import splitties.alertdialog.appcompat.*
 
@@ -51,7 +54,6 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
 
     private lateinit var presenter: QuizContract.Presenter
     private var adapter: QuizItemPagerAdapter? = null
-    private lateinit var selections: List<Quiz>
     private var tts: TextToSpeech? = null
     private var ttsSupported = SPEECH_NOT_INITALIZED
     private var currentEditColor: Int = R.color.lighter_gray
@@ -69,9 +71,9 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
 
 
     override fun onInit(status: Int) {
+        ttsSupported = onTTSinit(activity, status, tts)
+        presenter.setTTSSupported(ttsSupported)
         if (adapter != null && adapter!!.words.isNotEmpty()) {
-            ttsSupported = onTTSinit(activity, status, tts)
-            presenter.setTTSSupported(ttsSupported)
             val pref = PreferenceManager.getDefaultSharedPreferences(requireContext())
             val noPlayStart = pref.getBoolean("play_start", false)
             if (adapter!!.words[binding.pager.currentItem].second == QuizType.TYPE_AUDIO || noPlayStart) {
@@ -110,7 +112,6 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
         else
             InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
         presenter.start()
-        presenter.loadSelections()
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -136,8 +137,11 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
             savedInstanceState.getString("edit")?.let { editBinding.hiraganaEdit.setSelection(it.length) }
             editBinding.hiraganaEdit.setTextColor(ContextCompat.getColor(requireActivity(), currentEditColor))
             presenter.onRestoreInstanceState(savedInstanceState)
-        } else
-            presenter.initQuiz()
+        } else {
+            lifecycleScope.launch {
+                presenter.initQuiz()
+            }
+        }
     }
 
     override fun onDestroy() {
@@ -238,7 +242,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
     }
 
     private fun initEditText() {
-        editBinding.hiraganaEdit.setOnEditorActionListener { _, i, keyEvent ->
+        editBinding.hiraganaEdit.setOnEditorActionListener { _, i, keyEvent -> runBlocking {
             if (isSettingsOpen) closeTTSSettings()
             if (adapter!!.words[binding.pager.currentItem].second == QuizType.TYPE_PRONUNCIATION
                 && (i == EditorInfo.IME_ACTION_DONE || keyEvent?.keyCode == KeyEvent.KEYCODE_ENTER) && !holdOn) {
@@ -248,7 +252,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
                 presenter.onAnswerGiven(editBinding.hiraganaEdit.text.toString().trim().replace(" ", "").replace("　", "").replace("\n", "")) // TODO add function clean utils
             }
             true
-        }
+        }}
 
         editBinding.hiraganaEdit.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(s: Editable?) {
@@ -338,70 +342,29 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
         binding.quizAnswerType.visibility = GONE
         binding.tapToReveal.setOnClickListener { it.visibility = GONE }
         binding.tapToReveal.visibility = GONE
-        qcmBinding.option1Container.setOnClickListener {
-            if (isSettingsOpen) closeTTSSettings()
-            if (!holdOn) {
-                holdOn = true
-                presenter.onOption1Click()
 
+        // produces the function for the OnClickListener of a button with a number = 1,2,3,4
+        fun clickerFactory(num: Int) : (View) -> Unit {
+            return {
+                if (isSettingsOpen) closeTTSSettings()
+                if (!holdOn) {
+                    holdOn = true
+                    runBlocking {
+                        presenter.onOptionClick(num)
+                    }
+                }
             }
         }
-        qcmBinding.option2Container.setOnClickListener {
-            if (isSettingsOpen) closeTTSSettings()
-            if (!holdOn) {
-                holdOn = true
-                presenter.onOption2Click()
+        qcmBinding.option1Container.setOnClickListener(clickerFactory(1))
+        qcmBinding.option2Container.setOnClickListener(clickerFactory(2))
+        qcmBinding.option3Container.setOnClickListener(clickerFactory(3))
+        qcmBinding.option4Container.setOnClickListener(clickerFactory(4))
 
-            }
-        }
-        qcmBinding.option3Container.setOnClickListener {
-            if (isSettingsOpen) closeTTSSettings()
-            if (!holdOn) {
-                holdOn = true
-                presenter.onOption3Click()
+        qcmBinding.option1Tv.setOnClickListener(clickerFactory(1))
+        qcmBinding.option2Tv.setOnClickListener(clickerFactory(2))
+        qcmBinding.option3Tv.setOnClickListener(clickerFactory(3))
+        qcmBinding.option4Tv.setOnClickListener(clickerFactory(4))
 
-            }
-        }
-        qcmBinding.option4Container.setOnClickListener {
-            if (isSettingsOpen) closeTTSSettings()
-            if (!holdOn) {
-                holdOn = true
-                presenter.onOption4Click()
-
-            }
-        }
-        qcmBinding.option1Tv.setOnClickListener {
-            if (isSettingsOpen) closeTTSSettings()
-            if (!holdOn) {
-                holdOn = true
-                presenter.onOption1Click()
-
-            }
-        }
-        qcmBinding.option2Tv.setOnClickListener {
-            if (isSettingsOpen) closeTTSSettings()
-            if (!holdOn) {
-                holdOn = true
-                presenter.onOption2Click()
-
-            }
-        }
-        qcmBinding.option3Tv.setOnClickListener {
-            if (isSettingsOpen) closeTTSSettings()
-            if (!holdOn) {
-                holdOn = true
-                presenter.onOption3Click()
-
-            }
-        }
-        qcmBinding.option4Tv.setOnClickListener {
-            if (isSettingsOpen) closeTTSSettings()
-            if (!holdOn) {
-                holdOn = true
-                presenter.onOption4Click()
-
-            }
-        }
         qcmBinding.option1Tv.movementMethod = ScrollingMovementMethod()
         qcmBinding.option2Tv.movementMethod = ScrollingMovementMethod()
         qcmBinding.option3Tv.movementMethod = ScrollingMovementMethod()
@@ -478,7 +441,9 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
                     override fun onAnimationEnd(animation: Animator) {
                         binding.check.visibility = GONE
                         if (result) {
-                            presenter.onNextWord()
+                            runBlocking {
+                                presenter.onNextWord()
+                            }
                         } else {
                             holdOn = false
                             displayEditDisplayAnswerButton()
@@ -560,40 +525,38 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
         qcmBinding.option4Furi.visibility = VISIBLE
     }
 
-    override fun displayQCMTv1(option: String, color: Int) {
-        qcmBinding.option1Tv.text = option
-        qcmBinding.option1Tv.setTextColor(ContextCompat.getColor(requireContext(), color))
+    override fun displayQCMTv(tvNum: Int, option: String, color: Int) {
+        when (tvNum) {
+            1 -> {
+                qcmBinding.option1Tv.text = option
+                qcmBinding.option1Tv.setTextColor(ContextCompat.getColor(requireContext(), color))
+            }
+            2 -> {
+                qcmBinding.option2Tv.text = option
+                qcmBinding.option2Tv.setTextColor(ContextCompat.getColor(requireContext(), color))
+            }
+            3 -> {
+                qcmBinding.option3Tv.text = option
+                qcmBinding.option3Tv.setTextColor(ContextCompat.getColor(requireContext(), color))
+            }
+            4 -> {
+                qcmBinding.option4Tv.text = option
+                qcmBinding.option4Tv.setTextColor(ContextCompat.getColor(requireContext(), color))
+            }
+            else -> {
+                throw Error("Invalid tvNum: $tvNum")
+            }
+        }
     }
 
-    override fun displayQCMTv2(option: String, color: Int) {
-        qcmBinding.option2Tv.text = option
-        qcmBinding.option2Tv.setTextColor(ContextCompat.getColor(requireContext(), color))
-    }
-
-    override fun displayQCMTv3(option: String, color: Int) {
-        qcmBinding.option3Tv.text = option
-        qcmBinding.option3Tv.setTextColor(ContextCompat.getColor(requireContext(), color))
-    }
-
-    override fun displayQCMTv4(option: String, color: Int) {
-        qcmBinding.option4Tv.text = option
-        qcmBinding.option4Tv.setTextColor(ContextCompat.getColor(requireContext(), color))
-    }
-
-    override fun displayQCMFuri1(optionFuri: String, start: Int, end: Int, color: Int) {
-        qcmBinding.option1Furi.text_set(optionFuri, start, end, color)
-    }
-
-    override fun displayQCMFuri2(optionFuri: String, start: Int, end: Int, color: Int) {
-        qcmBinding.option2Furi.text_set(optionFuri, start, end, color)
-    }
-
-    override fun displayQCMFuri3(optionFuri: String, start: Int, end: Int, color: Int) {
-        qcmBinding.option3Furi.text_set(optionFuri, start, end, color)
-    }
-
-    override fun displayQCMFuri4(optionFuri: String, start: Int, end: Int, color: Int) {
-        qcmBinding.option4Furi.text_set(optionFuri, start, end, color)
+    override fun displayQCMFuri(furiNum: Int, optionFuri: String, start: Int, end: Int, color: Int) {
+        when (furiNum) {
+            1 -> qcmBinding.option1Furi.text_set(optionFuri, start, end, color)
+            2 -> qcmBinding.option2Furi.text_set(optionFuri, start, end, color)
+            3 -> qcmBinding.option3Furi.text_set(optionFuri, start, end, color)
+            4 -> qcmBinding.option4Furi.text_set(optionFuri, start, end, color)
+            else -> throw Error("Invalid furiNum: $furiNum")
+        }
     }
 
     fun setOptionsFontSize(fontSize: Float) {
@@ -672,7 +635,11 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
 
         requireContext().alertDialog {
             message = getString(R.string.alert_session_finished, sessionLength)
-            neutralButton(R.string.alert_continue) { presenter.onLaunchNextProgressiveSession() }
+            neutralButton(R.string.alert_continue) {
+                runBlocking {
+                    presenter.onLaunchNextProgressiveSession()
+                }
+            }
             positiveButton(R.string.alert_quit) { finishQuiz() }
             setCancelable(false)    // avoid accidental click out of session
         }.show()
@@ -685,12 +652,16 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
             if (!quizEnded) {
                 messageResource = R.string.alert_error_review_session_message
                 positiveButton(R.string.alert_continue_quiz) {
-                    presenter.onContinueQuizAfterErrorSession()
+                    runBlocking {
+                        presenter.onContinueQuizAfterErrorSession()
+                    }
                 }
             } else {
                 messageResource = R.string.alert_error_review_quiz_message
                 positiveButton(R.string.alert_restart) {
-                    presenter.onRestartQuiz()
+                    runBlocking {
+                        presenter.onRestartQuiz()
+                    }
                 }
             }
             neutralButton(R.string.alert_quit) {
@@ -706,12 +677,16 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
         requireContext().alertDialog {
             message = getString(R.string.alert_session_finished, pref.getString("length", "-1")?.toInt())
             positiveButton(R.string.alert_continue) {
-                presenter.onContinueAfterNonProgressiveSessionEnd()
+                runBlocking {
+                    presenter.onContinueAfterNonProgressiveSessionEnd()
+                }
             }
             if (proposeErrors) {
                 negativeButton(R.string.alert_review_session_errors) {
                     // TODO handle shuffle ?
-                    presenter.onLaunchErrorSession()
+                    runBlocking {
+                        presenter.onLaunchErrorSession()
+                    }
                 }
             }
             neutralButton(R.string.alert_quit) {
@@ -725,11 +700,15 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
         requireContext().alertDialog {
             messageResource = R.string.alert_quiz_finished
             neutralButton(R.string.alert_restart) {
-                presenter.onRestartQuiz()
+                runBlocking {
+                    presenter.onRestartQuiz()
+                }
             }
             if (proposeErrors) {
                 negativeButton(R.string.alert_review_quiz_errors) {
-                    presenter.onLaunchErrorSession()
+                    runBlocking {
+                        presenter.onLaunchErrorSession()
+                    }
                 }
             }
             positiveButton(R.string.alert_quit) {
@@ -740,18 +719,6 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
     }
 
     // TODO move to presenter ?
-    /**
-     * Selections
-     */
-
-    override fun selectionLoaded(quizzes: List<Quiz>) {
-        selections = quizzes
-    }
-
-    override fun noSelections() {
-        selections = emptyList()
-    }
-
     /**
      * Actions
      */
@@ -820,7 +787,8 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
         presenter.onSpeakWordTTS()
     }
 
-    override fun onSelectionClick(view: View, position: Int) {
+    override fun onSelectionClick(view: View, position: Int) = runBlocking {
+        val selections = presenter.getSelections()
         val popup = PopupMenu(activity, view)
         val word = adapter!!.words[position].first
         popup.menuInflater.inflate(R.menu.popup_selections, popup.menu)
@@ -828,7 +796,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
             popup.menu.add(1, i, i, selection.getName()).isChecked = presenter.isWordInQuiz(word.id, selection.id)
             popup.menu.setGroupCheckable(1, true, false)
         }
-        popup.setOnMenuItemClickListener {
+        popup.setOnMenuItemClickListener { it -> runBlocking {
             when (it.itemId) {
                 R.id.add_selection -> addSelection(word.id)
                 else -> {
@@ -841,7 +809,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
                 }
             }
             true
-        }
+        }}
         popup.show()
     }
 
@@ -853,7 +821,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
         reportError(requireActivity(), word, sentence)
     }
 
-    override fun onFuriClick(position: Int, isSelected: Boolean) {
+    override fun onFuriClick(position: Int, isSelected: Boolean) = lifecycleScope.launch {
         presenter.setIsFuriDisplayed(isSelected)
     }
 
@@ -881,9 +849,10 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
             titleResource = R.string.new_selection
             setView(container)
             okButton {
-                val selectionId = presenter.createSelection(input.text.toString())
-                presenter.addWordToSelection(wordId, selectionId)
-                presenter.loadSelections()
+                lifecycleScope.launch {
+                    val selectionId = presenter.createSelection(input.text.toString())
+                    presenter.addWordToSelection(wordId, selectionId)
+                }
             }
             cancelButton()
         }.show()

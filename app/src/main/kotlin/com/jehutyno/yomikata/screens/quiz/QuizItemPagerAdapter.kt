@@ -18,6 +18,7 @@ import com.jehutyno.yomikata.model.Sentence
 import com.jehutyno.yomikata.model.Word
 import com.jehutyno.yomikata.model.getWordColor
 import com.jehutyno.yomikata.util.*
+import kotlinx.coroutines.Job
 import java.util.*
 
 /**
@@ -205,7 +206,7 @@ class QuizItemPagerAdapter(var context: Context, var callback: Callback) : Pager
         fun onSelectionClick(view: View, position: Int)
         fun onReportClick(position: Int)
         fun onSentenceTTSClick(position: Int)
-        fun onFuriClick(position: Int, isSelected: Boolean)
+        fun onFuriClick(position: Int, isSelected: Boolean): Job
         fun onTradClick(position: Int)
     }
 

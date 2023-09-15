@@ -1,16 +1,24 @@
 package com.jehutyno.yomikata.screens.content
 
-import android.content.DialogInterface
 import android.os.Bundle
-import androidx.fragment.app.Fragment
-import androidx.recyclerview.widget.GridLayoutManager
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.appcompat.widget.PopupMenu
-import android.view.*
+import android.view.ActionMode
+import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.MenuItem
+import android.view.View
 import android.view.View.GONE
 import android.view.View.VISIBLE
+import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.FrameLayout
+import androidx.appcompat.widget.PopupMenu
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.Observer
+import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.databinding.FragmentContentGraphBinding
 import com.jehutyno.yomikata.model.Quiz
@@ -19,15 +27,23 @@ import com.jehutyno.yomikata.screens.content.word.WordDetailDialogFragment
 import com.jehutyno.yomikata.util.DimensionHelper
 import com.jehutyno.yomikata.util.Extras
 import com.jehutyno.yomikata.util.SeekBarsManager
-import org.kodein.di.*
-import splitties.alertdialog.appcompat.*
-import java.util.*
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
+import org.kodein.di.DI
+import org.kodein.di.direct
+import org.kodein.di.instance
+import splitties.alertdialog.appcompat.alertDialog
+import splitties.alertdialog.appcompat.cancelButton
+import splitties.alertdialog.appcompat.okButton
+import splitties.alertdialog.appcompat.titleResource
 
 
 /**
  * Created by valentin on 30/09/2016.
  */
-class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, WordsAdapter.Callback, DialogInterface.OnDismissListener {
+class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, WordsAdapter.Callback {
 
     private var mpresenter: ContentContract.Presenter? = null
     private lateinit var adapter: WordsAdapter
@@ -36,6 +52,7 @@ class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, Wo
     private var level = -1
     private var lastPosition = -1
     private lateinit var selections: List<Quiz>
+    private var dialog: WordDetailDialogFragment? = null
 
     // seekBars
     private lateinit var seekBars : SeekBarsManager
@@ -71,11 +88,19 @@ class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, Wo
         setHasOptionsMenu(true)
     }
 
+
+    private val wordsObserver = Observer<List<Word>> {
+        words -> displayWords(words)
+    }
+    private val selectionsObserver = Observer<List<Quiz>> {
+        selections -> selectionLoaded(selections)
+    }
+
     override fun onStart() {
         super.onStart()
         mpresenter?.start()
-        mpresenter?.loadWords(quizIds, level)
-        mpresenter?.loadSelections()
+        mpresenter?.words?.observe(viewLifecycleOwner, wordsObserver)
+        mpresenter?.selections?.observe(viewLifecycleOwner, selectionsObserver)
 
         displayStats()
     }
@@ -87,11 +112,8 @@ class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, Wo
             else (binding.recyclerviewContent.layoutManager as GridLayoutManager).findFirstVisibleItemPosition()
         lastPosition = -1
         mpresenter?.start()
-        mpresenter?.loadWords(quizIds, level)
         binding.recyclerviewContent.scrollToPosition(position)
-        mpresenter?.loadSelections()
 
-        displayStats()
         seekBars.animateAll()
     }
 
@@ -99,31 +121,22 @@ class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, Wo
         super.onPause()
 
         // cancel animation in case it is currently running
-        seekBars.cancelAll()
-
         // set all to zero to prepare for the next animation when the page resumes again
-        binding.seekLow.progress = 0
-        binding.seekMedium.progress = 0
-        binding.seekHigh.progress = 0
-        binding.seekMaster.progress = 0
+        seekBars.resetAll()
     }
 
     override fun displayStats() {
-        seekBars.count = mpresenter!!.countQuiz(quizIds)
-        seekBars.low = mpresenter!!.countLow(quizIds)
-        seekBars.medium = mpresenter!!.countMedium(quizIds)
-        seekBars.high = mpresenter!!.countHigh(quizIds)
-        seekBars.master = mpresenter!!.countMaster(quizIds)
-        if (level > -1) {
+        if (level > -1) {   // no need to update visibilities using LiveData, since it is only set once per fragment
             binding.seekLowContainer.visibility = if (level == 0) VISIBLE else GONE
             binding.seekMediumContainer.visibility = if (level == 1) VISIBLE else GONE
             binding.seekHighContainer.visibility = if (level == 2) VISIBLE else GONE
             binding.seekMasterContainer.visibility = if (level == 3) VISIBLE else GONE
         }
-        binding.textLow.text = seekBars.low.toString()
-        binding.textMedium.text = seekBars.medium.toString()
-        binding.textHigh.text = seekBars.high.toString()
-        binding.textMaster.text = seekBars.master.toString()
+        seekBars.setTextViews(binding.textLow, binding.textMedium, binding.textHigh, binding.textMaster)
+        mpresenter!!.let {
+            seekBars.setObservers(it.quizCount,
+                it.lowCount, it.mediumCount, it.highCount, it.masterCount, viewLifecycleOwner)
+        }
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -135,7 +148,8 @@ class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, Wo
         super.onViewCreated(view, savedInstanceState)
 
         if (mpresenter == null) {
-            mpresenter = ContentPresenter(di.direct.instance(), di.direct.instance(), this@ContentFragment)
+            mpresenter = ContentPresenter(di.direct.instance(), di.direct.instance(),
+                this@ContentFragment, quizIds, level)
         }
 
         binding.recyclerviewContent.let {
@@ -160,23 +174,31 @@ class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, Wo
         bundle.putInt(Extras.EXTRA_WORD_POSITION, position)
         bundle.putString(Extras.EXTRA_SEARCH_STRING, "")
 
-        val dialog = WordDetailDialogFragment(di)
-        dialog.arguments = bundle
-        dialog.show(childFragmentManager, "")
-        dialog.isCancelable = true
+        // unbind observer to prevent word from disappearing while viewing in detail dialog
+        mpresenter?.words?.removeObserver(wordsObserver)
+        mpresenter?.selections?.removeObserver(selectionsObserver)
+
+        dialog = WordDetailDialogFragment(di)
+        dialog!!.arguments = bundle
+        dialog!!.show(childFragmentManager, "")
+        dialog!!.isCancelable = true
+
+        dialog!!.lifecycle.addObserver(object: DefaultLifecycleObserver {
+            override fun onDestroy(owner: LifecycleOwner) {
+                super.onDestroy(owner)
+                // continue observing
+                mpresenter?.words?.observe(viewLifecycleOwner, wordsObserver)
+                mpresenter?.selections?.observe(viewLifecycleOwner, selectionsObserver)
+            }
+        })
     }
 
     override fun onCategoryIconClick(position: Int) {
         requireActivity().startActionMode(actionModeCallback)
     }
 
-    override fun onCheckChange(position: Int, check: Boolean) {
+    override fun onCheckChange(position: Int, check: Boolean) = runBlocking {
         mpresenter!!.updateWordCheck(adapter.items[position].id, check)
-    }
-
-    override fun onDismiss(dialog: DialogInterface?) {
-        mpresenter!!.loadWords(quizIds, level)
-        displayStats()
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
@@ -214,7 +236,7 @@ class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, Wo
                     for ((i, selection) in selections.withIndex()) {
                         popup.menu.add(1, i, i, selection.getName()).isChecked = false
                     }
-                    popup.setOnMenuItemClickListener { it ->
+                    popup.setOnMenuItemClickListener {it -> runBlocking {
                         val selectedWords: ArrayList<Word> = arrayListOf()
                         adapter.items.forEach { item -> if (item.isSelected == 1) selectedWords.add(item) }
                         val selectionItemId = it.itemId
@@ -229,7 +251,7 @@ class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, Wo
                             }
                         }
                         true
-                    }
+                    }}
                     popup.show()
                 }
                 REMOVE_FROM_SELECTIONS -> {
@@ -237,7 +259,7 @@ class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, Wo
                     for ((i, selection) in selections.withIndex()) {
                         popup.menu.add(1, i, i, selection.getName()).isChecked = false
                     }
-                    popup.setOnMenuItemClickListener {it ->
+                    popup.setOnMenuItemClickListener {it -> runBlocking {
                         val selectedWords: ArrayList<Word> = arrayListOf()
                         adapter.items.forEach { item -> if (item.isSelected == 1) selectedWords.add(item) }
                         val selectionItemId = it.itemId
@@ -251,16 +273,26 @@ class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, Wo
                             }
                         }
                         true
-                    }
+                    }}
                     popup.show()
 
                 }
                 SELECT_ALL -> {
-                    adapter.items.forEach { it.isSelected = 1 }
+                    runBlocking {
+                        mpresenter!!.updateWordsCheck(adapter.items.map{it.id}.toLongArray(), true)
+                    }
+                    adapter.items.forEach {
+                        it.isSelected = 1
+                    }
                     adapter.notifyItemRangeChanged(0, adapter.items.size)
                 }
                 UNSELECT_ALL -> {
-                    adapter.items.forEach { it.isSelected = 0 }
+                    runBlocking {
+                        mpresenter!!.updateWordsCheck(adapter.items.map{it.id}.toLongArray(), false)
+                    }
+                    adapter.items.forEach {
+                        it.isSelected = 0
+                    }
                     adapter.notifyItemRangeChanged(0, adapter.items.size)
                 }
             }
@@ -284,11 +316,16 @@ class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, Wo
                 setView(container)
 
                 okButton {
-                    val selectionId = mpresenter!!.createSelection(input.text.toString())
-                    selectedWords.forEach {
-                        mpresenter!!.addWordToSelection(it.id, selectionId)
+                    MainScope().launch {// don't use lifecycle since creation might
+                        // take a while, and we don't want the quiz selection to stop even if the activity stops
+                        // use time out to prevent unexpected problems
+                        withTimeout(2000L) {
+                            val selectionId = mpresenter!!.createSelection(input.text.toString())
+                            selectedWords.forEach {
+                                mpresenter!!.addWordToSelection(it.id, selectionId)
+                            }
+                        }
                     }
-                    mpresenter!!.loadSelections()
                 }
                 cancelButton { }
             }.show()
@@ -317,9 +354,6 @@ class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, Wo
         selections = quizzes
     }
 
-    override fun noSelections() {
-        selections = emptyList()
-    }
 
     override fun onDestroyView() {
         super.onDestroyView()

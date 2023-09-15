@@ -2,10 +2,11 @@ package com.jehutyno.yomikata.screens.answers
 
 import android.content.pm.ActivityInfo
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.app.AppCompatDelegate 
-import androidx.appcompat.widget.Toolbar
 import android.view.MenuItem
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.appcompat.widget.Toolbar
+import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.util.Prefs
@@ -27,7 +28,9 @@ class AnswersActivity : AppCompatActivity(), DIAware {
     private val subDI by DI.lazy {
         extend(di)
         import(answersPresenterModule(answersFragment))
-        bind<AnswersContract.Presenter>() with provider { AnswersPresenter(instance(), instance(), instance(), instance()) }
+        bind<AnswersContract.Presenter>() with provider {
+            AnswersPresenter(instance(), instance(), instance(), instance(), lifecycleScope)
+        }
     }
     private val trigger = DITrigger()
     @Suppress("UNUSED")

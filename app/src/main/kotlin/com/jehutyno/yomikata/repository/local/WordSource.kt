@@ -2,11 +2,12 @@ package com.jehutyno.yomikata.repository.local
 
 import androidx.sqlite.db.SimpleSQLiteQuery
 import com.jehutyno.yomikata.dao.WordDao
-import com.jehutyno.yomikata.model.QuizWord
 import com.jehutyno.yomikata.model.Word
 import com.jehutyno.yomikata.repository.WordRepository
 import com.jehutyno.yomikata.util.HiraganaUtils
 import com.jehutyno.yomikata.util.QuizType
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 
 
 /**
@@ -14,37 +15,40 @@ import com.jehutyno.yomikata.util.QuizType
  */
 class WordSource(private val wordDao: WordDao) : WordRepository {
 
-    override fun getAllWords(): List<Word> {
+    override suspend fun getAllWords(): List<Word> {
         return wordDao.getAllWords().map { it.toWord() }
     }
 
-    private fun wordsCallback(
-        roomWordsList: List<RoomWords>,
-        callback: WordRepository.LoadWordsCallback
-    ) {
-        if (roomWordsList.isNotEmpty()) {
-            val wordsList = roomWordsList.map { it.toWord() }
-            callback.onWordsLoaded(wordsList)
-        } else {
-            callback.onDataNotAvailable()
+    override fun getWords(quizId: Long) : Flow<List<Word>> {
+        val roomWordsList = wordDao.getWords(quizId)
+        return roomWordsList.map { list ->
+            list.map {
+                it.toWord()
+            }
         }
     }
 
-    override fun getWords(quizId: Long, callback: WordRepository.LoadWordsCallback) {
-        val roomWordsList = wordDao.getWords(quizId)
-        wordsCallback(roomWordsList, callback)
-    }
-
-    override fun getWords(quizIds: LongArray, callback: WordRepository.LoadWordsCallback) {
+    override fun getWords(quizIds: LongArray) : Flow<List<Word>> {
         val roomWordsList = wordDao.getWords(quizIds)
-        wordsCallback(roomWordsList, callback)
+        return roomWordsList.map { list ->
+            list.map {
+                it.toWord()
+            }
+        }
     }
 
-    override fun getWordsByLevel(
-        quizIds: LongArray,
-        level: Int,
-        callback: WordRepository.LoadWordsCallback
-    ) {
+    /**
+     * Get words by level
+     *
+     * @param quizIds Ids of the quiz of the returned words
+     * @param level The level of the word. If level = -1, words of any level are returned
+     * @return Flow of List of Words with the specified level in a quiz of the given quizIds
+     */
+    override fun getWordsByLevel(quizIds: LongArray, level: Int) : Flow<List<Word>> {
+        if (level == -1) {
+            return getWords(quizIds)
+        }
+
         val levelsArray =
             if (level == 3)
                 intArrayOf(level, level + 1)
@@ -52,10 +56,14 @@ class WordSource(private val wordDao: WordDao) : WordRepository {
                 intArrayOf(level)
 
         val roomWordsList = wordDao.getWordsByLevels(quizIds, levelsArray)
-        wordsCallback(roomWordsList, callback)
+        return roomWordsList.map { list ->
+            list.map {
+                it.toWord()
+            }
+        }
     }
 
-    override fun getWordsByRepetition(
+    override suspend fun getWordsByRepetition(
         quizIds: LongArray,
         repetition: Int,
         limit: Int
@@ -64,7 +72,7 @@ class WordSource(private val wordDao: WordDao) : WordRepository {
             .map { it.toWord() } as ArrayList<Word>
     }
 
-    override fun getRandomWords(
+    override suspend fun getRandomWords(
         wordId: Long,
         answer: String,
         wordSize: Int,
@@ -109,17 +117,21 @@ class WordSource(private val wordDao: WordDao) : WordRepository {
         return roomWordsList.map { it.toWord() } as ArrayList<Word>
     }
 
-    override fun searchWords(searchString: String, callback: WordRepository.LoadWordsCallback) {
+    override fun searchWords(searchString: String) : Flow<List<Word>> {
         val hiragana = HiraganaUtils.toHiragana(searchString)
         val roomWordsList = wordDao.searchWords(searchString, hiragana)
-        wordsCallback(roomWordsList, callback)
+        return roomWordsList.map { list ->
+            list.map {
+                it.toWord()
+            }
+        }
     }
 
-    override fun isWordInQuiz(wordId: Long, quizId: Long): Boolean {
+    override suspend fun isWordInQuiz(wordId: Long, quizId: Long): Boolean {
         return wordDao.isWordInQuiz(wordId, quizId)
     }
 
-    override fun isWordInQuizzes(wordId: Long, quizIds: Array<Long>): ArrayList<Boolean> {
+    override suspend fun isWordInQuizzes(wordId: Long, quizIds: Array<Long>): ArrayList<Boolean> {
         val isInQuizArrayList: ArrayList<Boolean> = arrayListOf()
         for (quizId in quizIds)
             isInQuizArrayList.add(isWordInQuiz(wordId, quizId))
@@ -127,38 +139,38 @@ class WordSource(private val wordDao: WordDao) : WordRepository {
         return isInQuizArrayList
     }
 
-    override fun getWordById(wordId: Long): Word {
+    override suspend fun getWordById(wordId: Long): Word {
         return wordDao.getWordById(wordId)!!.toWord()
     }
 
-    override fun deleteAllWords() {
+    override suspend fun deleteAllWords() {
         wordDao.deleteAllWords()
     }
 
-    override fun deleteWord(wordId: Long) {
+    override suspend fun deleteWord(wordId: Long) {
         val roomWord = wordDao.getWordById(wordId)
         if (roomWord != null)
             wordDao.deleteWord(roomWord)
     }
 
-    override fun updateWordPoints(wordId: Long, points: Int) {
+    override suspend fun updateWordPoints(wordId: Long, points: Int) {
         wordDao.updateWordPoints(wordId, points)
     }
 
-    override fun updateWordLevel(wordId: Long, level: Int) {
+    override suspend fun updateWordLevel(wordId: Long, level: Int) {
         wordDao.updateWordLevel(wordId, level)
     }
 
-    override fun updateWordRepetition(wordId: Long, repetition: Int) {
+    override suspend fun updateWordRepetition(wordId: Long, repetition: Int) {
         wordDao.updateWordRepetition(wordId, repetition)
     }
 
-    override fun decreaseWordsRepetition(quizIds: LongArray) {
+    override suspend fun decreaseWordsRepetition(quizIds: LongArray) {
         val idList = wordDao.getWordIdsWithRepetitionStrictlyGreaterThan(quizIds, 0)
         wordDao.decreaseWordRepetitionByOne(idList)
     }
 
-    override fun updateWord(updateWord: Word, word: Word?) {
+    override suspend fun updateWord(updateWord: Word, word: Word?) {
         if (word != null) {
             val newWord = Word(
                 word.id,
@@ -188,7 +200,7 @@ class WordSource(private val wordDao: WordDao) : WordRepository {
         }
     }
 
-    override fun updateWordProgression(updateWord: Word, word: Word) {
+    override suspend fun updateWordProgression(updateWord: Word, word: Word) {
         val newWord = Word(
             word.id,
             word.japanese,
@@ -209,15 +221,15 @@ class WordSource(private val wordDao: WordDao) : WordRepository {
         wordDao.updateWord(RoomWords.from(newWord))
     }
 
-    override fun updateWordSelected(wordId: Long, check: Boolean) {
+    override suspend fun updateWordSelected(wordId: Long, check: Boolean) {
         wordDao.updateWordSelected(wordId, check)
     }
 
-    fun getQuizWordFromId(quizId: Long, wordId: Long): QuizWord? {
-        return wordDao.getQuizWordFromId(quizId, wordId)?.toQuizWord()
+    override suspend fun updateWordsSelected(wordIds: LongArray, check: Boolean) {
+        wordDao.updateWordsSelected(wordIds, check)
     }
 
-    fun addQuizWord(quizId: Long, wordId: Long) {
+    override suspend fun addQuizWord(quizId: Long, wordId: Long) {
         wordDao.addQuizWord(RoomQuizWord(quizId, wordId))
     }
 

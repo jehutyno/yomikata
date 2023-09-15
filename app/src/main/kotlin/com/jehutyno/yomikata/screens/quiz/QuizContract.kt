@@ -9,6 +9,7 @@ import com.jehutyno.yomikata.model.Sentence
 import com.jehutyno.yomikata.model.Word
 import com.jehutyno.yomikata.util.QuizType
 
+
 /**
  * Created by valentin on 18/10/2016.
  */
@@ -17,21 +18,13 @@ interface QuizContract {
     interface View : BaseView<Presenter> {
         fun displayWords(quizWordsPair: List<Pair<Word, QuizType>>)
         fun noWords()
-        fun selectionLoaded(quizzes: List<Quiz>)
-        fun noSelections()
         fun setHiraganaConversion(enabled: Boolean)
         fun displayQCMMode(hintText: String? = null)
         fun displayEditMode()
         fun displayQCMNormalTextViews()
         fun displayQCMFuriTextViews()
-        fun displayQCMTv1(option: String, color: Int)
-        fun displayQCMTv2(option: String, color: Int)
-        fun displayQCMTv3(option: String, color: Int)
-        fun displayQCMTv4(option: String, color: Int)
-        fun displayQCMFuri1(optionFuri: String, start: Int, end: Int, color: Int)
-        fun displayQCMFuri2(optionFuri: String, start: Int, end: Int, color: Int)
-        fun displayQCMFuri3(optionFuri: String, start: Int, end: Int, color: Int)
-        fun displayQCMFuri4(optionFuri: String, start: Int, end: Int, color: Int)
+        fun displayQCMTv(tvNum: Int, option: String, color: Int)
+        fun displayQCMFuri(furiNum: Int, optionFuri: String, start: Int, end: Int, color: Int)
         fun showKeyboard()
         fun hideKeyboard()
         fun animateColor(position: Int, word: Word, sentence: Sentence, quizType: QuizType, fromLevel: Int, toLevel: Int, fromPoints: Int, toPoints: Int)
@@ -55,44 +48,42 @@ interface QuizContract {
     }
 
     interface Presenter : BasePresenter {
-        fun createSelection(quizName: String): Long
-        fun addWordToSelection(wordId: Long, quizId: Long)
-        fun loadSelections()
-        fun isWordInQuiz(wordId: Long, quizId: Long): Boolean
-        fun isWordInQuizzes(wordId: Long, quizIds: Array<Long>): ArrayList<Boolean>
-        fun deleteWordFromSelection(wordId: Long, selectionId: Long)
-        fun updateWordLevel(wordId: Long, level: Int)
-        fun getRandomWords(wordId: Long, answer: String, wordSize: Int, limit: Int, quizType: QuizType): ArrayList<Word>
-        fun updateWordPoints(wordId: Long, points: Int)
-        fun getNextWords(): List<Pair<Word, QuizType>>
-        fun getWord(id: Long): Word?
-        fun initQuiz()
-        fun loadWords(quizIds: LongArray)
-        fun updateRepetitions(id: Long, level: Int, points: Int, result: Boolean)
-        fun decreaseAllRepetitions()
-        fun saveAnswerResultStat(word: Word, result: Boolean)
-        fun saveWordSeenStat(word: Word)
+        suspend fun getWords(): List<Word>
+        suspend fun getSelections(): List<Quiz>
+        suspend fun loadWords()
+        suspend fun createSelection(quizName: String): Long
+        suspend fun addWordToSelection(wordId: Long, quizId: Long)
+        suspend fun isWordInQuiz(wordId: Long, quizId: Long): Boolean
+        suspend fun isWordInQuizzes(wordId: Long, quizIds: Array<Long>): ArrayList<Boolean>
+        suspend fun deleteWordFromSelection(wordId: Long, selectionId: Long)
+        suspend fun updateWordLevel(wordId: Long, level: Int)
+        suspend fun getRandomWords(wordId: Long, answer: String, wordSize: Int, limit: Int, quizType: QuizType): ArrayList<Word>
+        suspend fun updateWordPoints(wordId: Long, points: Int)
+        suspend fun getNextWords(): List<Pair<Word, QuizType>>
+        suspend fun getWord(id: Long): Word?
+        suspend fun initQuiz()
+        suspend fun updateRepetitions(id: Long, level: Int, points: Int, result: Boolean)
+        suspend fun decreaseAllRepetitions()
+        suspend fun saveAnswerResultStat(word: Word, result: Boolean)
+        suspend fun saveWordSeenStat(word: Word)
         fun setTTSSupported(ttsSupported: Int)
         fun getTTSForCurrentItem(): String
-        fun setIsFuriDisplayed(isFuriDisplayed: Boolean)
-        fun onNextWord()
-        fun onAnswerGiven(answer: String)
-        fun onLaunchErrorSession()
+        suspend fun setIsFuriDisplayed(isFuriDisplayed: Boolean)
+        suspend fun onNextWord()
+        suspend fun onAnswerGiven(answer: String)
+        suspend fun onLaunchErrorSession()
         fun onFinishQuiz()
-        fun setUpNextQuiz()
-        fun onLaunchNextProgressiveSession()
-        fun onContinueQuizAfterErrorSession()
-        fun onRestartQuiz()
-        fun onContinueAfterNonProgressiveSessionEnd()
+        suspend fun setUpNextQuiz()
+        suspend fun onLaunchNextProgressiveSession()
+        suspend fun onContinueQuizAfterErrorSession()
+        suspend fun onRestartQuiz()
+        suspend fun onContinueAfterNonProgressiveSessionEnd()
         fun onEditActionClick()
         fun onSaveInstanceState(outState: Bundle)
         fun onRestoreInstanceState(savedInstanceState: Bundle)
-        fun onOption1Click()
-        fun onOption2Click()
-        fun onOption3Click()
-        fun onOption4Click()
+        suspend fun onOptionClick(choice: Int)
         fun onDisplayAnswersClick()
-        fun getRandomSentence(word: Word): Sentence
+        suspend fun getRandomSentence(word: Word): Sentence
         fun onSpeakSentence()
         fun onSpeakWordTTS()
         fun onReportClick(position: Int)

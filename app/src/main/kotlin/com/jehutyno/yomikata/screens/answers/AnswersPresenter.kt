@@ -8,7 +8,12 @@ import com.jehutyno.yomikata.repository.QuizRepository
 import com.jehutyno.yomikata.repository.SentenceRepository
 import com.jehutyno.yomikata.repository.WordRepository
 import com.jehutyno.yomikata.util.Categories
-import java.util.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
+
 
 /**
  * Created by valentin on 25/10/2016.
@@ -17,57 +22,55 @@ class AnswersPresenter(
     private val wordRepository: WordRepository,
     private val quizRepository: QuizRepository,
     private val sentenceRepository: SentenceRepository,
-    private val answersView: AnswersContract.View) : AnswersContract.Presenter {
+    answersView: AnswersContract.View, coroutineScope: CoroutineScope) : AnswersContract.Presenter {
+
+    private val job: Job
+    private lateinit var selections: StateFlow<List<Quiz>>
 
     init {
+        job = coroutineScope.launch {
+            selections = quizRepository.getQuiz(Categories.CATEGORY_SELECTIONS).stateIn(coroutineScope)
+        }
         answersView.setPresenter(this)
     }
 
     override fun start() {
     }
 
-    override fun loadSelections() {
-        quizRepository.getQuiz(Categories.CATEGORY_SELECTIONS, object: QuizRepository.LoadQuizCallback {
-            override fun onQuizLoaded(quizzes: List<Quiz>) {
-                answersView.selectionLoaded(quizzes)
-            }
-
-            override fun onDataNotAvailable() {
-                answersView.noSelections()
-            }
-
-        })
+    override suspend fun getSelections(): List<Quiz> {
+        job.join()
+        return selections.value
     }
 
-    override fun createSelection(quizName: String): Long {
+    override suspend fun createSelection(quizName: String): Long {
         return quizRepository.saveQuiz(quizName, Categories.CATEGORY_SELECTIONS)
     }
 
-    override fun addWordToSelection(wordId: Long, quizId: Long) {
+    override suspend fun addWordToSelection(wordId: Long, quizId: Long) {
         quizRepository.addWordToQuiz(wordId, quizId)
     }
 
-    override fun isWordInQuiz(wordId: Long, quizId: Long) : Boolean {
+    override suspend fun isWordInQuiz(wordId: Long, quizId: Long) : Boolean {
         return wordRepository.isWordInQuiz(wordId, quizId)
     }
 
-    override fun isWordInQuizzes(wordId: Long, quizIds: Array<Long>) : ArrayList<Boolean> {
+    override suspend fun isWordInQuizzes(wordId: Long, quizIds: Array<Long>) : ArrayList<Boolean> {
         return wordRepository.isWordInQuizzes(wordId, quizIds)
     }
 
-    override fun deleteWordFromSelection(wordId: Long, selectionId: Long) {
+    override suspend fun deleteWordFromSelection(wordId: Long, selectionId: Long) {
         quizRepository.deleteWordFromQuiz(wordId, selectionId)
     }
 
-    override fun getWordById(id: Long): Word {
+    override suspend fun getWordById(id: Long): Word {
         return wordRepository.getWordById(id)
     }
 
-    override fun getSentenceById(id: Long): Sentence {
+    override suspend fun getSentenceById(id: Long): Sentence {
         return sentenceRepository.getSentenceById(id)
     }
 
-    override fun getAnswersWordsSentences(answers: List<Answer>): List<Triple<Answer, Word, Sentence>> {
+    override suspend fun getAnswersWordsSentences(answers: List<Answer>): List<Triple<Answer, Word, Sentence>> {
         val answersWordsSentences = mutableListOf<Triple<Answer, Word, Sentence>>()
         answers.forEach {
             answersWordsSentences.add(Triple(it, getWordById(it.wordId), getSentenceById(it.sentenceId)))

@@ -1,9 +1,11 @@
 package com.jehutyno.yomikata.screens.quizzes
 
+import androidx.lifecycle.LiveData
 import com.jehutyno.yomikata.BasePresenter
 import com.jehutyno.yomikata.BaseView
 import com.jehutyno.yomikata.model.Quiz
 import com.jehutyno.yomikata.util.QuizStrategy
+
 
 /**
  * Created by valentin on 27/09/2016.
@@ -11,7 +13,6 @@ import com.jehutyno.yomikata.util.QuizStrategy
 interface QuizzesContract {
 
     interface View : BaseView<Presenter> {
-        fun onMenuItemClick(category: Int)
         fun displayQuizzes(quizzes: List<Quiz>)
         fun displayNoData()
         fun selectPronunciationQcm(isSelected: Boolean)
@@ -24,16 +25,17 @@ interface QuizzesContract {
     }
 
     interface Presenter : BasePresenter {
-        fun loadQuizzes(category: Int)
-        fun createQuiz(quizName: String)
-        fun updateQuizName(quizId: Long, quizName: String)
-        fun deleteQuiz(quizId: Long)
-        fun updateQuizCheck(id: Long, checked: Boolean)
-        fun countLow(ids: LongArray): Int
-        fun countQuiz(ids: LongArray): Int
-        fun countMedium(ids: LongArray): Int
-        fun countHigh(ids: LongArray): Int
-        fun countMaster(ids: LongArray): Int
+        val quizList : LiveData<List<Quiz>>
+        val quizCount: LiveData<Int>
+        val lowCount: LiveData<Int>
+        val mediumCount: LiveData<Int>
+        val highCount: LiveData<Int>
+        val masterCount: LiveData<Int>
+        suspend fun createQuiz(quizName: String)
+        suspend fun updateQuizName(quizId: Long, quizName: String)
+        suspend fun deleteQuiz(quizId: Long)
+        suspend fun countQuiz(ids: LongArray): Int
+        suspend fun updateQuizCheck(id: Long, checked: Boolean)
         fun initQuizTypes()
         fun pronunciationQcmSwitch()
         fun pronunciationSwitch()
@@ -41,7 +43,7 @@ interface QuizzesContract {
         fun enJapSwitch()
         fun japEnSwitch()
         fun autoSwitch()
-        fun launchQuizClick(strategy: QuizStrategy, title: String, category: Int)
+        suspend fun launchQuizClick(strategy: QuizStrategy, title: String, category: Int)
         fun getSelectedTypes(): IntArray
     }
 }

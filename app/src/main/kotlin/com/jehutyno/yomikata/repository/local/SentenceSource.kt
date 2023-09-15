@@ -10,23 +10,23 @@ import com.jehutyno.yomikata.repository.SentenceRepository
  * Created by valentinlanfranchi on 19/05/2017.
  */
 class SentenceSource(private val sentenceDao: SentenceDao) : SentenceRepository {
-    override fun addSentence(sentence: Sentence) {
+    override suspend fun addSentence(sentence: Sentence) {
         sentenceDao.addSentence(RoomSentences.from(sentence))
     }
 
-    override fun getRandomSentence(word: Word, maxLevel: Int): Sentence? {
+    override suspend fun getRandomSentence(word: Word, maxLevel: Int): Sentence? {
         return sentenceDao.getRandomSentence(word.japanese, word.reading, maxLevel)?.toSentence()
     }
 
-    override fun getSentenceById(id: Long): Sentence {
+    override suspend fun getSentenceById(id: Long): Sentence {
         return sentenceDao.getSentenceById(id)!!.toSentence()
     }
 
-    override fun getAllSentences(): List<Sentence> {
+    override suspend fun getAllSentences(): List<Sentence> {
         return sentenceDao.getAllSentences().map { it.toSentence() }
     }
 
-    override fun updateSentence(updateSentence: Sentence, sentence: Sentence?) {
+    override suspend fun updateSentence(updateSentence: Sentence, sentence: Sentence?) {
         if (sentence != null) {
             // update only jap, en, fr (NOT id, level)
             val roomUpdateSentence = RoomSentences(sentence.id, updateSentence.jap,

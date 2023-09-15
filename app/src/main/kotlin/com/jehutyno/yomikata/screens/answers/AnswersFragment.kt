@@ -3,27 +3,28 @@ package com.jehutyno.yomikata.screens.answers
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
 import android.util.Log
-import androidx.fragment.app.Fragment
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.appcompat.widget.PopupMenu
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.FrameLayout
+import androidx.appcompat.widget.PopupMenu
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.databinding.FragmentContentBinding
 import com.jehutyno.yomikata.managers.VoicesManager
 import com.jehutyno.yomikata.model.Answer
-import com.jehutyno.yomikata.model.Quiz
 import com.jehutyno.yomikata.util.*
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.kodein.di.*
 import splitties.alertdialog.appcompat.alertDialog
 import splitties.alertdialog.appcompat.cancelButton
 import splitties.alertdialog.appcompat.okButton
 import splitties.alertdialog.appcompat.titleResource
 import java.util.*
-import kotlin.collections.ArrayList
 
 
 /**
@@ -42,7 +43,6 @@ class AnswersFragment(private val di: DI) : Fragment(), AnswersContract.View, An
     private lateinit var presenter: AnswersContract.Presenter
     private lateinit var layoutManager: LinearLayoutManager
     private lateinit var adapter: AnswersAdapter
-    private lateinit var selections: List<Quiz>
 
     private var tts: TextToSpeech? = null
     private var ttsSupported: Int = TextToSpeech.LANG_NOT_SUPPORTED
@@ -72,7 +72,9 @@ class AnswersFragment(private val di: DI) : Fragment(), AnswersContract.View, An
         }
         adapter = AnswersAdapter(requireActivity(), this)
         layoutManager = LinearLayoutManager(activity)
-        adapter.replaceData(presenter.getAnswersWordsSentences(answers))
+        runBlocking {
+            adapter.replaceData(presenter.getAnswersWordsSentences(answers))
+        }
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -89,25 +91,17 @@ class AnswersFragment(private val di: DI) : Fragment(), AnswersContract.View, An
         }
     }
 
-    override fun selectionLoaded(quizzes: List<Quiz>) {
-        selections = quizzes
-    }
-
-    override fun noSelections() {
-        selections = emptyList()
-    }
-
     override fun onResume() {
         super.onResume()
         presenter.start()
-        presenter.loadSelections()
     }
 
     override fun displayAnswers() {
 
     }
 
-    override fun onSelectionClick(position: Int, view: View) {
+    override fun onSelectionClick(position: Int, view: View) = runBlocking {
+        val selections = presenter.getSelections()
         val popup = PopupMenu(requireActivity(), view)
         popup.menuInflater.inflate(R.menu.popup_selections, popup.menu)
         for ((i, selection) in selections.withIndex()) {
@@ -118,12 +112,14 @@ class AnswersFragment(private val di: DI) : Fragment(), AnswersContract.View, An
             when (it.itemId) {
                 R.id.add_selection -> addSelection(adapter.items[position].second.id)
                 else -> {
-                    if (!it.isChecked)
-                        presenter.addWordToSelection(adapter.items[position].second.id, selections[it.itemId].id)
-                    else {
-                        presenter.deleteWordFromSelection(adapter.items[position].second.id, selections[it.itemId].id)
+                    runBlocking {
+                        if (!it.isChecked)
+                            presenter.addWordToSelection(adapter.items[position].second.id, selections[it.itemId].id)
+                        else {
+                            presenter.deleteWordFromSelection(adapter.items[position].second.id, selections[it.itemId].id)
+                        }
+                        it.isChecked = !it.isChecked
                     }
-                    it.isChecked = !it.isChecked
                 }
             }
             true
@@ -145,12 +141,13 @@ class AnswersFragment(private val di: DI) : Fragment(), AnswersContract.View, An
 
         requireActivity().alertDialog {
             titleResource = R.string.new_selection
-            setView(input)
+            setView(container)
 
             okButton {
-                val selectionId = presenter.createSelection(input.text.toString())
-                presenter.addWordToSelection(wordId, selectionId)
-                presenter.loadSelections()
+                lifecycleScope.launch {
+                    val selectionId = presenter.createSelection(input.text.toString())
+                    presenter.addWordToSelection(wordId, selectionId)
+                }
             }
             cancelButton()
         }.show()

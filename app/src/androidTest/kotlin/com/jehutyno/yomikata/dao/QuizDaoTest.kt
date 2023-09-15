@@ -5,9 +5,10 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import com.jehutyno.yomikata.repository.local.*
-import org.junit.Assert.*
-
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
 import org.junit.After
+import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -38,28 +39,28 @@ class QuizDaoTest {
     }
 
     @Test
-    fun getQuizzesOfCategory() {
+    fun getQuizzesOfCategory() = runBlocking {
         val sampleRoomQuizWithId = sampleRoomQuiz.map {
             val id = quizDao.addQuiz(it)
             it.copy(_id = id)
         }
         val sampleByCategory = sampleRoomQuizWithId.groupBy { it.category }
         for (category in sampleByCategory.keys) {
-            val retrievedRoomQuizzes = quizDao.getQuizzesOfCategory(category)
+            val retrievedRoomQuizzes = quizDao.getQuizzesOfCategory(category).first()
             assert (
                 sampleByCategory[category]!!.toSet() == retrievedRoomQuizzes.toSet()
             )
         }
         val weirdCategory = 999
         if (weirdCategory in sampleByCategory.keys)
-            return
+            return@runBlocking
         assert (
-            quizDao.getQuizzesOfCategory(weirdCategory).isEmpty()
+            quizDao.getQuizzesOfCategory(weirdCategory).first().isEmpty()
         )
     }
 
     @Test
-    fun getQuizById() {
+    fun getQuizById() = runBlocking {
         for (roomQuiz in sampleRoomQuiz) {
             val id = quizDao.addQuiz(roomQuiz)
             assert (
@@ -69,7 +70,7 @@ class QuizDaoTest {
     }
 
     @Test
-    fun addQuiz() {
+    fun addQuiz() = runBlocking {
         for (roomQuiz in sampleRoomQuiz) {
             val id = quizDao.addQuiz(roomQuiz)
             assert (
@@ -79,7 +80,7 @@ class QuizDaoTest {
     }
 
     @Test
-    fun deleteQuiz() {
+    fun deleteQuiz() = runBlocking {
         val sampleRoomQuizWithId = sampleRoomQuiz.map {
             val id = quizDao.addQuiz(it)
             it.copy(_id = id)
@@ -93,7 +94,7 @@ class QuizDaoTest {
     }
 
     @Test
-    fun updateQuizName() {
+    fun updateQuizName() = runBlocking {
         val ids = sampleRoomQuiz.map {
             quizDao.addQuiz(it)
         }
@@ -110,7 +111,7 @@ class QuizDaoTest {
     }
 
     @Test
-    fun updateQuizSelected() {
+    fun updateQuizSelected() = runBlocking {
         val ids = sampleRoomQuiz.map {
             quizDao.addQuiz(it)
         }
@@ -123,7 +124,7 @@ class QuizDaoTest {
     }
 
     @Test
-    fun addQuizWord() {
+    fun addQuizWord() = runBlocking {
         // must add quiz and word first to satisfy foreign key constraint
         quizDao.addQuiz(sampleRoomQuiz[0].copy(_id = 1))
         wordDao.addWord(sampleRoomWords[0].copy(_id = 2))
@@ -135,7 +136,7 @@ class QuizDaoTest {
     }
 
     @Test
-    fun deleteWordFromQuiz() {
+    fun deleteWordFromQuiz() = runBlocking {
         sampleRoomQuizWords.forEach {
             wordDao.addWord(getRandomRoomWord(it.word_id))
             quizDao.addQuiz(getRandomRoomQuiz(it.quiz_id))
@@ -155,7 +156,7 @@ class QuizDaoTest {
     }
 
     @Test
-    fun countWordsForLevel() {
+    fun countWordsForLevel() = runBlocking {
         val test = sampleRoomWords[0]
         val id = wordDao.addWord(test)
         val quizId : Long = 56
@@ -164,18 +165,18 @@ class QuizDaoTest {
         quizDao.addQuizWord(quizWord)
         val level = test.level
         assert (
-            quizDao.countWordsForLevel(longArrayOf(quizId), level) == 1
+            quizDao.countWordsForLevel(longArrayOf(quizId), level).first() == 1
         )
     }
 
     @Test
-    fun countWordsForQuizzes() {
+    fun countWordsForQuizzes() = runBlocking {
         val coupledSamples = CoupledQuizWords(quizDao, wordDao)
         coupledSamples.addAllToDatabase()
         val quizIds = longArrayOf(1, 2)
         val actualCount = coupledSamples.countWordsForQuizzes(quizIds)
         assert (
-            actualCount == quizDao.countWordsForQuizzes(quizIds)
+            actualCount == quizDao.countWordsForQuizzes(quizIds).first()
         )
     }
 

@@ -1,8 +1,13 @@
 package com.jehutyno.yomikata.screens.search
 
 import android.os.Bundle
-import android.view.*
+import android.view.ActionMode
+import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuInflater
 import android.view.MenuItem
+import android.view.View
+import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.Toast
@@ -19,9 +24,16 @@ import com.jehutyno.yomikata.screens.content.WordsAdapter
 import com.jehutyno.yomikata.screens.content.word.WordDetailDialogFragment
 import com.jehutyno.yomikata.util.DimensionHelper
 import com.jehutyno.yomikata.util.Extras
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
 import org.kodein.di.DI
-import splitties.alertdialog.appcompat.*
-import java.util.*
+import splitties.alertdialog.appcompat.alertDialog
+import splitties.alertdialog.appcompat.cancelButton
+import splitties.alertdialog.appcompat.okButton
+import splitties.alertdialog.appcompat.titleResource
+
 
 /**
  * Created by valentin on 13/10/2016.
@@ -31,7 +43,6 @@ class SearchResultFragment(private val di: DI) : Fragment(), SearchResultContrac
     private lateinit var adapter: WordsAdapter
     private lateinit var layoutManager: LinearLayoutManager
     private var searchString = ""
-    private lateinit var selections: List<Quiz>
 
     // View Binding
     private var _binding: FragmentContentBinding? = null
@@ -51,11 +62,21 @@ class SearchResultFragment(private val di: DI) : Fragment(), SearchResultContrac
         setHasOptionsMenu(true)
     }
 
+    override fun onStart() {
+        super.onStart()
+
+        searchResultPresenter.words.observe(viewLifecycleOwner) {
+            if (it.isEmpty()) {
+                displayNoResults()
+            } else {
+                displayResults(it)
+            }
+        }
+    }
 
     override fun onResume() {
         super.onResume()
         searchResultPresenter.start()
-        searchResultPresenter.loadSelections()
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -89,7 +110,7 @@ class SearchResultFragment(private val di: DI) : Fragment(), SearchResultContrac
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String): Boolean {
                 searchString = query.replace("'", " ").replace("\"", " ")
-                searchResultPresenter.loadWords(searchString)
+                searchResultPresenter.updateSearchString(searchString)
                 if (!searchView.isIconified) {
                     searchView.isIconified = true
                 }
@@ -139,7 +160,7 @@ class SearchResultFragment(private val di: DI) : Fragment(), SearchResultContrac
         requireActivity().startActionMode(actionModeCallback)
     }
 
-    override fun onCheckChange(position: Int, check: Boolean) {
+    override fun onCheckChange(position: Int, check: Boolean) = runBlocking {
         searchResultPresenter.updateWordCheck(adapter.items[position].id, check)
     }
 
@@ -156,6 +177,10 @@ class SearchResultFragment(private val di: DI) : Fragment(), SearchResultContrac
         private val UNSELECT_ALL = 4
 
         override fun onActionItemClicked(mode: ActionMode, item: MenuItem): Boolean {
+            val selections: List<Quiz>
+            runBlocking {
+                selections = searchResultPresenter.getSelections()
+            }
             when (item.itemId) {
                 ADD_TO_SELECTIONS -> {
                     val popup = PopupMenu(activity!!, activity!!.findViewById(item.itemId))
@@ -163,7 +188,7 @@ class SearchResultFragment(private val di: DI) : Fragment(), SearchResultContrac
                     for ((i, selection) in selections.withIndex()) {
                         popup.menu.add(1, i, i, selection.getName()).isChecked = false
                     }
-                    popup.setOnMenuItemClickListener {it ->
+                    popup.setOnMenuItemClickListener {it -> runBlocking {
                         val selectedWords: ArrayList<Word> = arrayListOf()
                         adapter.items.forEach { item -> if (item.isSelected == 1) selectedWords.add(item) }
                         val selectionItemId = it.itemId
@@ -178,7 +203,7 @@ class SearchResultFragment(private val di: DI) : Fragment(), SearchResultContrac
                             }
                         }
                         true
-                    }
+                    }}
                     popup.show()
                 }
                 REMOVE_FROM_SELECTIONS -> {
@@ -186,7 +211,7 @@ class SearchResultFragment(private val di: DI) : Fragment(), SearchResultContrac
                     for ((i, selection) in selections.withIndex()) {
                         popup.menu.add(1, i, i, selection.getName()).isChecked = false
                     }
-                    popup.setOnMenuItemClickListener {it ->
+                    popup.setOnMenuItemClickListener {it -> runBlocking {
                         val selectedWords: ArrayList<Word> = arrayListOf()
                         adapter.items.forEach { item -> if (item.isSelected == 1) selectedWords.add(item) }
                         val selectionItemId = it.itemId
@@ -200,15 +225,25 @@ class SearchResultFragment(private val di: DI) : Fragment(), SearchResultContrac
                             }
                         }
                         true
-                    }
+                    }}
                     popup.show()
                 }
                 SELECT_ALL -> {
-                    adapter.items.forEach { it.isSelected = 1 }
+                    runBlocking {
+                        searchResultPresenter.updateWordsCheck(adapter.items.map{it.id}.toLongArray(), true)
+                    }
+                    adapter.items.forEach {
+                        it.isSelected = 1
+                    }
                     adapter.notifyItemRangeChanged(0, adapter.items.size)
                 }
                 UNSELECT_ALL -> {
-                    adapter.items.forEach { it.isSelected = 0 }
+                    runBlocking {
+                        searchResultPresenter.updateWordsCheck(adapter.items.map{it.id}.toLongArray(), false)
+                    }
+                    adapter.items.forEach {
+                        it.isSelected = 0
+                    }
                     adapter.notifyItemRangeChanged(0, adapter.items.size)
                 }
             }
@@ -232,11 +267,14 @@ class SearchResultFragment(private val di: DI) : Fragment(), SearchResultContrac
                 setView(container)
 
                 okButton {
-                    val selectionId = searchResultPresenter.createSelection(input.text.toString())
-                    selectedWords.forEach {
-                        searchResultPresenter.addWordToSelection(it.id, selectionId)
+                    MainScope().launch {
+                        withTimeout(2000L) {
+                            val selectionId = searchResultPresenter.createSelection(input.text.toString())
+                            selectedWords.forEach {
+                                searchResultPresenter.addWordToSelection(it.id, selectionId)
+                            }
+                        }
                     }
-                    searchResultPresenter.loadSelections()
                 }
                 cancelButton { }
             }.show()
@@ -260,14 +298,6 @@ class SearchResultFragment(private val di: DI) : Fragment(), SearchResultContrac
             adapter.checkMode = false
             adapter.notifyItemRangeChanged(0, adapter.items.size)
         }
-    }
-
-    override fun selectionLoaded(quizzes: List<Quiz>) {
-        selections = quizzes
-    }
-
-    override fun noSelections() {
-        selections = emptyList()
     }
 
     override fun onDestroyView() {

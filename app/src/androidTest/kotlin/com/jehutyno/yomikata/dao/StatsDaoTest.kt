@@ -6,9 +6,10 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SmallTest
 import com.jehutyno.yomikata.repository.local.RoomStatEntry
 import com.jehutyno.yomikata.repository.local.YomikataDataBase
-import org.junit.Assert.*
-
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
 import org.junit.After
+import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -37,17 +38,17 @@ class StatsDaoTest {
     }
 
     @Test
-    fun addStatEntry() {
+    fun addStatEntry() = runBlocking {
         for (roomStatEntry in sampleStatEntries) {
             val id = statsDao.addStatEntry(roomStatEntry)
             assert (
-                statsDao.getAllStatEntries().contains(roomStatEntry.copy(_id = id))
+                statsDao.getAllStatEntries().first().contains(roomStatEntry.copy(_id = id))
             )
         }
     }
 
     @Test
-    fun getStatEntriesOfTimeInterval() {
+    fun getStatEntriesOfTimeInterval() = runBlocking {
         val samples = listOf (
             RoomStatEntry(1, 2, 3, 1680455076292, 0),
             RoomStatEntry(2, 5, 12, 1680455075001, 1),
@@ -59,7 +60,7 @@ class StatsDaoTest {
         for (sample in samples) {
             statsDao.addStatEntry(sample)
         }
-        val retrievedEntries = statsDao.getStatEntriesOfTimeInterval(start, end)
+        val retrievedEntries = statsDao.getStatEntriesOfTimeInterval(start, end).first()
         for (sample in samples) {
             if (sample.date in (start + 1) until end) {
                 assert ( retrievedEntries.contains(sample) )
@@ -71,12 +72,12 @@ class StatsDaoTest {
     }
 
     @Test
-    fun removeAllStats() {
+    fun removeAllStats() = runBlocking {
         for (sample in sampleStatEntries) {
             statsDao.addStatEntry(sample)
         }
         statsDao.removeAllStats()
-        assert ( statsDao.getAllStatEntries().isEmpty() )
+        assert ( statsDao.getAllStatEntries().first().isEmpty() )
     }
 
 }

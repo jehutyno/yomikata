@@ -6,6 +6,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SmallTest
 import com.jehutyno.yomikata.repository.local.RoomSentences
 import com.jehutyno.yomikata.repository.local.YomikataDataBase
+import kotlinx.coroutines.runBlocking
 import org.junit.Assert.*
 
 import org.junit.After
@@ -37,7 +38,7 @@ class SentenceDaoTest {
     }
 
     @Test
-    fun addSentence() {
+    fun addSentence() = runBlocking {
         for (roomSentence in sampleRoomSentences) {
             val id = sentenceDao.addSentence(roomSentence)
             assert (
@@ -47,7 +48,7 @@ class SentenceDaoTest {
     }
 
     @Test
-    fun getRandomSentence() {
+    fun getRandomSentence() = runBlocking {
         val sample = RoomSentences(1, "{彼;かれ}が{試験;しけん}に{受;う}かるかどうか{は;わ}{五;ご}{分;ぶ}{五;ご}{分;ぶ}だ。",
             "It's 50/50 whether he passes the test or not.",
             "Les chances qu'il réussisse l'examen ou pas sont de 50/50.", 4)
@@ -61,7 +62,7 @@ class SentenceDaoTest {
     }
 
     @Test
-    fun getSentenceById() {
+    fun getSentenceById() = runBlocking {
         for (roomSentence in sampleRoomSentences) {
             val id = sentenceDao.addSentence(roomSentence)
             assert (
@@ -71,7 +72,7 @@ class SentenceDaoTest {
     }
 
     @Test
-    fun updateSentence() {
+    fun updateSentence() = runBlocking {
         val sample = sampleRoomSentences[0]
         val id = sentenceDao.addSentence(sample)
         val editSample = sample.copy(_id = id, en = "edit")

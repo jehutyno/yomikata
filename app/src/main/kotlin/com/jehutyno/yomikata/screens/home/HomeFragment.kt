@@ -16,9 +16,7 @@ import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.databinding.FragmentHomeBinding
-import com.jehutyno.yomikata.model.StatAction
 import com.jehutyno.yomikata.model.StatEntry
-import com.jehutyno.yomikata.model.StatResult
 import com.jehutyno.yomikata.screens.quizzes.QuizzesActivity
 import com.jehutyno.yomikata.util.*
 import org.kodein.di.*
@@ -33,7 +31,7 @@ class HomeFragment(di: DI) : Fragment(), HomeContract.View {
 
     // kodein
     private val mpresenter: HomeContract.Presenter by di.newInstance {
-        HomePresenter(instance(), instance(), this@HomeFragment)
+        HomePresenter(instance(), this@HomeFragment)
     }
 
     private lateinit var newsRef: DatabaseReference
@@ -57,14 +55,13 @@ class HomeFragment(di: DI) : Fragment(), HomeContract.View {
         // preload for viewPager2
         super.onStart()
         mpresenter.start()
-        mpresenter.loadAllStats()
+        subscribeStatsDisplay()
         displayLatestCategories()
     }
 
     override fun onResume() {
         super.onResume()
         mpresenter.start()
-        mpresenter.loadAllStats()
         displayLatestCategories()
     }
 
@@ -119,15 +116,35 @@ class HomeFragment(di: DI) : Fragment(), HomeContract.View {
     }
 
     private fun displayStat(stats: List<StatEntry>, vararg textViews: TextView) {
-        val quizLaunched = stats.count { it.action == StatAction.LAUNCH_QUIZ_FROM_CATEGORY.value }
-        val wordsSeen = stats.count { it.action == StatAction.WORD_SEEN.value }
-        val goodAnswer = stats.count { it.action == StatAction.ANSWER_QUESTION.value && it.result == StatResult.SUCCESS.value }
-        val wrongAnswer = stats.count { it.action == StatAction.ANSWER_QUESTION.value && it.result == StatResult.FAIL.value }
+        val quizLaunched = mpresenter.getNumberOfLaunchedQuizzes(stats)
+        val wordsSeen = mpresenter.getNumberOfWordsSeen(stats)
+        val correctAnswer = mpresenter.getNumberOfCorrectAnswers(stats)
+        val wrongAnswer = mpresenter.getNumberOfWrongAnswers(stats)
 
         textViews[0].text = getString(R.string.quiz_launched, quizLaunched)
         textViews[1].text = getString(R.string.words_seen, wordsSeen)
-        textViews[2].text = getString(R.string.good_answers, goodAnswer)
+        textViews[2].text = getString(R.string.good_answers, correctAnswer)
         textViews[3].text = getString(R.string.wrong_answers, wrongAnswer)
+    }
+
+    /**
+     * Subscribe stats display
+     *
+     * Set subscribers to automatically update stats when database changes
+     */
+    private fun subscribeStatsDisplay() {
+        mpresenter.todayStatList.observe(viewLifecycleOwner) { stats ->
+            displayTodayStats(stats)
+        }
+        mpresenter.thisWeekStatList.observe(viewLifecycleOwner) { stats ->
+            displayThisWeekStats(stats)
+        }
+        mpresenter.thisMonthStatList.observe(viewLifecycleOwner) { stats ->
+            displayThisMonthStats(stats)
+        }
+        mpresenter.totalStatList.observe(viewLifecycleOwner) { stats ->
+            displayTotalStats(stats)
+        }
     }
 
     private fun displayLatestCategories() {

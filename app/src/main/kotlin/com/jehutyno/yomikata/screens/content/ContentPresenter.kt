@@ -1,12 +1,16 @@
 package com.jehutyno.yomikata.screens.content
 
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.asLiveData
+import androidx.lifecycle.distinctUntilChanged
 import com.jehutyno.yomikata.model.Quiz
 import com.jehutyno.yomikata.model.Word
 import com.jehutyno.yomikata.repository.QuizRepository
 import com.jehutyno.yomikata.repository.WordRepository
 import com.jehutyno.yomikata.util.Categories
+import kotlinx.coroutines.flow.combine
 import mu.KLogging
-import java.util.*
+
 
 /**
  * Created by valentin on 29/09/2016.
@@ -14,7 +18,8 @@ import java.util.*
 class ContentPresenter(
     private val wordRepository: WordRepository,
     private val quizRepository: QuizRepository,
-    private val contentView: ContentContract.View) : ContentContract.Presenter {
+    contentView: ContentContract.View,
+    quizIds : LongArray, level : Int) : ContentContract.Presenter {
 
     companion object : KLogging()
 
@@ -22,90 +27,56 @@ class ContentPresenter(
         contentView.setPresenter(this)
     }
 
+    // define LiveData
+    override val words: LiveData<List<Word>> =
+        wordRepository.getWordsByLevel(quizIds, level).asLiveData().distinctUntilChanged()
+    override val selections: LiveData<List<Quiz>> =
+        quizRepository.getQuiz(Categories.CATEGORY_SELECTIONS).asLiveData().distinctUntilChanged()
+    override val quizCount: LiveData<Int> =
+        quizRepository.countWordsForQuizzes(quizIds).asLiveData().distinctUntilChanged()
+    override val lowCount: LiveData<Int> =
+        quizRepository.countWordsForLevel(quizIds, 0).asLiveData().distinctUntilChanged()
+    override val mediumCount: LiveData<Int> =
+        quizRepository.countWordsForLevel(quizIds, 1).asLiveData().distinctUntilChanged()
+    override val highCount: LiveData<Int> =
+        quizRepository.countWordsForLevel(quizIds, 2).asLiveData().distinctUntilChanged()
+    override val masterCount: LiveData<Int> =
+        quizRepository.countWordsForLevel(quizIds, 3).combine(
+                                                        quizRepository.countWordsForLevel(quizIds, 4)
+                                                    ) {
+                                                        value3, value4 -> value3 + value4
+                                                    }.asLiveData().distinctUntilChanged()
+
+
     override fun start() {
         logger.info("Content presenter start")
     }
 
-    override fun loadWords(quizIds: LongArray, level: Int) {
-        if (level > -1) {
-            wordRepository.getWordsByLevel(quizIds, level, object : WordRepository.LoadWordsCallback {
-                override fun onWordsLoaded(words: List<Word>) {
-                    contentView.displayWords(words)
-                }
-
-                override fun onDataNotAvailable() {
-                    contentView.displayWords(emptyList())
-                }
-
-            })
-        } else {
-            wordRepository.getWords(quizIds, object : WordRepository.LoadWordsCallback {
-                override fun onWordsLoaded(words: List<Word>) {
-                    contentView.displayWords(words)
-                }
-
-                override fun onDataNotAvailable() {
-                    contentView.displayWords(emptyList())
-                }
-
-            })
-        }
-    }
-
-    override fun countQuiz(ids: LongArray): Int {
-        return quizRepository.countWordsForQuizzes(ids)
-    }
-
-    override fun countLow(ids: LongArray): Int {
-        return quizRepository.countWordsForLevel(ids, 0)
-    }
-
-    override fun countMedium(ids: LongArray): Int {
-        return quizRepository.countWordsForLevel(ids, 1)
-    }
-
-    override fun countHigh(ids: LongArray): Int {
-        return quizRepository.countWordsForLevel(ids, 2)
-    }
-
-    override fun countMaster(ids: LongArray): Int {
-        return quizRepository.countWordsForLevel(ids, 3) + quizRepository.countWordsForLevel(ids, 4)
-    }
-
-    override fun updateWordCheck(id: Long, check: Boolean) {
+    override suspend fun updateWordCheck(id: Long, check: Boolean) {
         wordRepository.updateWordSelected(id, check)
     }
 
-    override fun loadSelections() {
-        quizRepository.getQuiz(Categories.CATEGORY_SELECTIONS, object: QuizRepository.LoadQuizCallback {
-            override fun onQuizLoaded(quizzes: List<Quiz>) {
-                contentView.selectionLoaded(quizzes)
-            }
-
-            override fun onDataNotAvailable() {
-                contentView.noSelections()
-            }
-
-        })
+    override suspend fun updateWordsCheck(ids: LongArray, check: Boolean) {
+        wordRepository.updateWordsSelected(ids, check)
     }
 
-    override fun isWordInQuiz(wordId: Long, quizId: Long) : Boolean {
+    override suspend fun isWordInQuiz(wordId: Long, quizId: Long) : Boolean {
         return wordRepository.isWordInQuiz(wordId, quizId)
     }
 
-    override fun createSelection(quizName: String): Long {
+    override suspend fun createSelection(quizName: String): Long {
         return quizRepository.saveQuiz(quizName, Categories.CATEGORY_SELECTIONS)
     }
 
-    override fun addWordToSelection(wordId: Long, quizId: Long) {
+    override suspend fun addWordToSelection(wordId: Long, quizId: Long) {
         quizRepository.addWordToQuiz(wordId, quizId)
     }
 
-    override fun isWordInQuizzes(wordId: Long, quizIds: Array<Long>) : ArrayList<Boolean> {
+    override suspend fun isWordInQuizzes(wordId: Long, quizIds: Array<Long>) : ArrayList<Boolean> {
         return wordRepository.isWordInQuizzes(wordId, quizIds)
     }
 
-    override fun deleteWordFromSelection(wordId: Long, selectionId: Long) {
+    override suspend fun deleteWordFromSelection(wordId: Long, selectionId: Long) {
         quizRepository.deleteWordFromQuiz(wordId, selectionId)
     }
 

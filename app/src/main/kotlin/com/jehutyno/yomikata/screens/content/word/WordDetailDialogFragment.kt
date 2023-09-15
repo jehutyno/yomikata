@@ -12,17 +12,17 @@ import android.widget.FrameLayout
 import android.widget.ImageView
 import androidx.appcompat.widget.PopupMenu
 import androidx.fragment.app.DialogFragment
+import androidx.lifecycle.lifecycleScope
 import androidx.viewpager.widget.ViewPager
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.managers.VoicesManager
 import com.jehutyno.yomikata.model.KanjiSoloRadical
-import com.jehutyno.yomikata.model.Quiz
 import com.jehutyno.yomikata.model.Sentence
 import com.jehutyno.yomikata.model.Word
 import com.jehutyno.yomikata.util.*
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import org.kodein.di.*
 import splitties.alertdialog.appcompat.*
@@ -38,7 +38,10 @@ class WordDetailDialogFragment(private val di: DI) : DialogFragment(), WordContr
         extend(di)
         import(wordPresenterModule(this@WordDetailDialogFragment))
 //            import(voicesManagerModule(activity))
-        bind<WordContract.Presenter>() with provider { WordPresenter(instance(), instance(), instance(), instance(), instance()) }
+        bind<WordContract.Presenter>() with provider {
+            WordPresenter(instance(), instance(), instance(), instance(), instance(),
+                            lifecycleScope, quizIds, level, searchString)
+        }
         bind<VoicesManager>() with singleton { VoicesManager(requireActivity()) }
     }
     @Suppress("unused")
@@ -47,6 +50,8 @@ class WordDetailDialogFragment(private val di: DI) : DialogFragment(), WordContr
     private val voicesManager: VoicesManager by subDI.instance()
 
     private lateinit var adapter: WordPagerAdapter
+    private var locked: Boolean = true     // if locked -> don't adapt to database changes
+    private var initialLoad: Boolean = false    // used if locked = true to make sure initial load happened
     private var wordId: Long = -1
     private var quizIds: LongArray? = null
     private var quizType: QuizType? = null
@@ -54,7 +59,6 @@ class WordDetailDialogFragment(private val di: DI) : DialogFragment(), WordContr
     private var searchString: String = ""
     private var quizTitle: String? = ""
     private var level: Int = -1
-    private lateinit var selections: List<Quiz>
     private lateinit var viewPager: ViewPager
     private lateinit var arrowLeft: ImageView
     private lateinit var arrowRight: ImageView
@@ -144,15 +148,25 @@ class WordDetailDialogFragment(private val di: DI) : DialogFragment(), WordContr
     override fun onResume() {
         super.onResume()
         wordPresenter.start()
-        if (quizIds != null && quizIds!!.isNotEmpty())
-            wordPresenter.loadWords(quizIds!!, level)
-        else if (searchString.isNotEmpty())
-            (wordPresenter.searchWords(searchString))
-        else if (wordId != -1L)
-            wordPresenter.loadWord(wordId)
-        wordPresenter.loadSelections()
+        wordPresenter.words?.let {
+            it.observe(this) { words ->
+                if (initialLoad && locked)
+                    return@observe
+                lifecycleScope.launch {
+                    displayWords(wordPresenter.getWordKanjiSoloRadicalSentenceList(words))
+                }
+                initialLoad = true
+            }
+        }
+        if (wordPresenter.words == null) {
+            lifecycleScope.launch {
+                val oneWordList = listOf(wordPresenter.getWord(wordId))
+                displayWords(wordPresenter.getWordKanjiSoloRadicalSentenceList(oneWordList))
+            }
+        }
     }
 
+    @Synchronized
     override fun displayWords(words: List<Triple<Word, List<KanjiSoloRadical?>, Sentence>>) {
         adapter.replaceData(words)
         viewPager.currentItem = wordPosition
@@ -163,14 +177,15 @@ class WordDetailDialogFragment(private val di: DI) : DialogFragment(), WordContr
 
     }
 
-    override fun onSelectionClick(view: View, position: Int) {
+    override fun onSelectionClick(view: View, position: Int) = runBlocking {
+        val selections = wordPresenter.getSelections()
         val popup = PopupMenu(requireActivity(), view)
         popup.menuInflater.inflate(R.menu.popup_selections, popup.menu)
         for ((i, selection) in selections.withIndex()) {
             popup.menu.add(1, i, i, selection.getName()).isChecked = wordPresenter.isWordInQuiz(adapter.words[position].first.id, selection.id)
             popup.menu.setGroupCheckable(1, true, false)
         }
-        popup.setOnMenuItemClickListener {
+        popup.setOnMenuItemClickListener { runBlocking {
             when (it.itemId) {
                 R.id.add_selection -> addSelection(adapter.words[position].first.id)
                 else -> {
@@ -183,7 +198,7 @@ class WordDetailDialogFragment(private val di: DI) : DialogFragment(), WordContr
                 }
             }
             true
-        }
+        }}
         popup.show()
     }
 
@@ -204,9 +219,10 @@ class WordDetailDialogFragment(private val di: DI) : DialogFragment(), WordContr
             setView(container)
 
             okButton {
-                val selectionId = wordPresenter.createSelection(input.text.toString())
-                wordPresenter.addWordToSelection(wordId, selectionId)
-                wordPresenter.loadSelections()
+                lifecycleScope.launch {
+                    val selectionId = wordPresenter.createSelection(input.text.toString())
+                    wordPresenter.addWordToSelection(wordId, selectionId)
+                }
             }
             cancelButton { }
         }.show()
@@ -225,12 +241,12 @@ class WordDetailDialogFragment(private val di: DI) : DialogFragment(), WordContr
         voicesManager.speakSentence(sentence, ttsSupported, tts)
     }
 
-    override fun onLevelUp(position: Int) {
+    override fun onLevelUp(position: Int) = runBlocking {
         val newLevel = wordPresenter.levelUp(adapter.words[position].first.id, adapter.words[position].first.level)
         waitAndUpdateLevel(position, if (newLevel == 4) 3 else newLevel, if (newLevel == 4) 100 else adapter.words[position].first.points)
     }
 
-    override fun onLevelDown(position: Int) {
+    override fun onLevelDown(position: Int) = runBlocking {
         val newLevel = wordPresenter.levelDown(adapter.words[position].first.id, adapter.words[position].first.level)
         waitAndUpdateLevel(position, newLevel, 0)
     }
@@ -244,7 +260,7 @@ class WordDetailDialogFragment(private val di: DI) : DialogFragment(), WordContr
             adapter.words[position].first.level = newLevel
         }
         adapter.words[position].first.points = points
-        MainScope().async {
+        lifecycleScope.launch {
             withContext(Dispatchers.IO) {
                 Thread.sleep(300)
             }
@@ -252,14 +268,6 @@ class WordDetailDialogFragment(private val di: DI) : DialogFragment(), WordContr
                 adapter.notifyDataSetChanged()
             }
         }
-    }
-
-    override fun selectionLoaded(quizzes: List<Quiz>) {
-        selections = quizzes
-    }
-
-    override fun noSelections() {
-        selections = emptyList()
     }
 
     override fun onDismiss(dialog: DialogInterface) {
