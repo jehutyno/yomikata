@@ -1,7 +1,21 @@
 package com.jehutyno.yomikata.repository.local
 
-import androidx.room.*
-import com.jehutyno.yomikata.model.*
+import androidx.room.ColumnInfo
+import androidx.room.Embedded
+import androidx.room.Entity
+import androidx.room.ForeignKey
+import androidx.room.Junction
+import androidx.room.PrimaryKey
+import androidx.room.Relation
+import com.jehutyno.yomikata.model.KanjiSolo
+import com.jehutyno.yomikata.model.KanjiSoloRadical
+import com.jehutyno.yomikata.model.Quiz
+import com.jehutyno.yomikata.model.QuizWord
+import com.jehutyno.yomikata.model.Radical
+import com.jehutyno.yomikata.model.Sentence
+import com.jehutyno.yomikata.model.StatEntry
+import com.jehutyno.yomikata.model.Word
+import com.jehutyno.yomikata.util.toLevel
 
 
 @Entity(tableName = "quiz")
@@ -54,7 +68,7 @@ data class RoomWords (
     companion object {
         fun from(word: Word): RoomWords {
             return RoomWords(word.id, word.japanese, word.english, word.french,
-                             word.reading, word.level, word.countTry, word.countSuccess,
+                             word.reading, word.level.level, word.countTry, word.countSuccess,
                              word.countFail, word.isKana, word.repetition, word.points,
                              word.baseCategory, word.isSelected, word.sentenceId)
         }
@@ -62,7 +76,7 @@ data class RoomWords (
 
     fun toWord(): Word {
         return Word(
-            _id, japanese, english, french, reading, level, count_try, count_success,
+            _id, japanese, english, french, reading, level.toLevel(), count_try, count_success,
             count_fail, is_kana, repetition, points, base_category, isSelected, sentence_id
         )
     }

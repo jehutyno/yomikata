@@ -20,10 +20,9 @@ import com.jehutyno.yomikata.model.KanjiSoloRadical
 import com.jehutyno.yomikata.model.Sentence
 import com.jehutyno.yomikata.model.Word
 import com.jehutyno.yomikata.util.*
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withContext
 import org.kodein.di.*
 import splitties.alertdialog.appcompat.*
 
@@ -58,7 +57,7 @@ class WordDetailDialogFragment(private val di: DI) : DialogFragment(), WordContr
     private var wordPosition: Int = -1
     private var searchString: String = ""
     private var quizTitle: String? = ""
-    private var level: Int = -1
+    private var level: Level? = null
     private lateinit var viewPager: ViewPager
     private lateinit var arrowLeft: ImageView
     private lateinit var arrowRight: ImageView
@@ -104,7 +103,12 @@ class WordDetailDialogFragment(private val di: DI) : DialogFragment(), WordContr
             quizTitle = requireArguments().getString(Extras.EXTRA_QUIZ_TITLE)
             wordPosition = requireArguments().getInt(Extras.EXTRA_WORD_POSITION)
             searchString = requireArguments().getString(Extras.EXTRA_SEARCH_STRING) ?: ""
-            level = requireArguments().getInt(Extras.EXTRA_LEVEL)
+            level = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                requireArguments().getSerializable(Extras.EXTRA_LEVEL, Level::class.java)
+            } else {
+                @Suppress("DEPRECATION")
+                requireArguments().getSerializable(Extras.EXTRA_LEVEL) as Level?
+            }
         }
 
         if (savedInstanceState != null) {
@@ -242,31 +246,25 @@ class WordDetailDialogFragment(private val di: DI) : DialogFragment(), WordContr
     }
 
     override fun onLevelUp(position: Int) = runBlocking {
-        val newLevel = wordPresenter.levelUp(adapter.words[position].first.id, adapter.words[position].first.level)
-        waitAndUpdateLevel(position, if (newLevel == 4) 3 else newLevel, if (newLevel == 4) 100 else adapter.words[position].first.points)
+        wordPresenter.levelUp(adapter.words[position].first.id, adapter.words[position].first.points)
+        waitAndUpdateLevel(position, levelUp(adapter.words[position].first.points))
     }
 
     override fun onLevelDown(position: Int) = runBlocking {
-        val newLevel = wordPresenter.levelDown(adapter.words[position].first.id, adapter.words[position].first.level)
-        waitAndUpdateLevel(position, newLevel, 0)
+        wordPresenter.levelDown(adapter.words[position].first.id, adapter.words[position].first.points)
+        waitAndUpdateLevel(position, levelDown(adapter.words[position].first.points))
     }
 
     override fun onCloseClick() {
         dialog?.dismiss()
     }
 
-    private fun waitAndUpdateLevel(position: Int, newLevel: Int, points: Int) {
-        if (newLevel != adapter.words[position].first.level) {
-            adapter.words[position].first.level = newLevel
-        }
+    private fun waitAndUpdateLevel(position: Int, points: Int) {
         adapter.words[position].first.points = points
+        adapter.words[position].first.level = getLevelFromPoints(points)
         lifecycleScope.launch {
-            withContext(Dispatchers.IO) {
-                Thread.sleep(300)
-            }
-            withContext(Dispatchers.Main) {
-                adapter.notifyDataSetChanged()
-            }
+            delay(300L)
+            adapter.notifyDataSetChanged()
         }
     }
 

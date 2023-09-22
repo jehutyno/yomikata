@@ -25,8 +25,10 @@ import com.jehutyno.yomikata.screens.quiz.QuizActivity
 import com.jehutyno.yomikata.util.Categories
 import com.jehutyno.yomikata.util.DimensionHelper
 import com.jehutyno.yomikata.util.Extras
+import com.jehutyno.yomikata.util.Level
 import com.jehutyno.yomikata.util.Prefs
 import com.jehutyno.yomikata.util.QuizStrategy
+import com.jehutyno.yomikata.util.QuizType
 import com.jehutyno.yomikata.util.SeekBarsManager
 import com.jehutyno.yomikata.util.SpeechAvailability
 import com.jehutyno.yomikata.util.TextValidator
@@ -182,16 +184,16 @@ class QuizzesFragment(di: DI) : Fragment(), QuizzesContract.View, QuizzesAdapter
         }
 
         binding.playLow.setOnClickListener {
-            openContent(selectedCategory, 0)
+            openContent(selectedCategory, Level.LOW)
         }
         binding.playMedium.setOnClickListener {
-            openContent(selectedCategory, 1)
+            openContent(selectedCategory, Level.MEDIUM)
         }
         binding.playHigh.setOnClickListener {
-            openContent(selectedCategory, 2)
+            openContent(selectedCategory, Level.HIGH)
         }
         binding.playMaster.setOnClickListener {
-            openContent(selectedCategory, 3)
+            openContent(selectedCategory, Level.MASTER)
         }
 
         updateVoicesDownloadVisibility()
@@ -265,16 +267,15 @@ class QuizzesFragment(di: DI) : Fragment(), QuizzesContract.View, QuizzesAdapter
         binding.btnAutoSwitch.isSelected = isSelected
     }
 
-    override fun launchQuiz(strategy: QuizStrategy, selectedTypes: IntArray, title: String) {
+    override fun launchQuiz(strategy: QuizStrategy, level: Level?, selectedTypes: ArrayList<QuizType>, title: String) {
         val ids = mutableListOf<Long>()
         adapter.items.forEach {
             if (it.isSelected)
                 ids.add(it.id)
         }
 
-        //If nothing selected, use all quizzes
-        if (ids.size == 0 || strategy == QuizStrategy.LOW_STRAIGHT || strategy == QuizStrategy.MEDIUM_STRAIGHT
-            || strategy == QuizStrategy.HIGH_STRAIGHT || strategy == QuizStrategy.MASTER_STRAIGHT) {
+        // If nothing selected or if inside of a specific level, use all quizzes
+        if (ids.size == 0 || level != null) {   // TODO
             ids.clear()
             adapter.items.forEach {
                 ids.add(it.id)
@@ -292,13 +293,14 @@ class QuizzesFragment(di: DI) : Fragment(), QuizzesContract.View, QuizzesAdapter
             putExtra(Extras.EXTRA_QUIZ_IDS, ids.toLongArray())
             putExtra(Extras.EXTRA_QUIZ_TITLE, title)
             putExtra(Extras.EXTRA_QUIZ_STRATEGY, strategy)
+            putExtra(Extras.EXTRA_LEVEL, level)
             putExtra(Extras.EXTRA_QUIZ_TYPES, selectedTypes)
         }
         startActivity(intent)
     }
 
-    fun launchQuizClick(strategy: QuizStrategy, title: String) = runBlocking {
-        mpresenter.launchQuizClick(strategy, title, selectedCategory)
+    fun launchQuizClick(strategy: QuizStrategy, level: Level?, title: String) = runBlocking {
+        mpresenter.launchQuizClick(strategy, level, title, selectedCategory)
     }
 
     private fun subscribeDisplayQuizzes() {
@@ -311,12 +313,7 @@ class QuizzesFragment(di: DI) : Fragment(), QuizzesContract.View, QuizzesAdapter
         adapter.replaceData(quizzes, selectedCategory == Categories.CATEGORY_SELECTIONS)
     }
 
-    private fun openContent(position: Int, level: Int) {
-        if ((selectedCategory == Categories.CATEGORY_SELECTIONS)) {
-            // TODO: ?
-        } else {
-
-        }
+    private fun openContent(position: Int, level: Level?) {
         val intent = Intent(context, ContentActivity::class.java).apply {
             putExtra(Extras.EXTRA_CATEGORY, selectedCategory)
             putExtra(Extras.EXTRA_QUIZ_POSITION, position)
@@ -339,7 +336,7 @@ class QuizzesFragment(di: DI) : Fragment(), QuizzesContract.View, QuizzesAdapter
     }
 
     override fun onItemClick(position: Int) {
-        openContent(position, -1)
+        openContent(position, null)
     }
 
     override fun onItemChecked(position: Int, checked: Boolean) = runBlocking {

@@ -69,6 +69,14 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
     private val editBinding get() = binding.quizAnswersKeyboardEntry
     private val qcmBinding get() = binding.quizAnswersMultipleChoice
 
+    /** List of QCM tvs for convenience */
+    private val QCMtvs get() = qcmBinding.let {
+        listOf(it.option1Tv, it.option2Tv, it.option3Tv, it.option4Tv)
+    }
+    /** List of QCM furigana for convenience */
+    private val QCMfuri get() = qcmBinding.let {
+        listOf(it.option1Furi, it.option2Furi, it.option3Furi, it.option4Furi)
+    }
 
     override fun onInit(status: Int) {
         ttsSupported = onTTSinit(activity, status, tts)
@@ -360,29 +368,22 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
         qcmBinding.option3Container.setOnClickListener(clickerFactory(3))
         qcmBinding.option4Container.setOnClickListener(clickerFactory(4))
 
-        qcmBinding.option1Tv.setOnClickListener(clickerFactory(1))
-        qcmBinding.option2Tv.setOnClickListener(clickerFactory(2))
-        qcmBinding.option3Tv.setOnClickListener(clickerFactory(3))
-        qcmBinding.option4Tv.setOnClickListener(clickerFactory(4))
-
-        qcmBinding.option1Tv.movementMethod = ScrollingMovementMethod()
-        qcmBinding.option2Tv.movementMethod = ScrollingMovementMethod()
-        qcmBinding.option3Tv.movementMethod = ScrollingMovementMethod()
-        qcmBinding.option4Tv.movementMethod = ScrollingMovementMethod()
+        QCMtvs.forEachIndexed { i, tv ->
+            tv.setOnClickListener(clickerFactory(i + 1))
+            tv.movementMethod = ScrollingMovementMethod()
+        }
     }
 
     override fun reInitUI() {
         editBinding.hiraganaEdit.setText("")
         editBinding.editAction.setImageResource(R.drawable.ic_cancel_black_24dp)
         editBinding.editAction.setColorFilter(ContextCompat.getColor(requireActivity(), R.color.lighter_gray))
-        qcmBinding.option1Tv.setTextColor(ContextCompat.getColor(requireActivity(), android.R.color.white))
-        qcmBinding.option2Tv.setTextColor(ContextCompat.getColor(requireActivity(), android.R.color.white))
-        qcmBinding.option3Tv.setTextColor(ContextCompat.getColor(requireActivity(), android.R.color.white))
-        qcmBinding.option4Tv.setTextColor(ContextCompat.getColor(requireActivity(), android.R.color.white))
-        qcmBinding.option1Furi.setTextColor(ContextCompat.getColor(requireActivity(), android.R.color.white))
-        qcmBinding.option2Furi.setTextColor(ContextCompat.getColor(requireActivity(), android.R.color.white))
-        qcmBinding.option3Furi.setTextColor(ContextCompat.getColor(requireActivity(), android.R.color.white))
-        qcmBinding.option4Furi.setTextColor(ContextCompat.getColor(requireActivity(), android.R.color.white))
+        QCMtvs.forEach { tv ->
+            tv.setTextColor(ContextCompat.getColor(requireActivity(), android.R.color.white))
+        }
+        QCMfuri.forEach { furi ->
+            furi.setTextColor(ContextCompat.getColor(requireActivity(), android.R.color.white))
+        }
     }
 
     /**
@@ -475,6 +476,13 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
         editBinding.editAction.setColorFilter(ContextCompat.getColor(requireActivity(), R.color.level_master_4))
     }
 
+    /**
+     * Display QCM mode
+     *
+     * Hides the keyboard entry and shows multiple choice options.
+     *
+     * @param hintText Text to show if tap_to_reveal = true in user preferences
+     */
     override fun displayQCMMode(hintText: String?) {
         qcmBinding.root.visibility = VISIBLE
         editBinding.root.visibility = GONE
@@ -499,71 +507,85 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
 
     override fun displayQCMNormalTextViews() {
         val pref = PreferenceManager.getDefaultSharedPreferences(requireContext())
-
-        qcmBinding.option1Tv.textSize = pref.getString("font_size", "23")!!.toFloat()
-        qcmBinding.option2Tv.textSize = pref.getString("font_size", "23")!!.toFloat()
-        qcmBinding.option3Tv.textSize = pref.getString("font_size", "23")!!.toFloat()
-        qcmBinding.option4Tv.textSize = pref.getString("font_size", "23")!!.toFloat()
-        qcmBinding.option1Tv.visibility = VISIBLE
-        qcmBinding.option2Tv.visibility = VISIBLE
-        qcmBinding.option3Tv.visibility = VISIBLE
-        qcmBinding.option4Tv.visibility = VISIBLE
-        qcmBinding.option1Furi.visibility = GONE
-        qcmBinding.option2Furi.visibility = GONE
-        qcmBinding.option3Furi.visibility = GONE
-        qcmBinding.option4Furi.visibility = GONE
-    }
-
-    override fun displayQCMFuriTextViews() {
-        qcmBinding.option1Tv.visibility = GONE
-        qcmBinding.option2Tv.visibility = GONE
-        qcmBinding.option3Tv.visibility = GONE
-        qcmBinding.option4Tv.visibility = GONE
-        qcmBinding.option1Furi.visibility = VISIBLE
-        qcmBinding.option2Furi.visibility = VISIBLE
-        qcmBinding.option3Furi.visibility = VISIBLE
-        qcmBinding.option4Furi.visibility = VISIBLE
-    }
-
-    override fun displayQCMTv(tvNum: Int, option: String, color: Int) {
-        when (tvNum) {
-            1 -> {
-                qcmBinding.option1Tv.text = option
-                qcmBinding.option1Tv.setTextColor(ContextCompat.getColor(requireContext(), color))
-            }
-            2 -> {
-                qcmBinding.option2Tv.text = option
-                qcmBinding.option2Tv.setTextColor(ContextCompat.getColor(requireContext(), color))
-            }
-            3 -> {
-                qcmBinding.option3Tv.text = option
-                qcmBinding.option3Tv.setTextColor(ContextCompat.getColor(requireContext(), color))
-            }
-            4 -> {
-                qcmBinding.option4Tv.text = option
-                qcmBinding.option4Tv.setTextColor(ContextCompat.getColor(requireContext(), color))
-            }
-            else -> {
-                throw Error("Invalid tvNum: $tvNum")
-            }
+        val fontSize = pref.getString("font_size", "23")!!.toFloat()
+        QCMtvs.forEach { tv ->
+            tv.textSize = fontSize
+            tv.visibility = VISIBLE
+        }
+        QCMfuri.forEach{ furi ->
+            furi.visibility = GONE
         }
     }
 
-    override fun displayQCMFuri(furiNum: Int, optionFuri: String, start: Int, end: Int, color: Int) {
-        when (furiNum) {
-            1 -> qcmBinding.option1Furi.text_set(optionFuri, start, end, color)
-            2 -> qcmBinding.option2Furi.text_set(optionFuri, start, end, color)
-            3 -> qcmBinding.option3Furi.text_set(optionFuri, start, end, color)
-            4 -> qcmBinding.option4Furi.text_set(optionFuri, start, end, color)
-            else -> throw Error("Invalid furiNum: $furiNum")
+    /**
+     * Display QCM furi text views
+     *
+     * Makes all normal option texts GONE and makes furi text VISIBLE
+     */
+    override fun displayQCMFuriTextViews() {
+        QCMtvs.forEach { tv ->
+            tv.visibility = GONE
+        }
+        QCMfuri.forEach { furi ->
+            furi.visibility = VISIBLE
+        }
+    }
+
+    /**
+     * Display QCM tv
+     *
+     * Sets the text and color of a specified QCM tv.
+     *
+     * @param tvNum Index of the tv: 1,2,3,4
+     * @param option Text to show in tv
+     * @param colorId Color of the text
+     */
+    override fun displayQCMTv(tvNum: Int, option: String, colorId: Int) {
+        QCMtvs[tvNum - 1].also { tv ->
+            tv.text = option
+            tv.setTextColor(ContextCompat.getColor(requireContext(), colorId))
+        }
+    }
+
+    /**
+     * Display QCM tv
+     *
+     * Sets the text and color of all QCM tvs to the values in options and colors.
+     *
+     * @param options List of 4 strings
+     * @param colorIds List of 4 color ids (int)
+     */
+    override fun displayQCMTv(options: List<String>, colorIds: List<Int>) {
+        QCMtvs.forEachIndexed { i, tv ->
+            tv.text = options[i]
+            tv.setTextColor(ContextCompat.getColor(requireContext(), colorIds[i]))
+        }
+    }
+
+    /**
+     * Display QCM furi
+     *
+     * @param furiNum Index of the furigana text: 1,2,3,4
+     * @param optionFuri Text to display
+     * @param start Start (int)
+     * @param end End (int)
+     * @param colorId Id of the color (int)
+     */
+    override fun displayQCMFuri(furiNum: Int, optionFuri: String, start: Int, end: Int, colorId: Int) {
+        val color = ContextCompat.getColor(requireContext(), colorId)
+        QCMfuri[furiNum - 1].text_set(optionFuri, start, end, color)
+    }
+
+    override fun displayQCMFuri(options: List<String>, starts: List<Int>, ends: List<Int>, colorIds: List<Int>) {
+        QCMfuri.forEachIndexed { i, furi ->
+            furi.text_set(options[i], starts[i], ends[i], ContextCompat.getColor(requireContext(), colorIds[i]))
         }
     }
 
     fun setOptionsFontSize(fontSize: Float) {
-        qcmBinding.option1Tv.textSize = fontSize
-        qcmBinding.option2Tv.textSize = fontSize
-        qcmBinding.option3Tv.textSize = fontSize
-        qcmBinding.option4Tv.textSize = fontSize
+        QCMtvs.forEach { tv ->
+            tv.textSize = fontSize
+        }
     }
 
     fun closeTTSSettings() {
@@ -584,7 +606,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
         inputMethodManager.hideSoftInputFromWindow(editBinding.hiraganaEdit.windowToken, 0)
     }
 
-    override fun animateColor(position: Int, word: Word, sentence: Sentence, quizType: QuizType, fromLevel: Int, toLevel: Int, fromPoints: Int, toPoints: Int) {
+    override fun animateColor(position: Int, word: Word, sentence: Sentence, quizType: QuizType, fromPoints: Int, toPoints: Int) {
         val view = binding.pager.findViewWithTag<View>("pos_$position")
         val btnFuri = view.findViewById<View>(R.id.btn_furi)
         val furiSentence = view.findViewById<FuriganaView>(R.id.furi_sentence)
@@ -592,8 +614,8 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
         val sound = view.findViewById<ImageButton>(R.id.sound)
         val sentenceNoFuri = sentenceNoFuri(sentence)
         val colorAnimation = ValueAnimator.ofObject(ArgbEvaluator(),
-            getWordColor(requireContext(), fromLevel, fromPoints),
-            getWordColor(requireContext(), toLevel, toPoints))
+            getWordColor(requireContext(), fromPoints),
+            getWordColor(requireContext(), toPoints))
         colorAnimation.addUpdateListener {
             animator ->
             run {
@@ -630,17 +652,17 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
         colorAnimation.start()
     }
 
-    override fun showAlertProgressiveSessionEnd(proposeErrors: Boolean) {
+    override fun showAlertProgressiveSessionEnd() {
         val sessionLength = adapter!!.words.size
 
         requireContext().alertDialog {
             message = getString(R.string.alert_session_finished, sessionLength)
-            neutralButton(R.string.alert_continue) {
+            positiveButton(R.string.alert_continue) {
                 runBlocking {
                     presenter.onLaunchNextProgressiveSession()
                 }
             }
-            positiveButton(R.string.alert_quit) { finishQuiz() }
+            neutralButton(R.string.alert_quit) { finishQuiz() }
             setCancelable(false)    // avoid accidental click out of session
         }.show()
     }
@@ -699,7 +721,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
     override fun showAlertQuizEnd(proposeErrors: Boolean) {
         requireContext().alertDialog {
             messageResource = R.string.alert_quiz_finished
-            neutralButton(R.string.alert_restart) {
+            positiveButton(R.string.alert_restart) {
                 runBlocking {
                     presenter.onRestartQuiz()
                 }
@@ -711,7 +733,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
                     }
                 }
             }
-            positiveButton(R.string.alert_quit) {
+            neutralButton(R.string.alert_quit) {
                 finishQuiz()
             }
             setCancelable(false)    // avoid accidental click out of session
@@ -776,7 +798,8 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
         val dialog = WordDetailDialogFragment(di)
         val bundle = Bundle()
         bundle.putLong(Extras.EXTRA_WORD_ID, adapter!!.words[position].first.id)
-        bundle.putSerializable(Extras.EXTRA_QUIZ_TYPE, if (presenter.hasMistaken()) null else adapter!!.words[position].second)
+        bundle.putSerializable(Extras.EXTRA_QUIZ_TYPE,
+            if (presenter.previousAnswerWrong()) null else adapter!!.words[position].second)
         bundle.putString(Extras.EXTRA_SEARCH_STRING, "")
         dialog.arguments = bundle
         dialog.show(childFragmentManager, "")
@@ -856,6 +879,10 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
             }
             cancelButton()
         }.show()
+    }
+
+    override fun incrementInfiniteCount() {
+        adapter!!.isInfiniteSize = (adapter!!.isInfiniteSize?: 0) + 1
     }
 
 }

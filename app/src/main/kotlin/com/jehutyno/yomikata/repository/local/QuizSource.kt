@@ -3,6 +3,7 @@ package com.jehutyno.yomikata.repository.local
 import com.jehutyno.yomikata.dao.QuizDao
 import com.jehutyno.yomikata.model.Quiz
 import com.jehutyno.yomikata.repository.QuizRepository
+import com.jehutyno.yomikata.util.Level
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -59,8 +60,8 @@ class QuizSource(private val quizDao: QuizDao) : QuizRepository {
         quizDao.deleteWordFromQuiz(wordId, quizId)
     }
 
-    override fun countWordsForLevel(quizIds: LongArray, level: Int): Flow<Int> {
-        return quizDao.countWordsForLevel(quizIds, level)
+    override fun countWordsForLevel(quizIds: LongArray, level: Level): Flow<Int> {
+        return quizDao.countWordsForLevel(quizIds, level.level)
     }
 
     override fun countWordsForQuizzes(quizIds: LongArray): Flow<Int> {

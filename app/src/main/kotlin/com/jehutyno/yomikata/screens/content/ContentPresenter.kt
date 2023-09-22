@@ -8,7 +8,7 @@ import com.jehutyno.yomikata.model.Word
 import com.jehutyno.yomikata.repository.QuizRepository
 import com.jehutyno.yomikata.repository.WordRepository
 import com.jehutyno.yomikata.util.Categories
-import kotlinx.coroutines.flow.combine
+import com.jehutyno.yomikata.util.Level
 import mu.KLogging
 
 
@@ -19,7 +19,7 @@ class ContentPresenter(
     private val wordRepository: WordRepository,
     private val quizRepository: QuizRepository,
     contentView: ContentContract.View,
-    quizIds : LongArray, level : Int) : ContentContract.Presenter {
+    quizIds : LongArray, level : Level?) : ContentContract.Presenter {
 
     companion object : KLogging()
 
@@ -35,18 +35,13 @@ class ContentPresenter(
     override val quizCount: LiveData<Int> =
         quizRepository.countWordsForQuizzes(quizIds).asLiveData().distinctUntilChanged()
     override val lowCount: LiveData<Int> =
-        quizRepository.countWordsForLevel(quizIds, 0).asLiveData().distinctUntilChanged()
+        quizRepository.countWordsForLevel(quizIds, Level.LOW).asLiveData().distinctUntilChanged()
     override val mediumCount: LiveData<Int> =
-        quizRepository.countWordsForLevel(quizIds, 1).asLiveData().distinctUntilChanged()
+        quizRepository.countWordsForLevel(quizIds, Level.MEDIUM).asLiveData().distinctUntilChanged()
     override val highCount: LiveData<Int> =
-        quizRepository.countWordsForLevel(quizIds, 2).asLiveData().distinctUntilChanged()
+        quizRepository.countWordsForLevel(quizIds, Level.HIGH).asLiveData().distinctUntilChanged()
     override val masterCount: LiveData<Int> =
-        quizRepository.countWordsForLevel(quizIds, 3).combine(
-                                                        quizRepository.countWordsForLevel(quizIds, 4)
-                                                    ) {
-                                                        value3, value4 -> value3 + value4
-                                                    }.asLiveData().distinctUntilChanged()
-
+        quizRepository.countWordsForLevel(quizIds, Level.MASTER).asLiveData().distinctUntilChanged()
 
     override fun start() {
         logger.info("Content presenter start")

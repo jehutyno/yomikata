@@ -26,7 +26,10 @@ import com.jehutyno.yomikata.screens.quiz.QuizActivity
 import com.jehutyno.yomikata.util.*
 import com.jehutyno.yomikata.util.Extras.EXTRA_LEVEL
 import com.jehutyno.yomikata.util.Extras.EXTRA_QUIZ_IDS
+import com.jehutyno.yomikata.util.Extras.EXTRA_QUIZ_POSITION
+import com.jehutyno.yomikata.util.Extras.EXTRA_QUIZ_STRATEGY
 import com.jehutyno.yomikata.util.Extras.EXTRA_QUIZ_TITLE
+import com.jehutyno.yomikata.util.Extras.EXTRA_QUIZ_TYPES
 import io.github.inflationx.viewpump.ViewPumpContextWrapper
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -41,11 +44,11 @@ class ContentActivity : AppCompatActivity(), DIAware {
     companion object : KLogging()
 
     private var quizIds = longArrayOf()
-    private lateinit var selectedTypes: IntArray
+    private lateinit var selectedTypes: ArrayList<QuizType>
     private lateinit var quizzes: List<Quiz>
 
     private var category: Int = -1
-    private var level: Int = -1
+    private var level: Level? = null
 
     private var contentLevelFragment: ContentFragment? = null
 
@@ -90,9 +93,19 @@ class ContentActivity : AppCompatActivity(), DIAware {
         }
 
         category = intent.getIntExtra(Extras.EXTRA_CATEGORY, -1)
-        level = intent.getIntExtra(Extras.EXTRA_LEVEL, -1)
-        val quizPosition = intent.getIntExtra(Extras.EXTRA_QUIZ_POSITION, -1)
-        selectedTypes = intent.getIntArrayExtra(Extras.EXTRA_QUIZ_TYPES) ?: intArrayOf()
+        level = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            intent.getSerializableExtra(EXTRA_LEVEL, Level::class.java)
+        } else {
+            @Suppress("DEPRECATION")
+            intent.getSerializableExtra(EXTRA_LEVEL) as Level?
+        }
+        val quizPosition = intent.getIntExtra(EXTRA_QUIZ_POSITION, -1)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            selectedTypes = intent.getParcelableArrayListExtra(EXTRA_QUIZ_TYPES, QuizType::class.java) ?: arrayListOf()
+        } else {
+            @Suppress("DEPRECATION")
+            selectedTypes = intent.getParcelableArrayListExtra(EXTRA_QUIZ_TYPES) ?: arrayListOf()
+        }
 
         setSupportActionBar(findViewById(R.id.toolbar))
 
@@ -107,28 +120,16 @@ class ContentActivity : AppCompatActivity(), DIAware {
         }
 
 
-        binding.progressivePlay.visibility = if (level > -1) GONE else VISIBLE
+        binding.progressivePlay.visibility = if (level != null) GONE else VISIBLE
 
         binding.progressivePlay.setOnClickListener {
             launchQuiz(QuizStrategy.PROGRESSIVE)
         }
         binding.normalPlay.setOnClickListener {
-            when (level) {
-                0 -> launchQuiz(QuizStrategy.LOW_STRAIGHT)
-                1 -> launchQuiz(QuizStrategy.MEDIUM_STRAIGHT)
-                2 -> launchQuiz(QuizStrategy.HIGH_STRAIGHT)
-                3 -> launchQuiz(QuizStrategy.MASTER_STRAIGHT)
-                else -> launchQuiz(QuizStrategy.STRAIGHT)
-            }
+            launchQuiz(QuizStrategy.STRAIGHT)
         }
         binding.shufflePlay.setOnClickListener {
-            when (level) {
-                0 -> launchQuiz(QuizStrategy.LOW_SHUFFLE)
-                1 -> launchQuiz(QuizStrategy.MEDIUM_SHUFFLE)
-                2 -> launchQuiz(QuizStrategy.HIGH_SHUFFLE)
-                3 -> launchQuiz(QuizStrategy.MASTER_SHUFFLE)
-                else -> launchQuiz(QuizStrategy.SHUFFLE)
-            }
+            launchQuiz(QuizStrategy.SHUFFLE)
         }
 
         /**
@@ -179,11 +180,11 @@ class ContentActivity : AppCompatActivity(), DIAware {
      * selection is loaded (non-level selection)
      */
     private fun launchFragment(savedInstanceState: Bundle?, quizPosition: Int) {
-        if (level > -1) {
+        if (level != null) {
             title = when (level) {
-                0 -> getString(R.string.red_review)
-                1 -> getString(R.string.orange_review)
-                2 -> getString(R.string.yellow_review)
+                Level.LOW -> getString(R.string.red_review)
+                Level.MEDIUM -> getString(R.string.orange_review)
+                Level.HIGH -> getString(R.string.yellow_review)
                 else -> getString(R.string.green_review)
             }
             binding.pagerContent.visibility = GONE
@@ -196,7 +197,7 @@ class ContentActivity : AppCompatActivity(), DIAware {
                 val bundle = Bundle()
                 bundle.putLongArray(EXTRA_QUIZ_IDS, ids.toLongArray())
                 bundle.putString(EXTRA_QUIZ_TITLE, title as String)
-                bundle.putInt(EXTRA_LEVEL, level)
+                bundle.putSerializable(EXTRA_LEVEL, level)
                 contentLevelFragment = ContentFragment(di)
                 contentLevelFragment!!.arguments = bundle
                 quizIds = ids.toLongArray()
@@ -242,10 +243,11 @@ class ContentActivity : AppCompatActivity(), DIAware {
         }
 
         val intent = Intent(this, QuizActivity::class.java).apply {
-            putExtra(Extras.EXTRA_QUIZ_IDS, quizIds)
-            putExtra(Extras.EXTRA_QUIZ_TITLE, title)
-            putExtra(Extras.EXTRA_QUIZ_STRATEGY, strategy)
-            putExtra(Extras.EXTRA_QUIZ_TYPES, selectedTypes)
+            putExtra(EXTRA_QUIZ_IDS, quizIds)
+            putExtra(EXTRA_QUIZ_TITLE, title)
+            putExtra(EXTRA_QUIZ_STRATEGY, strategy)
+            putExtra(EXTRA_LEVEL, level)
+            putExtra(EXTRA_QUIZ_TYPES, selectedTypes)
         }
         startActivity(intent)
     }

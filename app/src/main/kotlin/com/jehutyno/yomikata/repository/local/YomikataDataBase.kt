@@ -6,7 +6,11 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
-import com.jehutyno.yomikata.dao.*
+import com.jehutyno.yomikata.dao.KanjiSoloDao
+import com.jehutyno.yomikata.dao.QuizDao
+import com.jehutyno.yomikata.dao.SentenceDao
+import com.jehutyno.yomikata.dao.StatsDao
+import com.jehutyno.yomikata.dao.WordDao
 import com.jehutyno.yomikata.repository.migration.OldMigrations
 import com.jehutyno.yomikata.util.UpdateProgressDialog
 import java.io.File
@@ -16,7 +20,7 @@ import java.io.OutputStream
 import java.nio.channels.FileLock
 
 
-const val DATABASE_VERSION = 14
+const val DATABASE_VERSION = 15
 
 @Database(entities = [RoomKanjiSolo::class, RoomQuiz::class, RoomSentences::class,
                       RoomStatEntry::class, RoomWords::class, RoomQuizWord::class,
@@ -51,7 +55,7 @@ abstract class YomikataDataBase : RoomDatabase() {
                             .addMigrations(
                                 *OldMigrations.getOldMigrations(),
                                 OldMigrations.MIGRATION_12_13(context),
-                                MIGRATION_13_14
+                                MIGRATION_13_14, MIGRATION_14_15
                             )
                             .build()
                 }
@@ -204,6 +208,90 @@ abstract class YomikataDataBase : RoomDatabase() {
 
         ///////// DEFINE MIGRATIONS /////////
         // do not use values, constants, entities, daos, etc. that may be changed externally
+
+        // migrate points and level system
+        val MIGRATION_14_15 = object: Migration(14, 15) {
+            /**
+             * Old system:
+             *      Points reset back to zero when leveling up
+             * New system:
+             *      Points keep increasing and level is determined by points uniquely
+             */
+            override fun migrate(database: SupportSQLiteDatabase) {
+                // fix a small issue with foreign key constraints
+                database.execSQL("""UPDATE words SET sentence_id = NULL WHERE _id = 3537""")
+
+                // go through all words and change level and words
+                // repetition is kept, it will be recalculated when the word is tested anyway
+                val idLevelPoints = mutableListOf<Triple<Long, Int, Int>>()
+
+                database.query("""SELECT _id, level, points FROM words""").use {
+                    val idIndex = it.getColumnIndexOrThrow("_id")
+                    val levelIndex = it.getColumnIndexOrThrow("level")
+                    val pointsIndex = it.getColumnIndexOrThrow("points")
+
+                    // add all words to list
+                    while (it.moveToNext()) {
+                        idLevelPoints.add(Triple(
+                            it.getLong(idIndex),
+                            it.getInt(levelIndex),
+                            it.getInt(pointsIndex)
+                        ))
+                    }
+                }
+
+                // minimum points requirements for level
+                val low = 0
+                val medium = 200
+                val high = 400
+                val master = 600
+                val max = 850
+
+                fun getPointsForLevel(level: Int): Int {
+                    return when(level) {
+                        0 -> low
+                        1 -> medium
+                        2 -> high
+                        3 -> master
+                        else -> max
+                    }
+                }
+                fun getNewLevelFromNewPoints(points: Int): Int {
+                    return   if (points < medium)   0
+                        else if (points < high)     1
+                        else if (points < master)   2
+                        else                        3
+                }
+                val newIdLevelPoints = mutableListOf<Triple<Long, Int, Int>>()
+                // change the level & points for each word
+                idLevelPoints.forEach {
+                    val currentLevel = it.second
+                    if (currentLevel == -1)
+                        return@forEach
+                    val percent = it.third
+                        .coerceAtLeast(0)   // make sure points are not negative
+                        .toFloat()                      // use points as percent between 0 and 100
+                    val basePoints = getPointsForLevel(currentLevel)
+
+                    // change to new values
+                    val difference = getPointsForLevel(currentLevel + 1) - basePoints
+                    val newPoints = (basePoints + (difference.toFloat() * percent / 100f).toInt())
+                                    .coerceIn(0, max)  // make sure points are in valid range
+
+                    newIdLevelPoints.add(Triple(
+                        it.first,
+                        getNewLevelFromNewPoints(newPoints),
+                        newPoints
+                    ))
+                }
+
+                // update database
+                val update = "UPDATE words SET level = ?, points = ? WHERE _id = ?"
+                newIdLevelPoints.forEach { (id, level, points) ->
+                    database.execSQL(update, arrayOf(level, points, id))
+                }
+            }
+        }
 
         // migrate from anko sqlite to room
         val MIGRATION_13_14 = object : Migration(13, 14) {

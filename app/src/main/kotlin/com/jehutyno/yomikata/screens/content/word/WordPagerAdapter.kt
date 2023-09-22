@@ -2,13 +2,15 @@ package com.jehutyno.yomikata.screens.content.word
 
 import android.app.Activity
 import android.content.Context
-import androidx.viewpager.widget.PagerAdapter
-import androidx.appcompat.widget.PopupMenu
 import android.view.LayoutInflater
 import android.view.View
-import android.view.View.*
+import android.view.View.GONE
+import android.view.View.INVISIBLE
+import android.view.View.VISIBLE
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.appcompat.widget.PopupMenu
+import androidx.viewpager.widget.PagerAdapter
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.databinding.VhKanjiSoloBinding
 import com.jehutyno.yomikata.databinding.VhWordDetailBinding
@@ -16,8 +18,10 @@ import com.jehutyno.yomikata.model.KanjiSoloRadical
 import com.jehutyno.yomikata.model.Sentence
 import com.jehutyno.yomikata.model.Word
 import com.jehutyno.yomikata.model.getWordColor
-import com.jehutyno.yomikata.util.*
-import java.util.*
+import com.jehutyno.yomikata.util.QuizType
+import com.jehutyno.yomikata.util.getWordPositionInFuriSentence
+import com.jehutyno.yomikata.util.sentenceNoAnswerFuri
+import com.jehutyno.yomikata.util.sentenceNoFuri
 
 /**
  * Created by jehutyno on 08/10/2016.
@@ -43,7 +47,7 @@ class WordPagerAdapter(val activity: Activity, var quizType: QuizType?, var call
                 if (quizType != null) word.first.japanese else "    {${word.first.japanese};${word.first.reading}}    "
         binding.levelDown.visibility = if (quizType != null) GONE else VISIBLE
         binding.levelUp.visibility = if (quizType != null) GONE else VISIBLE
-        wordDisplay.let { binding.furiWord.text_set(wordDisplay, 0, it.length, getWordColor(container.context, word.first.level, word.first.points)) }
+        wordDisplay.let { binding.furiWord.text_set(wordDisplay, 0, it.length, getWordColor(container.context, word.first.points)) }
         binding.textTraduction.text = word.first.getTrad()
 //        val sentenceNoFuri = sentenceNoFuri(word.third)
         val wordTruePosition = word.third.jap.let { getWordPositionInFuriSentence(it, word.first) }
@@ -52,7 +56,7 @@ class WordPagerAdapter(val activity: Activity, var quizType: QuizType?, var call
                     if (quizType == null) word.third.jap else sentenceNoAnswerFuri(word.third, word.first),
                     it,
                     wordTruePosition + word.first.japanese.length,
-                    getWordColor(activity, word.first.level, word.first.points))
+                    getWordColor(activity, word.first.points))
         }
         binding.textTraduction.visibility = if (quizType == QuizType.TYPE_JAP_EN || word.first.isKana == 2) INVISIBLE else VISIBLE
         binding.textSentenceEn.text = word.third.getTrad()

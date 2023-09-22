@@ -14,8 +14,10 @@ import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.util.Extras
+import com.jehutyno.yomikata.util.Level
 import com.jehutyno.yomikata.util.Prefs
 import com.jehutyno.yomikata.util.QuizStrategy
+import com.jehutyno.yomikata.util.QuizType
 import com.jehutyno.yomikata.util.addOrReplaceFragment
 import io.github.inflationx.viewpump.ViewPumpContextWrapper
 import mu.KLogging
@@ -25,6 +27,7 @@ import splitties.alertdialog.appcompat.alertDialog
 import splitties.alertdialog.appcompat.cancelButton
 import splitties.alertdialog.appcompat.okButton
 import splitties.alertdialog.appcompat.titleResource
+import java.util.Random
 
 
 class QuizActivity : AppCompatActivity(), DIAware {
@@ -38,7 +41,7 @@ class QuizActivity : AppCompatActivity(), DIAware {
         import(quizPresenterModule(quizFragment))
         bind<QuizContract.Presenter>() with provider {
             QuizPresenter(instance(), instance(), instance(), instance(), instance(), instance(),
-                            quizIds, quizStrategy, quizTypes, lifecycleScope)
+                            quizIds, quizStrategy, level, quizTypes, Random(), lifecycleScope)
         }
     }
     // trigger when quizFragment is set (see subDI)
@@ -50,7 +53,8 @@ class QuizActivity : AppCompatActivity(), DIAware {
 
     private lateinit var quizIds: LongArray
     private lateinit var quizStrategy: QuizStrategy
-    private lateinit var quizTypes: IntArray
+    private var level: Level? = null
+    private lateinit var quizTypes: ArrayList<QuizType>
 
     override fun attachBaseContext(newBase: Context) {
         super.attachBaseContext(ViewPumpContextWrapper.wrap(newBase))
@@ -79,30 +83,51 @@ class QuizActivity : AppCompatActivity(), DIAware {
 
             quizStrategy = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 savedInstanceState.getSerializable("quiz_strategy", QuizStrategy::class.java)!!
-            }
-            else {
+            } else {
                 @Suppress("DEPRECATION")
                 savedInstanceState.getSerializable("quiz_strategy") as QuizStrategy
             }
+            level = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                savedInstanceState.getSerializable("level", Level::class.java)
+            } else {
+                @Suppress("DEPRECATION")
+                savedInstanceState.getSerializable("level") as Level?
+            }
 
-            quizTypes = savedInstanceState.getIntArray("quiz_types")?: intArrayOf()
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                quizTypes = savedInstanceState.getParcelableArrayList("quiz_types", QuizType::class.java)?: arrayListOf()
+            } else {
+                @Suppress("DEPRECATION")
+                quizTypes = savedInstanceState.getParcelableArrayList("quiz_types")?: arrayListOf()
+            }
         } else {
             quizIds = intent.getLongArrayExtra(Extras.EXTRA_QUIZ_IDS) ?: longArrayOf()
 
             quizStrategy = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 intent.getSerializableExtra(Extras.EXTRA_QUIZ_STRATEGY, QuizStrategy::class.java)!!
-            }
-            else {
+            } else {
                 @Suppress("DEPRECATION")
                 intent.getSerializableExtra(Extras.EXTRA_QUIZ_STRATEGY) as QuizStrategy
             }
 
-            quizTypes = intent.getIntArrayExtra(Extras.EXTRA_QUIZ_TYPES) ?: intArrayOf()
+            level = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                intent.getSerializableExtra(Extras.EXTRA_LEVEL, Level::class.java)
+            } else {
+                @Suppress("DEPRECATION")
+                intent.getSerializableExtra(Extras.EXTRA_LEVEL) as Level?
+            }
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                quizTypes = intent.getParcelableArrayListExtra(Extras.EXTRA_QUIZ_TYPES, QuizType::class.java) ?: arrayListOf()
+            } else {
+                @Suppress("DEPRECATION")
+                quizTypes = intent.getParcelableArrayListExtra(Extras.EXTRA_QUIZ_TYPES) ?: arrayListOf()
+            }
 
             val bundle = Bundle()
             bundle.putLongArray(Extras.EXTRA_QUIZ_IDS, quizIds)
             bundle.putSerializable(Extras.EXTRA_QUIZ_STRATEGY, quizStrategy)
-            bundle.putIntArray(Extras.EXTRA_QUIZ_TYPES, quizTypes)
+            bundle.putParcelableArrayList(Extras.EXTRA_QUIZ_TYPES, quizTypes)
 
             quizFragment = QuizFragment(di)
             quizFragment.arguments = bundle
@@ -146,7 +171,8 @@ class QuizActivity : AppCompatActivity(), DIAware {
         supportFragmentManager.putFragment(outState, "quizFragment", quizFragment)
         outState.putLongArray("quiz_ids", quizIds)
         outState.putSerializable("quiz_strategy", quizStrategy)
-        outState.putIntArray("quiz_types", quizTypes)
+        outState.putSerializable("level", level)
+        outState.putParcelableArrayList("quiz_types", quizTypes)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {

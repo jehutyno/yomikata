@@ -7,6 +7,7 @@ import com.jehutyno.yomikata.model.Answer
 import com.jehutyno.yomikata.model.Quiz
 import com.jehutyno.yomikata.model.Sentence
 import com.jehutyno.yomikata.model.Word
+import com.jehutyno.yomikata.util.Level
 import com.jehutyno.yomikata.util.QuizType
 
 
@@ -23,15 +24,17 @@ interface QuizContract {
         fun displayEditMode()
         fun displayQCMNormalTextViews()
         fun displayQCMFuriTextViews()
-        fun displayQCMTv(tvNum: Int, option: String, color: Int)
-        fun displayQCMFuri(furiNum: Int, optionFuri: String, start: Int, end: Int, color: Int)
+        fun displayQCMTv(tvNum: Int, option: String, colorId: Int)
+        fun displayQCMTv(options: List<String>, colorIds: List<Int>)
+        fun displayQCMFuri(furiNum: Int, optionFuri: String, start: Int, end: Int, colorId: Int)
+        fun displayQCMFuri(options: List<String>, starts: List<Int>, ends: List<Int>, colorIds: List<Int>)
         fun showKeyboard()
         fun hideKeyboard()
-        fun animateColor(position: Int, word: Word, sentence: Sentence, quizType: QuizType, fromLevel: Int, toLevel: Int, fromPoints: Int, toPoints: Int)
+        fun animateColor(position: Int, word: Word, sentence: Sentence, quizType: QuizType, fromPoints: Int, toPoints: Int)
         fun setEditTextColor(color: Int)
         fun animateCheck(result: Boolean)
         fun reInitUI()
-        fun showAlertProgressiveSessionEnd(proposeErrors: Boolean)
+        fun showAlertProgressiveSessionEnd()
         fun setPagerPosition(position: Int)
         fun finishQuiz()
         fun showAlertNonProgressiveSessionEnd(proposeErrors: Boolean)
@@ -45,24 +48,25 @@ interface QuizContract {
         fun reportError(word: Word, sentence: Sentence)
         fun speakWord(word: Word)
         fun launchSpeakSentence(sentence: Sentence)
+        fun incrementInfiniteCount()
     }
 
     interface Presenter : BasePresenter {
         suspend fun getWords(): List<Word>
         suspend fun getSelections(): List<Quiz>
-        suspend fun loadWords()
+        suspend fun loadWords(): List<Pair<Word, QuizType>>
         suspend fun createSelection(quizName: String): Long
         suspend fun addWordToSelection(wordId: Long, quizId: Long)
         suspend fun isWordInQuiz(wordId: Long, quizId: Long): Boolean
         suspend fun isWordInQuizzes(wordId: Long, quizIds: Array<Long>): ArrayList<Boolean>
         suspend fun deleteWordFromSelection(wordId: Long, selectionId: Long)
-        suspend fun updateWordLevel(wordId: Long, level: Int)
+        suspend fun updateWordLevel(wordId: Long, level: Level)
         suspend fun getRandomWords(wordId: Long, answer: String, wordSize: Int, limit: Int, quizType: QuizType): ArrayList<Word>
         suspend fun updateWordPoints(wordId: Long, points: Int)
-        suspend fun getNextWords(): List<Pair<Word, QuizType>>
+        suspend fun getNextProgressiveWords(): List<Pair<Word, QuizType>>
         suspend fun getWord(id: Long): Word?
         suspend fun initQuiz()
-        suspend fun updateRepetitions(id: Long, level: Int, points: Int, result: Boolean)
+        suspend fun updateRepetitions(id: Long, repetition: Int)
         suspend fun decreaseAllRepetitions()
         suspend fun saveAnswerResultStat(word: Word, result: Boolean)
         suspend fun saveWordSeenStat(word: Word)
@@ -87,7 +91,7 @@ interface QuizContract {
         fun onSpeakSentence()
         fun onSpeakWordTTS()
         fun onReportClick(position: Int)
-        fun hasMistaken(): Boolean
+        fun previousAnswerWrong(): Boolean
     }
 
 }

@@ -11,15 +11,6 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import com.google.android.material.appbar.AppBarLayout
-import com.google.android.material.navigation.NavigationView
-import androidx.core.content.ContextCompat
-import androidx.core.view.GravityCompat
-import androidx.drawerlayout.widget.DrawerLayout
-import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.app.AppCompatDelegate
-import androidx.appcompat.widget.SwitchCompat
-import androidx.appcompat.widget.Toolbar
 import android.view.KeyEvent
 import android.view.Menu
 import android.view.MenuItem
@@ -32,11 +23,20 @@ import android.widget.TextView
 import android.window.OnBackInvokedDispatcher
 import androidx.activity.addCallback
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.appcompat.widget.SwitchCompat
+import androidx.appcompat.widget.Toolbar
+import androidx.core.content.ContextCompat
+import androidx.core.view.GravityCompat
+import androidx.drawerlayout.widget.DrawerLayout
 import androidx.preference.PreferenceManager
 import androidx.viewpager2.widget.ViewPager2
 import com.flaviofaria.kenburnsview.KenBurnsView
 import com.getbase.floatingactionbutton.FloatingActionButton
 import com.getbase.floatingactionbutton.FloatingActionsMenu
+import com.google.android.material.appbar.AppBarLayout
+import com.google.android.material.navigation.NavigationView
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.databinding.ActivityQuizzesBinding
 import com.jehutyno.yomikata.screens.PrefsActivity
@@ -44,10 +44,8 @@ import com.jehutyno.yomikata.screens.content.QuizzesPagerAdapter
 import com.jehutyno.yomikata.screens.search.SearchResultActivity
 import com.jehutyno.yomikata.util.*
 import com.jehutyno.yomikata.view.AppBarStateChangeListener
-import com.wooplr.spotlight.utils.SpotlightListener
-import mu.KLogging
-import org.kodein.di.DIAware
 import org.kodein.di.DI
+import org.kodein.di.DIAware
 import org.kodein.di.android.di
 import splitties.alertdialog.appcompat.*
 import java.util.*
@@ -56,13 +54,6 @@ import java.util.*
 class QuizzesActivity : AppCompatActivity(), DIAware {
 
     override val di: DI by di()
-
-    companion object : KLogging() {
-        val UPDATE_INTENT = "update_intent"
-        val UPDATE_COUNT = "update_count"
-        val UPDATE_PROGRESS = "update_progress"
-        val UPDATE_FINISHED = "update_finished"
-    }
 
     private var selectedCategory: Int = 0
     private lateinit var toolbar: Toolbar
@@ -174,7 +165,7 @@ class QuizzesActivity : AppCompatActivity(), DIAware {
                 // Viewpager2 uses the tag: "f" + position to store its fragments
                 val fragment = supportFragmentManager.findFragmentByTag("f${binding.pagerQuizzes.currentItem}")
                 if (fragment is QuizzesFragment) {
-                    fragment.launchQuizClick(quizStrategy, binding.textTitle.text.toString())
+                    fragment.launchQuizClick(quizStrategy, null, binding.textTitle.text.toString())
                     binding.multipleActions.collapseImmediately()
                 }
             }
@@ -241,11 +232,12 @@ class QuizzesActivity : AppCompatActivity(), DIAware {
     }
 
     private fun tutos() {
-        spotlightWelcome(this, binding.anchor, getString(R.string.tuto_yomikataz), getString(R.string.tuto_welcome), SpotlightListener {
+        spotlightWelcome(this, binding.anchor, getString(R.string.tuto_yomikataz), getString(R.string.tuto_welcome)
+        ) {
             spotlightTuto(this, getNavButtonView(toolbar), getString(R.string.tuto_categories),
-                getString(R.string.tuto_categories_message), SpotlightListener {
-            })
-        })
+                getString(R.string.tuto_categories_message)
+            ) {}
+        }
     }
 
     private fun getNavButtonView(toolbar: Toolbar): View? {
