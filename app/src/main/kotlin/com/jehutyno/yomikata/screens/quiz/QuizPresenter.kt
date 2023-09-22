@@ -344,8 +344,6 @@ class QuizPresenter(
      * depending on the QuizType of the next word.
      */
     override suspend fun setUpNextQuiz() {
-        if (!wordHandler.errorMode && wordHandler.currentItem != -1) decreaseAllRepetitions()
-
         wordHandler.increment()
 
         val word = wordHandler.getCurrentWord()
@@ -706,6 +704,8 @@ class QuizPresenter(
      * and also depending on quiz strategy.
      */
     override suspend fun onNextWord() {
+        if (!wordHandler.errorMode) decreaseAllRepetitions()
+
         sessionCount--
         previousAnswerWrong = false
         quizView.reInitUI()
