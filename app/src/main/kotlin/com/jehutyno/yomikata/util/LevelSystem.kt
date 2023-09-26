@@ -84,14 +84,20 @@ fun getLevelFromPoints(points: Int): Level {
  * Get progress to next level
  *
  * @param points Current points
- * @return a Float between 0.0 and 1.0 corresponding to the progress to the next level
+ * @return a Float between 0.0 and 1.0 corresponding to the progress to the next level, or the
+ * progress to [MAX_POINTS] if level is maxed.
  */
 fun getProgressToNextLevel(points: Int): Float {
     val currentLevel = getLevelFromPoints(points)
     val nextLevel = getNextLevel(currentLevel)
+    val nextLevelPoints = if (nextLevel == currentLevel) {
+        MAX_POINTS  // current level is max
+    } else {
+        nextLevel.minPoints
+    }
 
     val diff = (points - currentLevel.minPoints).toFloat()
-    val totalDiff = (nextLevel.minPoints - currentLevel.minPoints).toFloat()
+    val totalDiff = (nextLevelPoints - currentLevel.minPoints).toFloat()
     return diff / totalDiff
 }
 
