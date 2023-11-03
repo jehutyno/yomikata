@@ -24,6 +24,7 @@ import com.jehutyno.yomikata.util.sentenceNoAnswerFuri
 import com.jehutyno.yomikata.util.sentenceNoFuri
 import kotlinx.coroutines.Job
 
+
 /**
  * Created by jehutyno on 08/10/2016.
  */

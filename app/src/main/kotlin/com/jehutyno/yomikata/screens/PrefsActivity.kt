@@ -13,11 +13,23 @@ import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.PreferenceManager
 import com.jehutyno.yomikata.R
-import com.jehutyno.yomikata.repository.local.YomikataDataBase
-import com.jehutyno.yomikata.util.*
+import com.jehutyno.yomikata.repository.database.YomikataDatabase
+import com.jehutyno.yomikata.util.Categories
+import com.jehutyno.yomikata.util.FileUtils
+import com.jehutyno.yomikata.util.Prefs
+import com.jehutyno.yomikata.util.RestartDialogMessage
+import com.jehutyno.yomikata.util.backupProgress
+import com.jehutyno.yomikata.util.getBackupLauncher
+import com.jehutyno.yomikata.util.getLevelDownloadVersion
+import com.jehutyno.yomikata.util.getRestartDialog
+import com.jehutyno.yomikata.util.getRestoreLauncher
+import com.jehutyno.yomikata.util.restoreProgress
 import com.wooplr.spotlight.prefs.PreferencesManager
 import mu.KLogging
-import splitties.alertdialog.appcompat.*
+import splitties.alertdialog.appcompat.alertDialog
+import splitties.alertdialog.appcompat.cancelButton
+import splitties.alertdialog.appcompat.messageResource
+import splitties.alertdialog.appcompat.okButton
 
 
 /**
@@ -60,10 +72,10 @@ class PrefsActivity : AppCompatActivity() {
             return requireContext().alertDialog {
                 messageResource = R.string.prefs_reinit_sure
                 okButton {
-                    YomikataDataBase.resetDatabase(requireContext())
-                    YomikataDataBase.forceLoadDatabase(requireContext())
+                    YomikataDatabase.resetDatabase(requireContext())
+                    YomikataDatabase.forceLoadDatabase(requireContext())
                     requireActivity().getRestartDialog(RestartDialogMessage.RESET) {
-                        YomikataDataBase.restoreLocalBackup(requireContext())
+                        YomikataDatabase.restoreLocalBackup(requireContext())
                     }.show()
                 }
                 cancelButton()

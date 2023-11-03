@@ -1,13 +1,13 @@
 package com.jehutyno.yomikata.screens.home
 
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.View.GONE
 import android.view.View.VISIBLE
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.fragment.app.Fragment
 import androidx.preference.PreferenceManager
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -18,10 +18,16 @@ import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.databinding.FragmentHomeBinding
 import com.jehutyno.yomikata.model.StatEntry
 import com.jehutyno.yomikata.screens.quizzes.QuizzesActivity
-import com.jehutyno.yomikata.util.*
-import org.kodein.di.*
-
-import java.util.*
+import com.jehutyno.yomikata.util.Categories
+import com.jehutyno.yomikata.util.Prefs
+import com.jehutyno.yomikata.util.contactDiscord
+import com.jehutyno.yomikata.util.contactFacebook
+import com.jehutyno.yomikata.util.contactPlayStore
+import com.jehutyno.yomikata.util.shareApp
+import org.kodein.di.DI
+import org.kodein.di.instance
+import org.kodein.di.newInstance
+import java.util.Locale
 
 
 /**
@@ -31,7 +37,7 @@ class HomeFragment(di: DI) : Fragment(), HomeContract.View {
 
     // kodein
     private val mpresenter: HomeContract.Presenter by di.newInstance {
-        HomePresenter(instance(), this@HomeFragment)
+        HomePresenter(instance())
     }
 
     private lateinit var newsRef: DatabaseReference
@@ -44,11 +50,6 @@ class HomeFragment(di: DI) : Fragment(), HomeContract.View {
 
     override fun onMenuItemClick(category: Int) {
 
-    }
-
-    override fun setPresenter(presenter: HomeContract.Presenter) {
-        // no need: see QuizzesFragment setPresenter for explanation
-//        mpresenter = presenter
     }
 
     override fun onStart() {

@@ -13,7 +13,7 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.appcompat.app.AlertDialog
 import androidx.preference.PreferenceManager
 import com.jehutyno.yomikata.R
-import com.jehutyno.yomikata.repository.local.YomikataDataBase
+import com.jehutyno.yomikata.repository.database.YomikataDatabase
 import com.jehutyno.yomikata.repository.migration.importYomikata
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -110,7 +110,7 @@ private fun Activity.handleBackup(uri: Uri, updateProgressDialog: UpdateProgress
 
         var stop: Boolean = withContext(Dispatchers.IO) {
             try {
-                data = YomikataDataBase.getRawData(this@handleBackup)
+                data = YomikataDatabase.getRawData(this@handleBackup)
             } catch (e: Exception) {
                 errorMessage = e.message
                 return@withContext true
@@ -163,7 +163,7 @@ fun Activity.getRestoreLauncher(result: ActivityResult, create_backup: Boolean =
     val updateProgressDialog = UpdateProgressDialog(this)
     updateProgressDialog.finishDialog =
         if (create_backup)
-            getRestartDialog(RestartDialogMessage.RESTORE) { YomikataDataBase.restoreLocalBackup(this) }
+            getRestartDialog(RestartDialogMessage.RESTORE) { YomikataDatabase.restoreLocalBackup(this) }
         else
             getRestartDialog(RestartDialogMessage.RESTORE, null)
     updateProgressDialog.prepare(getString(R.string.restoring_progress), getString(R.string.do_not_close_app))
@@ -185,11 +185,11 @@ fun Activity.getRestoreLauncher(result: ActivityResult, create_backup: Boolean =
             return@launch
 
         // do migration
-        YomikataDataBase.setUpdateProgressDialog(updateProgressDialogMigrate)
+        YomikataDatabase.setUpdateProgressDialog(updateProgressDialogMigrate)
         updateProgressDialogMigrate.show()
         val successAndMessage = withContext(Dispatchers.IO) {
             try {
-                YomikataDataBase.forceLoadDatabase(this@getRestoreLauncher)
+                YomikataDatabase.forceLoadDatabase(this@getRestoreLauncher)
                 return@withContext Pair(true, "")
             } catch (e: Exception) {
                 return@withContext Pair(false, e.message)
@@ -198,10 +198,10 @@ fun Activity.getRestoreLauncher(result: ActivityResult, create_backup: Boolean =
         val migrationSuccess = successAndMessage.first
         try {
             updateProgressDialogMigrate.destroy()
-            YomikataDataBase.setUpdateProgressDialog(null)
+            YomikataDatabase.setUpdateProgressDialog(null)
         } finally {
             if (!migrationSuccess) {
-                YomikataDataBase.restoreLocalBackup(this@getRestoreLauncher)
+                YomikataDatabase.restoreLocalBackup(this@getRestoreLauncher)
                 val errorMessage = successAndMessage.second
                 updateProgressDialog.error(getString(R.string.restore_error),
                     getString(R.string.migration_failed) + ":\n" + errorMessage
@@ -260,14 +260,14 @@ private suspend fun Activity.handleRestore(inputStream: InputStream,
         if (type == DatabaseType.OLD_YOMIKATA) {
             importYomikata(this@handleRestore, data, null, create_backup)
         } else {
-            YomikataDataBase.overwriteDatabase(this@handleRestore, data, create_backup)
+            YomikataDatabase.overwriteDatabase(this@handleRestore, data, create_backup)
         }
         flag = true
 
         updateProgressDialog?.updateProgress(75)
     } catch (e: IOException) {
         if (flag) {
-            YomikataDataBase.restoreLocalBackup(this@handleRestore)
+            YomikataDatabase.restoreLocalBackup(this@handleRestore)
         }
         e.printStackTrace()
         withContext(Dispatchers.Main) {

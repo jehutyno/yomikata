@@ -2,8 +2,8 @@ package com.jehutyno.yomikata.dao
 
 import androidx.room.*
 import androidx.sqlite.db.SupportSQLiteQuery
-import com.jehutyno.yomikata.repository.local.RoomQuizWord
-import com.jehutyno.yomikata.repository.local.RoomWords
+import com.jehutyno.yomikata.repository.database.RoomQuizWord
+import com.jehutyno.yomikata.repository.database.RoomWords
 import kotlinx.coroutines.flow.Flow
 
 

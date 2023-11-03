@@ -1,4 +1,4 @@
-package com.jehutyno.yomikata.repository.local
+package com.jehutyno.yomikata.repository.database
 
 import androidx.collection.arraySetOf
 import androidx.room.Room
@@ -30,11 +30,11 @@ class RoomMigrationTest {
     @get:Rule
     val migrationHelper = MigrationTestHelper(
         InstrumentationRegistry.getInstrumentation(),
-        YomikataDataBase::class.java
+        YomikataDatabase::class.java
     )
 
     // add new migrations to this list
-    private val ALL_MIGRATIONS = YomikataDataBase.let {
+    private val ALL_MIGRATIONS = YomikataDatabase.let {
         arrayOf (
             it.MIGRATION_14_15
         )
@@ -89,7 +89,7 @@ class RoomMigrationTest {
         }
 
         database = migrationHelper.runMigrationsAndValidate(TEST_DB_NAME, 15,
-                            true, YomikataDataBase.MIGRATION_14_15)
+                            true, YomikataDatabase.MIGRATION_14_15)
 
         // test that inserted data was processed properly
         val cursor = database.query("""SELECT _id, level, points FROM words""")
@@ -116,7 +116,7 @@ class RoomMigrationTest {
         // Open latest version of the database. Room validates the schema once all migrations execute.
         Room.databaseBuilder(
             InstrumentationRegistry.getInstrumentation().targetContext,
-            YomikataDataBase::class.java,
+            YomikataDatabase::class.java,
             TEST_DB_NAME
         ).addMigrations(*ALL_MIGRATIONS).build().apply {
             openHelper.writableDatabase.close()

@@ -4,12 +4,11 @@ import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SmallTest
-import com.jehutyno.yomikata.repository.local.RoomSentences
-import com.jehutyno.yomikata.repository.local.YomikataDataBase
+import com.jehutyno.yomikata.repository.database.RoomSentences
+import com.jehutyno.yomikata.repository.database.YomikataDatabase
 import kotlinx.coroutines.runBlocking
-import org.junit.Assert.*
-
 import org.junit.After
+import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -19,14 +18,14 @@ import org.junit.runner.RunWith
 @SmallTest
 class SentenceDaoTest {
 
-    private lateinit var database: YomikataDataBase
+    private lateinit var database: YomikataDatabase
     private lateinit var sentenceDao: SentenceDao
 
     @Before
     fun setupDatabase() {
         database = Room.inMemoryDatabaseBuilder(
             ApplicationProvider.getApplicationContext(),
-            YomikataDataBase::class.java
+            YomikataDatabase::class.java
         ).allowMainThreadQueries().build()
 
         sentenceDao = database.sentenceDao()

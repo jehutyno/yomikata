@@ -1,4 +1,4 @@
-package com.jehutyno.yomikata.repository.local
+package com.jehutyno.yomikata.repository.database
 
 import androidx.room.ColumnInfo
 import androidx.room.Embedded

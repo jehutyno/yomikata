@@ -2,11 +2,11 @@ package com.jehutyno.yomikata.screens.quiz
 
 import android.os.Bundle
 import com.jehutyno.yomikata.BasePresenter
-import com.jehutyno.yomikata.BaseView
 import com.jehutyno.yomikata.model.Answer
-import com.jehutyno.yomikata.model.Quiz
 import com.jehutyno.yomikata.model.Sentence
 import com.jehutyno.yomikata.model.Word
+import com.jehutyno.yomikata.presenters.SelectionsInterface
+import com.jehutyno.yomikata.presenters.WordInQuizInterface
 import com.jehutyno.yomikata.util.Level
 import com.jehutyno.yomikata.util.QuizType
 
@@ -16,7 +16,7 @@ import com.jehutyno.yomikata.util.QuizType
  */
 interface QuizContract {
 
-    interface View : BaseView<Presenter> {
+    interface View {
         fun displayWords(quizWordsPair: List<Pair<Word, QuizType>>)
         fun noWords()
         fun setHiraganaConversion(enabled: Boolean)
@@ -51,20 +51,13 @@ interface QuizContract {
         fun incrementInfiniteCount()
     }
 
-    interface Presenter : BasePresenter {
+    interface Presenter : BasePresenter, SelectionsInterface, WordInQuizInterface {
         suspend fun getWords(): List<Word>
-        suspend fun getSelections(): List<Quiz>
         suspend fun loadWords(): List<Pair<Word, QuizType>>
-        suspend fun createSelection(quizName: String): Long
-        suspend fun addWordToSelection(wordId: Long, quizId: Long)
-        suspend fun isWordInQuiz(wordId: Long, quizId: Long): Boolean
-        suspend fun isWordInQuizzes(wordId: Long, quizIds: Array<Long>): ArrayList<Boolean>
-        suspend fun deleteWordFromSelection(wordId: Long, selectionId: Long)
         suspend fun updateWordLevel(wordId: Long, level: Level)
         suspend fun getRandomWords(wordId: Long, answer: String, wordSize: Int, limit: Int, quizType: QuizType): ArrayList<Word>
         suspend fun updateWordPoints(wordId: Long, points: Int)
         suspend fun getNextProgressiveWords(): List<Pair<Word, QuizType>>
-        suspend fun getWord(id: Long): Word?
         suspend fun initQuiz()
         suspend fun updateRepetitions(id: Long, repetition: Int)
         suspend fun decreaseAllRepetitions()

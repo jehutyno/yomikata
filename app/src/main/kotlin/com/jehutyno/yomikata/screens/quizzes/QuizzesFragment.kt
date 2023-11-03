@@ -3,15 +3,11 @@ package com.jehutyno.yomikata.screens.quizzes
 import android.content.Intent
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
-import android.text.InputType
 import android.view.LayoutInflater
 import android.view.View
 import android.view.View.GONE
 import android.view.View.VISIBLE
 import android.view.ViewGroup
-import android.widget.EditText
-import android.widget.FrameLayout
-import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
@@ -20,10 +16,10 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.databinding.FragmentQuizzesBinding
 import com.jehutyno.yomikata.model.Quiz
+import com.jehutyno.yomikata.repository.QuizRepository
 import com.jehutyno.yomikata.screens.content.ContentActivity
 import com.jehutyno.yomikata.screens.quiz.QuizActivity
 import com.jehutyno.yomikata.util.Categories
-import com.jehutyno.yomikata.util.DimensionHelper
 import com.jehutyno.yomikata.util.Extras
 import com.jehutyno.yomikata.util.Level
 import com.jehutyno.yomikata.util.Prefs
@@ -31,9 +27,9 @@ import com.jehutyno.yomikata.util.QuizStrategy
 import com.jehutyno.yomikata.util.QuizType
 import com.jehutyno.yomikata.util.SeekBarsManager
 import com.jehutyno.yomikata.util.SpeechAvailability
-import com.jehutyno.yomikata.util.TextValidator
 import com.jehutyno.yomikata.util.animateSeekBar
 import com.jehutyno.yomikata.util.checkSpeechAvailability
+import com.jehutyno.yomikata.util.createNewSelectionDialog
 import com.jehutyno.yomikata.util.getCategoryLevel
 import com.jehutyno.yomikata.util.getLevelDownloadSize
 import com.jehutyno.yomikata.util.getLevelDownloadVersion
@@ -41,6 +37,7 @@ import com.jehutyno.yomikata.util.onTTSinit
 import com.jehutyno.yomikata.util.speechNotSupportedAlert
 import com.jehutyno.yomikata.util.spotlightTuto
 import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
@@ -50,7 +47,6 @@ import org.kodein.di.newInstance
 import splitties.alertdialog.appcompat.alertDialog
 import splitties.alertdialog.appcompat.cancelButton
 import splitties.alertdialog.appcompat.message
-import splitties.alertdialog.appcompat.neutralButton
 import splitties.alertdialog.appcompat.okButton
 import splitties.alertdialog.appcompat.titleResource
 import java.lang.Thread.sleep
@@ -63,10 +59,15 @@ class QuizzesFragment(di: DI) : Fragment(), QuizzesContract.View, QuizzesAdapter
 
     // kodein
     private val mpresenter: QuizzesContract.Presenter by di.newInstance {
-        QuizzesPresenter(instance(), instance(), instance(), this@QuizzesFragment, selectedCategory)
+        QuizzesPresenter(instance(), instance(), instance(),
+            instance ( arg =
+                instance<QuizRepository>().getQuiz(selectedCategory).map {
+                    lst -> lst.map{ it.id }.toLongArray()
+                }
+            ), selectedCategory
+        )
     }
 
-    val REQUEST_TUTO: Int = 55
     private lateinit var adapter: QuizzesAdapter
     private var selectedCategory: Int = 0
     private var tts: TextToSpeech? = null
@@ -79,14 +80,6 @@ class QuizzesFragment(di: DI) : Fragment(), QuizzesContract.View, QuizzesAdapter
     private var _binding: FragmentQuizzesBinding? = null
     private val binding get() = _binding!!
 
-
-    override fun setPresenter(presenter: QuizzesContract.Presenter) {
-        // no need in this case since this is only used to set a reference to the mpresenter
-        // that is explicitly created in this class already.
-        // if this method is ever called because QuizzesPresenter was initialized from some
-        // other activity/fragment, then this should be set (see ContentFragment for an example)
-//        mpresenter = presenter
-    }
 
     override fun onInit(status: Int) {
         ttsSupported = onTTSinit(context, status, tts)
@@ -148,14 +141,21 @@ class QuizzesFragment(di: DI) : Fragment(), QuizzesContract.View, QuizzesAdapter
         }
 
         mpresenter.initQuizTypes()
+        mpresenter.selectedTypes.observe(viewLifecycleOwner) { selectedTypes ->
+            // go through all existing types and change selection status
+            // according to the selectedTypes
+            QuizType.values().forEach { type ->
+                selectQuizType(type, type in selectedTypes)
+            }
+        }
 
         binding.btnPronunciationQcmSwitch.setOnClickListener {
-            mpresenter.pronunciationQcmSwitch()
+            mpresenter.quizTypeSwitch(QuizType.TYPE_PRONUNCIATION_QCM)
             spotlightTuto(requireActivity(), binding.btnPronunciationQcmSwitch, getString(R.string.tutos_pronunciation_mcq), getString(R.string.tutos_pronunciation_mcq_message)
             ) { }
         }
         binding.btnPronunciationSwitch.setOnClickListener {
-            mpresenter.pronunciationSwitch()
+            mpresenter.quizTypeSwitch(QuizType.TYPE_PRONUNCIATION)
             spotlightTuto(requireActivity(), binding.btnPronunciationSwitch, getString(R.string.tutos_pronunciation_quiz), getString(R.string.tutos_pronunciation_quiz_message)
             ) { }
         }
@@ -163,22 +163,24 @@ class QuizzesFragment(di: DI) : Fragment(), QuizzesContract.View, QuizzesAdapter
             spotlightTuto(requireActivity(), binding.btnAudioSwitch, getString(R.string.tutos_audio_quiz), getString(R.string.tutos_audio_quiz_message)
             ) { }
             when (checkSpeechAvailability(requireActivity(), ttsSupported, getCategoryLevel(selectedCategory))) {
-                SpeechAvailability.NOT_AVAILABLE -> speechNotSupportedAlert(requireActivity(), getCategoryLevel(selectedCategory)) { (activity as QuizzesActivity).quizzesAdapter.notifyDataSetChanged() }
-                else -> mpresenter.audioSwitch()
+                SpeechAvailability.NOT_AVAILABLE -> speechNotSupportedAlert(requireActivity(), getCategoryLevel(selectedCategory)) {
+                    (activity as QuizzesActivity).quizzesAdapter.notifyDataSetChanged()
+                }
+                else -> mpresenter.quizTypeSwitch(QuizType.TYPE_AUDIO)
             }
         }
         binding.btnEnJapSwitch.setOnClickListener {
-            mpresenter.enJapSwitch()
+            mpresenter.quizTypeSwitch(QuizType.TYPE_EN_JAP)
             spotlightTuto(requireActivity(), binding.btnEnJapSwitch, getString(R.string.tutos_en_jp), getString(R.string.tutos_en_jp_message)
             ) { }
         }
         binding.btnJapEnSwitch.setOnClickListener {
-            mpresenter.japEnSwitch()
+            mpresenter.quizTypeSwitch(QuizType.TYPE_JAP_EN)
             spotlightTuto(requireActivity(), binding.btnJapEnSwitch, getString(R.string.tutos_jp_en), getString(R.string.tutos_jp_en_message)
             ) { }
         }
         binding.btnAutoSwitch.setOnClickListener {
-            mpresenter.autoSwitch()
+            mpresenter.quizTypeSwitch(QuizType.TYPE_AUTO)
             spotlightTuto(requireActivity(), binding.btnAutoSwitch, getString(R.string.tutos_auto_quiz), getString(R.string.tutos_auto_quiz_message)
             ) { }
         }
@@ -243,28 +245,29 @@ class QuizzesFragment(di: DI) : Fragment(), QuizzesContract.View, QuizzesAdapter
         }
     }
 
-    override fun selectPronunciationQcm(isSelected: Boolean) {
-        binding.btnPronunciationQcmSwitch.isSelected = isSelected
-    }
-
-    override fun selectPronunciation(isSelected: Boolean) {
-        binding.btnPronunciationSwitch.isSelected = isSelected
-    }
-
-    override fun selectAudio(isSelected: Boolean) {
-        binding.btnAudioSwitch.isSelected = isSelected
-    }
-
-    override fun selectEnJap(isSelected: Boolean) {
-        binding.btnEnJapSwitch.isSelected = isSelected
-    }
-
-    override fun selectJapEn(isSelected: Boolean) {
-        binding.btnJapEnSwitch.isSelected = isSelected
-    }
-
-    override fun selectAuto(isSelected: Boolean) {
-        binding.btnAutoSwitch.isSelected = isSelected
+    /**
+     * Select quiz type
+     *
+     * Set the selection status of a QuizType button to the given value.
+     *
+     * @param quizType QuizType to change selection status
+     * @param isSelected True if it should be selected, False if it should not be selected
+     */
+    override fun selectQuizType(quizType: QuizType, isSelected: Boolean) {
+        when (quizType) {
+            QuizType.TYPE_AUTO ->
+                binding.btnAutoSwitch.isSelected = isSelected
+            QuizType.TYPE_PRONUNCIATION ->
+                binding.btnPronunciationSwitch.isSelected = isSelected
+            QuizType.TYPE_PRONUNCIATION_QCM ->
+                binding.btnPronunciationQcmSwitch.isSelected = isSelected
+            QuizType.TYPE_AUDIO ->
+                binding.btnAudioSwitch.isSelected = isSelected
+            QuizType.TYPE_EN_JAP ->
+                binding.btnEnJapSwitch.isSelected = isSelected
+            QuizType.TYPE_JAP_EN ->
+                binding.btnJapEnSwitch.isSelected = isSelected
+        }
     }
 
     override fun launchQuiz(strategy: QuizStrategy, level: Level?, selectedTypes: ArrayList<QuizType>, title: String) {
@@ -299,8 +302,11 @@ class QuizzesFragment(di: DI) : Fragment(), QuizzesContract.View, QuizzesAdapter
         startActivity(intent)
     }
 
-    fun launchQuizClick(strategy: QuizStrategy, level: Level?, title: String) = runBlocking {
-        mpresenter.launchQuizClick(strategy, level, title, selectedCategory)
+    fun launchQuizClick(strategy: QuizStrategy, level: Level?, title: String) {
+        lifecycleScope.launch {
+            mpresenter.onLaunchQuizClick(selectedCategory)
+        }
+        launchQuiz(strategy, level, mpresenter.getSelectedTypes(), title)
     }
 
     private fun subscribeDisplayQuizzes() {
@@ -349,94 +355,37 @@ class QuizzesFragment(di: DI) : Fragment(), QuizzesContract.View, QuizzesAdapter
             // TODO propose to add all words to selections
             return
         }
-        val input = EditText(activity)
-        input.setSingleLine()
-        input.hint = getString(R.string.selection_name)
-        input.setText(adapter.items[position].getName())
+        requireActivity().createNewSelectionDialog(
+            adapter.items[position].getName(),
 
-        val container = FrameLayout(requireActivity())
-        val params = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-        params.leftMargin = DimensionHelper.getPixelFromDip(activity, 20)
-        params.rightMargin = DimensionHelper.getPixelFromDip(activity, 20)
-        input.layoutParams = params
+            { selectionName ->
+                if (adapter.items[position].getName() == selectionName)
+                    // name didn't change -> do nothing
+                    return@createNewSelectionDialog
 
-        input.addTextChangedListener(object : TextValidator(input) {
-            override fun validate(textView: TextView, text: String) {
-                if (text.isEmpty())
-                    input.error = getString(R.string.selection_not_empty_name)
-                else
-                    input.error = null
-            }
-        })
-        container.addView(input)
+                runBlocking {
+                    mpresenter.updateQuizName(adapter.items[position].id, selectionName)
+                }
+                adapter.items[position].nameFr = selectionName
+                adapter.items[position].nameEn = selectionName
+                adapter.notifyItemChanged(position)
+            },
 
-        requireContext().alertDialog {
-            titleResource = R.string.selection_edit
-            setView(container)
-
-            neutralButton(R.string.action_delete) {
-                requireContext().alertDialog {
-                    titleResource = R.string.selection_delete_sure
-                    okButton {
-                        runBlocking {
-                            mpresenter.deleteQuiz(adapter.items[position].id)
-                            adapter.deleteItem(position)
-                        }
-                    }
-                    cancelButton { }
-                }.show()
-            }
-            okButton {
-                if (adapter.items[position].getName() != input.text.toString() && input.error == null) {
-                    runBlocking {
-                        mpresenter.updateQuizName(adapter.items[position].id, input.text.toString())
-                    }
-                    adapter.items[position].nameFr = input.text.toString()
-                    adapter.items[position].nameEn = input.text.toString()
-                    adapter.notifyItemChanged(position)
+            {
+                runBlocking {
+                    mpresenter.deleteQuiz(adapter.items[position].id)
+                    adapter.deleteItem(position)
                 }
             }
-            cancelButton { }
-        }.show()
+        )
     }
 
     override fun addSelection() {
-        val input = EditText(activity)
-        input.setSingleLine()
-        input.inputType = InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
-        input.hint = getString(R.string.selection_name)
-
-        val container = FrameLayout(requireActivity())
-        val params = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-        params.leftMargin = DimensionHelper.getPixelFromDip(activity, 20)
-        params.rightMargin = DimensionHelper.getPixelFromDip(activity, 20)
-        input.layoutParams = params
-
-        input.addTextChangedListener(object : TextValidator(input) {
-            override fun validate(textView: TextView, text: String) {
-                if (text.isEmpty()) {
-                    input.error = getString(R.string.selection_not_empty_name)
-                } else {
-                    input.error = null
+        requireActivity().createNewSelectionDialog("", { selectionName ->
+                runBlocking {
+                    mpresenter.createQuiz(selectionName)
                 }
-            }
-        })
-        input.error = getString(R.string.selection_not_empty_name)
-        container.addView(input)
-
-        requireContext().alertDialog {
-            titleResource = R.string.new_selection
-            setView(container)
-
-            okButton {
-                if (input.error == null) {
-                    runBlocking {
-                        mpresenter.createQuiz(input.text.toString())
-                    }
-                }
-            }
-            cancelButton { }
-        }.show()
+            }, null)
     }
 
     override fun onDestroy() {

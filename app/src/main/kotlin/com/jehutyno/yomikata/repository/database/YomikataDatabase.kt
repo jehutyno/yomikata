@@ -1,4 +1,4 @@
-package com.jehutyno.yomikata.repository.local
+package com.jehutyno.yomikata.repository.database
 
 import android.content.Context
 import androidx.room.Database
@@ -26,7 +26,7 @@ const val DATABASE_VERSION = 15
                       RoomStatEntry::class, RoomWords::class, RoomQuizWord::class,
                       RoomRadicals::class],
           version = DATABASE_VERSION, exportSchema = true)
-abstract class YomikataDataBase : RoomDatabase() {
+abstract class YomikataDatabase : RoomDatabase() {
     abstract fun kanjiSoloDao(): KanjiSoloDao
     abstract fun quizDao(): QuizDao
     abstract fun sentenceDao(): SentenceDao
@@ -37,18 +37,18 @@ abstract class YomikataDataBase : RoomDatabase() {
         // file name should be the same for assets folder and database folder!
         private const val DATABASE_FILE_NAME = "yomikataz.db"
         private const val DATABASE_LOCAL_BACKUP_FILE_NAME = "yomikataz_backup.db"
-        private var INSTANCE: YomikataDataBase? = null
+        private var INSTANCE: YomikataDatabase? = null
         // WARNING: when creating from asset/file, Room will validate the schema, which
         // causes any gaps in the AUTOINCREMENT id columns to disappear (eg. ids 1, 2, 4 -> 1, 2, 3)
         // make sure there are no gaps in the asset databases to ensure consistency with migrations
         // update: this does not happen if the id is a foreign key constraint
-        fun getDatabase(context: Context): YomikataDataBase {
+        fun getDatabase(context: Context): YomikataDatabase {
             if (INSTANCE == null) {
                 synchronized(this) {
                     INSTANCE =
                         Room.databaseBuilder(
                             context,
-                            YomikataDataBase::class.java,
+                            YomikataDatabase::class.java,
                             DATABASE_FILE_NAME
                         )
                             .createFromAsset(DATABASE_FILE_NAME)

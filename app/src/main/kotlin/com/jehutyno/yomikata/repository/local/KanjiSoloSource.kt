@@ -5,6 +5,8 @@ import com.jehutyno.yomikata.model.KanjiSolo
 import com.jehutyno.yomikata.model.KanjiSoloRadical
 import com.jehutyno.yomikata.model.Radical
 import com.jehutyno.yomikata.repository.KanjiSoloRepository
+import com.jehutyno.yomikata.repository.database.RoomKanjiSolo
+import com.jehutyno.yomikata.repository.database.RoomRadicals
 
 
 /**

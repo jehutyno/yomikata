@@ -2,13 +2,9 @@ package com.jehutyno.yomikata.screens.content.word
 
 import android.app.Dialog
 import android.content.DialogInterface
-import android.os.Build
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
 import android.view.View
-import android.view.ViewGroup
-import android.widget.EditText
-import android.widget.FrameLayout
 import android.widget.ImageView
 import androidx.appcompat.widget.PopupMenu
 import androidx.fragment.app.DialogFragment
@@ -35,11 +31,13 @@ class WordDetailDialogFragment(private val di: DI) : DialogFragment(), WordContr
     // kodein
     private val subDI = DI.lazy {
         extend(di)
-        import(wordPresenterModule(this@WordDetailDialogFragment))
 //            import(voicesManagerModule(activity))
         bind<WordContract.Presenter>() with provider {
-            WordPresenter(instance(), instance(), instance(), instance(), instance(),
-                            lifecycleScope, quizIds, level, searchString)
+            WordPresenter (
+                instance(), instance(), instance(),
+                instance(arg = lifecycleScope), instance(),
+                quizIds, level, searchString
+            )
         }
         bind<VoicesManager>() with singleton { VoicesManager(requireActivity()) }
     }
@@ -91,24 +89,13 @@ class WordDetailDialogFragment(private val di: DI) : DialogFragment(), WordContr
         if (arguments != null) {
             wordId = requireArguments().getLong(Extras.EXTRA_WORD_ID, -1L)
 
-            quizType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                requireArguments().getSerializable(Extras.EXTRA_QUIZ_TYPE, QuizType::class.java)
-            }
-            else {
-                @Suppress("DEPRECATION")
-                requireArguments().getSerializable(Extras.EXTRA_QUIZ_TYPE) as QuizType?
-            }
+            quizType = requireArguments().getSerializableHelper(Extras.EXTRA_QUIZ_TYPE, QuizType::class.java)
 
             quizIds = requireArguments().getLongArray(Extras.EXTRA_QUIZ_IDS)
             quizTitle = requireArguments().getString(Extras.EXTRA_QUIZ_TITLE)
             wordPosition = requireArguments().getInt(Extras.EXTRA_WORD_POSITION)
             searchString = requireArguments().getString(Extras.EXTRA_SEARCH_STRING) ?: ""
-            level = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                requireArguments().getSerializable(Extras.EXTRA_LEVEL, Level::class.java)
-            } else {
-                @Suppress("DEPRECATION")
-                requireArguments().getSerializable(Extras.EXTRA_LEVEL) as Level?
-            }
+            level = requireArguments().getSerializableHelper(Extras.EXTRA_LEVEL, Level::class.java)
         }
 
         if (savedInstanceState != null) {
@@ -164,7 +151,7 @@ class WordDetailDialogFragment(private val di: DI) : DialogFragment(), WordContr
         }
         if (wordPresenter.words == null) {
             lifecycleScope.launch {
-                val oneWordList = listOf(wordPresenter.getWord(wordId))
+                val oneWordList = listOf(wordPresenter.getWordById(wordId))
                 displayWords(wordPresenter.getWordKanjiSoloRadicalSentenceList(oneWordList))
             }
         }
@@ -175,10 +162,6 @@ class WordDetailDialogFragment(private val di: DI) : DialogFragment(), WordContr
         adapter.replaceData(words)
         viewPager.currentItem = wordPosition
         setArrowDisplay(wordPosition)
-    }
-
-    override fun setPresenter(presenter: WordContract.Presenter) {
-
     }
 
     override fun onSelectionClick(view: View, position: Int) = runBlocking {
@@ -207,29 +190,12 @@ class WordDetailDialogFragment(private val di: DI) : DialogFragment(), WordContr
     }
 
     private fun addSelection(wordId: Long) {
-        val input = EditText(activity)
-        input.setSingleLine()
-        input.hint = getString(R.string.selection_name)
-
-        val container = FrameLayout(requireActivity())
-        val params = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-        params.leftMargin = DimensionHelper.getPixelFromDip(activity, 20)
-        params.rightMargin = DimensionHelper.getPixelFromDip(activity, 20)
-        input.layoutParams = params
-        container.addView(input)
-
-        requireContext().alertDialog {
-            titleResource = R.string.new_selection
-            setView(container)
-
-            okButton {
-                lifecycleScope.launch {
-                    val selectionId = wordPresenter.createSelection(input.text.toString())
-                    wordPresenter.addWordToSelection(wordId, selectionId)
-                }
+        requireActivity().createNewSelectionDialog("", { selectionName ->
+            lifecycleScope.launch {
+                val selectionId = wordPresenter.createSelection(selectionName)
+                wordPresenter.addWordToSelection(wordId, selectionId)
             }
-            cancelButton { }
-        }.show()
+        }, null)
     }
 
     override fun onReportClick(position: Int) {

@@ -1,70 +1,26 @@
 package com.jehutyno.yomikata.screens.answers
 
 import com.jehutyno.yomikata.model.Answer
-import com.jehutyno.yomikata.model.Quiz
 import com.jehutyno.yomikata.model.Sentence
 import com.jehutyno.yomikata.model.Word
-import com.jehutyno.yomikata.repository.QuizRepository
+import com.jehutyno.yomikata.presenters.SelectionsInterface
+import com.jehutyno.yomikata.presenters.WordInQuizInterface
 import com.jehutyno.yomikata.repository.SentenceRepository
-import com.jehutyno.yomikata.repository.WordRepository
-import com.jehutyno.yomikata.util.Categories
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
 
 
 /**
  * Created by valentin on 25/10/2016.
  */
 class AnswersPresenter(
-    private val wordRepository: WordRepository,
-    private val quizRepository: QuizRepository,
-    private val sentenceRepository: SentenceRepository,
-    answersView: AnswersContract.View, coroutineScope: CoroutineScope) : AnswersContract.Presenter {
-
-    private val job: Job
-    private lateinit var selections: StateFlow<List<Quiz>>
-
-    init {
-        job = coroutineScope.launch {
-            selections = quizRepository.getQuiz(Categories.CATEGORY_SELECTIONS).stateIn(coroutineScope)
-        }
-        answersView.setPresenter(this)
-    }
+    selectionsInterface: SelectionsInterface,
+    wordInQuizInterface: WordInQuizInterface,
+    private val sentenceRepository: SentenceRepository)
+                : AnswersContract.Presenter, SelectionsInterface by selectionsInterface,
+                                             WordInQuizInterface by wordInQuizInterface{
 
     override fun start() {
     }
 
-    override suspend fun getSelections(): List<Quiz> {
-        job.join()
-        return selections.value
-    }
-
-    override suspend fun createSelection(quizName: String): Long {
-        return quizRepository.saveQuiz(quizName, Categories.CATEGORY_SELECTIONS)
-    }
-
-    override suspend fun addWordToSelection(wordId: Long, quizId: Long) {
-        quizRepository.addWordToQuiz(wordId, quizId)
-    }
-
-    override suspend fun isWordInQuiz(wordId: Long, quizId: Long) : Boolean {
-        return wordRepository.isWordInQuiz(wordId, quizId)
-    }
-
-    override suspend fun isWordInQuizzes(wordId: Long, quizIds: Array<Long>) : ArrayList<Boolean> {
-        return wordRepository.isWordInQuizzes(wordId, quizIds)
-    }
-
-    override suspend fun deleteWordFromSelection(wordId: Long, selectionId: Long) {
-        quizRepository.deleteWordFromQuiz(wordId, selectionId)
-    }
-
-    override suspend fun getWordById(id: Long): Word {
-        return wordRepository.getWordById(id)
-    }
 
     override suspend fun getSentenceById(id: Long): Sentence {
         return sentenceRepository.getSentenceById(id)

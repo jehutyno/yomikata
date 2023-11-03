@@ -1,8 +1,8 @@
 package com.jehutyno.yomikata.dao
 
 import androidx.room.*
-import com.jehutyno.yomikata.repository.local.RoomQuiz
-import com.jehutyno.yomikata.repository.local.RoomQuizWord
+import com.jehutyno.yomikata.repository.database.RoomQuiz
+import com.jehutyno.yomikata.repository.database.RoomQuizWord
 import kotlinx.coroutines.flow.Flow
 
 

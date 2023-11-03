@@ -6,8 +6,6 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.EditText
-import android.widget.FrameLayout
 import androidx.appcompat.widget.PopupMenu
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
@@ -20,10 +18,6 @@ import com.jehutyno.yomikata.util.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.kodein.di.*
-import splitties.alertdialog.appcompat.alertDialog
-import splitties.alertdialog.appcompat.cancelButton
-import splitties.alertdialog.appcompat.okButton
-import splitties.alertdialog.appcompat.titleResource
 import java.util.*
 
 
@@ -35,12 +29,15 @@ class AnswersFragment(private val di: DI) : Fragment(), AnswersContract.View, An
     // kodein
     private val subDI by DI.lazy {
         extend(di)
+        bind<AnswersContract.Presenter>() with provider {
+            AnswersPresenter(instance(arg = lifecycleScope), instance(), instance())
+        }
         bind<VoicesManager>() with singleton { VoicesManager(requireActivity()) }
     }
     @Suppress("unused")
     private val voicesManager: VoicesManager by subDI.instance()
+    private val presenter: AnswersContract.Presenter by subDI.instance()
 
-    private lateinit var presenter: AnswersContract.Presenter
     private lateinit var layoutManager: LinearLayoutManager
     private lateinit var adapter: AnswersAdapter
 
@@ -54,10 +51,6 @@ class AnswersFragment(private val di: DI) : Fragment(), AnswersContract.View, An
 
     override fun onInit(status: Int) {
         ttsSupported = onTTSinit(activity, status, tts)
-    }
-
-    override fun setPresenter(presenter: AnswersContract.Presenter) {
-        this.presenter = presenter
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -128,31 +121,13 @@ class AnswersFragment(private val di: DI) : Fragment(), AnswersContract.View, An
     }
 
     private fun addSelection(wordId: Long) {
-        val input = EditText(activity)
-        input.setSingleLine()
-        input.hint = getString(R.string.selection_name)
-
-        val container = FrameLayout(requireActivity())
-        val params = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-        params.leftMargin = DimensionHelper.getPixelFromDip(activity, 20)
-        params.rightMargin = DimensionHelper.getPixelFromDip(activity, 20)
-        input.layoutParams = params
-        container.addView(input)
-
-        requireActivity().alertDialog {
-            titleResource = R.string.new_selection
-            setView(container)
-
-            okButton {
-                lifecycleScope.launch {
-                    val selectionId = presenter.createSelection(input.text.toString())
-                    presenter.addWordToSelection(wordId, selectionId)
-                }
+        requireActivity().createNewSelectionDialog("", { selectionName ->
+            lifecycleScope.launch {
+                val selectionId = presenter.createSelection(selectionName)
+                presenter.addWordToSelection(wordId, selectionId)
             }
-            cancelButton()
-        }.show()
+        }, null)
     }
-
 
     override fun onReportClick(position: Int) {
         reportError(requireActivity(), adapter.items[position].second, adapter.items[position].third)

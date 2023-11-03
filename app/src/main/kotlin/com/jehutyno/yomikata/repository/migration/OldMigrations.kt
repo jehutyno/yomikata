@@ -10,7 +10,7 @@ import com.jehutyno.yomikata.util.UpdateProgressDialog
  * Old migrations.
  *
  * For migrations up to version 13.
- * See YomikataDataBase.kt for migrations using Room schemas from version 14 upwards.
+ * See YomikataDatabase.kt for migrations using Room schemas from version 14 upwards.
  */
 object OldMigrations {
 
