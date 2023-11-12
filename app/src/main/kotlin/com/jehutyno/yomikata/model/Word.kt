@@ -129,9 +129,6 @@ fun getWordColor(context: Context, points: Int): Int {
             else
                 R.color.level_master_4
         }
-        Level.MAX -> {
-            R.color.level_master_4
-        }
     }
 
     return ContextCompat.getColor(context, color)

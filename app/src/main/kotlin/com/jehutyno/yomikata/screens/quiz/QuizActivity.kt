@@ -35,6 +35,7 @@ import splitties.alertdialog.appcompat.alertDialog
 import splitties.alertdialog.appcompat.cancelButton
 import splitties.alertdialog.appcompat.okButton
 import splitties.alertdialog.appcompat.titleResource
+import java.util.Random
 
 
 class QuizActivity : AppCompatActivity(), DIAware {
@@ -49,7 +50,7 @@ class QuizActivity : AppCompatActivity(), DIAware {
             view: QuizContract.View ->
             QuizPresenter (
                 instance(), instance(), instance(), instance(), view,
-                quizIds, quizStrategy, level, quizTypes,
+                quizIds, quizStrategy, level, quizTypes, Random(),
                 instance(arg = lifecycleScope), instance(), lifecycleScope
             )
         }

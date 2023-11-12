@@ -53,7 +53,8 @@ class RoomMigrationTest {
             Values(3658, 0, 0, 0, 0),
             Values(6328, 1, 0, 1, 200),
             Values(47, 1, 25, 1, 250),
-            Values(93, 4, 100, 4, 850)
+            Values(4519, 3, 50,  3,725),
+            Values(93, 4, 666, 3, 850)
         )
 
         @Suppress("VARIABLE_WITH_REDUNDANT_INITIALIZER")
@@ -77,8 +78,13 @@ class RoomMigrationTest {
             """.trimIndent(), values[2].toArray())
             execSQL("""
                 INSERT INTO words
-                VALUES (?, '小さい', 'small', 'petit', 'ちいさい', ?, '0', '0', '0', '0', '-1', ?, '2', '0', NULL);
+                VALUES (?, '炒る', '(v5r,vt) to parch;to fry;to fire;to broil;to roast;to boil down (in oil)',
+                '(v5r,vt) frire; faire bouillir (dans l''huile); rôtir; cuire', 'いる', ?, '0', '0', '0', '0', '-1', ?, '4', '0', '4646');
             """.trimIndent(), values[3].toArray())
+            execSQL("""
+                INSERT INTO words
+                VALUES (?, '小さい', 'small', 'petit', 'ちいさい', ?, '0', '0', '0', '0', '-1', ?, '2', '0', NULL);
+            """.trimIndent(), values[4].toArray())
 
             close()
         }
@@ -91,11 +97,11 @@ class RoomMigrationTest {
 
         val foundIds = arraySetOf<Long>()
         while (cursor.moveToNext()) {
-            val id = cursor.getLong(cursor.getColumnIndex("_id"))
+            val id = cursor.getLong(cursor.getColumnIndexOrThrow("_id"))
             foundIds.add(id)
             val value = values.find { it.id == id }!!
-            assert ( cursor.getInt(cursor.getColumnIndex("level")) == value.newLevel )
-            assert ( cursor.getInt(cursor.getColumnIndex("points")) == value.newPoints )
+            assert ( cursor.getInt(cursor.getColumnIndexOrThrow("level")) == value.newLevel )
+            assert ( cursor.getInt(cursor.getColumnIndexOrThrow("points")) == value.newPoints )
         }
         // make sure all inserted rows were found
         assert ( foundIds == values.map { it.id }.toSet() )

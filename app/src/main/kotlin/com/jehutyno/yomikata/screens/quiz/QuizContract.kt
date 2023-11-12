@@ -34,7 +34,7 @@ interface QuizContract {
         fun setEditTextColor(color: Int)
         fun animateCheck(result: Boolean)
         fun reInitUI()
-        fun showAlertProgressiveSessionEnd(proposeErrors: Boolean)
+        fun showAlertProgressiveSessionEnd()
         fun setPagerPosition(position: Int)
         fun finishQuiz()
         fun showAlertNonProgressiveSessionEnd(proposeErrors: Boolean)
