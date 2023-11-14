@@ -6,6 +6,7 @@ import androidx.room.testing.MigrationTestHelper
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
 import androidx.test.platform.app.InstrumentationRegistry
+import com.jehutyno.yomikata.repository.database.YomikataDatabase
 import org.junit.Assert.*
 import org.junit.Rule
 import org.junit.Test
@@ -36,7 +37,7 @@ class RoomMigrationTest {
     // add new migrations to this list
     private val ALL_MIGRATIONS = YomikataDatabase.let {
         arrayOf (
-            it.MIGRATION_14_15
+            it.MIGRATION_14_15, it.MIGRATION_15_16
         )
     }
 
@@ -104,6 +105,61 @@ class RoomMigrationTest {
         }
         // make sure all inserted rows were found
         assert ( foundIds == values.map { it.id }.toSet() )
+    }
+
+    @Test
+    fun migrate15To16() {
+
+        class Values(val id: Long, val english: String, val newEnglish: String) {
+            fun toArray(): Array<Any> {
+                return arrayOf(id, english)
+            }
+        }
+
+        val englishValues = arrayOf(
+            Values(3854,
+            "(n) (1) lighthouse;(2) old-fashioned interior light fixture comprising a wooden pole with an oil-filled dish and a wick atop it;(P)",
+            "(n) (1) lighthouse;(2) old-fashioned interior light fixture comprising a wooden pole with an oil-filled dish and a wick atop it"
+            ),
+            Values(94,
+            "warm (spring)",
+            "warm (spring)"
+            )
+        )
+
+        @Suppress("VARIABLE_WITH_REDUNDANT_INITIALIZER")
+        var database = migrationHelper.createDatabase(TEST_DB_NAME, 15).apply {
+
+            execSQL("""
+                INSERT INTO words
+                VALUES (?, '灯台', ?, '(n) phare', 'とうだい', '0', '0', '0',
+                '0', '0', '-1', '0', '4', '0', NULL);
+            """.trimIndent(), englishValues[0].toArray())
+
+            execSQL("""
+                INSERT INTO words
+                VALUES (?, '暖かい', ?, 'chaud (printemps)', 'あたたかい', '0', '0', '0', '0', '0',
+                '-1', '0', '2', '0', NULL);
+            """.trimIndent(), englishValues[1].toArray())
+
+            close()
+        }
+
+        database = migrationHelper.runMigrationsAndValidate(TEST_DB_NAME, 16,
+                            true, YomikataDatabase.MIGRATION_15_16)
+
+
+        val cursor = database.query("""SELECT _id, english FROM words""")
+
+        val foundIds = arraySetOf<Long>()
+        while (cursor.moveToNext()) {
+            val id = cursor.getLong(cursor.getColumnIndex("_id"))
+            foundIds.add(id)
+            val value = englishValues.find { it.id == id }!!
+            val newEnglish = cursor.getString(cursor.getColumnIndex("english"))
+            assert( newEnglish == value.newEnglish )
+        }
+        assert( foundIds == englishValues.map{ it.id }.toSet() )
     }
 
     @Test

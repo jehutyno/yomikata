@@ -540,6 +540,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
         QCMtvs[tvNum - 1].also { tv ->
             tv.text = option
             tv.setTextColor(ContextCompat.getColor(requireContext(), colorId))
+            tv.scrollTo(0, 0)
         }
     }
 
@@ -555,6 +556,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
         QCMtvs.forEachIndexed { i, tv ->
             tv.text = options[i]
             tv.setTextColor(ContextCompat.getColor(requireContext(), colorIds[i]))
+            tv.scrollTo(0, 0)
         }
     }
 

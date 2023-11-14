@@ -23,6 +23,7 @@ import com.jehutyno.yomikata.util.Prefs
 import com.jehutyno.yomikata.util.QuizStrategy
 import com.jehutyno.yomikata.util.QuizType
 import com.jehutyno.yomikata.util.addPoints
+import com.jehutyno.yomikata.util.cleanForQCM
 import com.jehutyno.yomikata.util.getCategoryLevel
 import com.jehutyno.yomikata.util.getLevelFromPoints
 import com.jehutyno.yomikata.util.getParcelableArrayListHelper
@@ -390,7 +391,7 @@ class QuizPresenter(
     private fun setupQCMPronunciationQuiz() {
         quizView.displayQCMNormalTextViews()
         quizView.displayQCMTv(
-            randoms.map { it.first.reading.split("/")[0].split(";")[0].trim() },
+            randoms.map { it.first.reading.split("/")[0].split(";")[0].cleanForQCM(true) },
             randoms.map { it.second }
         )
     }
@@ -398,7 +399,7 @@ class QuizPresenter(
     private fun setupQCMQAudioQuiz() {
         quizView.displayQCMNormalTextViews()
         quizView.displayQCMTv(
-            randoms.map { it.first.japanese.split("/")[0].split(";")[0].trim() },
+            randoms.map { it.first.japanese.split("/")[0].split(";")[0].cleanForQCM(true) },
             randoms.map { it.second }
         )
     }
@@ -416,7 +417,7 @@ class QuizPresenter(
 
     private fun setupQCMJapEnQuiz() {
         quizView.displayQCMNormalTextViews()
-        quizView.displayQCMTv(randoms.map{ it.first.getTrad().trim() }, randoms.map{ it.second })
+        quizView.displayQCMTv(randoms.map{ it.first.getTrad().cleanForQCM(false) }, randoms.map{ it.second })
     }
 
     private suspend fun getQCMDisPlayForEnJap(word: Word): String {
