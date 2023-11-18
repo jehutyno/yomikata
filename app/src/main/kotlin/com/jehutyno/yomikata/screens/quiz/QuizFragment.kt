@@ -322,21 +322,24 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
     private fun setUpRadioButtons() {
         val pref = PreferenceManager.getDefaultSharedPreferences(requireContext())
 
+        val defaultErrorReview = ErrorReviewOption.Show.preferenceId
+        val defaultFlawless = FlawlessOption.Show.preferenceId
+
         val errorReviewSelected = pref.getInt(
             Prefs.QUIZ_ERROR_SELECTED_RADIO_BUTTON_ID.pref,
-            ErrorReviewOption.Show.preferenceId
+            defaultErrorReview
         )
         val flawlessSelected = pref.getInt(
             Prefs.QUIZ_FLAWLESS_SELECTED_RADIO_BUTTON_ID.pref,
-            FlawlessOption.Show.preferenceId
+            defaultFlawless
         )
 
         val errorSelectedId = errorReviewIdMap.filterValues {
                 it.preferenceId == errorReviewSelected
-            }.keys.toList()[0]
+            }.keys.toList().getOrElse(0) { defaultErrorReview }
         val flawlessSelectedId = flawlessIdMap.filterValues {
                 it.preferenceId == flawlessSelected
-            }.keys.toList()[0]
+            }.keys.toList().getOrElse(0) { defaultFlawless }
 
         binding.errorReviewRadioGroup.check(errorSelectedId)
         binding.flawlessRadioGroup.check(flawlessSelectedId)
