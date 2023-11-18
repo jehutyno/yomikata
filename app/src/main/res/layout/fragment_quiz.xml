@@ -42,7 +42,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="8dp"
-                android:text="Intermediate session dialog settings" />
+                android:text="@string/intermediate_session_dialog_settings" />
 
             <TextView
                 android:id="@+id/error_review_subtitle"
@@ -51,7 +51,7 @@
                 android:layout_below="@+id/error_review_title"
                 android:layout_marginBottom="8dp"
                 android:paddingHorizontal="10dp"
-                android:text="After session with errors" />
+                android:text="@string/after_session_with_errors" />
 
             <RadioGroup
                 android:id="@+id/error_review_radio_group"
@@ -66,22 +66,22 @@
                     android:id="@+id/radio_button_show"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginRight="4dp"
-                    android:text="Always ask" />
+                    android:layout_marginEnd="4dp"
+                    android:text="@string/always_ask" />
 
                 <RadioButton
                     android:id="@+id/radio_button_auto_error"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginRight="4dp"
-                    android:text="Auto review" />
+                    android:layout_marginEnd="4dp"
+                    android:text="@string/auto_review" />
 
                 <RadioButton
                     android:id="@+id/radio_button_error_no_show"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginRight="4dp"
-                    android:text="Never review" />
+                    android:layout_marginEnd="4dp"
+                    android:text="@string/never_review" />
 
             </RadioGroup>
 
@@ -92,7 +92,7 @@
                 android:layout_below="@+id/error_review_radio_group"
                 android:layout_marginBottom="8dp"
                 android:paddingHorizontal="10dp"
-                android:text="After flawless session" />
+                android:text="@string/after_flawless_session" />
 
             <RadioGroup
                 android:id="@+id/flawless_radio_group"
@@ -107,15 +107,15 @@
                     android:id="@+id/flawless_radio_button_show"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginRight="4dp"
-                    android:text="Always ask" />
+                    android:layout_marginEnd="4dp"
+                    android:text="@string/always_ask" />
 
                 <RadioButton
                     android:id="@+id/flawless_radio_button_no_show"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginRight="4dp"
-                    android:text="Automatically continue" />
+                    android:layout_marginEnd="4dp"
+                    android:text="@string/automatically_continue" />
 
             </RadioGroup>
 
