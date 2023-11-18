@@ -322,7 +322,6 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
     private fun setUpRadioButtons() {
         val pref = PreferenceManager.getDefaultSharedPreferences(requireContext())
 
-        // use zero as default
         val errorReviewSelected = pref.getInt(
             Prefs.QUIZ_ERROR_SELECTED_RADIO_BUTTON_ID.pref,
             ErrorReviewOption.Show.preferenceId

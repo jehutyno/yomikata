@@ -695,9 +695,11 @@ class QuizPresenter(
      * and also depending on quiz strategy.
      */
     override suspend fun onNextWord() {
-        if (!wordHandler.errorMode) decreaseAllRepetitions()
+        if (!wordHandler.errorMode) {
+            decreaseAllRepetitions()
+            sessionCount--
+        }
 
-        sessionCount--
         previousAnswerWrong = false
         quizView.reInitUI()
 
