@@ -23,5 +23,8 @@ enum class Prefs(val pref: String) {
     // if error happens and this is set to true -> restore the local backup
     DB_RESTORE_ONGOING("db_restore_ongoing"),
     VOICE_DOWNLOADED_LEVEL_V("voice_downloaded_level_V"),
-    DONT_SHOW_VOICES_POPUP("dont_show_voices_popup")
+    DONT_SHOW_VOICES_POPUP("dont_show_voices_popup"),
+
+    QUIZ_ERROR_SELECTED_RADIO_BUTTON_ID("quiz_error_selected_radio_button_id"),
+    QUIZ_FLAWLESS_SELECTED_RADIO_BUTTON_ID("quiz_flawless_selected_radio_button_id")
 }

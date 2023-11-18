@@ -225,4 +225,11 @@
     <string name="give_word_or_kanji_hint">Donnez le mot ou le kanji</string>
     <string name="translate_to_japanese_hint">Traduisez en Japonais</string>
     <string name="translate_to_english_hint">Traduisez en Français</string>
+    <string name="intermediate_session_dialog_settings">Paramètres du dialogue de la session intermédiaire</string>
+    <string name="after_session_with_errors">Après une session avec des erreurs</string>
+    <string name="always_ask">Toujours demander</string>
+    <string name="auto_review">Toujours réviser</string>
+    <string name="never_review">Ne jamais réviser</string>
+    <string name="after_flawless_session">Après une session sans faille</string>
+    <string name="automatically_continue">Continuer automatiquement</string>
 </resources>
