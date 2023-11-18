@@ -648,22 +648,33 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
         colorAnimation.start()
     }
 
-    override fun showAlertProgressiveSessionEnd() {
-        val sessionLength = adapter!!.words.size
-
+    override fun showAlertSessionEnd(wordCount: Int, isProgressive: Boolean, proposeErrors: Boolean) {
         requireContext().alertDialog {
-            message = getString(R.string.alert_session_finished, sessionLength)
+            message = getString(R.string.alert_session_finished, wordCount)
             positiveButton(R.string.alert_continue) {
                 runBlocking {
-                    presenter.onLaunchNextProgressiveSession()
+                    if (isProgressive)
+                        presenter.onLaunchNextProgressiveSession()
+                    else
+                        presenter.onContinueAfterNonProgressiveSessionEnd()
                 }
             }
-            neutralButton(R.string.alert_quit) { finishQuiz() }
+            if (proposeErrors) {
+                negativeButton(R.string.alert_review_session_errors) {
+                    // TODO handle shuffle ?
+                    runBlocking {
+                        presenter.onLaunchErrorSession()
+                    }
+                }
+            }
+            neutralButton(R.string.alert_quit) {
+                finishQuiz()
+            }
             setCancelable(false)    // avoid accidental click out of session
         }.show()
     }
 
-    override fun showAlertErrorSessionEnd(quizEnded: Boolean) {
+    override fun showAlertErrorSessionEnd(quizEnded: Boolean, isProgressive: Boolean) {
         requireContext().alertDialog {
             messageResource = R.string.alert_error_review_finished
 
@@ -676,9 +687,14 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
                 }
             } else {
                 messageResource = R.string.alert_error_review_quiz_message
-                positiveButton(R.string.alert_restart) {
+                val positiveButtonText =
+                    if (isProgressive)
+                        R.string.alert_continue_quiz    // progressive doesn't really end
+                    else
+                        R.string.alert_restart
+                positiveButton(positiveButtonText) {
                     runBlocking {
-                        presenter.onRestartQuiz()
+                        presenter.onRestartQuiz(!isProgressive)
                     }
                 }
             }
@@ -689,37 +705,13 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
         }.show()
     }
 
-    override fun showAlertNonProgressiveSessionEnd(proposeErrors: Boolean) {
-        val pref = PreferenceManager.getDefaultSharedPreferences(requireContext())
-
-        requireContext().alertDialog {
-            message = getString(R.string.alert_session_finished, pref.getString("length", "-1")?.toInt())
-            positiveButton(R.string.alert_continue) {
-                runBlocking {
-                    presenter.onContinueAfterNonProgressiveSessionEnd()
-                }
-            }
-            if (proposeErrors) {
-                negativeButton(R.string.alert_review_session_errors) {
-                    // TODO handle shuffle ?
-                    runBlocking {
-                        presenter.onLaunchErrorSession()
-                    }
-                }
-            }
-            neutralButton(R.string.alert_quit) {
-                presenter.onFinishQuiz()
-            }
-            setCancelable(false)    // avoid accidental click out of session
-        }.show()
-    }
 
     override fun showAlertQuizEnd(proposeErrors: Boolean) {
         requireContext().alertDialog {
             messageResource = R.string.alert_quiz_finished
             positiveButton(R.string.alert_restart) {
                 runBlocking {
-                    presenter.onRestartQuiz()
+                    presenter.onRestartQuiz(true)
                 }
             }
             if (proposeErrors) {
