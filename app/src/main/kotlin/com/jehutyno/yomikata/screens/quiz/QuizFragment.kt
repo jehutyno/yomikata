@@ -61,6 +61,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
     private lateinit var ttsSettingsMenu: MenuItem
     private var holdOn = false
     private var isSettingsOpen = false
+    private val settingsAnimationOffset = -900f
 
     // View Binding
     private var _binding: FragmentQuizBinding? = null
@@ -222,6 +223,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
     private fun initUI() {
         initPager()
         initEditText()
+        setUpRadioButtons()
         setUpAudioManager()
         initAnswersButtons()
     }
@@ -297,6 +299,64 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
         editBinding.hiraganaEdit.setSelection(editBinding.hiraganaEdit.text.length)
     }
 
+    private enum class ErrorReviewOption(val preferenceId: Int) {
+        Show(0),
+        AutoReview(1),
+        Skip(2)
+    }
+    private enum class FlawlessOption(val preferenceId: Int) {
+        Show(0),
+        Skip(1)
+    }
+
+    private val errorReviewIdMap = mapOf(
+        Pair(R.id.radio_button_show, ErrorReviewOption.Show),
+        Pair(R.id.radio_button_auto_error, ErrorReviewOption.AutoReview),
+        Pair(R.id.radio_button_error_no_show, ErrorReviewOption.Skip)
+    )
+    private val flawlessIdMap = mapOf(
+        Pair(R.id.flawless_radio_button_show, FlawlessOption.Show),
+        Pair(R.id.flawless_radio_button_no_show, FlawlessOption.Skip)
+    )
+
+    private fun setUpRadioButtons() {
+        val pref = PreferenceManager.getDefaultSharedPreferences(requireContext())
+
+        // use zero as default
+        val errorReviewSelected = pref.getInt(
+            Prefs.QUIZ_ERROR_SELECTED_RADIO_BUTTON_ID.pref,
+            ErrorReviewOption.Show.preferenceId
+        )
+        val flawlessSelected = pref.getInt(
+            Prefs.QUIZ_FLAWLESS_SELECTED_RADIO_BUTTON_ID.pref,
+            FlawlessOption.Show.preferenceId
+        )
+
+        val errorSelectedId = errorReviewIdMap.filterValues {
+                it.preferenceId == errorReviewSelected
+            }.keys.toList()[0]
+        val flawlessSelectedId = flawlessIdMap.filterValues {
+                it.preferenceId == flawlessSelected
+            }.keys.toList()[0]
+
+        binding.errorReviewRadioGroup.check(errorSelectedId)
+        binding.flawlessRadioGroup.check(flawlessSelectedId)
+
+        // set shared preferences
+        binding.errorReviewRadioGroup.setOnCheckedChangeListener { _, checkedId ->
+            pref.edit().putInt(
+                Prefs.QUIZ_ERROR_SELECTED_RADIO_BUTTON_ID.pref,
+                errorReviewIdMap[checkedId]!!.preferenceId
+            ).apply()
+        }
+        binding.flawlessRadioGroup.setOnCheckedChangeListener { _, checkedId ->
+            pref.edit().putInt(
+                Prefs.QUIZ_FLAWLESS_SELECTED_RADIO_BUTTON_ID.pref,
+                flawlessIdMap[checkedId]!!.preferenceId
+            ).apply()
+        }
+    }
+
     private fun setUpAudioManager() {
         val audioManager = requireActivity().getSystemService(Context.AUDIO_SERVICE) as AudioManager
         binding.seekVolume.max = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
@@ -334,7 +394,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
             }
 
         })
-        binding.settingsContainer.translationY = -400f
+        binding.settingsContainer.translationY = settingsAnimationOffset
         binding.settingsClose.setOnClickListener {
             closeTTSSettings()
         }
@@ -585,7 +645,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
     }
 
     fun closeTTSSettings() {
-        binding.settingsContainer.animate().setDuration(300).translationY(-400f).withEndAction {
+        binding.settingsContainer.animate().setDuration(300).translationY(settingsAnimationOffset).withEndAction {
             isSettingsOpen = false
             binding.settingsContainer.visibility = GONE
         }.start()
@@ -649,7 +709,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
     }
 
     override fun showAlertSessionEnd(wordCount: Int, isProgressive: Boolean, proposeErrors: Boolean) {
-        requireContext().alertDialog {
+        val dialog = requireContext().alertDialog {
             message = getString(R.string.alert_session_finished, wordCount)
             positiveButton(R.string.alert_continue) {
                 runBlocking {
@@ -671,11 +731,25 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
                 finishQuiz()
             }
             setCancelable(false)    // avoid accidental click out of session
-        }.show()
+        }
+        dialog.create()
+
+        if (proposeErrors) {
+            when (errorReviewIdMap[binding.errorReviewRadioGroup.checkedRadioButtonId]!!) {
+                ErrorReviewOption.Show -> { dialog.show() } // don't do anything
+                ErrorReviewOption.AutoReview -> { dialog.negativeButton.callOnClick() }
+                ErrorReviewOption.Skip -> { dialog.positiveButton.callOnClick() }
+            }
+        } else {
+            when (flawlessIdMap[binding.flawlessRadioGroup.checkedRadioButtonId]!!) {
+                FlawlessOption.Show -> { dialog.show() } // don't do anything
+                FlawlessOption.Skip -> { dialog.positiveButton.callOnClick() }
+            }
+        }
     }
 
     override fun showAlertErrorSessionEnd(quizEnded: Boolean, isProgressive: Boolean) {
-        requireContext().alertDialog {
+        val dialog = requireContext().alertDialog {
             messageResource = R.string.alert_error_review_finished
 
             if (!quizEnded) {
@@ -702,9 +776,18 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
                 finishQuiz()
             }
             setCancelable(false)    // avoid accidental click out of session
-        }.show()
-    }
+        }
+        dialog.create()
 
+        if (!quizEnded || isProgressive) {
+            when (flawlessIdMap[binding.flawlessRadioGroup.checkedRadioButtonId]!!) {
+                FlawlessOption.Show -> { dialog.show() } // don't do anything
+                FlawlessOption.Skip -> { dialog.positiveButton.callOnClick() }
+            }
+        } else {
+            dialog.show()
+        }
+    }
 
     override fun showAlertQuizEnd(proposeErrors: Boolean) {
         requireContext().alertDialog {

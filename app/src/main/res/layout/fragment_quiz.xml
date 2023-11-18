@@ -34,14 +34,98 @@
             android:background="@drawable/rounded_bg"
             android:orientation="vertical"
             android:padding="12dp"
-            android:visibility="gone">
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <TextView
+                android:id="@+id/error_review_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:text="Intermediate session dialog settings" />
+
+            <TextView
+                android:id="@+id/error_review_subtitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/error_review_title"
+                android:layout_marginBottom="8dp"
+                android:paddingHorizontal="10dp"
+                android:text="After session with errors" />
+
+            <RadioGroup
+                android:id="@+id/error_review_radio_group"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/error_review_subtitle"
+                android:layout_marginBottom="8dp"
+                android:paddingHorizontal="14dp"
+                android:orientation="horizontal">
+
+                <RadioButton
+                    android:id="@+id/radio_button_show"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginRight="4dp"
+                    android:text="Always ask" />
+
+                <RadioButton
+                    android:id="@+id/radio_button_auto_error"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginRight="4dp"
+                    android:text="Auto review" />
+
+                <RadioButton
+                    android:id="@+id/radio_button_error_no_show"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginRight="4dp"
+                    android:text="Never review" />
+
+            </RadioGroup>
+
+            <TextView
+                android:id="@+id/no_error_subtitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/error_review_radio_group"
+                android:layout_marginBottom="8dp"
+                android:paddingHorizontal="10dp"
+                android:text="After flawless session" />
+
+            <RadioGroup
+                android:id="@+id/flawless_radio_group"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/no_error_subtitle"
+                android:layout_marginBottom="8dp"
+                android:paddingHorizontal="14dp"
+                android:orientation="horizontal">
+
+                <RadioButton
+                    android:id="@+id/flawless_radio_button_show"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginRight="4dp"
+                    android:text="Always ask" />
+
+                <RadioButton
+                    android:id="@+id/flawless_radio_button_no_show"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginRight="4dp"
+                    android:text="Automatically continue" />
+
+            </RadioGroup>
 
             <TextView
                 android:id="@+id/settings_title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_below="@+id/flawless_radio_group"
                 android:layout_marginBottom="8dp"
-                android:text="@string/tts_settings_title"/>
+                android:text="@string/tts_settings_title" />
 
             <TextView
                 android:id="@+id/settings_volume"
@@ -50,14 +134,14 @@
                 android:layout_below="@+id/settings_title"
                 android:layout_marginBottom="4dp"
                 android:text="@string/tts_volume"
-                android:textColor="@color/colorAccent"/>
+                android:textColor="@color/colorAccent" />
 
             <SeekBar
                 android:id="@+id/seek_volume"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/settings_volume"
-                android:layout_marginBottom="8dp"/>
+                android:layout_marginBottom="8dp" />
 
             <TextView
                 android:id="@+id/settings_speed"
@@ -66,13 +150,13 @@
                 android:layout_below="@+id/seek_volume"
                 android:layout_marginBottom="4dp"
                 android:text="@string/tts_rate"
-                android:textColor="@color/colorAccent"/>
+                android:textColor="@color/colorAccent" />
 
             <SeekBar
                 android:id="@+id/seek_speed"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_below="@+id/settings_speed"/>
+                android:layout_below="@+id/settings_speed" />
 
             <ImageView
                 android:id="@+id/settings_close"
@@ -81,7 +165,7 @@
                 android:layout_alignParentEnd="true"
                 android:layout_alignParentRight="true"
                 android:background="?attr/selectableItemBackgroundBorderless"
-                android:src="@drawable/ic_clear_orange_24dp"/>
+                android:src="@drawable/ic_clear_orange_24dp" />
 
         </RelativeLayout>
 
