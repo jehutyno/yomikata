@@ -253,4 +253,11 @@
     <string name="give_word_or_kanji_hint">Give word or kanji</string>
     <string name="translate_to_japanese_hint">Translate to Japanese</string>
     <string name="translate_to_english_hint">Translate to English</string>
+    <string name="intermediate_session_dialog_settings">Intermediate session dialog settings</string>
+    <string name="after_session_with_errors">After session with errors</string>
+    <string name="always_ask">Always ask</string>
+    <string name="auto_review">Auto review</string>
+    <string name="never_review">Never review</string>
+    <string name="after_flawless_session">After flawless session</string>
+    <string name="automatically_continue">Automatically continue</string>
 </resources>

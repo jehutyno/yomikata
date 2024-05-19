@@ -23,6 +23,7 @@ import com.jehutyno.yomikata.util.Prefs
 import com.jehutyno.yomikata.util.QuizStrategy
 import com.jehutyno.yomikata.util.QuizType
 import com.jehutyno.yomikata.util.addPoints
+import com.jehutyno.yomikata.util.cleanForQCM
 import com.jehutyno.yomikata.util.getCategoryLevel
 import com.jehutyno.yomikata.util.getLevelFromPoints
 import com.jehutyno.yomikata.util.getParcelableArrayListHelper
@@ -390,7 +391,7 @@ class QuizPresenter(
     private fun setupQCMPronunciationQuiz() {
         quizView.displayQCMNormalTextViews()
         quizView.displayQCMTv(
-            randoms.map { it.first.reading.split("/")[0].split(";")[0].trim() },
+            randoms.map { it.first.reading.split("/")[0].split(";")[0].cleanForQCM(true) },
             randoms.map { it.second }
         )
     }
@@ -398,7 +399,7 @@ class QuizPresenter(
     private fun setupQCMQAudioQuiz() {
         quizView.displayQCMNormalTextViews()
         quizView.displayQCMTv(
-            randoms.map { it.first.japanese.split("/")[0].split(";")[0].trim() },
+            randoms.map { it.first.japanese.split("/")[0].split(";")[0].cleanForQCM(true) },
             randoms.map { it.second }
         )
     }
@@ -416,7 +417,7 @@ class QuizPresenter(
 
     private fun setupQCMJapEnQuiz() {
         quizView.displayQCMNormalTextViews()
-        quizView.displayQCMTv(randoms.map{ it.first.getTrad().trim() }, randoms.map{ it.second })
+        quizView.displayQCMTv(randoms.map{ it.first.getTrad().cleanForQCM(false) }, randoms.map{ it.second })
     }
 
     private suspend fun getQCMDisPlayForEnJap(word: Word): String {
@@ -695,9 +696,11 @@ class QuizPresenter(
      * and also depending on quiz strategy.
      */
     override suspend fun onNextWord() {
-        if (!wordHandler.errorMode) decreaseAllRepetitions()
+        if (!wordHandler.errorMode) {
+            decreaseAllRepetitions()
+            sessionCount--
+        }
 
-        sessionCount--
         previousAnswerWrong = false
         quizView.reInitUI()
 
@@ -708,7 +711,7 @@ class QuizPresenter(
         if (wordHandler.errorMode) {
             // check if you have reached the end of error list
             if (wordHandler.currentItemErrorMode >= errors.size - 1) {
-                quizView.showAlertErrorSessionEnd(quizEnded)
+                quizView.showAlertErrorSessionEnd(quizEnded, strategy == QuizStrategy.PROGRESSIVE)
             } else {
                 setUpNextQuiz()
             }
@@ -738,11 +741,12 @@ class QuizPresenter(
         if (sessionCount == 0) {
             // end of session
             sessionCount = sessionLength    // reset count
-            if (strategy == QuizStrategy.PROGRESSIVE) {
-                quizView.showAlertProgressiveSessionEnd()
-            } else {
-                quizView.showAlertNonProgressiveSessionEnd(errors.size > 0)
-            }
+            quizView.showAlertSessionEnd(
+                sessionLength,
+                strategy == QuizStrategy.PROGRESSIVE,
+                errors.isNotEmpty()
+            )
+
             return
         }
 
@@ -759,6 +763,7 @@ class QuizPresenter(
     }
 
     override suspend fun onLaunchNextProgressiveSession() {
+        wordHandler.errors.clear()
         initQuiz()  // this is only called when you've run out of words => re-initialize
     }
 
@@ -774,10 +779,11 @@ class QuizPresenter(
         setUpNextQuiz()
     }
 
-    override suspend fun onRestartQuiz() {
+    override suspend fun onRestartQuiz(clearAnswers: Boolean) {
         wordHandler.errorMode = false
         wordHandler.errors.clear()
-        answers.clear()
+        if (clearAnswers)
+            answers.clear()
         initQuiz()
     }
 

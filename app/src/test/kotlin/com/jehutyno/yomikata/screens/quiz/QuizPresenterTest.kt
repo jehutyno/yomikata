@@ -89,7 +89,7 @@ class QuizPresenterTest(private val length: Int, private val type: QuizType) {
         wordInQuizMock = mockk(relaxed = true)
 
         every {
-            quizViewMock.showAlertNonProgressiveSessionEnd(any())
+            quizViewMock.showAlertSessionEnd(any(), false, any())
         } answers { runBlocking {
             quizPresenter.onContinueAfterNonProgressiveSessionEnd()
         }}
@@ -157,7 +157,7 @@ class QuizPresenterTest(private val length: Int, private val type: QuizType) {
         // should be called if finite session, otherwise not called
         val sessionEndCallTimes = if (length == -1) 0 else 1
         verify(exactly = sessionEndCallTimes) {
-            quizViewMock.showAlertNonProgressiveSessionEnd(false)
+            quizViewMock.showAlertSessionEnd(any(), false, false)
         }
     }
 
@@ -175,7 +175,7 @@ class QuizPresenterTest(private val length: Int, private val type: QuizType) {
         // should be called if finite session, otherwise not called
         val sessionEndCallTimes = if (length == -1) 0 else 1
         verify(exactly = sessionEndCallTimes) {
-            quizViewMock.showAlertNonProgressiveSessionEnd(true)
+            quizViewMock.showAlertSessionEnd(any(), false, true)
         }
     }
 
