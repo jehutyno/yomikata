@@ -14,7 +14,7 @@ android {
         applicationId "com.jehutyno.yomikata"
         minSdkVersion 21
         targetSdkVersion 33
-        versionCode 63
+        versionCode 65
         versionName "1.25"
         archivesBaseName = "Yomikata-Z-$versionName"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
