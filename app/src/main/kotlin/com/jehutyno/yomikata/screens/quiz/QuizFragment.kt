@@ -61,6 +61,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
     private lateinit var ttsSettingsMenu: MenuItem
     private var holdOn = false
     private var isSettingsOpen = false
+    private val settingsAnimationOffset = -900f
 
     // View Binding
     private var _binding: FragmentQuizBinding? = null
@@ -222,6 +223,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
     private fun initUI() {
         initPager()
         initEditText()
+        setUpRadioButtons()
         setUpAudioManager()
         initAnswersButtons()
     }
@@ -297,6 +299,66 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
         editBinding.hiraganaEdit.setSelection(editBinding.hiraganaEdit.text.length)
     }
 
+    private enum class ErrorReviewOption(val preferenceId: Int) {
+        Show(0),
+        AutoReview(1),
+        Skip(2)
+    }
+    private enum class FlawlessOption(val preferenceId: Int) {
+        Show(0),
+        Skip(1)
+    }
+
+    private val errorReviewIdMap = mapOf(
+        Pair(R.id.radio_button_show, ErrorReviewOption.Show),
+        Pair(R.id.radio_button_auto_error, ErrorReviewOption.AutoReview),
+        Pair(R.id.radio_button_error_no_show, ErrorReviewOption.Skip)
+    )
+    private val flawlessIdMap = mapOf(
+        Pair(R.id.flawless_radio_button_show, FlawlessOption.Show),
+        Pair(R.id.flawless_radio_button_no_show, FlawlessOption.Skip)
+    )
+
+    private fun setUpRadioButtons() {
+        val pref = PreferenceManager.getDefaultSharedPreferences(requireContext())
+
+        val defaultErrorReview = ErrorReviewOption.Show.preferenceId
+        val defaultFlawless = FlawlessOption.Show.preferenceId
+
+        val errorReviewSelected = pref.getInt(
+            Prefs.QUIZ_ERROR_SELECTED_RADIO_BUTTON_ID.pref,
+            defaultErrorReview
+        )
+        val flawlessSelected = pref.getInt(
+            Prefs.QUIZ_FLAWLESS_SELECTED_RADIO_BUTTON_ID.pref,
+            defaultFlawless
+        )
+
+        val errorSelectedId = errorReviewIdMap.filterValues {
+                it.preferenceId == errorReviewSelected
+            }.keys.toList().getOrElse(0) { defaultErrorReview }
+        val flawlessSelectedId = flawlessIdMap.filterValues {
+                it.preferenceId == flawlessSelected
+            }.keys.toList().getOrElse(0) { defaultFlawless }
+
+        binding.errorReviewRadioGroup.check(errorSelectedId)
+        binding.flawlessRadioGroup.check(flawlessSelectedId)
+
+        // set shared preferences
+        binding.errorReviewRadioGroup.setOnCheckedChangeListener { _, checkedId ->
+            pref.edit().putInt(
+                Prefs.QUIZ_ERROR_SELECTED_RADIO_BUTTON_ID.pref,
+                errorReviewIdMap[checkedId]!!.preferenceId
+            ).apply()
+        }
+        binding.flawlessRadioGroup.setOnCheckedChangeListener { _, checkedId ->
+            pref.edit().putInt(
+                Prefs.QUIZ_FLAWLESS_SELECTED_RADIO_BUTTON_ID.pref,
+                flawlessIdMap[checkedId]!!.preferenceId
+            ).apply()
+        }
+    }
+
     private fun setUpAudioManager() {
         val audioManager = requireActivity().getSystemService(Context.AUDIO_SERVICE) as AudioManager
         binding.seekVolume.max = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
@@ -334,7 +396,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
             }
 
         })
-        binding.settingsContainer.translationY = -400f
+        binding.settingsContainer.translationY = settingsAnimationOffset
         binding.settingsClose.setOnClickListener {
             closeTTSSettings()
         }
@@ -587,7 +649,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
     }
 
     fun closeTTSSettings() {
-        binding.settingsContainer.animate().setDuration(300).translationY(-400f).withEndAction {
+        binding.settingsContainer.animate().setDuration(300).translationY(settingsAnimationOffset).withEndAction {
             isSettingsOpen = false
             binding.settingsContainer.visibility = GONE
         }.start()
@@ -650,55 +712,15 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
         colorAnimation.start()
     }
 
-    override fun showAlertProgressiveSessionEnd() {
-        val sessionLength = adapter!!.words.size
-
-        requireContext().alertDialog {
-            message = getString(R.string.alert_session_finished, sessionLength)
+    override fun showAlertSessionEnd(wordCount: Int, isProgressive: Boolean, proposeErrors: Boolean) {
+        val dialog = requireContext().alertDialog {
+            message = getString(R.string.alert_session_finished, wordCount)
             positiveButton(R.string.alert_continue) {
                 runBlocking {
-                    presenter.onLaunchNextProgressiveSession()
-                }
-            }
-            neutralButton(R.string.alert_quit) { finishQuiz() }
-            setCancelable(false)    // avoid accidental click out of session
-        }.show()
-    }
-
-    override fun showAlertErrorSessionEnd(quizEnded: Boolean) {
-        requireContext().alertDialog {
-            messageResource = R.string.alert_error_review_finished
-
-            if (!quizEnded) {
-                messageResource = R.string.alert_error_review_session_message
-                positiveButton(R.string.alert_continue_quiz) {
-                    runBlocking {
-                        presenter.onContinueQuizAfterErrorSession()
-                    }
-                }
-            } else {
-                messageResource = R.string.alert_error_review_quiz_message
-                positiveButton(R.string.alert_restart) {
-                    runBlocking {
-                        presenter.onRestartQuiz()
-                    }
-                }
-            }
-            neutralButton(R.string.alert_quit) {
-                finishQuiz()
-            }
-            setCancelable(false)    // avoid accidental click out of session
-        }.show()
-    }
-
-    override fun showAlertNonProgressiveSessionEnd(proposeErrors: Boolean) {
-        val pref = PreferenceManager.getDefaultSharedPreferences(requireContext())
-
-        requireContext().alertDialog {
-            message = getString(R.string.alert_session_finished, pref.getString("length", "-1")?.toInt())
-            positiveButton(R.string.alert_continue) {
-                runBlocking {
-                    presenter.onContinueAfterNonProgressiveSessionEnd()
+                    if (isProgressive)
+                        presenter.onLaunchNextProgressiveSession()
+                    else
+                        presenter.onContinueAfterNonProgressiveSessionEnd()
                 }
             }
             if (proposeErrors) {
@@ -710,10 +732,65 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
                 }
             }
             neutralButton(R.string.alert_quit) {
-                presenter.onFinishQuiz()
+                finishQuiz()
             }
             setCancelable(false)    // avoid accidental click out of session
-        }.show()
+        }
+        dialog.create()
+
+        if (proposeErrors) {
+            when (errorReviewIdMap[binding.errorReviewRadioGroup.checkedRadioButtonId]!!) {
+                ErrorReviewOption.Show -> { dialog.show() } // don't do anything
+                ErrorReviewOption.AutoReview -> { dialog.negativeButton.callOnClick() }
+                ErrorReviewOption.Skip -> { dialog.positiveButton.callOnClick() }
+            }
+        } else {
+            when (flawlessIdMap[binding.flawlessRadioGroup.checkedRadioButtonId]!!) {
+                FlawlessOption.Show -> { dialog.show() } // don't do anything
+                FlawlessOption.Skip -> { dialog.positiveButton.callOnClick() }
+            }
+        }
+    }
+
+    override fun showAlertErrorSessionEnd(quizEnded: Boolean, isProgressive: Boolean) {
+        val dialog = requireContext().alertDialog {
+            messageResource = R.string.alert_error_review_finished
+
+            if (!quizEnded) {
+                messageResource = R.string.alert_error_review_session_message
+                positiveButton(R.string.alert_continue_quiz) {
+                    runBlocking {
+                        presenter.onContinueQuizAfterErrorSession()
+                    }
+                }
+            } else {
+                messageResource = R.string.alert_error_review_quiz_message
+                val positiveButtonText =
+                    if (isProgressive)
+                        R.string.alert_continue_quiz    // progressive doesn't really end
+                    else
+                        R.string.alert_restart
+                positiveButton(positiveButtonText) {
+                    runBlocking {
+                        presenter.onRestartQuiz(!isProgressive)
+                    }
+                }
+            }
+            neutralButton(R.string.alert_quit) {
+                finishQuiz()
+            }
+            setCancelable(false)    // avoid accidental click out of session
+        }
+        dialog.create()
+
+        if (!quizEnded || isProgressive) {
+            when (flawlessIdMap[binding.flawlessRadioGroup.checkedRadioButtonId]!!) {
+                FlawlessOption.Show -> { dialog.show() } // don't do anything
+                FlawlessOption.Skip -> { dialog.positiveButton.callOnClick() }
+            }
+        } else {
+            dialog.show()
+        }
     }
 
     override fun showAlertQuizEnd(proposeErrors: Boolean) {
@@ -721,7 +798,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
             messageResource = R.string.alert_quiz_finished
             positiveButton(R.string.alert_restart) {
                 runBlocking {
-                    presenter.onRestartQuiz()
+                    presenter.onRestartQuiz(true)
                 }
             }
             if (proposeErrors) {

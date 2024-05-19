@@ -696,9 +696,11 @@ class QuizPresenter(
      * and also depending on quiz strategy.
      */
     override suspend fun onNextWord() {
-        if (!wordHandler.errorMode) decreaseAllRepetitions()
+        if (!wordHandler.errorMode) {
+            decreaseAllRepetitions()
+            sessionCount--
+        }
 
-        sessionCount--
         previousAnswerWrong = false
         quizView.reInitUI()
 
@@ -709,7 +711,7 @@ class QuizPresenter(
         if (wordHandler.errorMode) {
             // check if you have reached the end of error list
             if (wordHandler.currentItemErrorMode >= errors.size - 1) {
-                quizView.showAlertErrorSessionEnd(quizEnded)
+                quizView.showAlertErrorSessionEnd(quizEnded, strategy == QuizStrategy.PROGRESSIVE)
             } else {
                 setUpNextQuiz()
             }
@@ -739,11 +741,12 @@ class QuizPresenter(
         if (sessionCount == 0) {
             // end of session
             sessionCount = sessionLength    // reset count
-            if (strategy == QuizStrategy.PROGRESSIVE) {
-                quizView.showAlertProgressiveSessionEnd()
-            } else {
-                quizView.showAlertNonProgressiveSessionEnd(errors.size > 0)
-            }
+            quizView.showAlertSessionEnd(
+                sessionLength,
+                strategy == QuizStrategy.PROGRESSIVE,
+                errors.isNotEmpty()
+            )
+
             return
         }
 
@@ -760,6 +763,7 @@ class QuizPresenter(
     }
 
     override suspend fun onLaunchNextProgressiveSession() {
+        wordHandler.errors.clear()
         initQuiz()  // this is only called when you've run out of words => re-initialize
     }
 
@@ -775,10 +779,11 @@ class QuizPresenter(
         setUpNextQuiz()
     }
 
-    override suspend fun onRestartQuiz() {
+    override suspend fun onRestartQuiz(clearAnswers: Boolean) {
         wordHandler.errorMode = false
         wordHandler.errors.clear()
-        answers.clear()
+        if (clearAnswers)
+            answers.clear()
         initQuiz()
     }
 
