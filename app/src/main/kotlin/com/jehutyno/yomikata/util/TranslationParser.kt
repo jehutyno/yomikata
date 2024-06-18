@@ -50,25 +50,23 @@ fun String.removePartsOfSpeechInfo(): String {
 /**
  * Remove any japanese
  *
- * Removes hiragana, katakana, and kanji from a string by removing any non-latin
- * characters. Also removes any other characters within the same parentheses () as the
+ * Removes hiragana, katakana, and kanji from a string.
+ * Also removes any other characters within the same parentheses () as the
  * removed japanese text. e.g. `(hello 先輩)` will be remove completely since the hello
  * is also in the brackets.
  * Also removes any trailing whitespaces.
  *
- * WARNING: This will also remove other special characters that are not part of the standard
- * latin character set.
- *
- * @return New string with any non-latin characters removed
+ * @return New string with any Hiragana, Katakana, and Kanji removed
  */
 fun String.removeAnyJapanese(): String {
     /** Finds any text inside of parentheses () that also contains non-latin characters, and
      * any trailing whitespaces */
-    val regex = Regex("""\([^()]*\P{InBasicLatin}[^()]*\)\s*""")
+    val japaneseRegex = """\p{InHiragana}\p{InKatakana}\p{InCJKUnifiedIdeographs}"""
+    val regex = Regex("""\([^()]*[$japaneseRegex]+[^()]*\)\s*""")
     val newString = regex.replace(this, "")
 
     // also remove any stray japanese that is not in brackets
-    return Regex("""\P{InBasicLatin}""").replace(newString, "")
+    return Regex(japaneseRegex).replace(newString, "")
 }
 
 /** Regex for indexes which mark different translations / meaning for words that have many */
