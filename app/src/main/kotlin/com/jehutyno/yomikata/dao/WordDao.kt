@@ -63,6 +63,9 @@ interface WordDao {
             "AND words._id != :wordId")
     suspend fun getWordsOfSizeRelatedTo(wordId: Long, wordSize: Int): List<Long>
 
+    @Query("SELECT * from words ORDER BY random() LIMIT (:limit)")
+    suspend fun getRandomWords(limit: Int): List<RoomWords>
+
     @RawQuery
     suspend fun getRandomWords(rawQuery: SupportSQLiteQuery): List<RoomWords>
 

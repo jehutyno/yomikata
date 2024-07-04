@@ -1,5 +1,6 @@
 package com.jehutyno.yomikata.repository.local
 
+import android.util.Log
 import androidx.sqlite.db.SimpleSQLiteQuery
 import com.jehutyno.yomikata.dao.WordDao
 import com.jehutyno.yomikata.model.Word
@@ -70,6 +71,52 @@ class WordSource(private val wordDao: WordDao) : WordRepository {
         return wordDao.getWordsByMinRepetition(quizIds, minRepetition, limit).map { it.toWord() } as ArrayList<Word>
     }
 
+    /**
+     * get related random words helper
+     *
+     * @param wordId search for other words related to this one
+     * @param wordSize size of the word
+     * @param minimum return at least this many ids
+     * @return a list of wordIds of words that are somehow related to the given word, e.g. same size or quiz.
+     */
+    private suspend fun getRelatedRandomWordsHelper(wordId: Long, wordSize: Int, minimum: Int): List<Long> {
+        val wordIds = mutableListOf<Long>()
+        if (wordIds.size >= minimum) {
+            return wordIds
+        }
+        // first attempt: same quiz AND same size
+        wordIds += wordDao.getWordsOfSizeRelatedTo(wordId, wordSize)
+        if (wordIds.size >= minimum) {
+            return wordIds
+        }
+        // second attempt: same quiz but slightly different size
+        wordIds += wordDao.getWordsOfSizeRelatedTo(wordId, wordSize - 1)
+        if (wordIds.size >= minimum) {
+            return wordIds
+        }
+        wordIds += wordDao.getWordsOfSizeRelatedTo(wordId, wordSize + 1)
+        if (wordIds.size >= minimum) {
+            return wordIds
+        }
+        // third attempt: get completely unrelated random words
+        val remaining = minimum - wordIds.size
+        wordIds += wordDao.getRandomWords(remaining).map{ it._id }
+        if (wordIds.size >= minimum) {
+            return wordIds
+        }
+        // finally: all words are exhausted, copy the list to reach the minimum
+        Log.w(
+            "WordSource",
+            "Could not find enough words to satisfy minimum of $minimum (only found ${wordIds.size})"
+        )
+        assert(wordIds.isNotEmpty())
+        while (wordIds.size < minimum) {
+            wordIds += wordIds
+        }
+        return wordIds
+    }
+
+    // this is must be guaranteed to return the [limit] number of words
     override suspend fun getRandomWords(
         wordId: Long,
         answer: String,
@@ -87,28 +134,24 @@ class WordSource(private val wordDao: WordDao) : WordRepository {
             else -> "${wordsTableName}.japanese"
         }
 
-        val wordIds = mutableListOf<Long>()
-        var tryWordSize = wordSize
-        while (wordIds.size <= 1 && tryWordSize > 0) {
-            wordIds += wordDao.getWordsOfSizeRelatedTo(wordId, tryWordSize)
-            tryWordSize--   // get smaller sizes in case there are no other words of the same size
-        }
+        // this is guaranteed to return at least [limit] words
+        val wordIds = getRelatedRandomWordsHelper(wordId, wordSize, limit)
 
+        // TODO: is checking $column != answer redundant? (since wordId is already excluded in wordIds)
         // use @RawQuery since column names cannot be inserted in @Query by Room
         val rawQuery = "SELECT * FROM words " +
                        "WHERE _id IN (${wordIds.joinToString(",")}) " +
                        "AND $column != (?) " +
                        "GROUP BY $column ORDER BY RANDOM() LIMIT ?"
-        var supportSQLiteQuery = SimpleSQLiteQuery(rawQuery, arrayOf<Any>(answer, limit))
+        val supportSQLiteQuery = SimpleSQLiteQuery(rawQuery, arrayOf<Any>(answer, limit))
 
         val roomWordsList = wordDao.getRandomWords(supportSQLiteQuery).toMutableList()
 
-        // try two more times to make sure size is at least 3
-        for (i in 1..2) {
-            if (roomWordsList.size < limit) {
-                supportSQLiteQuery = SimpleSQLiteQuery(rawQuery, arrayOf<Any>(answer, limit - roomWordsList.size))
-                val extraRoomWordsList = wordDao.getRandomWords(supportSQLiteQuery)
-                roomWordsList += extraRoomWordsList
+        if (roomWordsList.size < limit) {
+            Log.e("WordSource", "word list is not big enough! (${roomWordsList.size} < $limit)")
+            val duplicateWord = roomWordsList[0]
+            while (roomWordsList.size < limit) {
+                roomWordsList.add(duplicateWord)
             }
         }
 
