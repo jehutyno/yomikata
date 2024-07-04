@@ -441,7 +441,6 @@ class QuizPresenter(
     private suspend fun generateQCMRandoms(word: Word, quizType: QuizType, answerToAvoid: String): ArrayList<Pair<Word, Int>> {
         // Generate 3 different random words
         val random = getRandomWords(word.id, answerToAvoid, word.japanese.length, 3, quizType)
-        // TODO: this may crash if getRandomWords returns less than 3 words
         val randoms = arrayListOf<Pair<Word, Int>>()
         random.forEach { randoms.add(Pair(it, android.R.color.white)) }
         // Add the good answer at a random place
