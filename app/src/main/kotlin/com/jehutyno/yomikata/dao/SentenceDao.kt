@@ -21,6 +21,9 @@ interface SentenceDao {
     @Query("SELECT * FROM sentences WHERE _id = :id")
     suspend fun getSentenceById(id: Long): RoomSentences?
 
+    @Query("SELECT * FROM sentences WHERE _id IN (:ids)")
+    suspend fun getSentencesByIds(ids: LongArray): List<RoomSentences>
+
     @Query("SELECT * FROM sentences")
     suspend fun getAllSentences(): List<RoomSentences>
 

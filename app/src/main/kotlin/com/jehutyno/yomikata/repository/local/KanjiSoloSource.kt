@@ -46,4 +46,27 @@ class KanjiSoloSource(private val kanjiSoloDao: KanjiSoloDao) : KanjiSoloReposit
         return roomRadical?.toRadical()
     }
 
+    override suspend fun getSoloByKanjiRadical(wordIds: LongArray): Map<Long, List<KanjiSoloRadical>> {
+        val stepSize = 500  // to avoid going over max number of SQL variables (999)
+        val ret = mutableMapOf<Long, ArrayList<KanjiSoloRadical>>()
+        // make sure that all wordIds are put in ret, since SQL query may not find any KanjiSoloRadical
+        wordIds.forEach { id ->
+            ret[id] = arrayListOf()
+        }
+
+        var index = 0
+        while (index < wordIds.size) {
+            val slice = wordIds.sliceArray(
+                index until (index + stepSize).coerceAtMost(wordIds.size)
+            )
+            kanjiSoloDao.getSoloByKanjiRadical(slice).mapValues {
+                    lst -> lst.value.map{ it.toKanjiSoloRadical() }
+            }.forEach { (key, value) ->
+                ret[key]!! += value
+            }
+            index += stepSize
+        }
+        return ret
+    }
+
 }

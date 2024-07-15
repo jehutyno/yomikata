@@ -22,6 +22,19 @@ class SentenceSource(private val sentenceDao: SentenceDao) : SentenceRepository 
     override suspend fun getSentenceById(id: Long): Sentence {
         return sentenceDao.getSentenceById(id)!!.toSentence()
     }
+    override suspend fun getSentencesByIds(ids: LongArray): List<Sentence> {
+        val stepSize = 500  // to avoid going over max number of SQL variables (999)
+        val ret = mutableListOf<Sentence>()
+        var index = 0
+        while (index < ids.size) {
+            val slice = ids.sliceArray(
+                index until (index + stepSize).coerceAtMost(ids.size)
+            )
+            ret += sentenceDao.getSentencesByIds(slice).map{ it.toSentence() }
+            index += stepSize
+        }
+        return ret
+    }
 
     override suspend fun getAllSentences(): List<Sentence> {
         return sentenceDao.getAllSentences().map { it.toSentence() }

@@ -17,8 +17,8 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.databinding.FragmentContentBinding
 import com.jehutyno.yomikata.model.Word
-import com.jehutyno.yomikata.screens.content.WordsAdapter
-import com.jehutyno.yomikata.screens.content.word.WordDetailDialogFragment
+import com.jehutyno.yomikata.screens.word.WordDetailDialogFragment
+import com.jehutyno.yomikata.screens.word.WordsAdapter
 import com.jehutyno.yomikata.util.Extras
 import com.jehutyno.yomikata.view.WordSelectorActionModeCallback
 import kotlinx.coroutines.runBlocking

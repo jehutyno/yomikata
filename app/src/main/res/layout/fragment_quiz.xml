@@ -12,7 +12,7 @@
         android:layout_height="match_parent"
         android:layout_above="@+id/answer_container">
 
-        <com.jehutyno.yomikata.view.SwipeDirectionViewPager
+        <androidx.viewpager2.widget.ViewPager2
             android:id="@+id/pager"
             android:layout_width="match_parent"
             android:layout_height="match_parent"

@@ -1,8 +1,6 @@
 package com.jehutyno.yomikata.screens.quiz
 
 import android.animation.Animator
-import android.animation.ArgbEvaluator
-import android.animation.ValueAnimator
 import android.content.Context
 import android.content.Intent
 import android.media.AudioManager
@@ -23,16 +21,14 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
-import androidx.viewpager.widget.ViewPager
+import androidx.viewpager2.widget.ViewPager2
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.databinding.FragmentQuizBinding
-import com.jehutyno.yomikata.furigana.FuriganaView
 import com.jehutyno.yomikata.managers.VoicesManager
 import com.jehutyno.yomikata.model.*
 import com.jehutyno.yomikata.screens.answers.AnswersActivity
-import com.jehutyno.yomikata.screens.content.word.WordDetailDialogFragment
+import com.jehutyno.yomikata.screens.word.WordDetailDialogFragment
 import com.jehutyno.yomikata.util.*
-import com.jehutyno.yomikata.view.SwipeDirection
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.kodein.di.*
@@ -231,15 +227,8 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
     private fun initPager() {
         adapter = QuizItemPagerAdapter(requireContext(), this)
         binding.pager.adapter = adapter
-        binding.pager.setAllowedSwipeDirection(SwipeDirection.none)
-        binding.pager.offscreenPageLimit = 0
-        binding.pager.addOnPageChangeListener(object : ViewPager.OnPageChangeListener {
-            override fun onPageScrollStateChanged(state: Int) {
-            }
-
-            override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) {
-            }
-
+        binding.pager.isUserInputEnabled = false
+        binding.pager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
             override fun onPageSelected(position: Int) {
                 editBinding.hiraganaEdit.isEnableConversion = adapter!!.words[position].first.isKana == 0
                 holdOn = false
@@ -470,9 +459,9 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
         binding.pager.currentItem = position
     }
 
-    override fun setSentence(sentence: Sentence) {
-        adapter!!.replaceSentence(sentence)
-        adapter!!.notifyDataSetChanged()
+    override fun setSentence(position: Int, sentence: Sentence) {
+        adapter!!.sentence = sentence
+        adapter!!.notifyItemChanged(position)
     }
 
     override fun setEditTextColor(color: Int) {
@@ -667,49 +656,8 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
     }
 
     override fun animateColor(position: Int, word: Word, sentence: Sentence, quizType: QuizType, fromPoints: Int, toPoints: Int) {
-        val view = binding.pager.findViewWithTag<View>("pos_$position")
-        val btnFuri = view.findViewById<View>(R.id.btn_furi)
-        val furiSentence = view.findViewById<FuriganaView>(R.id.furi_sentence)
-        val tradSentence = view.findViewById<TextView>(R.id.trad_sentence)
-        val sound = view.findViewById<ImageButton>(R.id.sound)
-        val sentenceNoFuri = sentenceNoFuri(sentence)
-        val colorAnimation = ValueAnimator.ofObject(ArgbEvaluator(),
-            getWordColor(requireContext(), fromPoints),
-            getWordColor(requireContext(), toPoints))
-        colorAnimation.addUpdateListener {
-            animator ->
-            run {
-                when (quizType) {
-                    QuizType.TYPE_PRONUNCIATION, QuizType.TYPE_PRONUNCIATION_QCM, QuizType.TYPE_JAP_EN -> {
-                        val colorEntireWord = word.isKana == 2 && quizType == QuizType.TYPE_JAP_EN
-                        val wordTruePosition = if (colorEntireWord) 0 else getWordPositionInFuriSentence(sentence.jap, word)
-                        if (btnFuri.isSelected) {
-                            if (!colorEntireWord) wordTruePosition.let {
-                                furiSentence.text_set(
-                                    sentenceNoAnswerFuri(sentence, word), it,
-                             wordTruePosition + word.japanese.length,
-                                    animator.animatedValue as Int)
-                            }
-                        } else {
-                            furiSentence.text_set(
-                                if (colorEntireWord) sentence.jap else sentenceNoFuri.replace("%", word.japanese),
-                                (if (colorEntireWord) 0 else wordTruePosition),
-                                if (colorEntireWord) sentence.jap.length else wordTruePosition + word.japanese.length,
-                                animator.animatedValue as Int)
-                        }
-                    }
-                    QuizType.TYPE_EN_JAP -> {
-                        tradSentence.setTextColor(animator.animatedValue as Int)
-                    }
-                    QuizType.TYPE_AUDIO -> {
-                        sound.setColorFilter(animator.animatedValue as Int)
-                    }
-                    else -> {
-                    }
-                }
-            }
-        }
-        colorAnimation.start()
+        adapter!!.setAnimation(fromPoints, toPoints, quizType)
+        adapter!!.notifyItemChanged(position, QuizItemPagerAdapter.PlayAnimation())
     }
 
     override fun showAlertSessionEnd(wordCount: Int, isProgressive: Boolean, proposeErrors: Boolean) {
@@ -894,7 +842,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
             popup.menu.add(1, i, i, selection.getName()).isChecked = presenter.isWordInQuiz(word.id, selection.id)
             popup.menu.setGroupCheckable(1, true, false)
         }
-        popup.setOnMenuItemClickListener { it -> runBlocking {
+        popup.setOnMenuItemClickListener { runBlocking {
             when (it.itemId) {
                 R.id.add_selection -> addSelection(word.id)
                 else -> {

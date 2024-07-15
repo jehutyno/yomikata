@@ -16,4 +16,5 @@ interface KanjiSoloRepository {
     suspend fun addRadical(radical: Radical)
     suspend fun getKanjiRadical(radicalString: String): Radical?
     suspend fun getSoloByKanjiRadical(kanji: String): KanjiSoloRadical?
+    suspend fun getSoloByKanjiRadical(wordIds: LongArray): Map<Long, List<KanjiSoloRadical>>
 }

@@ -1,4 +1,4 @@
-package com.jehutyno.yomikata.screens.content.word
+package com.jehutyno.yomikata.screens.word
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.asLiveData
@@ -48,22 +48,40 @@ class WordPresenter(
     }
 
     override suspend fun getWordKanjiSoloRadicalSentenceList(words: List<Word>) : List<Triple<Word, List<KanjiSoloRadical?>, Sentence>> {
-        // TODO: maybe add dedicated Dao for this operation to increase performance?
-        val wordsRad = mutableListOf<Triple<Word, List<KanjiSoloRadical?>, Sentence>>()
-        words.forEach {
-            val sentence = sentenceRepository.getSentenceById(it.sentenceId!!)
-            wordsRad.add(Triple(it, loadRadicals(it.japanese), sentence))
+        val wordIdsMap = words.associateBy { it.id }
+        val wordIdsWithKanjiSoloRadicals = radicalSource.getSoloByKanjiRadical(wordIdsMap.keys.toLongArray())
+
+        val sentences = sentenceRepository.getSentencesByIds(words.mapNotNull{ it.sentenceId }.toLongArray()).toMutableList()
+
+        val mapWordIdKanjiSoloSentence = wordIdsWithKanjiSoloRadicals.mapValues { (wordId, value) ->
+            val sentence = sentences.find { sen -> sen.id == wordIdsMap[wordId]!!.sentenceId }
+            Pair(value, sentence)
         }
+
+        val wordsRad = mutableListOf<Triple<Word, List<KanjiSoloRadical?>, Sentence>>()
+        mapWordIdKanjiSoloSentence.forEach { (key, value) ->
+            wordsRad.add(
+                Triple(
+                    wordIdsMap[key]!!, value.first,
+                    value.second!!
+                )
+            )
+        }
+
         return wordsRad
     }
 
-    private suspend fun loadRadicals(kanjis: String): List<KanjiSoloRadical?> {
-        val radicals = mutableListOf<KanjiSoloRadical?>()
-        kanjis.forEach {
-            radicals.add(radicalSource.getSoloByKanjiRadical(it.toString()))
+    override suspend fun getKanjiSoloList(word: Word): List<KanjiSoloRadical> {
+        return word.japanese.fold(mutableListOf()) { acc, char ->
+            val kanjiSoloRadical = radicalSource.getSoloByKanjiRadical(char.toString())
+            if (kanjiSoloRadical != null)
+                acc.add(kanjiSoloRadical)
+            acc
         }
+    }
 
-        return radicals
+    override suspend fun getSentence(word: Word): Sentence {
+        return sentenceRepository.getSentenceById(word.sentenceId!!)
     }
 
     override suspend fun levelUp(id: Long, points: Int) {

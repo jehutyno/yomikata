@@ -18,7 +18,7 @@ import java.util.*
 /**
  * Created by valentin on 26/09/2016.
  */
-open class Word(var id: Long, var japanese: String, var english: String, var french: String,
+data class Word(var id: Long, var japanese: String, var english: String, var french: String,
                 var reading: String, var level: Level, var countTry: Int, var countSuccess: Int,
                 var countFail: Int, var isKana: Int, var repetition: Int, var points: Int,
                 var baseCategory: Int, var isSelected: Int, var sentenceId: Long?) : Parcelable, Serializable {

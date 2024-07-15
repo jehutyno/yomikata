@@ -43,7 +43,7 @@ interface QuizContract {
         fun displayEditAnswer(answer: String)
         fun displayEditDisplayAnswerButton()
         fun openAnswersScreen(answers: ArrayList<Answer>)
-        fun setSentence(sentence: Sentence)
+        fun setSentence(position: Int, sentence: Sentence)
         fun reportError(word: Word, sentence: Sentence)
         fun speakWord(word: Word)
         fun launchSpeakSentence(sentence: Sentence)

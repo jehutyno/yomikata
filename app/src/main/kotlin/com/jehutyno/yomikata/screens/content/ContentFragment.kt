@@ -20,7 +20,8 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.databinding.FragmentContentGraphBinding
 import com.jehutyno.yomikata.model.Word
-import com.jehutyno.yomikata.screens.content.word.WordDetailDialogFragment
+import com.jehutyno.yomikata.screens.word.WordDetailDialogFragment
+import com.jehutyno.yomikata.screens.word.WordsAdapter
 import com.jehutyno.yomikata.util.Extras
 import com.jehutyno.yomikata.util.Level
 import com.jehutyno.yomikata.util.SeekBarsManager

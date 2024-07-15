@@ -10,7 +10,7 @@ import com.jehutyno.yomikata.model.Quiz
 import com.jehutyno.yomikata.model.Word
 import com.jehutyno.yomikata.presenters.SelectionsInterface
 import com.jehutyno.yomikata.presenters.WordInQuizInterface
-import com.jehutyno.yomikata.screens.content.WordsAdapter
+import com.jehutyno.yomikata.screens.word.WordsAdapter
 import com.jehutyno.yomikata.util.createNewSelectionDialog
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch

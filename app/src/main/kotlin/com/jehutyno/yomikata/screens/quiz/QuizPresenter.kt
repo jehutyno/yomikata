@@ -344,7 +344,7 @@ class QuizPresenter(
         quizView.setPagerPosition(wordHandler.getActiveIndex())
 
         currentSentence = getRandomSentence(word)
-        quizView.setSentence(currentSentence)
+        quizView.setSentence(wordHandler.getActiveIndex(), currentSentence)
 
         when (quizType) {
             QuizType.TYPE_PRONUNCIATION -> {

@@ -5,12 +5,12 @@
     android:background="@color/transparent"
     android:orientation="horizontal">
 
-    <androidx.viewpager.widget.ViewPager
+    <androidx.viewpager2.widget.ViewPager2
         android:id="@+id/viewpager_words"
         android:layout_width="match_parent"
         android:layout_height="fill_parent"
         android:layout_gravity="center"
-        android:orientation="vertical" />
+        android:orientation="horizontal" />
 
     <ImageButton
         android:id="@+id/arrow_left"
