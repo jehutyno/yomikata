@@ -12,7 +12,10 @@ import com.jehutyno.yomikata.util.Prefs
 import com.jehutyno.yomikata.util.addOrReplaceFragment
 import mu.KLogging
 import org.kodein.di.DIAware
-import org.kodein.di.android.di
+import org.kodein.di.android.closestDI
+import org.kodein.di.direct
+import org.kodein.di.instance
+import org.kodein.di.DI
 
 
 /**
@@ -23,7 +26,7 @@ class AnswersActivity : AppCompatActivity(), DIAware {
     companion object : KLogging()
 
     // kodein
-    override val di by di()
+    override val di: DI by closestDI()
 
     private lateinit var answersFragment: AnswersFragment
 

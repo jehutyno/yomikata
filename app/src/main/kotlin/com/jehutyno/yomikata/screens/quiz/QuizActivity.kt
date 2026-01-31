@@ -27,7 +27,7 @@ import io.github.inflationx.viewpump.ViewPumpContextWrapper
 import mu.KLogging
 import org.kodein.di.DI
 import org.kodein.di.DIAware
-import org.kodein.di.android.di
+import org.kodein.di.android.closestDI
 import org.kodein.di.bind
 import org.kodein.di.factory
 import org.kodein.di.instance
@@ -43,7 +43,7 @@ class QuizActivity : AppCompatActivity(), DIAware {
     companion object : KLogging()
 
     // kodein
-    override val di by di()
+    override val di: DI by closestDI()
     private val subDI by DI.lazy {
         extend(di)
         bind<QuizContract.Presenter>() with factory {

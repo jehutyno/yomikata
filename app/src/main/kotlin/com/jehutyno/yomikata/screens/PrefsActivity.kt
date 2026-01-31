@@ -30,14 +30,19 @@ import splitties.alertdialog.appcompat.alertDialog
 import splitties.alertdialog.appcompat.cancelButton
 import splitties.alertdialog.appcompat.messageResource
 import splitties.alertdialog.appcompat.okButton
+import org.kodein.di.DI
+import org.kodein.di.DIAware
+import org.kodein.di.android.closestDI
 
 
 /**
  * Created by valentin on 30/11/2016.
  */
-class PrefsActivity : AppCompatActivity() {
+class PrefsActivity : AppCompatActivity(), DIAware {
 
     companion object : KLogging()
+
+    override val di: DI by closestDI()
 
     private lateinit var backupLauncher : ActivityResultLauncher<Intent>
     private lateinit var restoreLauncher : ActivityResultLauncher<Intent>

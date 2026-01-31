@@ -42,10 +42,11 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import mu.KLogging
 import org.kodein.di.DIAware
-import org.kodein.di.android.di
+import org.kodein.di.android.closestDI
 import org.kodein.di.direct
 import org.kodein.di.instance
 import org.kodein.di.newInstance
+import org.kodein.di.DI
 import java.util.Calendar
 
 
@@ -63,7 +64,7 @@ class ContentActivity : AppCompatActivity(), DIAware {
     private var contentLevelFragment: ContentFragment? = null
 
     // kodein
-    override val di by di()
+    override val di: DI by closestDI()
 
     private lateinit var statsRepository: StatsSource
 

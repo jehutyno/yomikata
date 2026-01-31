@@ -46,14 +46,16 @@ import com.jehutyno.yomikata.util.*
 import com.jehutyno.yomikata.view.AppBarStateChangeListener
 import org.kodein.di.DI
 import org.kodein.di.DIAware
-import org.kodein.di.android.di
+import org.kodein.di.android.closestDI
+import org.kodein.di.direct
+import org.kodein.di.instance
 import splitties.alertdialog.appcompat.*
 import java.util.*
 
 
 class QuizzesActivity : AppCompatActivity(), DIAware {
 
-    override val di: DI by di()
+    override val di: DI by closestDI()
 
     private var selectedCategory: Int = 0
     private lateinit var toolbar: Toolbar
