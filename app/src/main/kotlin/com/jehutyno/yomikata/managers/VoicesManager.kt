@@ -31,7 +31,8 @@ class VoicesManager(val context: Activity) {
         when (checkSpeechAvailability(context, ttsSupported, sentence.level)) {
             SpeechAvailability.VOICES_AVAILABLE -> {
                 try {
-                    exoPlayer.prepare(exoPlayerAudio.extractorMediaSource(Uri.parse("${FileUtils.getDataDir(context, "Voices").absolutePath}/s_${sentence.id}.mp3")))
+                    exoPlayer.setMediaItem(exoPlayerAudio.extractorMediaSource(Uri.parse("${FileUtils.getDataDir(context, "Voices").absolutePath}/s_${sentence.id}.mp3")))
+                    exoPlayer.prepare()
                     exoPlayer.playWhenReady = true
                 } catch (e: Exception) {
                     speechNotSupportedAlert(context, sentence.level) {}
@@ -60,7 +61,8 @@ class VoicesManager(val context: Activity) {
         when (checkSpeechAvailability(context, ttsSupported, level)) {
             SpeechAvailability.VOICES_AVAILABLE -> {
                 try {
-                    exoPlayer.prepare(exoPlayerAudio.extractorMediaSource(Uri.parse("${FileUtils.getDataDir(context, "Voices").absolutePath}/w_${word.id}.mp3")))
+                    exoPlayer.setMediaItem(exoPlayerAudio.extractorMediaSource(Uri.parse("${FileUtils.getDataDir(context, "Voices").absolutePath}/w_${word.id}.mp3")))
+                    exoPlayer.prepare()
                     exoPlayer.playWhenReady = true
                 } catch (e: Exception) {
                     speechNotSupportedAlert(context, level) {}

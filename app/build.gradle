@@ -8,12 +8,12 @@ plugins {
 android {
     namespace 'com.jehutyno.yomikata'
 
-    compileSdkVersion 33
+    compileSdkVersion 36
 
     defaultConfig {
         applicationId "com.jehutyno.yomikata"
-        minSdkVersion 21
-        targetSdkVersion 33
+        minSdkVersion 23
+        targetSdkVersion 36
         versionCode 65
         versionName "1.25"
         archivesBaseName = "Yomikata-Z-$versionName"
@@ -40,6 +40,15 @@ android {
         }
 
     }
+    
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
+
     sourceSets {
         main.java.srcDirs += 'src/main/kotlin'
 
@@ -124,12 +133,13 @@ dependencies {
     implementation 'com.google.firebase:firebase-messaging-ktx'
     implementation 'com.google.firebase:firebase-storage-ktx'
 
-    implementation ('com.google.android.exoplayer:exoplayer-core:r2.5.1', {
-        exclude group: 'com.android.support', module: 'support-annotations'
-    })
+    implementation "androidx.media3:media3-exoplayer:1.2.1"
+    implementation "androidx.media3:media3-ui:1.2.1"
+    implementation "androidx.media3:media3-common:1.2.1"
 
 }
 repositories {
+    google()
     mavenCentral()
     maven { url "https://jitpack.io" }
 }

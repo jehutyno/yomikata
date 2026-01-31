@@ -2,7 +2,7 @@
 
 buildscript {
     ext {
-        kotlin_version = '1.8.0'
+        kotlin_version = '1.9.22'
         room_version = '2.5.1'
         lifecycle_version = '2.6.1'
     }
@@ -12,14 +12,14 @@ buildscript {
         google()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.4.2'
+        classpath 'com.android.tools.build:gradle:8.2.2'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath 'com.google.gms:google-services:4.3.15'
     }
 }
 
 plugins {
-    id("com.google.devtools.ksp") version "$kotlin_version-1.0.9" apply false
+    id("com.google.devtools.ksp") version "1.9.22-1.0.17" apply false
 }
 
 allprojects {
