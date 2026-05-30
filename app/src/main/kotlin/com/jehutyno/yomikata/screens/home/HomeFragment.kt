@@ -41,7 +41,6 @@ class HomeFragment(di: DI) : Fragment(), HomeContract.View {
     }
 
     private lateinit var newsRef: DatabaseReference
-    private lateinit var newsListener: ValueEventListener
 
     // View Binding
     private var _binding: FragmentHomeBinding? = null
@@ -81,17 +80,17 @@ class HomeFragment(di: DI) : Fragment(), HomeContract.View {
             database.getReference("news_en")
 
         binding.expandTextView.text = getString(R.string.news_loading)
-        newsListener = object : ValueEventListener {
+        newsRef.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(dataSnapshot: DataSnapshot) {
-                val value = dataSnapshot.getValue(String::class.java)
-                binding.expandTextView.text = value
+                if (_binding == null) return
+                binding.expandTextView.text = dataSnapshot.getValue(String::class.java)
             }
 
             override fun onCancelled(error: DatabaseError) {
+                if (_binding == null) return
                 binding.expandTextView.text = getString(R.string.news_default)
             }
-        }
-        newsRef.addValueEventListener(newsListener)
+        })
 
         binding.share.setOnClickListener { shareApp(requireActivity()) }
         binding.facebook.setOnClickListener { contactFacebook(activity) }
@@ -212,7 +211,6 @@ class HomeFragment(di: DI) : Fragment(), HomeContract.View {
 
     override fun onDestroyView() {
         super.onDestroyView()
-        newsRef.removeEventListener(newsListener)
         _binding = null
     }
 
