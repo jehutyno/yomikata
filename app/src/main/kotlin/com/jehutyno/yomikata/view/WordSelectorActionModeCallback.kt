@@ -14,7 +14,6 @@ import com.jehutyno.yomikata.screens.content.WordsAdapter
 import com.jehutyno.yomikata.util.createNewSelectionDialog
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 
 
@@ -45,62 +44,61 @@ class WordSelectorActionModeCallback (
     }
 
     override fun onActionItemClicked(mode: ActionMode, item: MenuItem): Boolean {
-        val selections: List<Quiz>
-        runBlocking {
-            selections = selectionsPresenter.getSelections()
-        }
         when (item.itemId) {
             SelectAction.ADD_TO_SELECTIONS.value -> {
-                val popup = PopupMenu(activity, activity.findViewById(item.itemId))
-                popup.menuInflater.inflate(R.menu.popup_selections, popup.menu)
-                for ((i, selection) in selections.withIndex()) {
-                    popup.menu.add(1, i, i, selection.getName()).isChecked = false
-                }
-                popup.setOnMenuItemClickListener {it -> runBlocking {
-                    val selectedWords: ArrayList<Word> = arrayListOf()
-                    adapter.items.forEach { item -> if (item.isSelected == 1) selectedWords.add(item) }
-                    val selectionItemId = it.itemId
-                    when (it.itemId) {
-                        R.id.add_selection -> addSelection(selectedWords)
-                        else -> {
-                            selectedWords.forEach {
-                                if (!wordsPresenter.isWordInQuiz(it.id, selections[selectionItemId].id))
-                                    selectionsPresenter.addWordToSelection(it.id, selections[selectionItemId].id)
-                            }
-                            it.isChecked = !it.isChecked
-                        }
+                MainScope().launch {
+                    val selections = selectionsPresenter.getSelections()
+                    val popup = PopupMenu(activity, activity.findViewById(item.itemId))
+                    popup.menuInflater.inflate(R.menu.popup_selections, popup.menu)
+                    for ((i, selection) in selections.withIndex()) {
+                        popup.menu.add(1, i, i, selection.getName()).isChecked = false
                     }
-                    true
+                    popup.setOnMenuItemClickListener { it ->
+                        val selectedWords: ArrayList<Word> = arrayListOf()
+                        adapter.items.forEach { item -> if (item.isSelected == 1) selectedWords.add(item) }
+                        val selectionItemId = it.itemId
+                        when (it.itemId) {
+                            R.id.add_selection -> addSelection(selectedWords)
+                            else -> {
+                                MainScope().launch {
+                                    selectedWords.forEach {
+                                        if (!wordsPresenter.isWordInQuiz(it.id, selections[selectionItemId].id))
+                                            selectionsPresenter.addWordToSelection(it.id, selections[selectionItemId].id)
+                                    }
+                                }
+                                it.isChecked = !it.isChecked
+                            }
+                        }
+                        true
+                    }
+                    popup.show()
                 }
-                }
-                popup.show()
             }
             SelectAction.REMOVE_FROM_SELECTIONS.value -> {
-                val popup = PopupMenu(activity, activity.findViewById(item.itemId))
-                for ((i, selection) in selections.withIndex()) {
-                    popup.menu.add(1, i, i, selection.getName()).isChecked = false
-                }
-                popup.setOnMenuItemClickListener {it -> runBlocking {
-                    val selectedWords: ArrayList<Word> = arrayListOf()
-                    adapter.items.forEach { item -> if (item.isSelected == 1) selectedWords.add(item) }
-                    val selectionItemId = it.itemId
-                    when (it.itemId) {
-                        else -> {
+                MainScope().launch {
+                    val selections = selectionsPresenter.getSelections()
+                    val popup = PopupMenu(activity, activity.findViewById(item.itemId))
+                    for ((i, selection) in selections.withIndex()) {
+                        popup.menu.add(1, i, i, selection.getName()).isChecked = false
+                    }
+                    popup.setOnMenuItemClickListener { it ->
+                        val selectedWords: ArrayList<Word> = arrayListOf()
+                        adapter.items.forEach { item -> if (item.isSelected == 1) selectedWords.add(item) }
+                        val selectionItemId = it.itemId
+                        MainScope().launch {
                             selectedWords.forEach {
                                 if (wordsPresenter.isWordInQuiz(it.id, selections[selectionItemId].id))
                                     selectionsPresenter.deleteWordFromSelection(it.id, selections[selectionItemId].id)
                             }
-                            it.isChecked = !it.isChecked
                         }
+                        it.isChecked = !it.isChecked
+                        true
                     }
-                    true
+                    popup.show()
                 }
-                }
-                popup.show()
-
             }
             SelectAction.SELECT_ALL.value -> {
-                runBlocking {
+                MainScope().launch {
                     wordsPresenter.updateWordsCheck(adapter.items.map{it.id}.toLongArray(), true)
                 }
                 adapter.items.forEach {
@@ -109,7 +107,7 @@ class WordSelectorActionModeCallback (
                 adapter.notifyItemRangeChanged(0, adapter.items.size)
             }
             SelectAction.UNSELECT_ALL.value -> {
-                runBlocking {
+                MainScope().launch {
                     wordsPresenter.updateWordsCheck(adapter.items.map{it.id}.toLongArray(), false)
                 }
                 adapter.items.forEach {

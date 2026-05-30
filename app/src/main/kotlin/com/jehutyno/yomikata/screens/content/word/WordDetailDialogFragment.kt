@@ -18,7 +18,6 @@ import com.jehutyno.yomikata.model.Word
 import com.jehutyno.yomikata.util.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import org.kodein.di.*
 import splitties.alertdialog.appcompat.*
 
@@ -164,29 +163,33 @@ class WordDetailDialogFragment(private val di: DI) : DialogFragment(), WordContr
         setArrowDisplay(wordPosition)
     }
 
-    override fun onSelectionClick(view: View, position: Int) = runBlocking {
-        val selections = wordPresenter.getSelections()
-        val popup = PopupMenu(requireActivity(), view)
-        popup.menuInflater.inflate(R.menu.popup_selections, popup.menu)
-        for ((i, selection) in selections.withIndex()) {
-            popup.menu.add(1, i, i, selection.getName()).isChecked = wordPresenter.isWordInQuiz(adapter.words[position].first.id, selection.id)
-            popup.menu.setGroupCheckable(1, true, false)
-        }
-        popup.setOnMenuItemClickListener { runBlocking {
-            when (it.itemId) {
-                R.id.add_selection -> addSelection(adapter.words[position].first.id)
-                else -> {
-                    if (!it.isChecked)
-                        wordPresenter.addWordToSelection(adapter.words[position].first.id, selections[it.itemId].id)
-                    else {
-                        wordPresenter.deleteWordFromSelection(adapter.words[position].first.id, selections[it.itemId].id)
-                    }
-                    it.isChecked = !it.isChecked
-                }
+    override fun onSelectionClick(view: View, position: Int) {
+        lifecycleScope.launch {
+            val selections = wordPresenter.getSelections()
+            val popup = PopupMenu(requireActivity(), view)
+            popup.menuInflater.inflate(R.menu.popup_selections, popup.menu)
+            for ((i, selection) in selections.withIndex()) {
+                popup.menu.add(1, i, i, selection.getName()).isChecked = wordPresenter.isWordInQuiz(adapter.words[position].first.id, selection.id)
+                popup.menu.setGroupCheckable(1, true, false)
             }
-            true
-        }}
-        popup.show()
+            popup.setOnMenuItemClickListener {
+                when (it.itemId) {
+                    R.id.add_selection -> addSelection(adapter.words[position].first.id)
+                    else -> {
+                        lifecycleScope.launch {
+                            if (!it.isChecked)
+                                wordPresenter.addWordToSelection(adapter.words[position].first.id, selections[it.itemId].id)
+                            else {
+                                wordPresenter.deleteWordFromSelection(adapter.words[position].first.id, selections[it.itemId].id)
+                            }
+                        }
+                        it.isChecked = !it.isChecked
+                    }
+                }
+                true
+            }
+            popup.show()
+        }
     }
 
     private fun addSelection(wordId: Long) {
@@ -211,14 +214,18 @@ class WordDetailDialogFragment(private val di: DI) : DialogFragment(), WordContr
         voicesManager.speakSentence(sentence, ttsSupported, tts)
     }
 
-    override fun onLevelUp(position: Int) = runBlocking {
-        wordPresenter.levelUp(adapter.words[position].first.id, adapter.words[position].first.points)
-        waitAndUpdateLevel(position, levelUp(adapter.words[position].first.points))
+    override fun onLevelUp(position: Int) {
+        lifecycleScope.launch {
+            wordPresenter.levelUp(adapter.words[position].first.id, adapter.words[position].first.points)
+            waitAndUpdateLevel(position, levelUp(adapter.words[position].first.points))
+        }
     }
 
-    override fun onLevelDown(position: Int) = runBlocking {
-        wordPresenter.levelDown(adapter.words[position].first.id, adapter.words[position].first.points)
-        waitAndUpdateLevel(position, levelDown(adapter.words[position].first.points))
+    override fun onLevelDown(position: Int) {
+        lifecycleScope.launch {
+            wordPresenter.levelDown(adapter.words[position].first.id, adapter.words[position].first.points)
+            waitAndUpdateLevel(position, levelDown(adapter.words[position].first.points))
+        }
     }
 
     override fun onCloseClick() {

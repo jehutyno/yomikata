@@ -34,7 +34,6 @@ import com.jehutyno.yomikata.screens.content.word.WordDetailDialogFragment
 import com.jehutyno.yomikata.util.*
 import com.jehutyno.yomikata.view.SwipeDirection
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import org.kodein.di.*
 import splitties.alertdialog.appcompat.*
 
@@ -248,17 +247,19 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
     }
 
     private fun initEditText() {
-        editBinding.hiraganaEdit.setOnEditorActionListener { _, i, keyEvent -> runBlocking {
+        editBinding.hiraganaEdit.setOnEditorActionListener { _, i, keyEvent ->
             if (isSettingsOpen) closeTTSSettings()
             if (adapter!!.words[binding.pager.currentItem].second == QuizType.TYPE_PRONUNCIATION
                 && (i == EditorInfo.IME_ACTION_DONE || keyEvent?.keyCode == KeyEvent.KEYCODE_ENTER) && !holdOn) {
                 // Validate Action
                 holdOn = true
                 editBinding.hiraganaEdit.setText(editBinding.hiraganaEdit.text.toString().replace("n", if (adapter!!.words[binding.pager.currentItem].first.isKana >= 1) "n" else "ん"))
-                presenter.onAnswerGiven(editBinding.hiraganaEdit.text.toString().trim().replace(" ", "").replace("　", "").replace("\n", "")) // TODO add function clean utils
+                lifecycleScope.launch {
+                    presenter.onAnswerGiven(editBinding.hiraganaEdit.text.toString().trim().replace(" ", "").replace("　", "").replace("\n", "")) // TODO add function clean utils
+                }
             }
             true
-        }}
+        }
 
         editBinding.hiraganaEdit.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(s: Editable?) {
@@ -415,7 +416,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
                 if (isSettingsOpen) closeTTSSettings()
                 if (!holdOn) {
                     holdOn = true
-                    runBlocking {
+                    lifecycleScope.launch {
                         presenter.onOptionClick(num)
                     }
                 }
@@ -500,7 +501,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
                     override fun onAnimationEnd(animation: Animator) {
                         binding.check.visibility = GONE
                         if (result) {
-                            runBlocking {
+                            lifecycleScope.launch {
                                 presenter.onNextWord()
                             }
                         } else {
@@ -716,7 +717,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
         val dialog = requireContext().alertDialog {
             message = getString(R.string.alert_session_finished, wordCount)
             positiveButton(R.string.alert_continue) {
-                runBlocking {
+                lifecycleScope.launch {
                     if (isProgressive)
                         presenter.onLaunchNextProgressiveSession()
                     else
@@ -726,7 +727,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
             if (proposeErrors) {
                 negativeButton(R.string.alert_review_session_errors) {
                     // TODO handle shuffle ?
-                    runBlocking {
+                    lifecycleScope.launch {
                         presenter.onLaunchErrorSession()
                     }
                 }
@@ -759,7 +760,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
             if (!quizEnded) {
                 messageResource = R.string.alert_error_review_session_message
                 positiveButton(R.string.alert_continue_quiz) {
-                    runBlocking {
+                    lifecycleScope.launch {
                         presenter.onContinueQuizAfterErrorSession()
                     }
                 }
@@ -771,7 +772,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
                     else
                         R.string.alert_restart
                 positiveButton(positiveButtonText) {
-                    runBlocking {
+                    lifecycleScope.launch {
                         presenter.onRestartQuiz(!isProgressive)
                     }
                 }
@@ -797,13 +798,13 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
         requireContext().alertDialog {
             messageResource = R.string.alert_quiz_finished
             positiveButton(R.string.alert_restart) {
-                runBlocking {
+                lifecycleScope.launch {
                     presenter.onRestartQuiz(true)
                 }
             }
             if (proposeErrors) {
                 negativeButton(R.string.alert_review_quiz_errors) {
-                    runBlocking {
+                    lifecycleScope.launch {
                         presenter.onLaunchErrorSession()
                     }
                 }
@@ -885,30 +886,34 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
         presenter.onSpeakWordTTS()
     }
 
-    override fun onSelectionClick(view: View, position: Int) = runBlocking {
-        val selections = presenter.getSelections()
-        val popup = PopupMenu(activity, view)
-        val word = adapter!!.words[position].first
-        popup.menuInflater.inflate(R.menu.popup_selections, popup.menu)
-        for ((i, selection) in selections.withIndex()) {
-            popup.menu.add(1, i, i, selection.getName()).isChecked = presenter.isWordInQuiz(word.id, selection.id)
-            popup.menu.setGroupCheckable(1, true, false)
-        }
-        popup.setOnMenuItemClickListener { it -> runBlocking {
-            when (it.itemId) {
-                R.id.add_selection -> addSelection(word.id)
-                else -> {
-                    if (!it.isChecked)
-                        presenter.addWordToSelection(word.id, selections[it.itemId].id)
-                    else {
-                        presenter.deleteWordFromSelection(word.id, selections[it.itemId].id)
-                    }
-                    it.isChecked = !it.isChecked
-                }
+    override fun onSelectionClick(view: View, position: Int) {
+        lifecycleScope.launch {
+            val selections = presenter.getSelections()
+            val popup = PopupMenu(activity, view)
+            val word = adapter!!.words[position].first
+            popup.menuInflater.inflate(R.menu.popup_selections, popup.menu)
+            for ((i, selection) in selections.withIndex()) {
+                popup.menu.add(1, i, i, selection.getName()).isChecked = presenter.isWordInQuiz(word.id, selection.id)
+                popup.menu.setGroupCheckable(1, true, false)
             }
-            true
-        }}
-        popup.show()
+            popup.setOnMenuItemClickListener { it ->
+                when (it.itemId) {
+                    R.id.add_selection -> addSelection(word.id)
+                    else -> {
+                        lifecycleScope.launch {
+                            if (!it.isChecked)
+                                presenter.addWordToSelection(word.id, selections[it.itemId].id)
+                            else {
+                                presenter.deleteWordFromSelection(word.id, selections[it.itemId].id)
+                            }
+                        }
+                        it.isChecked = !it.isChecked
+                    }
+                }
+                true
+            }
+            popup.show()
+        }
     }
 
     override fun onReportClick(position: Int) {

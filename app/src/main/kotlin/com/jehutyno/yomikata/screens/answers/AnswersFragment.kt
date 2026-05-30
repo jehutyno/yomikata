@@ -16,7 +16,6 @@ import com.jehutyno.yomikata.managers.VoicesManager
 import com.jehutyno.yomikata.model.Answer
 import com.jehutyno.yomikata.util.*
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import org.kodein.di.*
 import java.util.*
 
@@ -53,21 +52,20 @@ class AnswersFragment(private val di: DI) : Fragment(), AnswersContract.View, An
         ttsSupported = onTTSinit(activity, status, tts)
     }
 
+    private lateinit var answers: List<Answer>
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         tts = TextToSpeech(activity, this)
 
         val answersListRaw = LocalPersistence.readObjectFromFile(context, "answers")
         val answersList = answersListRaw as ArrayList<*>
-        val answers = answersListRaw.filterIsInstance<Answer>()
+        answers = answersListRaw.filterIsInstance<Answer>()
         if (answers.size != answersList.size) {
             Log.e("Failed cast", "Some items in the read list of answers were not of the type Answer")
         }
         adapter = AnswersAdapter(requireActivity(), this)
         layoutManager = LinearLayoutManager(activity)
-        runBlocking {
-            adapter.replaceData(presenter.getAnswersWordsSentences(answers))
-        }
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -82,6 +80,10 @@ class AnswersFragment(private val di: DI) : Fragment(), AnswersContract.View, An
             it.adapter = adapter
             it.layoutManager = layoutManager
         }
+
+        lifecycleScope.launch {
+            adapter.replaceData(presenter.getAnswersWordsSentences(answers))
+        }
     }
 
     override fun onResume() {
@@ -93,31 +95,33 @@ class AnswersFragment(private val di: DI) : Fragment(), AnswersContract.View, An
 
     }
 
-    override fun onSelectionClick(position: Int, view: View) = runBlocking {
-        val selections = presenter.getSelections()
-        val popup = PopupMenu(requireActivity(), view)
-        popup.menuInflater.inflate(R.menu.popup_selections, popup.menu)
-        for ((i, selection) in selections.withIndex()) {
-            popup.menu.add(1, i, i, selection.getName()).isChecked = presenter.isWordInQuiz(adapter.items[position].second.id, selection.id)
-            popup.menu.setGroupCheckable(1, true, false)
-        }
-        popup.setOnMenuItemClickListener {
-            when (it.itemId) {
-                R.id.add_selection -> addSelection(adapter.items[position].second.id)
-                else -> {
-                    runBlocking {
-                        if (!it.isChecked)
-                            presenter.addWordToSelection(adapter.items[position].second.id, selections[it.itemId].id)
-                        else {
-                            presenter.deleteWordFromSelection(adapter.items[position].second.id, selections[it.itemId].id)
+    override fun onSelectionClick(position: Int, view: View) {
+        lifecycleScope.launch {
+            val selections = presenter.getSelections()
+            val popup = PopupMenu(requireActivity(), view)
+            popup.menuInflater.inflate(R.menu.popup_selections, popup.menu)
+            for ((i, selection) in selections.withIndex()) {
+                popup.menu.add(1, i, i, selection.getName()).isChecked = presenter.isWordInQuiz(adapter.items[position].second.id, selection.id)
+                popup.menu.setGroupCheckable(1, true, false)
+            }
+            popup.setOnMenuItemClickListener {
+                when (it.itemId) {
+                    R.id.add_selection -> addSelection(adapter.items[position].second.id)
+                    else -> {
+                        lifecycleScope.launch {
+                            if (!it.isChecked)
+                                presenter.addWordToSelection(adapter.items[position].second.id, selections[it.itemId].id)
+                            else {
+                                presenter.deleteWordFromSelection(adapter.items[position].second.id, selections[it.itemId].id)
+                            }
                         }
                         it.isChecked = !it.isChecked
                     }
                 }
+                true
             }
-            true
+            popup.show()
         }
-        popup.show()
     }
 
     private fun addSelection(wordId: Long) {

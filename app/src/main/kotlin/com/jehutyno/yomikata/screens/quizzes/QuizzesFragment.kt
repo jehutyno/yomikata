@@ -39,7 +39,6 @@ import com.jehutyno.yomikata.util.spotlightTuto
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import org.kodein.di.DI
 import org.kodein.di.instance
@@ -285,21 +284,23 @@ class QuizzesFragment(di: DI) : Fragment(), QuizzesContract.View, QuizzesAdapter
             }
         }
 
-        // No quiz to launch
-        if (ids.size == 0 || runBlocking {mpresenter.countQuiz(ids.toLongArray())} <= 0) {
-            val toast = Toast.makeText(context, R.string.error_no_quiz_no_word, Toast.LENGTH_SHORT)
-            toast.show()
-            return
-        }
+        // No quiz to launch — check is done asynchronously; launch quiz only after count is confirmed > 0
+        lifecycleScope.launch {
+            if (ids.size == 0 || mpresenter.countQuiz(ids.toLongArray()) <= 0) {
+                val toast = Toast.makeText(context, R.string.error_no_quiz_no_word, Toast.LENGTH_SHORT)
+                toast.show()
+                return@launch
+            }
 
-        val intent = Intent(activity, QuizActivity::class.java).apply {
-            putExtra(Extras.EXTRA_QUIZ_IDS, ids.toLongArray())
-            putExtra(Extras.EXTRA_QUIZ_TITLE, title)
-            putExtra(Extras.EXTRA_QUIZ_STRATEGY, strategy)
-            putExtra(Extras.EXTRA_LEVEL, level)
-            putExtra(Extras.EXTRA_QUIZ_TYPES, selectedTypes)
+            val intent = Intent(activity, QuizActivity::class.java).apply {
+                putExtra(Extras.EXTRA_QUIZ_IDS, ids.toLongArray())
+                putExtra(Extras.EXTRA_QUIZ_TITLE, title)
+                putExtra(Extras.EXTRA_QUIZ_STRATEGY, strategy)
+                putExtra(Extras.EXTRA_LEVEL, level)
+                putExtra(Extras.EXTRA_QUIZ_TYPES, selectedTypes)
+            }
+            startActivity(intent)
         }
-        startActivity(intent)
     }
 
     fun launchQuizClick(strategy: QuizStrategy, level: Level?, title: String) {
@@ -345,9 +346,10 @@ class QuizzesFragment(di: DI) : Fragment(), QuizzesContract.View, QuizzesAdapter
         openContent(position, null)
     }
 
-    override fun onItemChecked(position: Int, checked: Boolean) = runBlocking {
-        mpresenter.updateQuizCheck(adapter.items[position].id, checked)
-
+    override fun onItemChecked(position: Int, checked: Boolean) {
+        lifecycleScope.launch {
+            mpresenter.updateQuizCheck(adapter.items[position].id, checked)
+        }
     }
 
     override fun onItemLongClick(position: Int) {
@@ -363,16 +365,16 @@ class QuizzesFragment(di: DI) : Fragment(), QuizzesContract.View, QuizzesAdapter
                     // name didn't change -> do nothing
                     return@createNewSelectionDialog
 
-                runBlocking {
+                lifecycleScope.launch {
                     mpresenter.updateQuizName(adapter.items[position].id, selectionName)
+                    adapter.items[position].nameFr = selectionName
+                    adapter.items[position].nameEn = selectionName
+                    adapter.notifyItemChanged(position)
                 }
-                adapter.items[position].nameFr = selectionName
-                adapter.items[position].nameEn = selectionName
-                adapter.notifyItemChanged(position)
             },
 
             {
-                runBlocking {
+                lifecycleScope.launch {
                     mpresenter.deleteQuiz(adapter.items[position].id)
                     adapter.deleteItem(position)
                 }
@@ -382,7 +384,7 @@ class QuizzesFragment(di: DI) : Fragment(), QuizzesContract.View, QuizzesAdapter
 
     override fun addSelection() {
         requireActivity().createNewSelectionDialog("", { selectionName ->
-                runBlocking {
+                lifecycleScope.launch {
                     mpresenter.createQuiz(selectionName)
                 }
             }, null)

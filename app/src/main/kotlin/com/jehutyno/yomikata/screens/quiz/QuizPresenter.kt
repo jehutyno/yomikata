@@ -35,7 +35,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import java.util.Calendar
 import java.util.Random
 
@@ -52,7 +51,7 @@ class QuizPresenter(
     private val quizTypes: ArrayList<QuizType>, private val rng: Random,
     selectionsInterface: SelectionsInterface,
     wordInQuizInterface: WordInQuizInterface,
-    coroutineScope: CoroutineScope) : QuizContract.Presenter,
+    private val coroutineScope: CoroutineScope) : QuizContract.Presenter,
             SelectionsInterface by selectionsInterface, WordInQuizInterface by wordInQuizInterface {
 
     private val defaultSharedPreferences: SharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
@@ -214,7 +213,7 @@ class QuizPresenter(
         quizView.setPagerPosition(wordHandler.currentItem)
         if (previousAnswerWrong)
             quizView.displayEditDisplayAnswerButton()
-        runBlocking {
+        coroutineScope.launch {
             setUpNextQuiz()
         }
         sessionCount = savedInstanceState.getInt("session_count")
