@@ -252,6 +252,7 @@ class WordDetailDialogFragment(private val di: DI) : DialogFragment(), WordContr
     override fun onDestroy() {
         tts?.stop()
         tts?.shutdown()
+        voicesManager.releasePlayer()
         super.onDestroy()
     }
 }

@@ -150,6 +150,7 @@ class AnswersFragment(private val di: DI) : Fragment(), AnswersContract.View, An
     override fun onDestroy() {
         tts?.stop()
         tts?.shutdown()
+        voicesManager.releasePlayer()
         super.onDestroy()
     }
 

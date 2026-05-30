@@ -4,7 +4,6 @@ import android.app.Activity
 import android.content.Context
 import android.media.AudioManager
 import android.net.Uri
-import android.os.Build
 import android.speech.tts.TextToSpeech
 import android.widget.Toast
 import com.jehutyno.yomikata.R
@@ -39,12 +38,7 @@ class VoicesManager(val context: Activity) {
                 }
             }
             SpeechAvailability.TTS_AVAILABLE -> {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                    tts?.speak(sentenceNoFuri(sentence), TextToSpeech.QUEUE_FLUSH, null, null)
-                } else {    // remove this if minBuildVersion >= 21 (LOLLIPOP)
-                    @Suppress("DEPRECATION")
-                    tts?.speak(sentenceNoFuri(sentence), TextToSpeech.QUEUE_FLUSH, null)
-                }
+                tts?.speak(sentenceNoFuri(sentence), TextToSpeech.QUEUE_FLUSH, null, null)
             }
             else -> speechNotSupportedAlert(context, sentence.level) {}
         }
@@ -69,20 +63,13 @@ class VoicesManager(val context: Activity) {
                 }
             }
             SpeechAvailability.TTS_AVAILABLE -> {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                    tts?.speak(if (word.isKana >= 1)
+                tts?.speak(
+                    if (word.isKana >= 1)
                         word.japanese.split("/")[0].split(";")[0]
                     else
                         word.reading.split("/")[0].split(";")[0],
-                            TextToSpeech.QUEUE_FLUSH, null,null)
-                } else {    // remove this if minBuildVersion >= 21 (LOLLIPOP)
-                    @Suppress("DEPRECATION")
-                    tts?.speak(if (word.isKana >= 1)
-                        word.japanese.split("/")[0].split(";")[0]
-                    else
-                        word.reading.split("/")[0].split(";")[0],
-                            TextToSpeech.QUEUE_FLUSH, null)
-                }
+                    TextToSpeech.QUEUE_FLUSH, null, null
+                )
             }
             else -> speechNotSupportedAlert(context, level) {}
         }
