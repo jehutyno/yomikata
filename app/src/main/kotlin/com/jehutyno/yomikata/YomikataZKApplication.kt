@@ -1,9 +1,8 @@
 package com.jehutyno.yomikata
 
+import android.app.Application
 import androidx.appcompat.app.AppCompatDelegate
-import androidx.multidex.MultiDexApplication
 import androidx.preference.PreferenceManager
-import com.facebook.stetho.Stetho
 import com.jehutyno.yomikata.dao.daoModule
 import com.jehutyno.yomikata.presenters.source.presenterModule
 import com.jehutyno.yomikata.repository.database.databaseModule
@@ -20,7 +19,7 @@ import org.kodein.di.DIAware
  * Created by jehutyno on 25/09/2016.
  */
 
-class YomikataZKApplication : MultiDexApplication(), DIAware {
+class YomikataZKApplication : Application(), DIAware {
 
     companion object {
         const val APP_PNAME = "com.jehutyno.yomikata"
@@ -36,8 +35,6 @@ class YomikataZKApplication : MultiDexApplication(), DIAware {
 
     override fun onCreate() {
         super.onCreate()
-
-        Stetho.initializeWithDefaults(this)
 
         val nightModePref = PreferenceManager.getDefaultSharedPreferences(this)
         val mode = nightModePref.getInt(Prefs.DAY_NIGHT_MODE.pref, AppCompatDelegate.MODE_NIGHT_YES)
