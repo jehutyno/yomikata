@@ -199,13 +199,11 @@ private fun createDlButton(activity: Activity, level: Int, finishedListener: () 
     val dlButton = Button(activity)
     dlButton.setCompoundDrawablesWithIntrinsicBounds(ContextCompat.getDrawable(activity, R.drawable.ic_download), null, null, null)
     try {
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
-            val attrs = intArrayOf(android.R.attr.selectableItemBackgroundBorderless /* index 0 */)
-            val ta = activity.obtainStyledAttributes(attrs)
-            val drawableFromTheme = ta.getDrawable(0 /* index */)
-            ta.recycle()
-            dlButton.background = drawableFromTheme
-        }
+        val attrs = intArrayOf(android.R.attr.selectableItemBackgroundBorderless)
+        val ta = activity.obtainStyledAttributes(attrs)
+        val drawableFromTheme = ta.getDrawable(0)
+        ta.recycle()
+        dlButton.background = drawableFromTheme
     } catch (e: Exception) {
         e.printStackTrace()
     }
@@ -233,13 +231,11 @@ private fun createGpButton(activity: Activity) : Button {
     val gpButton = Button(activity)
     gpButton.setCompoundDrawablesWithIntrinsicBounds(ContextCompat.getDrawable(activity, R.drawable.ic_google_play), null, null, null)
     try {
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
-            val attrs = intArrayOf(android.R.attr.selectableItemBackgroundBorderless /* index 0 */)
-            val ta = activity.obtainStyledAttributes(attrs)
-            val drawableFromTheme = ta.getDrawable(0 /* index */)
-            ta.recycle()
-            gpButton.background = drawableFromTheme
-        }
+        val attrs = intArrayOf(android.R.attr.selectableItemBackgroundBorderless)
+        val ta = activity.obtainStyledAttributes(attrs)
+        val drawableFromTheme = ta.getDrawable(0)
+        ta.recycle()
+        gpButton.background = drawableFromTheme
     } catch (e: Exception) {
         e.printStackTrace()
     }
