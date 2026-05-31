@@ -5,14 +5,12 @@ import android.animation.ArgbEvaluator
 import android.animation.ValueAnimator
 import android.content.Context
 import android.content.Intent
-import android.media.AudioManager
 import android.os.Bundle
 import android.os.Parcelable
 import android.speech.tts.TextToSpeech
 import android.text.Editable
 import android.text.InputType
 import android.text.TextWatcher
-import android.text.method.ScrollingMovementMethod
 import android.view.*
 import android.view.View.GONE
 import android.view.View.VISIBLE
@@ -59,24 +57,17 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
     private lateinit var errorsMenu: MenuItem
     private lateinit var ttsSettingsMenu: MenuItem
     private var holdOn = false
-    private var isSettingsOpen = false
-    private val settingsAnimationOffset = -900f
 
     // View Binding
     private var _binding: FragmentQuizBinding? = null
     private val binding get() = _binding!!
     // for keyboard entry edit and multiple choice
     private val editBinding get() = binding.quizAnswersKeyboardEntry
-    private val qcmBinding get() = binding.quizAnswersMultipleChoice
 
-    /** List of QCM tvs for convenience */
-    private val QCMtvs get() = qcmBinding.let {
-        listOf(it.option1Tv, it.option2Tv, it.option3Tv, it.option4Tv)
-    }
-    /** List of QCM furigana for convenience */
-    private val QCMfuri get() = qcmBinding.let {
-        listOf(it.option1Furi, it.option2Furi, it.option3Furi, it.option4Furi)
-    }
+    // UI Controllers
+    private lateinit var qcmController: QCMUIController
+    private lateinit var settingsUIManager: SettingsUIManager
+    private lateinit var dialogFlowController: DialogFlowController
 
     override fun onInit(status: Int) {
         ttsSupported = onTTSinit(activity, status, tts)
@@ -134,6 +125,10 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
         super.onViewCreated(view, savedInstanceState)
         tts?.shutdown()
         tts = TextToSpeech(activity, this)
+
+        qcmController = QCMUIController(binding)
+        settingsUIManager = SettingsUIManager(binding, voicesManager, presenter)
+        dialogFlowController = DialogFlowController(this, presenter, binding)
 
         initUI()
 
@@ -194,20 +189,10 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
                         speechNotSupportedAlert(requireActivity(), getCategoryLevel(category)) {}
                     }
                     else -> {
-                        if (isSettingsOpen) {
-                            closeTTSSettings()
+                        if (settingsUIManager.isSettingsOpen) {
+                            settingsUIManager.close()
                         } else {
-                            if (speechAvailability == SpeechAvailability.VOICES_AVAILABLE) {
-                                binding.settingsSpeed.visibility = GONE
-                                binding.seekSpeed.visibility = GONE
-                            } else {
-                                binding.settingsSpeed.visibility = VISIBLE
-                                binding.seekSpeed.visibility = VISIBLE
-                            }
-                            binding.settingsContainer.animate().setDuration(300).translationY(0f).withStartAction {
-                                binding.settingsContainer.visibility = VISIBLE
-                                isSettingsOpen = true
-                            }.start()
+                            settingsUIManager.openIfAvailable(speechAvailability)
                         }
                     }
                 }
@@ -223,8 +208,8 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
     private fun initUI() {
         initPager()
         initEditText()
-        setUpRadioButtons()
-        setUpAudioManager()
+        dialogFlowController.setUpRadioButtons()
+        settingsUIManager.setUp(tts)
         initAnswersButtons()
     }
 
@@ -249,7 +234,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
 
     private fun initEditText() {
         editBinding.hiraganaEdit.setOnEditorActionListener { _, i, keyEvent ->
-            if (isSettingsOpen) closeTTSSettings()
+            if (settingsUIManager.isSettingsOpen) settingsUIManager.close()
             if (adapter.words[binding.pager.currentItem].second == QuizType.TYPE_PRONUNCIATION
                 && (i == EditorInfo.IME_ACTION_DONE || keyEvent?.keyCode == KeyEvent.KEYCODE_ENTER) && !holdOn) {
                 // Validate Action
@@ -267,7 +252,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
             }
 
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
-                if (isSettingsOpen) closeTTSSettings()
+                if (settingsUIManager.isSettingsOpen) settingsUIManager.close()
                 // Return to normal color when typing again (because it becomes Red or Green when
                 // you validate
                 currentEditColor = R.color.lighter_gray
@@ -280,7 +265,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
         })
 
         editBinding.editAction.setOnClickListener {
-            if (isSettingsOpen) closeTTSSettings()
+            if (settingsUIManager.isSettingsOpen) settingsUIManager.close()
             // hold is used to wait so only one answer is validated even with multiple press
             if (!holdOn) {
                 holdOn = true
@@ -301,120 +286,17 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
         editBinding.hiraganaEdit.setSelection(editBinding.hiraganaEdit.text.length)
     }
 
-    private enum class ErrorReviewOption(val preferenceId: Int) {
-        Show(0),
-        AutoReview(1),
-        Skip(2)
-    }
-    private enum class FlawlessOption(val preferenceId: Int) {
-        Show(0),
-        Skip(1)
-    }
-
-    private val errorReviewIdMap = mapOf(
-        Pair(R.id.radio_button_show, ErrorReviewOption.Show),
-        Pair(R.id.radio_button_auto_error, ErrorReviewOption.AutoReview),
-        Pair(R.id.radio_button_error_no_show, ErrorReviewOption.Skip)
-    )
-    private val flawlessIdMap = mapOf(
-        Pair(R.id.flawless_radio_button_show, FlawlessOption.Show),
-        Pair(R.id.flawless_radio_button_no_show, FlawlessOption.Skip)
-    )
-
-    private fun setUpRadioButtons() {
-        val pref = PreferenceManager.getDefaultSharedPreferences(requireContext())
-
-        val defaultErrorReview = ErrorReviewOption.Show.preferenceId
-        val defaultFlawless = FlawlessOption.Show.preferenceId
-
-        val errorReviewSelected = pref.getInt(
-            Prefs.QUIZ_ERROR_SELECTED_RADIO_BUTTON_ID.pref,
-            defaultErrorReview
-        )
-        val flawlessSelected = pref.getInt(
-            Prefs.QUIZ_FLAWLESS_SELECTED_RADIO_BUTTON_ID.pref,
-            defaultFlawless
-        )
-
-        val errorSelectedId = errorReviewIdMap.filterValues {
-                it.preferenceId == errorReviewSelected
-            }.keys.toList().getOrElse(0) { defaultErrorReview }
-        val flawlessSelectedId = flawlessIdMap.filterValues {
-                it.preferenceId == flawlessSelected
-            }.keys.toList().getOrElse(0) { defaultFlawless }
-
-        binding.errorReviewRadioGroup.check(errorSelectedId)
-        binding.flawlessRadioGroup.check(flawlessSelectedId)
-
-        // set shared preferences
-        binding.errorReviewRadioGroup.setOnCheckedChangeListener { _, checkedId ->
-            pref.edit().putInt(
-                Prefs.QUIZ_ERROR_SELECTED_RADIO_BUTTON_ID.pref,
-                requireNotNull(errorReviewIdMap[checkedId]) { "Unknown radio button: $checkedId" }.preferenceId
-            ).apply()
-        }
-        binding.flawlessRadioGroup.setOnCheckedChangeListener { _, checkedId ->
-            pref.edit().putInt(
-                Prefs.QUIZ_FLAWLESS_SELECTED_RADIO_BUTTON_ID.pref,
-                requireNotNull(flawlessIdMap[checkedId]) { "Unknown radio button: $checkedId" }.preferenceId
-            ).apply()
-        }
-    }
-
-    private fun setUpAudioManager() {
-        val audioManager = requireActivity().getSystemService(Context.AUDIO_SERVICE) as AudioManager
-        binding.seekVolume.max = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
-        binding.seekVolume.progress = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
-        binding.seekVolume.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(p0: SeekBar?, p1: Int, p2: Boolean) {
-                audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, p1, 0)
-                presenter.onSpeakSentence()
-            }
-
-            override fun onStartTrackingTouch(p0: SeekBar?) {
-            }
-
-            override fun onStopTrackingTouch(p0: SeekBar?) {
-            }
-
-        })
-
-        binding.seekSpeed.max = 250
-        val pref = PreferenceManager.getDefaultSharedPreferences(requireContext())
-        val rate = pref.getInt(Prefs.TTS_RATE.pref, 50)
-        binding.seekSpeed.progress = rate
-        tts?.setSpeechRate((rate + 50).toFloat() / 100)
-        binding.seekSpeed.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(p0: SeekBar?, p1: Int, p2: Boolean) {
-                pref.edit().putInt(Prefs.TTS_RATE.pref, p1).apply()
-                tts?.setSpeechRate((p1 + 50).toFloat() / 100)
-                presenter.onSpeakSentence()
-            }
-
-            override fun onStartTrackingTouch(p0: SeekBar?) {
-            }
-
-            override fun onStopTrackingTouch(p0: SeekBar?) {
-            }
-
-        })
-        binding.settingsContainer.translationY = settingsAnimationOffset
-        binding.settingsClose.setOnClickListener {
-            closeTTSSettings()
-        }
-    }
-
     private fun initAnswersButtons() {
-        binding.quizContainer.setOnClickListener { if (isSettingsOpen) closeTTSSettings() }
-        binding.answerContainer.setOnClickListener { if (isSettingsOpen) closeTTSSettings() }
+        binding.quizContainer.setOnClickListener { if (settingsUIManager.isSettingsOpen) settingsUIManager.close() }
+        binding.answerContainer.setOnClickListener { if (settingsUIManager.isSettingsOpen) settingsUIManager.close() }
         binding.quizAnswerType.visibility = GONE
         binding.tapToReveal.setOnClickListener { it.visibility = GONE }
         binding.tapToReveal.visibility = GONE
 
         // produces the function for the OnClickListener of a button with a number = 1,2,3,4
-        fun clickerFactory(num: Int) : (View) -> Unit {
-            return {
-                if (isSettingsOpen) closeTTSSettings()
+        val clickerFactory: (Int) -> (View) -> Unit = { num ->
+            {
+                if (settingsUIManager.isSettingsOpen) settingsUIManager.close()
                 if (!holdOn) {
                     holdOn = true
                     lifecycleScope.launch {
@@ -423,25 +305,18 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
                 }
             }
         }
-        qcmBinding.option1Container.setOnClickListener(clickerFactory(1))
-        qcmBinding.option2Container.setOnClickListener(clickerFactory(2))
-        qcmBinding.option3Container.setOnClickListener(clickerFactory(3))
-        qcmBinding.option4Container.setOnClickListener(clickerFactory(4))
 
-        QCMtvs.forEachIndexed { i, tv ->
-            tv.setOnClickListener(clickerFactory(i + 1))
-            tv.movementMethod = ScrollingMovementMethod()
-        }
+        qcmController.setUpOptionClickListeners(clickerFactory)
     }
 
     override fun reInitUI() {
         editBinding.hiraganaEdit.setText("")
         editBinding.editAction.setImageResource(R.drawable.ic_cancel_black_24dp)
         editBinding.editAction.setColorFilter(ContextCompat.getColor(requireActivity(), R.color.lighter_gray))
-        QCMtvs.forEach { tv ->
+        qcmController.QCMtvs.forEach { tv ->
             tv.setTextColor(ContextCompat.getColor(requireActivity(), android.R.color.white))
         }
-        QCMfuri.forEach { furi ->
+        qcmController.QCMfuri.forEach { furi ->
             furi.setTextColor(ContextCompat.getColor(requireActivity(), android.R.color.white))
         }
     }
@@ -453,12 +328,10 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
     override fun displayWords(quizWordsPair: List<Pair<Word, QuizType>>) {
         holdOn = false
         adapter.replaceData(quizWordsPair)
-        // TODO do something with that
-//        pager.post { tutos() }
     }
 
     override fun noWords() {
-        qcmBinding.root.visibility = GONE
+        binding.quizAnswersMultipleChoice.root.visibility = GONE
         binding.answerContainer.visibility = GONE
 
         requireContext().alertDialog {
@@ -544,7 +417,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
      * @param hintText Text to show if tap_to_reveal = true in user preferences
      */
     override fun displayQCMMode(hintText: String?) {
-        qcmBinding.root.visibility = VISIBLE
+        binding.quizAnswersMultipleChoice.root.visibility = VISIBLE
         editBinding.root.visibility = GONE
         val pref = PreferenceManager.getDefaultSharedPreferences(requireContext())
         if (pref.getBoolean("tap_to_reveal", false)) {
@@ -561,20 +434,12 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
 
     override fun displayEditMode() {
         binding.quizAnswerType.visibility = GONE
-        qcmBinding.root.visibility = GONE
+        binding.quizAnswersMultipleChoice.root.visibility = GONE
         editBinding.root.visibility = VISIBLE
     }
 
     override fun displayQCMNormalTextViews() {
-        val pref = PreferenceManager.getDefaultSharedPreferences(requireContext())
-        val fontSize = (pref.getString("font_size", "23") ?: "23").toFloat()
-        QCMtvs.forEach { tv ->
-            tv.textSize = fontSize
-            tv.visibility = VISIBLE
-        }
-        QCMfuri.forEach{ furi ->
-            furi.visibility = GONE
-        }
+        qcmController.displayQCMNormalTextViews()
     }
 
     /**
@@ -583,12 +448,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
      * Makes all normal option texts GONE and makes furi text VISIBLE
      */
     override fun displayQCMFuriTextViews() {
-        QCMtvs.forEach { tv ->
-            tv.visibility = GONE
-        }
-        QCMfuri.forEach { furi ->
-            furi.visibility = VISIBLE
-        }
+        qcmController.displayQCMFuriTextViews()
     }
 
     /**
@@ -601,11 +461,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
      * @param colorId Color of the text
      */
     override fun displayQCMTv(tvNum: Int, option: String, colorId: Int) {
-        QCMtvs[tvNum - 1].also { tv ->
-            tv.text = option
-            tv.setTextColor(ContextCompat.getColor(requireContext(), colorId))
-            tv.scrollTo(0, 0)
-        }
+        qcmController.displayQCMTv(tvNum, option, colorId)
     }
 
     /**
@@ -617,11 +473,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
      * @param colorIds List of 4 color ids (int)
      */
     override fun displayQCMTv(options: List<String>, colorIds: List<Int>) {
-        QCMtvs.forEachIndexed { i, tv ->
-            tv.text = options[i]
-            tv.setTextColor(ContextCompat.getColor(requireContext(), colorIds[i]))
-            tv.scrollTo(0, 0)
-        }
+        qcmController.displayQCMTv(options, colorIds)
     }
 
     /**
@@ -634,27 +486,19 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
      * @param colorId Id of the color (int)
      */
     override fun displayQCMFuri(furiNum: Int, optionFuri: String, start: Int, end: Int, colorId: Int) {
-        val color = ContextCompat.getColor(requireContext(), colorId)
-        QCMfuri[furiNum - 1].text_set(optionFuri, start, end, color)
+        qcmController.displayQCMFuri(furiNum, optionFuri, start, end, colorId)
     }
 
     override fun displayQCMFuri(options: List<String>, starts: List<Int>, ends: List<Int>, colorIds: List<Int>) {
-        QCMfuri.forEachIndexed { i, furi ->
-            furi.text_set(options[i], starts[i], ends[i], ContextCompat.getColor(requireContext(), colorIds[i]))
-        }
+        qcmController.displayQCMFuri(options, starts, ends, colorIds)
     }
 
     fun setOptionsFontSize(fontSize: Float) {
-        QCMtvs.forEach { tv ->
-            tv.textSize = fontSize
-        }
+        qcmController.setOptionsFontSize(fontSize)
     }
 
     fun closeTTSSettings() {
-        binding.settingsContainer.animate().setDuration(300).translationY(settingsAnimationOffset).withEndAction {
-            isSettingsOpen = false
-            binding.settingsContainer.visibility = GONE
-        }.start()
+        settingsUIManager.close()
     }
 
     override fun showKeyboard() {
@@ -715,106 +559,15 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
     }
 
     override fun showAlertSessionEnd(wordCount: Int, isProgressive: Boolean, proposeErrors: Boolean) {
-        val dialog = requireContext().alertDialog {
-            message = getString(R.string.alert_session_finished, wordCount)
-            positiveButton(R.string.alert_continue) {
-                lifecycleScope.launch {
-                    if (isProgressive)
-                        presenter.onLaunchNextProgressiveSession()
-                    else
-                        presenter.onContinueAfterNonProgressiveSessionEnd()
-                }
-            }
-            if (proposeErrors) {
-                negativeButton(R.string.alert_review_session_errors) {
-                    // TODO handle shuffle ?
-                    lifecycleScope.launch {
-                        presenter.onLaunchErrorSession()
-                    }
-                }
-            }
-            neutralButton(R.string.alert_quit) {
-                finishQuiz()
-            }
-            setCancelable(false)    // avoid accidental click out of session
-        }
-        dialog.create()
-
-        if (proposeErrors) {
-            when (requireNotNull(errorReviewIdMap[binding.errorReviewRadioGroup.checkedRadioButtonId]) { "Unknown radio button: ${binding.errorReviewRadioGroup.checkedRadioButtonId}" }) {
-                ErrorReviewOption.Show -> { dialog.show() } // don't do anything
-                ErrorReviewOption.AutoReview -> { dialog.negativeButton.callOnClick() }
-                ErrorReviewOption.Skip -> { dialog.positiveButton.callOnClick() }
-            }
-        } else {
-            when (requireNotNull(flawlessIdMap[binding.flawlessRadioGroup.checkedRadioButtonId]) { "Unknown radio button: ${binding.flawlessRadioGroup.checkedRadioButtonId}" }) {
-                FlawlessOption.Show -> { dialog.show() } // don't do anything
-                FlawlessOption.Skip -> { dialog.positiveButton.callOnClick() }
-            }
-        }
+        dialogFlowController.showAlertSessionEnd(wordCount, isProgressive, proposeErrors)
     }
 
     override fun showAlertErrorSessionEnd(quizEnded: Boolean, isProgressive: Boolean) {
-        val dialog = requireContext().alertDialog {
-            messageResource = R.string.alert_error_review_finished
-
-            if (!quizEnded) {
-                messageResource = R.string.alert_error_review_session_message
-                positiveButton(R.string.alert_continue_quiz) {
-                    lifecycleScope.launch {
-                        presenter.onContinueQuizAfterErrorSession()
-                    }
-                }
-            } else {
-                messageResource = R.string.alert_error_review_quiz_message
-                val positiveButtonText =
-                    if (isProgressive)
-                        R.string.alert_continue_quiz    // progressive doesn't really end
-                    else
-                        R.string.alert_restart
-                positiveButton(positiveButtonText) {
-                    lifecycleScope.launch {
-                        presenter.onRestartQuiz(!isProgressive)
-                    }
-                }
-            }
-            neutralButton(R.string.alert_quit) {
-                finishQuiz()
-            }
-            setCancelable(false)    // avoid accidental click out of session
-        }
-        dialog.create()
-
-        if (!quizEnded || isProgressive) {
-            when (requireNotNull(flawlessIdMap[binding.flawlessRadioGroup.checkedRadioButtonId]) { "Unknown radio button: ${binding.flawlessRadioGroup.checkedRadioButtonId}" }) {
-                FlawlessOption.Show -> { dialog.show() } // don't do anything
-                FlawlessOption.Skip -> { dialog.positiveButton.callOnClick() }
-            }
-        } else {
-            dialog.show()
-        }
+        dialogFlowController.showAlertErrorSessionEnd(quizEnded, isProgressive)
     }
 
     override fun showAlertQuizEnd(proposeErrors: Boolean) {
-        requireContext().alertDialog {
-            messageResource = R.string.alert_quiz_finished
-            positiveButton(R.string.alert_restart) {
-                lifecycleScope.launch {
-                    presenter.onRestartQuiz(true)
-                }
-            }
-            if (proposeErrors) {
-                negativeButton(R.string.alert_review_quiz_errors) {
-                    lifecycleScope.launch {
-                        presenter.onLaunchErrorSession()
-                    }
-                }
-            }
-            neutralButton(R.string.alert_quit) {
-                finishQuiz()
-            }
-            setCancelable(false)    // avoid accidental click out of session
-        }.show()
+        dialogFlowController.showAlertQuizEnd(proposeErrors)
     }
 
     // TODO move to presenter ?
@@ -848,20 +601,10 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
                         speechNotSupportedAlert(requireActivity(), getCategoryLevel(category)) {}
                     }
                     else -> {
-                        if (isSettingsOpen) {
-                            closeTTSSettings()
+                        if (settingsUIManager.isSettingsOpen) {
+                            settingsUIManager.close()
                         } else {
-                            if (speechAvailability == SpeechAvailability.VOICES_AVAILABLE) {
-                                binding.settingsSpeed.visibility = GONE
-                                binding.seekSpeed.visibility = GONE
-                            } else {
-                                binding.settingsSpeed.visibility = VISIBLE
-                                binding.seekSpeed.visibility = VISIBLE
-                            }
-                            binding.settingsContainer.animate().setDuration(300).translationY(0f).withStartAction {
-                                binding.settingsContainer.visibility = VISIBLE
-                                isSettingsOpen = true
-                            }.start()
+                            settingsUIManager.openIfAvailable(speechAvailability)
                         }
                     }
                 }
