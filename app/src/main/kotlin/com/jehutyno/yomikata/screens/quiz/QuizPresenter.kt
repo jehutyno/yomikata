@@ -9,8 +9,6 @@ import androidx.preference.PreferenceManager
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.model.Answer
 import com.jehutyno.yomikata.model.Sentence
-import com.jehutyno.yomikata.model.StatAction
-import com.jehutyno.yomikata.model.StatResult
 import com.jehutyno.yomikata.model.Word
 import com.jehutyno.yomikata.presenters.SelectionsInterface
 import com.jehutyno.yomikata.presenters.WordInQuizInterface
@@ -35,7 +33,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import java.util.Calendar
 import java.util.Random
 
 
@@ -55,6 +52,10 @@ class QuizPresenter(
             SelectionsInterface by selectionsInterface, WordInQuizInterface by wordInQuizInterface {
 
     private val defaultSharedPreferences: SharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
+
+    private val answerValidator = AnswerValidator
+    private val randomAnswerGenerator = RandomAnswerGenerator(wordRepository, rng)
+    private val wordStatisticsRecorder = WordStatisticsRecorder(statsRepository, wordRepository)
 
 
     /**
@@ -438,15 +439,7 @@ class QuizPresenter(
     }
 
     private suspend fun generateQCMRandoms(word: Word, quizType: QuizType, answerToAvoid: String): ArrayList<Pair<Word, Int>> {
-        // Generate 3 different random words
-        val random = getRandomWords(word.id, answerToAvoid, word.japanese.length, 3, quizType)
-        // TODO: this may crash if getRandomWords returns less than 3 words
-        val randoms = arrayListOf<Pair<Word, Int>>()
-        random.forEach { randoms.add(Pair(it, android.R.color.white)) }
-        // Add the good answer at a random place
-        randoms.add(rng.nextInt(4), Pair(word, android.R.color.white))
-
-        return randoms
+        return randomAnswerGenerator.generateQCMRandoms(word, quizType, answerToAvoid)
     }
 
     /**
@@ -611,28 +604,7 @@ class QuizPresenter(
      * @return True if answer matches word, False otherwise.
      */
     private fun checkWord(word: Word, quizType: QuizType, answer: String): Boolean {
-        when (quizType) {
-            QuizType.TYPE_JAP_EN -> {
-                return word.getTrad().trim() == answer
-            }
-            QuizType.TYPE_EN_JAP -> {
-                return word.japanese.trim() == answer
-            }
-            else -> {
-                word.reading.split("/").forEach {
-                    if (it.trim() == answer.trim().replace("-", "ー")) {
-                        return true
-                    }
-                }
-                word.reading.split(";").forEach {
-                    if (it.trim() == answer.trim().replace("-", "ー")) {
-                        return true
-                    }
-                }
-            }
-        }
-
-        return false
+        return answerValidator.checkWord(word, quizType, answer)
     }
 
     /**
@@ -793,11 +765,11 @@ class QuizPresenter(
 
 
     override suspend fun updateWordPoints(wordId: Long, points: Int) {
-        wordRepository.updateWordPoints(wordId, points)
+        wordStatisticsRecorder.updateWordPoints(wordId, points)
     }
 
     override suspend fun updateWordLevel(wordId: Long, level: Level) {
-        wordRepository.updateWordLevel(wordId, level)
+        wordStatisticsRecorder.updateWordLevel(wordId, level)
     }
 
     override suspend fun getRandomWords(wordId: Long, answer: String, wordSize: Int, limit: Int, quizType: QuizType): ArrayList<Word> {
@@ -852,21 +824,19 @@ class QuizPresenter(
     }
 
     override suspend fun updateRepetitions(id: Long, repetition: Int) {
-        wordRepository.updateWordRepetition(id, repetition)
+        wordStatisticsRecorder.updateRepetitions(id, repetition)
     }
 
     override suspend fun decreaseAllRepetitions() {
-        wordRepository.decreaseWordsRepetition(quizIds)
+        wordStatisticsRecorder.decreaseAllRepetitions(quizIds)
     }
 
     override suspend fun saveAnswerResultStat(word: Word, result: Boolean) {
-        statsRepository.addStatEntry(StatAction.ANSWER_QUESTION, word.id,
-            Calendar.getInstance().timeInMillis, if (result) StatResult.SUCCESS else StatResult.FAIL)
+        wordStatisticsRecorder.saveAnswerResultStat(word, result)
     }
 
     override suspend fun saveWordSeenStat(word: Word) {
-        statsRepository.addStatEntry(StatAction.WORD_SEEN, word.id,
-            Calendar.getInstance().timeInMillis, StatResult.OTHER)
+        wordStatisticsRecorder.saveWordSeenStat(word)
     }
 
     override fun setTTSSupported(ttsSupported: Int) {
