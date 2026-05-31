@@ -58,67 +58,9 @@ class QuizPresenter(
     private val wordStatisticsRecorder = WordStatisticsRecorder(statsRepository, wordRepository)
 
 
-    /**
-     * Word handler
-     *
-     * Used to obtain either the current word in a normal quiz, or the current word in
-     * an error session, depending on [errorMode]
-     */
-    private class WordHandler {
-        /** False for normal session, True for error session (reviewing incorrect words).
-         *  Does not apply for progressive study sessions */
-        var errorMode = false
-
-        var quizWords = listOf<Pair<Word, QuizType>>()
-        var errors = arrayListOf<Pair<Word, QuizType>>()
-        /** The index of quizWords of the current word */
-        var currentItem = -1
-        /** The index of errors, if you are currently in an error session */
-        var currentItemErrorMode = -1
-
-        /** Increment the active index */
-        fun increment() {
-            if (errorMode)
-                currentItemErrorMode++
-            else
-                currentItem++
-        }
-
-        /** Set the active index to -1 */
-        fun reset() {
-            if (errorMode)
-                currentItemErrorMode = -1
-            else
-                currentItem = -1
-        }
-
-        /** Returns the active index */
-        fun getActiveIndex(): Int {
-            return if (errorMode)
-                currentItemErrorMode
-            else
-                currentItem
-        }
-
-        /** Get the current word depending on whether [errorMode] is True or False */
-        fun getCurrentWord(index: Int? = null): Word {
-            return if (errorMode)
-                errors[index?: currentItemErrorMode].first
-            else
-                quizWords[index?: currentItem].first
-        }
-
-        /** Get the current quizType depending on whether [errorMode] is True or False */
-        fun getCurrentQuizType(index: Int? = null): QuizType {
-            return if (errorMode)
-                errors[index?: currentItemErrorMode].second
-            else
-                quizWords[index?: currentItem].second
-        }
-    }
-    private val wordHandler = WordHandler()
-    private val quizWords get() = wordHandler.quizWords
-    private val errors get() = wordHandler.errors
+    private val sessionState = QuizSessionState()
+    private val quizWords get() = sessionState.quizWords
+    private val errors get() = sessionState.errors
 
     private var randoms = arrayListOf<Pair<Word, Int>>() // We store the word and the color in order to be able to change it and keep it saved as well
     private var answers = arrayListOf<Answer>()
@@ -177,7 +119,7 @@ class QuizPresenter(
         LocalPersistence.witeObjectToFile(context, words, "words")
         LocalPersistence.witeObjectToFile(context, types, "types")
 
-        outState.putInt("position", wordHandler.currentItem)
+        outState.putInt("position", sessionState.currentItem)
     }
 
     override fun onRestoreInstanceState(savedInstanceState: Bundle) {
@@ -208,10 +150,10 @@ class QuizPresenter(
             Log.e("Failed cast", "Some items in the read list of quiz types were not of the type QuizType")
         }
 
-        wordHandler.quizWords = words.indices.map { i -> Pair(words[i], types[i]) }
+        sessionState.quizWords = words.indices.map { i -> Pair(words[i], types[i]) }
         quizView.displayWords(quizWords)
-        wordHandler.currentItem = savedInstanceState.getInt("position") - 1 // -1 because setUpQuiz will do the +1
-        quizView.setPagerPosition(wordHandler.currentItem)
+        sessionState.currentItem = savedInstanceState.getInt("position") - 1 // -1 because setUpQuiz will do the +1
+        quizView.setPagerPosition(sessionState.currentItem)
         if (previousAnswerWrong)
             quizView.displayEditDisplayAnswerButton()
         coroutineScope.launch {
@@ -228,9 +170,9 @@ class QuizPresenter(
      * (it is never called in errorMode)
      */
     override suspend fun initQuiz() {
-        wordHandler.reset()     // make sure list index is reset
+        sessionState.reset()     // make sure list index is reset
 
-        wordHandler.quizWords = when (strategy) {
+        sessionState.quizWords = when (strategy) {
             QuizStrategy.PROGRESSIVE -> {
                 getNextProgressiveWords()
             }
@@ -336,12 +278,12 @@ class QuizPresenter(
      * depending on the QuizType of the next word.
      */
     override suspend fun setUpNextQuiz() {
-        wordHandler.increment()
+        sessionState.increment()
 
-        val word = wordHandler.getCurrentWord()
-        val quizType = wordHandler.getCurrentQuizType()
+        val word = sessionState.getCurrentWord()
+        val quizType = sessionState.getCurrentQuizType()
 
-        quizView.setPagerPosition(wordHandler.getActiveIndex())
+        quizView.setPagerPosition(sessionState.getActiveIndex())
 
         currentSentence = getRandomSentence(word)
         quizView.setSentence(currentSentence)
@@ -384,7 +326,7 @@ class QuizPresenter(
             QuizType.TYPE_AUTO -> TODO()
         }.setUpQuiz(quizType, word)
 
-        if (!wordHandler.errorMode)
+        if (!sessionState.errorMode)
             saveWordSeenStat(word)
     }
 
@@ -495,7 +437,7 @@ class QuizPresenter(
     }
 
     override fun onSpeakWordTTS() {
-        quizView.speakWord(wordHandler.getCurrentWord())
+        quizView.speakWord(sessionState.getCurrentWord())
     }
 
     override fun onSpeakSentence() {
@@ -504,7 +446,7 @@ class QuizPresenter(
 
     private suspend fun onAnswerGiven(choice: Int) {
         val option = randoms[choice]
-        when (wordHandler.getCurrentQuizType()) {
+        when (sessionState.getCurrentQuizType()) {
             QuizType.TYPE_PRONUNCIATION_QCM -> onAnswerGiven(option.first.reading.trim(), choice)
             QuizType.TYPE_JAP_EN -> onAnswerGiven(
                 option.first.getTrad().trim(),
@@ -536,17 +478,17 @@ class QuizPresenter(
      * @param choice Index corresponding to multiple choice (0, 1, 2, 3), or -1 if keyboard entry
      */
     private suspend fun onAnswerGiven(answer: String, choice: Int) {
-        val word = wordHandler.getCurrentWord()
-        val quizType = wordHandler.getCurrentQuizType()
+        val word = sessionState.getCurrentWord()
+        val quizType = sessionState.getCurrentQuizType()
         val result = checkWord(word, quizType, answer)
         updateRepetitionAndPoints(word, quizType, result)
-        if (!wordHandler.errorMode) {
+        if (!sessionState.errorMode) {
             if (!previousAnswerWrong) {
                 // add to answers list if this is the first time answering
                 addCurrentWordToAnswers(answer, result)
                 if (!result) {
                     // add to errors if answer is wrong, but is not a repeated mistake
-                    wordHandler.errors.add(Pair(word, quizType))
+                    sessionState.errors.add(Pair(word, quizType))
                 }
             }
             saveAnswerResultStat(word, result)
@@ -581,14 +523,14 @@ class QuizPresenter(
         }
 
         if (result && defaultSharedPreferences.getBoolean("play_end", true))
-            quizView.speakWord(wordHandler.getCurrentWord())
+            quizView.speakWord(sessionState.getCurrentWord())
 
         quizView.animateCheck(result)
     }
 
     override fun onEditActionClick() {
         if (previousAnswerWrong)
-            quizView.displayEditAnswer(wordHandler.getCurrentWord().reading)
+            quizView.displayEditAnswer(sessionState.getCurrentWord().reading)
         else
             quizView.clearEdit()
     }
@@ -635,7 +577,7 @@ class QuizPresenter(
         updateWordLevel(word.id, newLevel)
         updateRepetitions(word.id, newRepetition)
 
-        quizView.animateColor(wordHandler.getActiveIndex(), word, currentSentence, quizType, word.points, newPoints)
+        quizView.animateColor(sessionState.getActiveIndex(), word, currentSentence, quizType, word.points, newPoints)
 
         // update in-memory word
         word.level = newLevel
@@ -643,7 +585,7 @@ class QuizPresenter(
     }
 
     private fun addCurrentWordToAnswers(answer: String, result: Boolean) {
-        val word = wordHandler.getCurrentWord()
+        val word = sessionState.getCurrentWord()
         val color = if (result) "#77d228" else "#d22828"
         if (answers.size > 0 && answers[0].wordId == word.id) {
             answers[0].answer += "<br><font color='$color'>$answer</font>"
@@ -653,7 +595,7 @@ class QuizPresenter(
                 "<font color='$color'>$answer</font>",
                 word.id,
                 currentSentence.id,
-                wordHandler.getCurrentQuizType())
+                sessionState.getCurrentQuizType())
             )
         }
     }
@@ -667,7 +609,7 @@ class QuizPresenter(
      * and also depending on quiz strategy.
      */
     override suspend fun onNextWord() {
-        if (!wordHandler.errorMode) {
+        if (!sessionState.errorMode) {
             decreaseAllRepetitions()
             sessionCount--
         }
@@ -676,12 +618,12 @@ class QuizPresenter(
         quizView.reInitUI()
 
         // set to true if normal words have run out
-        val quizEnded = wordHandler.currentItem >= quizWords.size - 1
+        val quizEnded = sessionState.currentItem >= quizWords.size - 1
 
         // handle errorMode
-        if (wordHandler.errorMode) {
+        if (sessionState.errorMode) {
             // check if you have reached the end of error list
-            if (wordHandler.currentItemErrorMode >= errors.size - 1) {
+            if (sessionState.currentItemErrorMode >= errors.size - 1) {
                 quizView.showAlertErrorSessionEnd(quizEnded, strategy == QuizStrategy.PROGRESSIVE)
             } else {
                 setUpNextQuiz()
@@ -702,9 +644,9 @@ class QuizPresenter(
         else if (quizEnded) {   // this is mutually exclusive with progressive strategy
             // quiz has completely ended -> replace errors with ALL previous errors
             // use answers with result == 0 <-> error
-            wordHandler.errors.clear()
+            sessionState.errors.clear()
             answers.filter { it.result == 0 }
-                   .mapTo(wordHandler.errors) { Pair(getWordById(it.wordId), it.quizType) }
+                   .mapTo(sessionState.errors) { Pair(getWordById(it.wordId), it.quizType) }
             quizView.showAlertQuizEnd(errors.size > 0)
             return
         }
@@ -726,33 +668,33 @@ class QuizPresenter(
     }
 
     override suspend fun onLaunchErrorSession() {
-        wordHandler.errorMode = true
-        wordHandler.reset()
+        sessionState.errorMode = true
+        sessionState.reset()
         errors.shuffle()
         quizView.displayWords(errors)
         setUpNextQuiz()
     }
 
     override suspend fun onLaunchNextProgressiveSession() {
-        wordHandler.errors.clear()
+        sessionState.errors.clear()
         initQuiz()  // this is only called when you've run out of words => re-initialize
     }
 
     override suspend fun onContinueQuizAfterErrorSession() {
-        wordHandler.errorMode = false
-        wordHandler.errors.clear()
+        sessionState.errorMode = false
+        sessionState.errors.clear()
         quizView.displayWords(quizWords)
         setUpNextQuiz()
     }
 
     override suspend fun onContinueAfterNonProgressiveSessionEnd() {
-        wordHandler.errors.clear()
+        sessionState.errors.clear()
         setUpNextQuiz()
     }
 
     override suspend fun onRestartQuiz(clearAnswers: Boolean) {
-        wordHandler.errorMode = false
-        wordHandler.errors.clear()
+        sessionState.errorMode = false
+        sessionState.errors.clear()
         if (clearAnswers)
             answers.clear()
         initQuiz()
@@ -844,7 +786,7 @@ class QuizPresenter(
     }
 
     override fun getTTSForCurrentItem(): String {
-        val word = wordHandler.getCurrentWord()
+        val word = sessionState.getCurrentWord()
         return if (word.isKana >= 1)
             word.japanese.split("/")[0].split(";")[0]
         else word.reading.split("/")[0].split(";")[0]
@@ -852,13 +794,13 @@ class QuizPresenter(
 
     override suspend fun setIsFuriDisplayed(isFuriDisplayed: Boolean) {
         this.isFuriDisplayed = isFuriDisplayed
-        if (wordHandler.getCurrentQuizType() == QuizType.TYPE_EN_JAP) {
+        if (sessionState.getCurrentQuizType() == QuizType.TYPE_EN_JAP) {
             setupQCMEnJapQuiz()
         }
     }
 
     override fun onReportClick(position: Int) {
-        quizView.reportError(wordHandler.getCurrentWord(position), currentSentence)
+        quizView.reportError(sessionState.getCurrentWord(position), currentSentence)
     }
 
     override fun previousAnswerWrong(): Boolean {
