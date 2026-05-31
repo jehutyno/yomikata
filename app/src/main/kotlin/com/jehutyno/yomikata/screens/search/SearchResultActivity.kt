@@ -7,6 +7,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.preference.PreferenceManager
 import com.jehutyno.yomikata.R
+import com.jehutyno.yomikata.databinding.ActivitySearchBinding
 import com.jehutyno.yomikata.util.Prefs
 import com.jehutyno.yomikata.util.addOrReplaceFragment
 import org.kodein.di.DIAware
@@ -21,19 +22,21 @@ class SearchResultActivity : AppCompatActivity(), DIAware {
     // kodein
     override val di: DI by closestDI()
 
+    private lateinit var binding: ActivitySearchBinding
     private lateinit var searchResultFragment : SearchResultFragment
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val pref = PreferenceManager.getDefaultSharedPreferences(this)
         AppCompatDelegate.setDefaultNightMode(pref.getInt(Prefs.DAY_NIGHT_MODE.pref, AppCompatDelegate.MODE_NIGHT_YES))
-        setContentView(R.layout.activity_search)
+        binding = ActivitySearchBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
         if(resources.getBoolean(R.bool.portrait_only)){
             requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         }
 
-        setSupportActionBar(findViewById(R.id.toolbar))
+        setSupportActionBar(binding.toolbar)
 
         supportActionBar?.apply {
             setHomeAsUpIndicator(R.drawable.ic_arrow_back_orange_24dp)

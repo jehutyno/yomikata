@@ -13,6 +13,7 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
 import com.jehutyno.yomikata.R
+import com.jehutyno.yomikata.databinding.ActivityQuizBinding
 import com.jehutyno.yomikata.util.Extras
 import com.jehutyno.yomikata.util.Level
 import com.jehutyno.yomikata.util.Prefs
@@ -56,6 +57,7 @@ class QuizActivity : AppCompatActivity(), DIAware {
         }
     }
 
+    private lateinit var binding: ActivityQuizBinding
     private lateinit var quizFragment: QuizFragment
 
     private lateinit var quizIds: LongArray
@@ -71,12 +73,13 @@ class QuizActivity : AppCompatActivity(), DIAware {
         super.onCreate(savedInstanceState)
         val pref = PreferenceManager.getDefaultSharedPreferences(this)
         AppCompatDelegate.setDefaultNightMode(pref.getInt(Prefs.DAY_NIGHT_MODE.pref, AppCompatDelegate.MODE_NIGHT_YES))
-        setContentView(R.layout.activity_quiz)
+        binding = ActivityQuizBinding.inflate(layoutInflater)
+        setContentView(binding.root)
         if(resources.getBoolean(R.bool.portrait_only)){
             requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         }
 
-        setSupportActionBar(findViewById(R.id.toolbar))
+        setSupportActionBar(binding.toolbar)
         supportActionBar?.apply {
             setHomeAsUpIndicator(R.drawable.ic_clear_orange_24dp)
             setDisplayHomeAsUpEnabled(true)

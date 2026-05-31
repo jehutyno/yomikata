@@ -99,7 +99,7 @@ class ContentActivity : AppCompatActivity(), DIAware {
         val quizPosition = intent.getIntExtra(EXTRA_QUIZ_POSITION, -1)
         selectedTypes = intent.getParcelableArrayListExtraHelper(EXTRA_QUIZ_TYPES, QuizType::class.java) ?: arrayListOf()
 
-        setSupportActionBar(findViewById(R.id.toolbar))
+        setSupportActionBar(binding.toolbar)
 
         supportActionBar?.apply {
             setHomeAsUpIndicator(R.drawable.ic_arrow_back_orange_24dp)

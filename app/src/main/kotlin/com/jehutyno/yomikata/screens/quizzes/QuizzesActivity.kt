@@ -108,7 +108,7 @@ class QuizzesActivity : AppCompatActivity(), DIAware {
             requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         }
 
-        toolbar = findViewById(R.id.toolbar)
+        toolbar = binding.toolbar
         setSupportActionBar(toolbar)
         supportActionBar?.apply {
             setHomeAsUpIndicator(R.drawable.ic_menu)

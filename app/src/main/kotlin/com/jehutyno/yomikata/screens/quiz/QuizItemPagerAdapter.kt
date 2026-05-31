@@ -13,6 +13,7 @@ import androidx.core.content.ContextCompat
 import androidx.preference.PreferenceManager
 import androidx.viewpager.widget.PagerAdapter
 import com.jehutyno.yomikata.R
+import com.jehutyno.yomikata.databinding.VhQuizItemBinding
 import com.jehutyno.yomikata.furigana.FuriganaView
 import com.jehutyno.yomikata.model.Sentence
 import com.jehutyno.yomikata.model.Word
@@ -44,19 +45,20 @@ class QuizItemPagerAdapter(var context: Context, var callback: Callback) : Pager
     }
 
     override fun instantiateItem(container: ViewGroup, position: Int): Any {
-        val view = LayoutInflater.from(container.context).inflate(R.layout.vh_quiz_item, container, false)
+        val binding = VhQuizItemBinding.inflate(LayoutInflater.from(container.context), container, false)
+        val view = binding.root
         val word = words[position].first
-        val wholeSentenceLayout = view.findViewById<View>(R.id.whole_sentence_layout)
-        val btnFuri = view.findViewById<View>(R.id.btn_furi)
-        val btnTrad = view.findViewById<View>(R.id.btn_trad)
-        val btnCopy = view.findViewById<View>(R.id.btn_copy)
-        val btnSelection = view.findViewById<View>(R.id.btn_selection)
-        val btnReport = view.findViewById<View>(R.id.btn_report)
-        val btnTts = view.findViewById<View>(R.id.btn_tts)
-        val tradSentence = view.findViewById<TextView>(R.id.trad_sentence)
-        val furiSentence = view.findViewById<FuriganaView>(R.id.furi_sentence)
-        val sound = view.findViewById<ImageButton>(R.id.sound)
-        val sessionCount = view.findViewById<TextView>(R.id.session_count)
+        val wholeSentenceLayout = binding.wholeSentenceLayout
+        val btnFuri = binding.btnFuri
+        val btnTrad = binding.btnTrad
+        val btnCopy = binding.btnCopy
+        val btnSelection = binding.btnSelection
+        val btnReport = binding.btnReport
+        val btnTts = binding.btnTts
+        val tradSentence = binding.tradSentence
+        val furiSentence = binding.furiSentence
+        val sound = binding.sound
+        val sessionCount = binding.sessionCount
 
         sessionCount.text =
             if (isInfiniteSize != null)

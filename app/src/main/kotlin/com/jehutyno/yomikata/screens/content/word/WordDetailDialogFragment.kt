@@ -11,6 +11,7 @@ import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.lifecycleScope
 import androidx.viewpager.widget.ViewPager
 import com.jehutyno.yomikata.R
+import com.jehutyno.yomikata.databinding.DialogWordDetailBinding
 import com.jehutyno.yomikata.managers.VoicesManager
 import com.jehutyno.yomikata.model.KanjiSoloRadical
 import com.jehutyno.yomikata.model.Sentence
@@ -102,12 +103,13 @@ class WordDetailDialogFragment(private val di: DI) : DialogFragment(), WordContr
         }
 
         val dialog = Dialog(requireActivity(), R.style.full_screen_dialog)
-        dialog.setContentView(R.layout.dialog_word_detail)
+        val dialogBinding = DialogWordDetailBinding.inflate(requireActivity().layoutInflater)
+        dialog.setContentView(dialogBinding.root)
         dialog.setCanceledOnTouchOutside(true)
         adapter = WordPagerAdapter(requireActivity(), quizType, this)
-        viewPager = dialog.findViewById(R.id.viewpager_words)
-        arrowLeft = dialog.findViewById(R.id.arrow_left)
-        arrowRight = dialog.findViewById(R.id.arrow_right)
+        viewPager = dialogBinding.viewpagerWords
+        arrowLeft = dialogBinding.arrowLeft
+        arrowRight = dialogBinding.arrowRight
         viewPager.adapter = adapter
         with(viewPager) {
             addOnPageChangeListener(object : ViewPager.OnPageChangeListener {

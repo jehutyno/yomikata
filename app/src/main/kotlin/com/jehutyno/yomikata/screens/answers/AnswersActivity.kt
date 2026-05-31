@@ -5,9 +5,9 @@ import android.os.Bundle
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
-import androidx.appcompat.widget.Toolbar
 import androidx.preference.PreferenceManager
 import com.jehutyno.yomikata.R
+import com.jehutyno.yomikata.databinding.ActivityAnswersBinding
 import com.jehutyno.yomikata.util.Prefs
 import com.jehutyno.yomikata.util.addOrReplaceFragment
 import mu.KLogging
@@ -28,22 +28,22 @@ class AnswersActivity : AppCompatActivity(), DIAware {
     // kodein
     override val di: DI by closestDI()
 
+    private lateinit var binding: ActivityAnswersBinding
     private lateinit var answersFragment: AnswersFragment
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val pref = PreferenceManager.getDefaultSharedPreferences(this)
         AppCompatDelegate.setDefaultNightMode(pref.getInt(Prefs.DAY_NIGHT_MODE.pref, AppCompatDelegate.MODE_NIGHT_YES))
-        setContentView(R.layout.activity_answers)
+        binding = ActivityAnswersBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
         if(resources.getBoolean(R.bool.portrait_only)){
             requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         }
 
-        findViewById<Toolbar>(R.id.toolbar).let {
-            setSupportActionBar(it)
-            title = getString(R.string.answer_title)
-        }
+        setSupportActionBar(binding.toolbar)
+        title = getString(R.string.answer_title)
 
         supportActionBar?.apply {
             setHomeAsUpIndicator(R.drawable.ic_arrow_back_orange_24dp)
