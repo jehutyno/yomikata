@@ -132,6 +132,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        tts?.shutdown()
         tts = TextToSpeech(activity, this)
 
         initUI()

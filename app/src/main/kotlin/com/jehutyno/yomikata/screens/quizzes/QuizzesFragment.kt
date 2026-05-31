@@ -133,6 +133,7 @@ class QuizzesFragment(di: DI) : Fragment(), QuizzesContract.View, QuizzesAdapter
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        tts?.shutdown()
         tts = TextToSpeech(activity, this)
         binding.recyclerview.let {
             it.adapter = adapter
