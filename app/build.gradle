@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace 'com.jehutyno.yomikata'
+    namespace = 'com.jehutyno.yomikata'
 
     compileSdkVersion 36
 
@@ -133,5 +133,5 @@ dependencies {
 repositories {
     google()
     mavenCentral()
-    maven { url "https://jitpack.io" }
+    maven { url = "https://jitpack.io" }
 }
