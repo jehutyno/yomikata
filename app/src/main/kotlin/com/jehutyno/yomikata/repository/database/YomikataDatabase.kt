@@ -60,7 +60,7 @@ abstract class YomikataDatabase : RoomDatabase() {
                             .build()
                 }
             }
-            return INSTANCE!!
+            return checkNotNull(INSTANCE) { "Database not initialized" }
         }
 
         /**

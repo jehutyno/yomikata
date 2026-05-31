@@ -127,7 +127,7 @@ private fun Activity.handleBackup(uri: Uri, updateProgressDialog: UpdateProgress
         stop = withContext(Dispatchers.IO) {
             var outputStream: OutputStream? = null
             try {
-                outputStream = contentResolver.openOutputStream(uri)!!
+                outputStream = requireNotNull(contentResolver.openOutputStream(uri)) { "Cannot open output stream for $uri" }
                 outputStream.write(data)
             } catch (e: IOException) {
                 errorMessage = e.message
@@ -180,7 +180,7 @@ fun Activity.getRestoreLauncher(result: ActivityResult, create_backup: Boolean =
                 contentResolver.openInputStream(uri)
             }
 
-        val success = handleRestore(inputStream!!, updateProgressDialog, create_backup)
+        val success = handleRestore(requireNotNull(inputStream) { "Could not open input stream from result data" }, updateProgressDialog, create_backup)
         if (!success)
             return@launch
 
@@ -322,7 +322,7 @@ fun Context.getRestartDialog(message: RestartDialogMessage, undoCallback: (() ->
 fun Context.triggerRebirth() {
     val packageManager: PackageManager = this.packageManager
     val intent = packageManager.getLaunchIntentForPackage(this.packageName)
-    val componentName = intent!!.component
+    val componentName = requireNotNull(intent) { "Launch intent not found for package ${this.packageName}" }.component
     val mainIntent = Intent.makeRestartActivityTask(componentName)
     this.startActivity(mainIntent)
     Runtime.getRuntime().exit(0)

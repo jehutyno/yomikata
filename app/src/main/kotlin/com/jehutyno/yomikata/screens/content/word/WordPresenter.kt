@@ -51,7 +51,7 @@ class WordPresenter(
         // TODO: maybe add dedicated Dao for this operation to increase performance?
         val wordsRad = mutableListOf<Triple<Word, List<KanjiSoloRadical?>, Sentence>>()
         words.forEach {
-            val sentence = sentenceRepository.getSentenceById(it.sentenceId!!)
+            val sentence = sentenceRepository.getSentenceById(requireNotNull(it.sentenceId) { "sentenceId is null for word ${it.id}" })
             wordsRad.add(Triple(it, loadRadicals(it.japanese), sentence))
         }
         return wordsRad

@@ -190,11 +190,12 @@ class ContentActivity : AppCompatActivity(), DIAware {
                 bundle.putLongArray(EXTRA_QUIZ_IDS, ids.toLongArray())
                 bundle.putString(EXTRA_QUIZ_TITLE, title as String)
                 bundle.putSerializable(EXTRA_LEVEL, level)
-                contentLevelFragment = ContentFragment(di)
-                contentLevelFragment!!.arguments = bundle
+                val newFragment = ContentFragment(di)
+                newFragment.arguments = bundle
+                contentLevelFragment = newFragment
                 quizIds = ids.toLongArray()
             }
-            addOrReplaceFragment(R.id.fragment_container, contentLevelFragment!!)
+            addOrReplaceFragment(R.id.fragment_container, requireNotNull(contentLevelFragment) { "contentLevelFragment not initialized" })
 
         } else {
             contentPagerAdapter = ContentPagerAdapter(this@ContentActivity, quizzes, di)
@@ -245,8 +246,9 @@ class ContentActivity : AppCompatActivity(), DIAware {
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         //Save the fragment's instance
-        if (contentLevelFragment != null)
-            supportFragmentManager.putFragment(outState, "contentLevelFragment", contentLevelFragment!!)
+        contentLevelFragment?.let {
+            supportFragmentManager.putFragment(outState, "contentLevelFragment", it)
+        }
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {

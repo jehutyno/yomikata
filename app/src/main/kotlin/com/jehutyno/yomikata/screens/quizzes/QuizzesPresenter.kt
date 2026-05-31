@@ -77,8 +77,8 @@ class QuizzesPresenter(
 
     @Synchronized
     private fun switchOthers(type: QuizType) {
-        val newSelectedTypes = ArrayList(selectedTypes.value!!) // makes copy
-        selectedTypes.value!!.also { types ->
+        val newSelectedTypes = ArrayList(requireNotNull(selectedTypes.value) { "selectedTypes not initialized" }) // makes copy
+        requireNotNull(selectedTypes.value) { "selectedTypes not initialized" }.also { types ->
             if (!types.contains(type)) {
                 if (types.contains(QuizType.TYPE_AUTO)) {
                     // auto cannot be selected simultaneously with other types -> unselect it
@@ -100,7 +100,7 @@ class QuizzesPresenter(
     @Synchronized
     private fun switchAuto() {
         val newSelectedTypes =
-            selectedTypes.value!!.let { types ->
+            requireNotNull(selectedTypes.value) { "selectedTypes not initialized" }.let { types ->
                 if (types.contains(QuizType.TYPE_AUTO)) {
                     // if auto is unselected -> get saved selection from preferences
                     getQuizTypeArrayFromPrefs(Prefs.WAS_SELECTED_QUIZ_TYPES.pref, QuizType.TYPE_PRONUNCIATION)
@@ -120,7 +120,7 @@ class QuizzesPresenter(
             switchOthers(quizType)
         }
         // save new selection in preferences
-        saveQuizTypeArrayInPrefs(Prefs.SELECTED_QUIZ_TYPES.pref, selectedTypes.value!!)
+        saveQuizTypeArrayInPrefs(Prefs.SELECTED_QUIZ_TYPES.pref, requireNotNull(selectedTypes.value) { "selectedTypes not initialized" })
     }
 
     private fun getQuizTypeArrayFromPrefs(key: String, default: QuizType): ArrayList<QuizType> {
@@ -169,6 +169,6 @@ class QuizzesPresenter(
     }
 
     override fun getSelectedTypes(): ArrayList<QuizType> {
-        return selectedTypes.value!!
+        return requireNotNull(selectedTypes.value) { "selectedTypes not initialized" }
     }
 }

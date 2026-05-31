@@ -75,8 +75,8 @@ class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, Wo
         super.onCreate(savedInstanceState)
 
         if (arguments != null) {
-            quizIds = requireArguments().getLongArray(Extras.EXTRA_QUIZ_IDS)!!
-            quizTitle = requireArguments().getString(Extras.EXTRA_QUIZ_TITLE)!!
+            quizIds = requireNotNull(requireArguments().getLongArray(Extras.EXTRA_QUIZ_IDS)) { "EXTRA_QUIZ_IDS missing" }
+            quizTitle = requireNotNull(requireArguments().getString(Extras.EXTRA_QUIZ_TITLE)) { "EXTRA_QUIZ_TITLE missing" }
             level = requireArguments().getSerializableHelper(Extras.EXTRA_LEVEL, Level::class.java)
         }
 
@@ -171,12 +171,13 @@ class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, Wo
         // unbind observer to prevent word from disappearing while viewing in detail dialog
         mpresenter.words.removeObserver(wordsObserver)
 
-        dialog = WordDetailDialogFragment(di)
-        dialog!!.arguments = bundle
-        dialog!!.show(childFragmentManager, "")
-        dialog!!.isCancelable = true
+        val newDialog = WordDetailDialogFragment(di)
+        newDialog.arguments = bundle
+        newDialog.show(childFragmentManager, "")
+        newDialog.isCancelable = true
+        dialog = newDialog
 
-        dialog!!.lifecycle.addObserver(object: DefaultLifecycleObserver {
+        newDialog.lifecycle.addObserver(object: DefaultLifecycleObserver {
             override fun onDestroy(owner: LifecycleOwner) {
                 super.onDestroy(owner)
                 // continue observing

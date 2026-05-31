@@ -52,7 +52,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
     private val voicesManager: VoicesManager by subDI.instance()
     private val presenter: QuizContract.Presenter by subDI.instance(arg = this@QuizFragment)
 
-    private var adapter: QuizItemPagerAdapter? = null
+    private lateinit var adapter: QuizItemPagerAdapter
     private var tts: TextToSpeech? = null
     private var ttsSupported = SPEECH_NOT_INITALIZED
     private var currentEditColor: Int = R.color.lighter_gray
@@ -81,11 +81,11 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
     override fun onInit(status: Int) {
         ttsSupported = onTTSinit(activity, status, tts)
         presenter.setTTSSupported(ttsSupported)
-        if (adapter != null && adapter!!.words.isNotEmpty()) {
+        if (::adapter.isInitialized && adapter.words.isNotEmpty()) {
             val pref = PreferenceManager.getDefaultSharedPreferences(requireContext())
             val noPlayStart = pref.getBoolean("play_start", false)
-            if (adapter!!.words[binding.pager.currentItem].second == QuizType.TYPE_AUDIO || noPlayStart) {
-                voicesManager.speakWord(adapter!!.words[binding.pager.currentItem].first, ttsSupported, tts)
+            if (adapter.words[binding.pager.currentItem].second == QuizType.TYPE_AUDIO || noPlayStart) {
+                voicesManager.speakWord(adapter.words[binding.pager.currentItem].first, ttsSupported, tts)
             }
         }
     }
@@ -187,7 +187,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
             val pad = DimensionHelper.getPixelFromDip(activity, 12)
             ttsErrorsImage.setPadding(pad, pad, pad, pad)
             ttsErrorsImage.setOnClickListener {
-                val category = adapter!!.words[binding.pager.currentItem].first.baseCategory
+                val category = adapter.words[binding.pager.currentItem].first.baseCategory
                 when (val speechAvailability = checkSpeechAvailability(requireActivity(), ttsSupported, getCategoryLevel(category))) {
                     SpeechAvailability.NOT_AVAILABLE -> {
                         speechNotSupportedAlert(requireActivity(), getCategoryLevel(category)) {}
@@ -240,7 +240,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
             }
 
             override fun onPageSelected(position: Int) {
-                editBinding.hiraganaEdit.isEnableConversion = adapter!!.words[position].first.isKana == 0
+                editBinding.hiraganaEdit.isEnableConversion = adapter.words[position].first.isKana == 0
                 holdOn = false
             }
         })
@@ -249,11 +249,11 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
     private fun initEditText() {
         editBinding.hiraganaEdit.setOnEditorActionListener { _, i, keyEvent ->
             if (isSettingsOpen) closeTTSSettings()
-            if (adapter!!.words[binding.pager.currentItem].second == QuizType.TYPE_PRONUNCIATION
+            if (adapter.words[binding.pager.currentItem].second == QuizType.TYPE_PRONUNCIATION
                 && (i == EditorInfo.IME_ACTION_DONE || keyEvent?.keyCode == KeyEvent.KEYCODE_ENTER) && !holdOn) {
                 // Validate Action
                 holdOn = true
-                editBinding.hiraganaEdit.setText(editBinding.hiraganaEdit.text.toString().replace("n", if (adapter!!.words[binding.pager.currentItem].first.isKana >= 1) "n" else "ん"))
+                editBinding.hiraganaEdit.setText(editBinding.hiraganaEdit.text.toString().replace("n", if (adapter.words[binding.pager.currentItem].first.isKana >= 1) "n" else "ん"))
                 lifecycleScope.launch {
                     presenter.onAnswerGiven(editBinding.hiraganaEdit.text.toString().trim().replace(" ", "").replace("　", "").replace("\n", "")) // TODO add function clean utils
                 }
@@ -270,7 +270,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
                 // Return to normal color when typing again (because it becomes Red or Green when
                 // you validate
                 currentEditColor = R.color.lighter_gray
-                editBinding.hiraganaEdit.setTextColor(ContextCompat.getColor(activity!!, currentEditColor))
+                editBinding.hiraganaEdit.setTextColor(ContextCompat.getColor(requireActivity(), currentEditColor))
             }
 
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
@@ -349,13 +349,13 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
         binding.errorReviewRadioGroup.setOnCheckedChangeListener { _, checkedId ->
             pref.edit().putInt(
                 Prefs.QUIZ_ERROR_SELECTED_RADIO_BUTTON_ID.pref,
-                errorReviewIdMap[checkedId]!!.preferenceId
+                requireNotNull(errorReviewIdMap[checkedId]) { "Unknown radio button: $checkedId" }.preferenceId
             ).apply()
         }
         binding.flawlessRadioGroup.setOnCheckedChangeListener { _, checkedId ->
             pref.edit().putInt(
                 Prefs.QUIZ_FLAWLESS_SELECTED_RADIO_BUTTON_ID.pref,
-                flawlessIdMap[checkedId]!!.preferenceId
+                requireNotNull(flawlessIdMap[checkedId]) { "Unknown radio button: $checkedId" }.preferenceId
             ).apply()
         }
     }
@@ -451,7 +451,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
 
     override fun displayWords(quizWordsPair: List<Pair<Word, QuizType>>) {
         holdOn = false
-        adapter!!.replaceData(quizWordsPair)
+        adapter.replaceData(quizWordsPair)
         // TODO do something with that
 //        pager.post { tutos() }
     }
@@ -472,8 +472,8 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
     }
 
     override fun setSentence(sentence: Sentence) {
-        adapter!!.replaceSentence(sentence)
-        adapter!!.notifyDataSetChanged()
+        adapter.replaceSentence(sentence)
+        adapter.notifyDataSetChanged()
     }
 
     override fun setEditTextColor(color: Int) {
@@ -566,7 +566,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
 
     override fun displayQCMNormalTextViews() {
         val pref = PreferenceManager.getDefaultSharedPreferences(requireContext())
-        val fontSize = pref.getString("font_size", "23")!!.toFloat()
+        val fontSize = (pref.getString("font_size", "23") ?: "23").toFloat()
         QCMtvs.forEach { tv ->
             tv.textSize = fontSize
             tv.visibility = VISIBLE
@@ -740,13 +740,13 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
         dialog.create()
 
         if (proposeErrors) {
-            when (errorReviewIdMap[binding.errorReviewRadioGroup.checkedRadioButtonId]!!) {
+            when (requireNotNull(errorReviewIdMap[binding.errorReviewRadioGroup.checkedRadioButtonId]) { "Unknown radio button: ${binding.errorReviewRadioGroup.checkedRadioButtonId}" }) {
                 ErrorReviewOption.Show -> { dialog.show() } // don't do anything
                 ErrorReviewOption.AutoReview -> { dialog.negativeButton.callOnClick() }
                 ErrorReviewOption.Skip -> { dialog.positiveButton.callOnClick() }
             }
         } else {
-            when (flawlessIdMap[binding.flawlessRadioGroup.checkedRadioButtonId]!!) {
+            when (requireNotNull(flawlessIdMap[binding.flawlessRadioGroup.checkedRadioButtonId]) { "Unknown radio button: ${binding.flawlessRadioGroup.checkedRadioButtonId}" }) {
                 FlawlessOption.Show -> { dialog.show() } // don't do anything
                 FlawlessOption.Skip -> { dialog.positiveButton.callOnClick() }
             }
@@ -785,7 +785,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
         dialog.create()
 
         if (!quizEnded || isProgressive) {
-            when (flawlessIdMap[binding.flawlessRadioGroup.checkedRadioButtonId]!!) {
+            when (requireNotNull(flawlessIdMap[binding.flawlessRadioGroup.checkedRadioButtonId]) { "Unknown radio button: ${binding.flawlessRadioGroup.checkedRadioButtonId}" }) {
                 FlawlessOption.Show -> { dialog.show() } // don't do anything
                 FlawlessOption.Skip -> { dialog.positiveButton.callOnClick() }
             }
@@ -841,7 +841,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
                 presenter.onDisplayAnswersClick()
             }
             R.id.tts_settings -> {
-                val category = adapter!!.words[binding.pager.currentItem].first.baseCategory
+                val category = adapter.words[binding.pager.currentItem].first.baseCategory
                 when (val speechAvailability = checkSpeechAvailability(requireActivity(), ttsSupported, getCategoryLevel(category))) {
                     SpeechAvailability.NOT_AVAILABLE -> {
                         speechNotSupportedAlert(requireActivity(), getCategoryLevel(category)) {}
@@ -870,12 +870,12 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
     }
 
     override fun onItemClick(position: Int) {
-        Intent().putExtra(Extras.EXTRA_QUIZ_TYPE, adapter!!.words[position].second as Parcelable)
+        Intent().putExtra(Extras.EXTRA_QUIZ_TYPE, adapter.words[position].second as Parcelable)
         val dialog = WordDetailDialogFragment(di)
         val bundle = Bundle()
-        bundle.putLong(Extras.EXTRA_WORD_ID, adapter!!.words[position].first.id)
+        bundle.putLong(Extras.EXTRA_WORD_ID, adapter.words[position].first.id)
         bundle.putSerializable(Extras.EXTRA_QUIZ_TYPE,
-            if (presenter.previousAnswerWrong()) null else adapter!!.words[position].second)
+            if (presenter.previousAnswerWrong()) null else adapter.words[position].second)
         bundle.putString(Extras.EXTRA_SEARCH_STRING, "")
         dialog.arguments = bundle
         dialog.show(childFragmentManager, "")
@@ -890,7 +890,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
         lifecycleScope.launch {
             val selections = presenter.getSelections()
             val popup = PopupMenu(activity, view)
-            val word = adapter!!.words[position].first
+            val word = adapter.words[position].first
             popup.menuInflater.inflate(R.menu.popup_selections, popup.menu)
             for ((i, selection) in selections.withIndex()) {
                 popup.menu.add(1, i, i, selection.getName()).isChecked = presenter.isWordInQuiz(word.id, selection.id)
@@ -946,7 +946,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
     }
 
     override fun incrementInfiniteCount() {
-        adapter!!.isInfiniteSize = (adapter!!.isInfiniteSize?: 0) + 1
+        adapter.isInfiniteSize = (adapter.isInfiniteSize ?: 0) + 1
     }
 
 }

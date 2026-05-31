@@ -20,7 +20,7 @@ class SentenceSource(private val sentenceDao: SentenceDao) : SentenceRepository 
     }
 
     override suspend fun getSentenceById(id: Long): Sentence {
-        return sentenceDao.getSentenceById(id)!!.toSentence()
+        return requireNotNull(sentenceDao.getSentenceById(id)) { "Sentence not found: $id" }.toSentence()
     }
 
     override suspend fun getAllSentences(): List<Sentence> {

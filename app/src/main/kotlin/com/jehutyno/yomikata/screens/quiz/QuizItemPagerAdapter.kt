@@ -62,7 +62,7 @@ class QuizItemPagerAdapter(var context: Context, var callback: Callback) : Pager
 
         sessionCount.text =
             if (isInfiniteSize != null)
-                "${isInfiniteSize!!}"
+                "$isInfiniteSize"
             else
                 "${position + 1} / ${words.size}"
 
@@ -105,7 +105,7 @@ class QuizItemPagerAdapter(var context: Context, var callback: Callback) : Pager
                 tradSentence.visibility = View.VISIBLE
                 tradSentence.movementMethod = ScrollingMovementMethod()
                 tradSentence.setTextColor(getWordColor(context, word.points))
-                tradSentence.textSize = PreferenceManager.getDefaultSharedPreferences(context).getString("font_size", "18")!!.toFloat()
+                tradSentence.textSize = (PreferenceManager.getDefaultSharedPreferences(context).getString("font_size", "18") ?: "18").toFloat()
                 tradSentence.text = word.getTrad().cleanForQCM(false)
             }
             QuizType.TYPE_AUDIO -> {

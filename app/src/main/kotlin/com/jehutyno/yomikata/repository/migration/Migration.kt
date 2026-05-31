@@ -249,7 +249,7 @@ fun updateOldDBtoVersion13(oldDatabase: SupportSQLiteDatabase, context: Context,
             if (old_quiz_word.quizId in quizIdsMap.keys) {
                 // use safe check (?) in case any quiz_words refer to non-existing words
                 wordIdsMap[old_quiz_word.wordId]?.also {
-                    val updatedQuizWord = QuizWordv13(0, quizIdsMap[old_quiz_word.quizId]!!, it)
+                    val updatedQuizWord = QuizWordv13(0, requireNotNull(quizIdsMap[old_quiz_word.quizId]) { "quizId ${old_quiz_word.quizId} not found in map" }, it)
                     // change word and quiz id to new ones
                     QuizWordv13.insertQuizWord(oldDatabase, updatedQuizWord, false)
                 }

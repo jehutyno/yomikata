@@ -133,7 +133,7 @@ class SearchResultFragment(private val di: DI) : Fragment(), SearchResultContrac
             }
 
             override fun onMenuItemActionCollapse(item: MenuItem): Boolean {
-                activity!!.finish()
+                requireActivity().finish()
                 return true
             }
         })

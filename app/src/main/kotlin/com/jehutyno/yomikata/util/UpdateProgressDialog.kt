@@ -55,7 +55,7 @@ class UpdateProgressDialog(private val activity: Activity) {
         }
         progressBar.progress = 0
 
-        progressAlertDialog!!.show()
+        requireNotNull(progressAlertDialog) { "progressAlertDialog not initialized" }.show()
         isShown = true
     }
 
@@ -93,7 +93,7 @@ class UpdateProgressDialog(private val activity: Activity) {
                 okButton()
             }.show()
         } else {
-            finishDialog!!.show()
+            requireNotNull(finishDialog) { "finishDialog became null unexpectedly" }.show()
         }
         finishCallback?.invoke()
     }
@@ -109,7 +109,7 @@ class UpdateProgressDialog(private val activity: Activity) {
         if (!isShown)
             return
         (progressBar.parent as ViewGroup).removeView(progressBar)
-        progressAlertDialog!!.dismiss()
+        requireNotNull(progressAlertDialog) { "progressAlertDialog not initialized" }.dismiss()
         progressAlertDialog = null
         isShown = false
     }
@@ -126,7 +126,7 @@ class UpdateProgressDialog(private val activity: Activity) {
     @Synchronized
     fun error(errorTitle: String?, errorMessage: String?) {
         (progressBar.parent as ViewGroup).removeView(progressBar)
-        progressAlertDialog!!.dismiss()
+        requireNotNull(progressAlertDialog) { "progressAlertDialog not initialized" }.dismiss()
         progressAlertDialog = null
         activity.alertDialog {
             title = errorTitle

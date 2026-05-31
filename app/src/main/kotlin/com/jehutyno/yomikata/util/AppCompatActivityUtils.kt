@@ -32,6 +32,5 @@ fun AppCompatActivity.addOrReplaceFragment(layoutId: Int, fragment: Fragment) {
 
 fun Activity.hideSoftKeyboard() {
     val inputMethodManager = this.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
-    if (this.currentFocus != null)
-        inputMethodManager.hideSoftInputFromWindow(this.currentFocus!!.windowToken, 0)
+    inputMethodManager.hideSoftInputFromWindow(this.currentFocus?.windowToken, 0)
 }

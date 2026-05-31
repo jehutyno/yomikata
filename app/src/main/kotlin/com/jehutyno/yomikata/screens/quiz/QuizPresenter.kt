@@ -126,7 +126,7 @@ class QuizPresenter(
      *  Keep in mind that a quiz could run out of words before this counter reaches 0. */
     private var sessionCount = -1
     /** Session length of choice in user preferences, only used for non-error session */
-    private val prefSessionLength = defaultSharedPreferences.getString("length", "10")!!.toInt()
+    private val prefSessionLength = (defaultSharedPreferences.getString("length", "10") ?: "10").toInt()
     /** Total length of current session */
     private var sessionLength = prefSessionLength
 
@@ -183,7 +183,7 @@ class QuizPresenter(
         quizView.reInitUI()
         previousAnswerWrong = savedInstanceState.getBoolean("previousQCMAnswerWrong")
 
-        answers = savedInstanceState.getParcelableArrayListHelper("answers", Answer::class.java)!!
+        answers = requireNotNull(savedInstanceState.getParcelableArrayListHelper("answers", Answer::class.java)) { "answers missing from savedInstanceState" }
         val random0 = savedInstanceState.getParcelableHelper("random0", Word::class.java)
         val random1 = savedInstanceState.getParcelableHelper("random1", Word::class.java)
         val random2 = savedInstanceState.getParcelableHelper("random2", Word::class.java)
@@ -421,7 +421,7 @@ class QuizPresenter(
 
     private suspend fun getQCMDisPlayForEnJap(word: Word): String {
         return if (word.isKana == 2) {
-            val sentence = sentenceRepository.getSentenceById(word.sentenceId!!)
+            val sentence = sentenceRepository.getSentenceById(requireNotNull(word.sentenceId) { "sentenceId is null for word ${word.id}" })
             if (isFuriDisplayed)
                 sentence.jap
             else
@@ -652,7 +652,7 @@ class QuizPresenter(
             return  // do not update since the user already got it wrong on this word
         }
 
-        val speed = defaultSharedPreferences.getString("speed", "2")!!.toInt()
+        val speed = (defaultSharedPreferences.getString("speed", "2") ?: "2").toInt()
 
         val newPoints = addPoints(word.points, result, quizType, speed)
         val newLevel = getLevelFromPoints(newPoints)
@@ -846,7 +846,7 @@ class QuizPresenter(
     override suspend fun getRandomSentence(word: Word): Sentence {
         val sentence = sentenceRepository.getRandomSentence(word, getCategoryLevel(word.baseCategory))
         return if (word.isKana == 2 || sentence == null)
-            sentenceRepository.getSentenceById(word.sentenceId!!)
+            sentenceRepository.getSentenceById(requireNotNull(word.sentenceId) { "sentenceId is null for word ${word.id}" })
         else
             sentence
     }

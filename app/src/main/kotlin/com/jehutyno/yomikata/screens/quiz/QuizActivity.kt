@@ -91,14 +91,14 @@ class QuizActivity : AppCompatActivity(), DIAware {
             quizFragment = supportFragmentManager.getFragment(savedInstanceState, "quizFragment") as QuizFragment
             quizIds = savedInstanceState.getLongArray("quiz_ids")?: longArrayOf()
 
-            quizStrategy = savedInstanceState.getSerializableHelper("quiz_strategy", QuizStrategy::class.java)!!
+            quizStrategy = requireNotNull(savedInstanceState.getSerializableHelper("quiz_strategy", QuizStrategy::class.java)) { "quiz_strategy missing from savedInstanceState" }
             level = savedInstanceState.getSerializableHelper("level", Level::class.java)
 
             quizTypes = savedInstanceState.getParcelableArrayListHelper("quiz_types", QuizType::class.java)?: arrayListOf()
         } else {
             quizIds = intent.getLongArrayExtra(Extras.EXTRA_QUIZ_IDS) ?: longArrayOf()
 
-            quizStrategy = intent.getSerializableExtraHelper(Extras.EXTRA_QUIZ_STRATEGY, QuizStrategy::class.java)!!
+            quizStrategy = requireNotNull(intent.getSerializableExtraHelper(Extras.EXTRA_QUIZ_STRATEGY, QuizStrategy::class.java)) { "EXTRA_QUIZ_STRATEGY missing from intent" }
 
             level = intent.getSerializableExtraHelper(Extras.EXTRA_LEVEL, Level::class.java)
 

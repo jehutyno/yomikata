@@ -1,5 +1,3 @@
-@file:Suppress("UNNECESSARY_NOT_NULL_ASSERTION")
-
 package com.jehutyno.yomikata.util
 
 import android.app.Activity
@@ -118,7 +116,7 @@ fun onTTSinit(context: Context?, status: Int, tts: TextToSpeech?): Int {
     try {
         // Initialize the TTS in Japanese if available
         if (status == TextToSpeech.SUCCESS) {
-            supported = tts!!.isLanguageAvailable(Locale.JAPANESE)
+            supported = requireNotNull(tts) { "TextToSpeech instance is null" }.isLanguageAvailable(Locale.JAPANESE)
             if (supported == TextToSpeech.LANG_MISSING_DATA || supported == TextToSpeech.LANG_NOT_SUPPORTED) {
             } else {
                 tts.language = Locale.JAPANESE
@@ -346,7 +344,7 @@ fun launchVoicesDownload(activity: Activity, level: Int, finishedListener: () ->
 
     }.addOnProgressListener {
         val progress: Double = 100.0 * it.bytesTransferred / it.totalByteCount
-        progressBar!!.progress = progress.toInt()
+        progressBar.progress = progress.toInt()
     }
 
 }

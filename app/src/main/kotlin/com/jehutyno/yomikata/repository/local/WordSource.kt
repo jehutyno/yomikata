@@ -138,7 +138,7 @@ class WordSource(private val wordDao: WordDao) : WordRepository {
     }
 
     override suspend fun getWordById(wordId: Long): Word {
-        return wordDao.getWordById(wordId)!!.toWord()
+        return requireNotNull(wordDao.getWordById(wordId)) { "Word not found: $wordId" }.toWord()
     }
 
     override suspend fun deleteAllWords() {
