@@ -5,6 +5,7 @@ import android.animation.ArgbEvaluator
 import android.animation.ValueAnimator
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.os.Bundle
 import android.os.Parcelable
 import android.speech.tts.TextToSpeech
@@ -20,7 +21,6 @@ import android.widget.*
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
-import androidx.preference.PreferenceManager
 import androidx.viewpager.widget.ViewPager
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.databinding.FragmentQuizBinding
@@ -49,6 +49,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
     @Suppress("unused")
     private val voicesManager: VoicesManager by subDI.instance()
     private val presenter: QuizContract.Presenter by subDI.instance(arg = this@QuizFragment)
+    private val prefs: SharedPreferences by subDI.instance()
 
     private lateinit var adapter: QuizItemPagerAdapter
     private var tts: TextToSpeech? = null
@@ -73,8 +74,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
         ttsSupported = onTTSinit(activity, status, tts)
         presenter.setTTSSupported(ttsSupported)
         if (::adapter.isInitialized && adapter.words.isNotEmpty()) {
-            val pref = PreferenceManager.getDefaultSharedPreferences(requireContext())
-            val noPlayStart = pref.getBoolean("play_start", false)
+            val noPlayStart = prefs.getBoolean(Prefs.PLAY_START.pref, false)
             if (adapter.words[binding.pager.currentItem].second == QuizType.TYPE_AUDIO || noPlayStart) {
                 voicesManager.speakWord(adapter.words[binding.pager.currentItem].first, ttsSupported, tts)
             }
@@ -101,8 +101,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
 
     override fun onResume() {
         super.onResume()
-        val pref = PreferenceManager.getDefaultSharedPreferences(requireContext())
-        editBinding.hiraganaEdit.inputType = if (pref.getBoolean("input_change", false))
+        editBinding.hiraganaEdit.inputType = if (prefs.getBoolean("input_change", false))
             InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
         else
             InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
@@ -127,8 +126,8 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
         tts = TextToSpeech(activity, this)
 
         qcmController = QCMUIController(binding)
-        settingsUIManager = SettingsUIManager(binding, voicesManager, presenter)
-        dialogFlowController = DialogFlowController(this, presenter, binding)
+        settingsUIManager = SettingsUIManager(binding, prefs, voicesManager, presenter)
+        dialogFlowController = DialogFlowController(this, prefs, presenter, binding)
 
         initUI()
 
@@ -214,7 +213,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
     }
 
     private fun initPager() {
-        adapter = QuizItemPagerAdapter(requireContext(), this)
+        adapter = QuizItemPagerAdapter(requireContext(), prefs, this)
         binding.pager.adapter = adapter
         binding.pager.setAllowedSwipeDirection(SwipeDirection.none)
         binding.pager.offscreenPageLimit = 0
@@ -419,8 +418,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, QuizItem
     override fun displayQCMMode(hintText: String?) {
         binding.quizAnswersMultipleChoice.root.visibility = VISIBLE
         editBinding.root.visibility = GONE
-        val pref = PreferenceManager.getDefaultSharedPreferences(requireContext())
-        if (pref.getBoolean("tap_to_reveal", false)) {
+        if (prefs.getBoolean("tap_to_reveal", false)) {
             binding.tapToReveal.visibility = VISIBLE
             binding.quizAnswerType.visibility = VISIBLE
             // say what type of answer should be found

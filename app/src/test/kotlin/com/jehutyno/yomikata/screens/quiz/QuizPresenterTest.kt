@@ -2,7 +2,6 @@ package com.jehutyno.yomikata.screens.quiz
 
 import android.content.Context
 import android.content.SharedPreferences
-import androidx.preference.PreferenceManager
 import com.jehutyno.yomikata.model.Word
 import com.jehutyno.yomikata.presenters.source.SelectionsPresenter
 import com.jehutyno.yomikata.presenters.source.WordInQuizPresenter
@@ -16,8 +15,6 @@ import com.jehutyno.yomikata.util.QuizType
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkStatic
-import io.mockk.unmockkStatic
 import io.mockk.verify
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -112,22 +109,20 @@ class QuizPresenterTest(private val length: Int, private val type: QuizType) {
 
         // mock for preferences
         val sharedPrefMock = mockk<SharedPreferences>()
-        every { sharedPrefMock.getBoolean("play_start", any()) } returns false
-        every { sharedPrefMock.getBoolean("play_end", any()) } returns false
-        every { sharedPrefMock.getString("length", any()) } returns length.toString()
-        every { sharedPrefMock.getString("speed", any()) } returns "2"
+        every { sharedPrefMock.getBoolean(Prefs.PLAY_START.pref, any()) } returns false
+        every { sharedPrefMock.getBoolean(Prefs.PLAY_END.pref, any()) } returns false
+        every { sharedPrefMock.getString(Prefs.QUIZ_LENGTH.pref, any()) } returns length.toString()
+        every { sharedPrefMock.getString(Prefs.QUIZ_SPEED.pref, any()) } returns "2"
         every { sharedPrefMock.getBoolean(Prefs.FURI_DISPLAYED.pref, any()) } returns false
 
         val context = mockk<Context>(relaxed = true)
-        mockkStatic(PreferenceManager::class)
-        every { PreferenceManager.getDefaultSharedPreferences(context) } returns sharedPrefMock
 
         // always insert correct answer into option 1 (index 0)
         val rngMock = object : Random() {
             override fun nextInt(bound: Int) = 0
         }
 
-        quizPresenter = QuizPresenter(context, wordRepoMock, sentenceRepoMock,
+        quizPresenter = QuizPresenter(context, sharedPrefMock, wordRepoMock, sentenceRepoMock,
             statsRepoMock, quizViewMock, longArrayOf(), QuizStrategy.STRAIGHT, null,
             arrayListOf(type), rngMock, selectionsMock, wordInQuizMock, scope
         )
@@ -136,7 +131,6 @@ class QuizPresenterTest(private val length: Int, private val type: QuizType) {
     @After
     fun tearDown() {
         scope.cancel()
-        unmockkStatic(PreferenceManager::class)
     }
 
     @Test

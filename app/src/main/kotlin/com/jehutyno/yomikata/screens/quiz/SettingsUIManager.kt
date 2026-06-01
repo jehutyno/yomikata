@@ -1,11 +1,11 @@
 package com.jehutyno.yomikata.screens.quiz
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.media.AudioManager
 import android.speech.tts.TextToSpeech
 import android.view.View.GONE
 import android.view.View.VISIBLE
-import androidx.preference.PreferenceManager
 import com.jehutyno.yomikata.databinding.FragmentQuizBinding
 import com.jehutyno.yomikata.managers.VoicesManager
 import com.jehutyno.yomikata.util.Prefs
@@ -13,6 +13,7 @@ import android.widget.SeekBar
 
 class SettingsUIManager(
     private val binding: FragmentQuizBinding,
+    private val prefs: SharedPreferences,
     private val voicesManager: VoicesManager,
     private val presenter: QuizContract.Presenter
 ) {
@@ -38,13 +39,12 @@ class SettingsUIManager(
         })
 
         binding.seekSpeed.max = 250
-        val pref = PreferenceManager.getDefaultSharedPreferences(binding.root.context)
-        val rate = pref.getInt(Prefs.TTS_RATE.pref, 50)
+        val rate = prefs.getInt(Prefs.TTS_RATE.pref, 50)
         binding.seekSpeed.progress = rate
         tts?.setSpeechRate((rate + 50).toFloat() / 100)
         binding.seekSpeed.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(p0: SeekBar?, p1: Int, p2: Boolean) {
-                pref.edit().putInt(Prefs.TTS_RATE.pref, p1).apply()
+                prefs.edit().putInt(Prefs.TTS_RATE.pref, p1).apply()
                 tts?.setSpeechRate((p1 + 50).toFloat() / 100)
                 presenter.onSpeakSentence()
             }

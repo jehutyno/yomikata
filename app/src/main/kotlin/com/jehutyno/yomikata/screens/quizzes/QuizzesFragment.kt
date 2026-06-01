@@ -1,6 +1,7 @@
 package com.jehutyno.yomikata.screens.quizzes
 
 import android.content.Intent
+import android.content.SharedPreferences
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
 import android.view.LayoutInflater
@@ -11,7 +12,6 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
-import androidx.preference.PreferenceManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.databinding.FragmentQuizzesBinding
@@ -54,9 +54,10 @@ import java.lang.Thread.sleep
 /**
  * Created by valentin on 30/09/2016.
  */
-class QuizzesFragment(di: DI) : Fragment(), QuizzesContract.View, QuizzesAdapter.Callback, TextToSpeech.OnInitListener {
+class QuizzesFragment(private val di: DI) : Fragment(), QuizzesContract.View, QuizzesAdapter.Callback, TextToSpeech.OnInitListener {
 
     // kodein
+    private val prefs: SharedPreferences by di.instance()
     private val mpresenter: QuizzesContract.Presenter by di.newInstance {
         QuizzesPresenter(instance(), instance(), instance(),
             instance ( arg =
@@ -223,7 +224,7 @@ class QuizzesFragment(di: DI) : Fragment(), QuizzesContract.View, QuizzesAdapter
     }
 
     private fun updateVoicesDownloadVisibility() {
-        val pref = PreferenceManager.getDefaultSharedPreferences(requireContext())
+        val pref = prefs
         if (selectedCategory == -1 || selectedCategory == 8
                 || pref.getBoolean(Prefs.VOICE_DOWNLOADED_LEVEL_V.pref +
                         "${getLevelDownloadVersion(getCategoryLevel(selectedCategory))}_${getCategoryLevel(selectedCategory)}", false)) {
@@ -239,7 +240,7 @@ class QuizzesFragment(di: DI) : Fragment(), QuizzesContract.View, QuizzesAdapter
     }
 
     private fun previousVoicesDownloaded(downloadVersion: Int): Boolean {
-        val pref = PreferenceManager.getDefaultSharedPreferences(requireContext())
+        val pref = prefs
         return (0 until downloadVersion).any {
             pref.getBoolean("${Prefs.VOICE_DOWNLOADED_LEVEL_V.pref}${it}_${getCategoryLevel(selectedCategory)}", false)
         }

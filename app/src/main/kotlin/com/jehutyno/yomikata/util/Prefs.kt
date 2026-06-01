@@ -26,5 +26,11 @@ enum class Prefs(val pref: String) {
     DONT_SHOW_VOICES_POPUP("dont_show_voices_popup"),
 
     QUIZ_ERROR_SELECTED_RADIO_BUTTON_ID("quiz_error_selected_radio_button_id"),
-    QUIZ_FLAWLESS_SELECTED_RADIO_BUTTON_ID("quiz_flawless_selected_radio_button_id")
+    QUIZ_FLAWLESS_SELECTED_RADIO_BUTTON_ID("quiz_flawless_selected_radio_button_id"),
+
+    QUIZ_LENGTH("length"),
+    QUIZ_SPEED("speed"),
+    PLAY_START("play_start"),
+    PLAY_END("play_end"),
+    FONT_SIZE("font_size")
 }

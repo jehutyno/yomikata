@@ -11,6 +11,7 @@ import androidx.activity.addCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.lifecycle.lifecycleScope
+import android.content.SharedPreferences
 import androidx.preference.PreferenceManager
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.databinding.ActivityQuizBinding
@@ -50,7 +51,7 @@ class QuizActivity : AppCompatActivity(), DIAware {
         bind<QuizContract.Presenter>() with factory {
             view: QuizContract.View ->
             QuizPresenter (
-                instance(), instance(), instance(), instance(), view,
+                instance(), instance<SharedPreferences>(), instance(), instance(), instance(), view,
                 quizIds, quizStrategy, level, quizTypes, Random(),
                 instance(arg = lifecycleScope), instance(), lifecycleScope
             )

@@ -1,12 +1,11 @@
 package com.jehutyno.yomikata.screens.quizzes
 
-import android.content.Context
+import android.content.SharedPreferences
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.distinctUntilChanged
-import androidx.preference.PreferenceManager
 import com.jehutyno.yomikata.model.Quiz
 import com.jehutyno.yomikata.model.StatAction
 import com.jehutyno.yomikata.model.StatResult
@@ -27,7 +26,7 @@ import java.util.StringTokenizer
  * Created by valentin on 29/09/2016.
  */
 class QuizzesPresenter(
-    private val context: Context,
+    private val prefs: SharedPreferences,
     private val quizRepository: QuizRepository,
     private val statsRepository: StatsRepository,
     wordCountInterface: WordCountInterface,
@@ -124,7 +123,7 @@ class QuizzesPresenter(
     }
 
     private fun getQuizTypeArrayFromPrefs(key: String, default: QuizType): ArrayList<QuizType> {
-        val pref = PreferenceManager.getDefaultSharedPreferences(context)
+        val pref = prefs
         val savedString = pref.getString(key, "")
         val savedList = ArrayList<Int>(5)
         if (savedString == "") {
@@ -145,7 +144,7 @@ class QuizzesPresenter(
         list.forEach {
             str.append(it).append(",")
         }
-        val pref = PreferenceManager.getDefaultSharedPreferences(context)
+        val pref = prefs
         pref.edit().putString(key, str.toString()).apply()
     }
 
@@ -159,7 +158,7 @@ class QuizzesPresenter(
      */
     override suspend fun onLaunchQuizClick(category: Int) {
         statsRepository.addStatEntry(StatAction.LAUNCH_QUIZ_FROM_CATEGORY, category.toLong(), Calendar.getInstance().timeInMillis, StatResult.OTHER)
-        val pref = PreferenceManager.getDefaultSharedPreferences(context)
+        val pref = prefs
         val cat1 = pref.getInt(Prefs.LATEST_CATEGORY_1.pref, -1)
 
         if (category != cat1) {

@@ -1,8 +1,8 @@
 package com.jehutyno.yomikata.screens.quiz
 
+import android.content.SharedPreferences
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
-import androidx.preference.PreferenceManager
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.databinding.FragmentQuizBinding
 import com.jehutyno.yomikata.util.Prefs
@@ -11,6 +11,7 @@ import splitties.alertdialog.appcompat.*
 
 class DialogFlowController(
     private val fragment: Fragment,
+    private val prefs: SharedPreferences,
     private val presenter: QuizContract.Presenter,
     private val binding: FragmentQuizBinding
 ) {
@@ -38,16 +39,14 @@ class DialogFlowController(
     )
 
     fun setUpRadioButtons() {
-        val pref = PreferenceManager.getDefaultSharedPreferences(fragment.requireContext())
-
         val defaultErrorReview = ErrorReviewOption.Show.preferenceId
         val defaultFlawless = FlawlessOption.Show.preferenceId
 
-        val errorReviewSelected = pref.getInt(
+        val errorReviewSelected = prefs.getInt(
             Prefs.QUIZ_ERROR_SELECTED_RADIO_BUTTON_ID.pref,
             defaultErrorReview
         )
-        val flawlessSelected = pref.getInt(
+        val flawlessSelected = prefs.getInt(
             Prefs.QUIZ_FLAWLESS_SELECTED_RADIO_BUTTON_ID.pref,
             defaultFlawless
         )
@@ -64,13 +63,13 @@ class DialogFlowController(
 
         // set shared preferences
         binding.errorReviewRadioGroup.setOnCheckedChangeListener { _, checkedId ->
-            pref.edit().putInt(
+            prefs.edit().putInt(
                 Prefs.QUIZ_ERROR_SELECTED_RADIO_BUTTON_ID.pref,
                 requireNotNull(errorReviewIdMap[checkedId]) { "Unknown radio button: $checkedId" }.preferenceId
             ).apply()
         }
         binding.flawlessRadioGroup.setOnCheckedChangeListener { _, checkedId ->
-            pref.edit().putInt(
+            prefs.edit().putInt(
                 Prefs.QUIZ_FLAWLESS_SELECTED_RADIO_BUTTON_ID.pref,
                 requireNotNull(flawlessIdMap[checkedId]) { "Unknown radio button: $checkedId" }.preferenceId
             ).apply()

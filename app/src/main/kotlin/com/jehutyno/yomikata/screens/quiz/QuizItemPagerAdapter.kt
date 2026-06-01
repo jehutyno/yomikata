@@ -1,6 +1,7 @@
 package com.jehutyno.yomikata.screens.quiz
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.text.method.ScrollingMovementMethod
 import android.view.LayoutInflater
 import android.view.View
@@ -10,7 +11,6 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.widget.PopupMenu
 import androidx.core.content.ContextCompat
-import androidx.preference.PreferenceManager
 import androidx.viewpager.widget.PagerAdapter
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.databinding.VhQuizItemBinding
@@ -30,7 +30,7 @@ import kotlinx.coroutines.Job
 /**
  * Created by jehutyno on 08/10/2016.
  */
-class QuizItemPagerAdapter(var context: Context, var callback: Callback) : PagerAdapter() {
+class QuizItemPagerAdapter(var context: Context, private val prefs: SharedPreferences, var callback: Callback) : PagerAdapter() {
 
     var words: ArrayList<Pair<Word, QuizType>> = arrayListOf()
     var sentence: Sentence = Sentence()
@@ -66,9 +66,8 @@ class QuizItemPagerAdapter(var context: Context, var callback: Callback) : Pager
             else
                 "${position + 1} / ${words.size}"
 
-        val pref = PreferenceManager.getDefaultSharedPreferences(context)
-        btnFuri.isSelected = pref.getBoolean(Prefs.FURI_DISPLAYED.pref, true)
-        btnTrad.isSelected = pref.getBoolean(Prefs.TRAD_DISPLAYED.pref, true)
+        btnFuri.isSelected = prefs.getBoolean(Prefs.FURI_DISPLAYED.pref, true)
+        btnTrad.isSelected = prefs.getBoolean(Prefs.TRAD_DISPLAYED.pref, true)
 
         when (words[position].second) {
             QuizType.TYPE_PRONUNCIATION, QuizType.TYPE_PRONUNCIATION_QCM, QuizType.TYPE_JAP_EN -> {
@@ -105,7 +104,7 @@ class QuizItemPagerAdapter(var context: Context, var callback: Callback) : Pager
                 tradSentence.visibility = View.VISIBLE
                 tradSentence.movementMethod = ScrollingMovementMethod()
                 tradSentence.setTextColor(getWordColor(context, word.points))
-                tradSentence.textSize = (PreferenceManager.getDefaultSharedPreferences(context).getString("font_size", "18") ?: "18").toFloat()
+                tradSentence.textSize = (prefs.getString(Prefs.FONT_SIZE.pref, "18") ?: "18").toFloat()
                 tradSentence.text = word.getTrad().cleanForQCM(false)
             }
             QuizType.TYPE_AUDIO -> {
@@ -132,14 +131,14 @@ class QuizItemPagerAdapter(var context: Context, var callback: Callback) : Pager
 
         btnFuri.setOnClickListener {
             btnFuri.isSelected = !btnFuri.isSelected
-            pref.edit().putBoolean(Prefs.FURI_DISPLAYED.pref, btnFuri.isSelected).apply()
+            prefs.edit().putBoolean(Prefs.FURI_DISPLAYED.pref, btnFuri.isSelected).apply()
             notifyDataSetChanged()
             callback.onFuriClick(position, btnFuri.isSelected)
         }
 
         btnTrad.setOnClickListener {
             btnTrad.isSelected = !btnTrad.isSelected
-            pref.edit().putBoolean(Prefs.TRAD_DISPLAYED.pref, btnTrad.isSelected).apply()
+            prefs.edit().putBoolean(Prefs.TRAD_DISPLAYED.pref, btnTrad.isSelected).apply()
             notifyDataSetChanged()
             callback.onTradClick(position)
         }

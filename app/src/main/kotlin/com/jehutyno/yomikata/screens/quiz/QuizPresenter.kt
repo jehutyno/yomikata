@@ -5,7 +5,6 @@ import android.content.SharedPreferences
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
 import android.util.Log
-import androidx.preference.PreferenceManager
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.model.Answer
 import com.jehutyno.yomikata.model.Sentence
@@ -41,6 +40,7 @@ import java.util.Random
  */
 class QuizPresenter(
     val context: Context,
+    prefs: SharedPreferences,
     private val wordRepository: WordRepository,
     private val sentenceRepository: SentenceRepository, private val statsRepository: StatsRepository,
     private val quizView: QuizContract.View, private val quizIds: LongArray,
@@ -51,7 +51,7 @@ class QuizPresenter(
     private val coroutineScope: CoroutineScope) : QuizContract.Presenter,
             SelectionsInterface by selectionsInterface, WordInQuizInterface by wordInQuizInterface {
 
-    private val defaultSharedPreferences: SharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
+    private val defaultSharedPreferences: SharedPreferences = prefs
 
     private val answerValidator = AnswerValidator
     private val randomAnswerGenerator = RandomAnswerGenerator(wordRepository, rng)
@@ -69,7 +69,7 @@ class QuizPresenter(
      *  Keep in mind that a quiz could run out of words before this counter reaches 0. */
     private var sessionCount = -1
     /** Session length of choice in user preferences, only used for non-error session */
-    private val prefSessionLength = (defaultSharedPreferences.getString("length", "10") ?: "10").toInt()
+    private val prefSessionLength = (defaultSharedPreferences.getString(Prefs.QUIZ_LENGTH.pref, "10") ?: "10").toInt()
     /** Total length of current session */
     private var sessionLength = prefSessionLength
 
@@ -255,7 +255,7 @@ class QuizPresenter(
                 }
             }
 
-            if (forceAudioAtStart || defaultSharedPreferences.getBoolean("play_start", false)) {
+            if (forceAudioAtStart || defaultSharedPreferences.getBoolean(Prefs.PLAY_START.pref, false)) {
                 quizView.speakWord(word)
             }
 
@@ -522,7 +522,7 @@ class QuizPresenter(
             QuizType.TYPE_AUTO -> TODO()
         }
 
-        if (result && defaultSharedPreferences.getBoolean("play_end", true))
+        if (result && defaultSharedPreferences.getBoolean(Prefs.PLAY_END.pref, true))
             quizView.speakWord(sessionState.getCurrentWord())
 
         quizView.animateCheck(result)
@@ -566,7 +566,7 @@ class QuizPresenter(
             return  // do not update since the user already got it wrong on this word
         }
 
-        val speed = (defaultSharedPreferences.getString("speed", "2") ?: "2").toInt()
+        val speed = (defaultSharedPreferences.getString(Prefs.QUIZ_SPEED.pref, "2") ?: "2").toInt()
 
         val newPoints = addPoints(word.points, result, quizType, speed)
         val newLevel = getLevelFromPoints(newPoints)
