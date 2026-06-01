@@ -1,0 +1,354 @@
+# Yomikata Z — Architecture
+
+## Ce que fait l'application
+
+Yomikata Z est une application Android d'apprentissage du japonais. Elle permet à l'utilisateur de :
+
+- Parcourir des listes de mots classées par catégorie (Hiragana, Katakana, JLPT N1–N5, Kanjis, Compteurs) et par sélections personnelles.
+- Lancer des sessions de quiz pour mémoriser les mots.
+- Suivre sa progression via un système de niveaux et de points par mot.
+- Écouter la prononciation de mots et de phrases d'exemple (voix pré-enregistrées ou TTS).
+- Sauvegarder/restaurer sa base de données depuis un stockage externe.
+
+L'interface et les traductions sont disponibles en **6 langues** : anglais (EN), français (FR), allemand (DE), espagnol (ES), portugais (PT), mandarin (ZH). La langue est sélectionnable dans les préférences, avec détection automatique de la locale système au premier lancement.
+
+---
+
+## Couches principales
+
+```
+┌─────────────────────────────────────────────────────┐
+│  Screens  (Activity / Fragment / Presenter — MVP)    │
+├─────────────────────────────────────────────────────┤
+│  Presenters partagés  (SelectionsPresenter,          │
+│                        WordInQuizPresenter,          │
+│                        WordCountPresenter)           │
+├─────────────────────────────────────────────────────┤
+│  Repositories  (interfaces + implémentations Room)   │
+├─────────────────────────────────────────────────────┤
+│  DAOs  (Room — KotlinFlow / suspend)                 │
+├─────────────────────────────────────────────────────┤
+│  YomikataDatabase  (Room, SQLite, asset DB v18)      │
+└─────────────────────────────────────────────────────┘
+         Injection de dépendances : Kodein DI 7.x
+```
+
+---
+
+## Pattern architectural : MVP
+
+Chaque écran suit le pattern **Model–View–Presenter** avec un contrat d'interface :
+
+```
+FooContract.View      ← implémenté par Fragment/Activity
+FooContract.Presenter ← implémenté par FooPresenter
+```
+
+Les `Fragment` et `Activity` ne contiennent que de la logique UI (binding, animations, navigation). Toute la logique métier est dans les `Presenter`, qui accèdent aux données via les repositories injectés par Kodein.
+
+Les presenters reçoivent un `CoroutineScope` (le `lifecycleScope` du fragment hôte) à la construction — ils n'en créent jamais eux-mêmes, ce qui les rend lifecycle-aware.
+
+---
+
+## Écrans
+
+| Package | Activité principale | Rôle |
+|---|---|---|
+| `splash` | `SplashActivity` | Démarrage, migration DB, backup/restore |
+| `quizzes` | `QuizzesActivity` | Navigation principale (ViewPager2 : Home + liste des catégories) |
+| `home` | `HomeFragment` | Dashboard — stats globales, accès rapide, fil d'actualité Firebase |
+| `content` | `ContentActivity` | Liste des mots d'une catégorie, graphique de progression |
+| `content/word` | `WordDetailDialogFragment` | Détail d'un mot (kanji, radical, exemple de phrase) |
+| `quiz` | `QuizActivity` / `QuizFragment` | Session de quiz complète |
+| `answers` | `AnswersActivity` | Récapitulatif des réponses après une session |
+| `search` | `SearchResultActivity` | Recherche de mots dans toute la base |
+| `PrefsActivity` | `PrefsActivity` | Paramètres (thème, vitesse TTS, voix, langue de traduction) |
+
+---
+
+## Système de langues (`util/AppLanguage.kt`, `util/LanguageManager.kt`)
+
+### `AppLanguage`
+
+Enum des langues supportées :
+
+```kotlin
+enum class AppLanguage(val isoCode: String, val displayName: String) {
+    ENGLISH("en", "English"),
+    FRENCH("fr", "Français"),
+    GERMAN("de", "Deutsch"),
+    SPANISH("es", "Español"),
+    PORTUGUESE("pt", "Português"),
+    CHINESE("zh", "中文")
+}
+```
+
+### `LanguageManager`
+
+Singleton Kodein. Gère la langue active de façon centralisée.
+
+- **`LanguageManager.current`** — propriété companion `@Volatile` lue directement par les méthodes `getTrad()` des modèles (pas d'injection Android dans les data classes).
+- **`initFromPrefs(prefs)`** — appelé dans `Application.onCreate()`, avant tout DI. Détecte la locale système au premier lancement et la persiste.
+- **`setLanguage(lang)`** — met à jour `current` et écrit dans `SharedPreferences`.
+
+### Sélection de langue dans les prefs
+
+`PrefsActivity` contient une `ListPreference` avec clé `app_language` (→ `Prefs.APP_LANGUAGE`). Un changement de langue affiche une boîte de dialogue de redémarrage pour recharger les chaînes Android.
+
+### Chaîne de fallback dans `getTrad()`
+
+Pour les traductions non encore remplies (colonnes vides) :
+```
+langue demandée → EN si colonne vide → EN par défaut
+```
+
+Les modèles `Word`, `Sentence`, `Quiz`, `KanjiSolo`, `KanjiSoloRadical` et `Radical` implémentent tous ce pattern via `when (LanguageManager.current)`.
+
+---
+
+## Modèles de données
+
+### `Word`
+Entité centrale. Champs notables :
+- `japanese`, `reading` — contenu japonais.
+- `english`, `french` — traductions originales (source JMdict).
+- `german`, `spanish`, `portuguese`, `chinese` — traductions ajoutées en v18, vides jusqu'au remplissage (phases 3c–3f). Fallback vers `english` si vide.
+- `points` (0–850) — mesure la maîtrise du mot, détermine le niveau.
+- `level` — redondant avec `points`, maintenu pour compatibilité.
+- `repetition` — délai avant la prochaine apparition en mode progressif.
+- `baseCategory` — catégorie d'origine du mot.
+- `sentenceId` — lien optionnel vers une phrase d'exemple.
+
+### `Quiz`
+Une liste de mots (ex : "JLPT N4 - verbes"). Champs :
+- `nameEn`, `nameFr` — noms originaux.
+- `nameDe`, `nameEs`, `namePt`, `nameZh` — noms traduits (v18, vides jusqu'au remplissage).
+- `category` et `isSelected`.
+
+### `Sentence`
+Phrase d'exemple japonaise avec traductions `en`, `fr`, `de`, `es`, `pt`, `zh` et un niveau de difficulté.
+
+### `KanjiSolo` / `Radical`
+Données statiques sur les kanjis (tracés, kunyomi/onyomi, radical). Champs `en`, `fr`, `de`, `es`, `pt`, `zh`.
+
+### `StatEntry`
+Journal d'événements (action, résultat, date, id associé).
+
+---
+
+## Système de niveaux (`util/LevelSystem.kt`)
+
+Les mots sont notés de 0 à 850 points. Le niveau (`Level`) en découle directement :
+
+| Level | Points min | Répétition typique |
+|---|---|---|
+| LOW | 0 | 1 |
+| MEDIUM | 200 | ~6 |
+| HIGH | 400 | ~28 |
+| MASTER | 600 | ~149 |
+
+- `addPoints()` : ajoute ou retire des points selon le type de quiz et la vitesse choisie.
+- `getRepetition()` : croissance exponentielle — les mots bien connus réapparaissent beaucoup moins fréquemment.
+- `levelUp()` / `levelDown()` : saut de niveau forcé, en conservant le % de progression intra-niveau.
+
+---
+
+## Types de quiz (`QuizType`)
+
+| Type | Description | Points bonus |
+|---|---|---|
+| `TYPE_PRONUNCIATION` | Saisie clavier de la lecture (hiragana/katakana) | +15 |
+| `TYPE_EN_JAP` | Saisie du japonais à partir de la traduction | +5 |
+| `TYPE_JAP_EN` | QCM ou saisie de la traduction | 0 |
+| `TYPE_AUDIO` | Identifier le mot depuis l'audio | -5 |
+| `TYPE_PRONUNCIATION_QCM` | QCM de lecture | -10 |
+| `TYPE_AUTO` | Choix aléatoire | 0 |
+
+La validation est centralisée dans `AnswerValidator.checkWord()` : le tiret ASCII `-` est accepté pour `ー`, et les lectures multiples séparées par `/` ou `;` sont toutes valides.
+
+---
+
+## Stratégies de quiz (`QuizStrategy`)
+
+- `STRAIGHT` — tous les mots dans l'ordre.
+- `SHUFFLE` — tous les mots dans un ordre aléatoire.
+- `PROGRESSIVE` — seuls les mots dont la `repetition` est ≤ 0 sont proposés ; après chaque réponse, la valeur est recalculée et tous les autres mots sont décrémentés.
+
+---
+
+## Architecture du quiz (classes extraites de `QuizPresenter`)
+
+`QuizPresenter` délègue à plusieurs helpers :
+
+| Classe | Responsabilité |
+|---|---|
+| `QuizSessionState` | Machine d'état : index courant (mode normal vs. mode erreurs), liste des mots, liste des erreurs |
+| `AnswerValidator` | Vérification de la réponse (pure, sans état) |
+| `RandomAnswerGenerator` | Génère les options de QCM (3 distracteurs aléatoires) |
+| `WordStatisticsRecorder` | Enregistre les stats (tries, success, fail) en base |
+| `QCMUIController` | Prépare les données d'affichage QCM (textes, furigana, couleurs) |
+| `SettingsUIManager` | Configure l'UI du quiz (volume TTS, vitesse) — reçoit `SharedPreferences` par injection |
+| `DialogFlowController` | Gère les dialogues de fin de session / fin de quiz / mode erreurs — reçoit `SharedPreferences` par injection |
+
+---
+
+## Base de données (Room)
+
+Fichier : `yomikataz.db` — livré dans `assets/`, copié au premier lancement.
+
+**Version courante : 18.** Toutes les migrations sont définies dans `YomikataDatabase`. `fallbackToDestructiveMigration()` est activé pour les utilisateurs encore sur une version < 13 (reset propre sans crash).
+
+### Tables
+
+| Table | Entité Room | Notes |
+|---|---|---|
+| `words` | `RoomWords` | Colonnes `german`, `spanish`, `portuguese`, `chinese` ajoutées en v18 |
+| `quiz` | `RoomQuiz` | Colonnes `name_de`, `name_es`, `name_pt`, `name_zh` ajoutées en v18 |
+| `quiz_word` | `RoomQuizWord` | Clé composite `quiz_id` + `word_id` |
+| `sentences` | `RoomSentences` | Colonnes `de`, `es`, `pt`, `zh` ajoutées en v18 |
+| `kanji_solo` | `RoomKanjiSolo` | Colonnes `de`, `es`, `pt`, `zh` ajoutées en v18 |
+| `radicals` | `RoomRadicals` | Colonnes `de`, `es`, `pt`, `zh` ajoutées en v18 |
+| `stat_entry` | `RoomStatEntry` | |
+
+### Historique des migrations
+
+| Version | Contenu |
+|---|---|
+| 1→12 | Supprimées (migrations obsolètes, no-op). Les utilisateurs v≤12 reçoivent un reset. |
+| 13→14 | Refactoring Room : DROP/CREATE de toutes les tables pour uniformiser les types. |
+| 14→15 | Nouveau système de points (0–850 cumulatifs, ancienne remise à zéro supprimée). |
+| 15→16 | Nettoyage des traductions EN : suppression du suffixe `;(P)` issu de JMdict. |
+| 16→17 | Nettoyage des données : suppression du mot fantôme id=3537, espaces doubles et leading/trailing dans `words` et `sentences`. |
+| 17→18 | Ajout des 4 colonnes de traduction dans 5 tables (20 colonnes au total, DEFAULT ''). |
+
+Les schémas Room sont exportés à partir de la version 14 dans `app/schemas/`.
+
+### Contenu de la base (v18)
+
+| Table | Lignes |
+|---|---|
+| `words` | 7 503 (7 504 − fantôme supprimé) |
+| `sentences` | 7 425 |
+| `kanji_solo` | 1 993 |
+| `radicals` | 320 |
+| `quiz` | 96 |
+
+**Couverture des traductions allemandes (v18, après extraction JMdict) :**
+
+| Catégorie | Mots traduits EN DE |
+|---|---|
+| Kanji Beginner | 63% |
+| Hiragana | 48% |
+| JLPT N1–N5 | 41–47% |
+| Katakana (loanwords) | 4% (normal) |
+
+---
+
+## Injection de dépendances (Kodein)
+
+L'arbre DI est construit dans `YomikataZKApplication` à partir de 5 modules :
+
+```
+applicationModule   ← Context, SharedPreferences (singleton), LanguageManager (singleton)
+databaseModule      ← YomikataDatabase (singleton)
+daoModule           ← les 5 DAOs
+repositoryModule    ← les 5 sources locales (implémentent les interfaces repository)
+presenterModule     ← SelectionsPresenter, WordInQuizPresenter, WordCountPresenter
+```
+
+**`SharedPreferences`** est lié comme singleton Kodein dans `applicationModule` et injecté dans :
+- `QuizPresenter` (paramètre constructeur)
+- `QuizzesPresenter` (paramètre constructeur, remplace l'ancien `Context`)
+- `QuizItemPagerAdapter`, `SettingsUIManager`, `DialogFlowController` (via `QuizFragment`)
+
+**`LanguageManager`** est lié comme singleton Kodein. Il est également initialisé statiquement via `LanguageManager.initFromPrefs()` dans `Application.onCreate()` pour que `getTrad()` soit correct dès le premier appel.
+
+Les `Activity` et `Fragment` étendent `DIAware` et récupèrent leurs dépendances via `by di.newInstance { ... }` ou `by instance()`. `QuizActivity` crée un sous-DI (`subDI`) local pour fournir le `QuizPresenter` avec les paramètres de la session courante.
+
+---
+
+## Préférences utilisateur (`util/Prefs.kt`)
+
+| Clé | Type | Rôle |
+|---|---|---|
+| `app_language` | String (ISO 639-1) | Langue de traduction choisie |
+| `pref_day_night_mode` | Int | Thème jour/nuit (AppCompatDelegate) |
+| `prefs_selected_category` | Int | Dernière catégorie sélectionnée |
+| `selected_quiz_types` | String (CSV) | Types de quiz actifs |
+| `was_selected_quiz_types` | String (CSV) | Sauvegarde avant passage en mode AUTO |
+| `length` | String | Longueur de session (nombre de mots) |
+| `speed` | String | Vitesse de progression (facteur de points) |
+| `play_start` / `play_end` | Boolean | Audio au début/fin d'un mot |
+| `font_size` | String | Taille de police des phrases |
+| `tts_rate` | Int | Vitesse TTS |
+| `latest_category_1/2` | Int | Historique des catégories récentes |
+| `db_restore_ongoing` | Boolean | Flag de sécurité (restauration en cours) |
+| `voice_downloaded_level_V` | Boolean | Voix téléchargées par catégorie |
+
+---
+
+## Audio
+
+Deux systèmes coexistent :
+
+1. **Voix pré-enregistrées** (`ExoPlayer`) — fichiers MP3 téléchargeables par niveau depuis Firebase Storage. Chaque phrase a un fichier `s_<id>.mp3`. La disponibilité est vérifiée par `SpeechAvailability`.
+2. **TTS Android** (`TextToSpeech`) — fallback si les voix ne sont pas téléchargées.
+
+La logique de choix est dans `VoicesManager` ; la coordination avec l'UI est dans `QuizFragment`.
+
+---
+
+## Firebase
+
+| Service | Usage |
+|---|---|
+| Realtime Database | Fil d'actualité affiché dans `HomeFragment` |
+| Cloud Messaging | Notifications push |
+| Storage | Téléchargement des packs de voix par niveau |
+
+---
+
+## Tests
+
+| Suite | Outil | Localisation |
+|---|---|---|
+| Tests unitaires JVM (purs) | JUnit 4 + MockK | `src/test/` |
+| Tests d'instrumentation Room | JUnit + Room Testing | `src/androidTest/` |
+
+### Tests unitaires (117 tests)
+
+| Fichier | Tests | Couverture |
+|---|---|---|
+| `TranslationParserKtTest` | 3 | Parsing `readableTranslationFormat()` |
+| `AnswerValidatorTest` | 15 | Validation de toutes les combinaisons type/format |
+| `QuizSessionStateTest` | 16 | Machine d'état de session (modes normal/erreurs) |
+| `LevelSystemTest` | 24 | Frontières de niveaux, levelUp/Down, addPoints, getRepetition |
+| `QuizPresenterTest` | 25 | Flow complet d'une session (5 combinaisons longueur × type) |
+| `QuizzesPresenterTest` | 14 | Sélection de types de quiz, persistance prefs |
+| `LanguageManagerTest` | 20 | AppLanguage, initFromPrefs, setLanguage, getTrad() sur 5 modèles |
+
+### Tests d'instrumentation (androidTest)
+
+| Fichier | Couverture |
+|---|---|
+| `RoomMigrationTest` | Migrations 14→15, 15→16, 16→17, 17→18, chemin complet 14→18 |
+| `OldMigrationTest` | Migration 13→14 (depuis schéma SQLite v13) |
+| `WordDaoTest`, `QuizDaoTest`, `SentenceDaoTest`, `KanjiSoloDaoTest`, `StatsDaoTest` | DAOs Room |
+
+---
+
+## Dépendances tierces notables
+
+| Bibliothèque | Usage |
+|---|---|
+| Kodein DI 7.x | Injection de dépendances |
+| Room + KSP | ORM SQLite |
+| Kotlin Coroutines + Flow | Asynchronisme, streams réactifs |
+| ExoPlayer (Media3) | Lecture audio |
+| Calligraphy + ViewPump | Police personnalisée (Roboto) |
+| Splitties | DSL dialogs AlertDialog |
+| KenBurnsView, PathView | Animations splash / tracés de kanjis |
+| HiraganaEditText | Saisie IME hiragana |
+| Firebase BOM 33.x | RTDB, FCM, Storage |
+| MockK 1.13.x | Mocking pour les tests unitaires |
+| androidx.arch.core:core-testing | `InstantTaskExecutorRule` pour les tests LiveData |
