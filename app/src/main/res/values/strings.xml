@@ -248,6 +248,9 @@
     <string name="app_closed_data_recovered">The app was closed during the restore process and an error occurred, your previous data was recovered</string>
     <string name="tap_to_reveal_choices">Tap to reveal choices</string>
     <string name="tap_to_reveal_choices_summary">Hide multiple choice options until you tap the screen</string>
+    <string name="prefs_language_section">Language</string>
+    <string name="prefs_language_title">Translation language</string>
+    <string name="language_changed_title">Language changed</string>
     <string name="give_hiragana_reading_hint">Give hiragana reading</string>
     <string name="give_romaji_hint">Give rōmaji</string>
     <string name="give_word_or_kanji_hint">Give word or kanji</string>

@@ -7,6 +7,7 @@ import com.jehutyno.yomikata.dao.daoModule
 import com.jehutyno.yomikata.presenters.source.presenterModule
 import com.jehutyno.yomikata.repository.database.databaseModule
 import com.jehutyno.yomikata.repository.local.repositoryModule
+import com.jehutyno.yomikata.util.LanguageManager
 import com.jehutyno.yomikata.util.Prefs
 import io.github.inflationx.calligraphy3.CalligraphyConfig
 import io.github.inflationx.calligraphy3.CalligraphyInterceptor
@@ -37,6 +38,8 @@ class YomikataZKApplication : Application(), DIAware {
         super.onCreate()
 
         val nightModePref = PreferenceManager.getDefaultSharedPreferences(this)
+        // Bootstrap language before any getTrad() call (models read LanguageManager.current)
+        LanguageManager.initFromPrefs(nightModePref)
         val mode = nightModePref.getInt(Prefs.DAY_NIGHT_MODE.pref, AppCompatDelegate.MODE_NIGHT_YES)
         AppCompatDelegate.setDefaultNightMode(mode)
 

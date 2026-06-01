@@ -28,6 +28,8 @@ enum class Prefs(val pref: String) {
     QUIZ_ERROR_SELECTED_RADIO_BUTTON_ID("quiz_error_selected_radio_button_id"),
     QUIZ_FLAWLESS_SELECTED_RADIO_BUTTON_ID("quiz_flawless_selected_radio_button_id"),
 
+    APP_LANGUAGE("app_language"),
+
     QUIZ_LENGTH("length"),
     QUIZ_SPEED("speed"),
     PLAY_START("play_start"),

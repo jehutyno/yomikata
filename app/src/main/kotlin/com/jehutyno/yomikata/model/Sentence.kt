@@ -2,7 +2,8 @@ package com.jehutyno.yomikata.model
 
 import android.os.Parcel
 import android.os.Parcelable
-import java.util.*
+import com.jehutyno.yomikata.util.AppLanguage
+import com.jehutyno.yomikata.util.LanguageManager
 
 /**
  * Created by valentinlanfranchi on 19/05/2017.
@@ -39,10 +40,10 @@ open class Sentence(var id: Long = -1, val jap: String = "", val en: String = ""
 
 
     fun getTrad(): String {
-        return if (Locale.getDefault().language == "fr")
-            fr
-        else
-            en
+        return when (LanguageManager.current) {
+            AppLanguage.FRENCH -> fr
+            else -> en   // Phase 3a: DE/ES/PT/ZH added in Phase 3b
+        }
     }
 
 }

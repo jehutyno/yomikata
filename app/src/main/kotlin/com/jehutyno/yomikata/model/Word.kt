@@ -9,10 +9,11 @@ import com.jehutyno.yomikata.util.Categories
 import com.jehutyno.yomikata.util.Level
 import com.jehutyno.yomikata.util.getLevelFromPoints
 import com.jehutyno.yomikata.util.getProgressToNextLevel
+import com.jehutyno.yomikata.util.AppLanguage
+import com.jehutyno.yomikata.util.LanguageManager
 import com.jehutyno.yomikata.util.readableTranslationFormat
 import com.jehutyno.yomikata.util.toLevel
 import java.io.Serializable
-import java.util.*
 
 
 /**
@@ -64,10 +65,10 @@ open class Word(var id: Long, var japanese: String, var english: String, var fre
     }
 
     fun getTrad(): String {
-        return (if (Locale.getDefault().language == "fr")
-            french
-        else
-            english).readableTranslationFormat()
+        return when (LanguageManager.current) {
+            AppLanguage.FRENCH -> french
+            else -> english   // Phase 3a: DE/ES/PT/ZH columns added in Phase 3b
+        }.readableTranslationFormat()
     }
 }
 

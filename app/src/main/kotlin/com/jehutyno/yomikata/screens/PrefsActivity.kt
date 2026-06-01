@@ -9,13 +9,16 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.preference.ListPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.PreferenceManager
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.repository.database.YomikataDatabase
+import com.jehutyno.yomikata.util.AppLanguage
 import com.jehutyno.yomikata.util.Categories
 import com.jehutyno.yomikata.util.FileUtils
+import com.jehutyno.yomikata.util.LanguageManager
 import com.jehutyno.yomikata.util.Prefs
 import com.jehutyno.yomikata.util.RestartDialogMessage
 import com.jehutyno.yomikata.util.backupProgress
@@ -71,6 +74,19 @@ class PrefsActivity : AppCompatActivity(), DIAware {
 
         override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
             setPreferencesFromResource(R.xml.preferences, rootKey)
+
+            // Sync the ListPreference to the current language (may differ from default "en"
+            // if LanguageManager auto-detected a locale on first launch)
+            findPreference<ListPreference>(Prefs.APP_LANGUAGE.pref)?.apply {
+                value = LanguageManager.current.isoCode
+                setOnPreferenceChangeListener { _, newValue ->
+                    LanguageManager.current = AppLanguage.fromIsoCode(newValue as String)
+                    requireActivity()
+                        .getRestartDialog(RestartDialogMessage.LANGUAGE_CHANGED, null)
+                        .show()
+                    true    // allow ListPreference to persist the new value to SharedPreferences
+                }
+            }
         }
 
         private fun getResetAlert() : AlertDialog {
@@ -157,6 +173,11 @@ class PrefsActivity : AppCompatActivity(), DIAware {
                 }
                 "delete_voices" -> {
                     getDeleteVoicesAlert().show()
+                    return true
+                }
+
+                // Language (ListPreference handles its own dialog; listener in onCreatePreferences)
+                Prefs.APP_LANGUAGE.pref -> {
                     return true
                 }
 

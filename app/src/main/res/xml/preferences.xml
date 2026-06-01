@@ -60,6 +60,16 @@
 
     </PreferenceCategory>
 
+    <PreferenceCategory android:title="@string/prefs_language_section">
+        <ListPreference
+            android:defaultValue="en"
+            android:entries="@array/languageDisplayNames"
+            android:entryValues="@array/languageIsoCodes"
+            android:key="app_language"
+            android:summary="%s"
+            android:title="@string/prefs_language_title"/>
+    </PreferenceCategory>
+
     <PreferenceCategory android:title="@string/prefs_tutorials">
         <Preference
             android:icon="@drawable/ic_database"

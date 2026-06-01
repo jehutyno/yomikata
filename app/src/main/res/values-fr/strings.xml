@@ -232,4 +232,7 @@
     <string name="never_review">Ne jamais réviser</string>
     <string name="after_flawless_session">Après une session sans faille</string>
     <string name="automatically_continue">Continuer automatiquement</string>
+    <string name="prefs_language_section">Langue</string>
+    <string name="prefs_language_title">Langue de traduction</string>
+    <string name="language_changed_title">Langue modifiée</string>
 </resources>

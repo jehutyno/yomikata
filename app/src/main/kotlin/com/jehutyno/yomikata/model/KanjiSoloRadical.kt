@@ -1,6 +1,7 @@
 package com.jehutyno.yomikata.model
 
-import java.util.*
+import com.jehutyno.yomikata.util.AppLanguage
+import com.jehutyno.yomikata.util.LanguageManager
 
 
 /**
@@ -11,10 +12,10 @@ open class KanjiSoloRadical(kanji: String, strokes: Int, en: String, fr: String,
                     val radEn: String, val radFr: String): KanjiSolo(kanji, strokes, en, fr, kunyomi, onyomi, radical) {
 
     fun getRadTrad(): String {
-        return if (Locale.getDefault().language == "fr")
-            radFr
-        else
-            radEn
+        return when (LanguageManager.current) {
+            AppLanguage.FRENCH -> radFr
+            else -> radEn   // Phase 3a: DE/ES/PT/ZH added in Phase 3b
+        }
     }
 
 }

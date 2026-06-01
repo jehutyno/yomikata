@@ -1,6 +1,7 @@
 package com.jehutyno.yomikata.model
 
-import java.util.Locale
+import com.jehutyno.yomikata.util.AppLanguage
+import com.jehutyno.yomikata.util.LanguageManager
 
 /**
  * Created by valentin on 27/09/2016.
@@ -8,10 +9,10 @@ import java.util.Locale
 open class Quiz(val id: Long, var nameEn: String, var nameFr: String, val category: Int, var isSelected: Boolean) {
 
     fun getName(): String {
-        return if (Locale.getDefault().language == "fr")
-            nameFr
-        else
-            nameEn
+        return when (LanguageManager.current) {
+            AppLanguage.FRENCH -> nameFr
+            else -> nameEn   // Phase 3a: DE/ES/PT/ZH added in Phase 3b
+        }
     }
 
 }

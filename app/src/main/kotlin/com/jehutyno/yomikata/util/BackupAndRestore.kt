@@ -280,7 +280,8 @@ private suspend fun ComponentActivity.handleRestore(inputStream: InputStream,
 enum class RestartDialogMessage {
     RESTORE,
     RESET,
-    UNDO
+    UNDO,
+    LANGUAGE_CHANGED
 }
 
 fun Context.getRestartDialog(message: RestartDialogMessage, undoCallback: (() -> Unit)?): AlertDialog {
@@ -297,6 +298,10 @@ fun Context.getRestartDialog(message: RestartDialogMessage, undoCallback: (() ->
             }
             RestartDialogMessage.UNDO -> {
                 titleResource = R.string.changes_undone
+                messageResource = R.string.ask_to_restart
+            }
+            RestartDialogMessage.LANGUAGE_CHANGED -> {
+                titleResource = R.string.language_changed_title
                 messageResource = R.string.ask_to_restart
             }
         }

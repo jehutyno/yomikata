@@ -1,5 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Language selector (matches AppLanguage enum order) -->
+    <string-array name="languageDisplayNames" translatable="false">
+        <item>English</item>
+        <item>Français</item>
+        <item>Deutsch</item>
+        <item>Español</item>
+        <item>Português</item>
+        <item>中文</item>
+    </string-array>
+    <string-array name="languageIsoCodes" translatable="false">
+        <item>en</item>
+        <item>fr</item>
+        <item>de</item>
+        <item>es</item>
+        <item>pt</item>
+        <item>zh</item>
+    </string-array>
+
     <string-array name="speedArray">
         <item>Quick</item>
         <item>Normal</item>
