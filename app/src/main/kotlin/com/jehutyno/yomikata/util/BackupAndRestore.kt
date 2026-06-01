@@ -8,14 +8,15 @@ import android.database.sqlite.SQLiteException
 import android.net.Uri
 import android.os.Build
 import android.provider.DocumentsContract
+import androidx.activity.ComponentActivity
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.appcompat.app.AlertDialog
+import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.repository.database.YomikataDatabase
 import com.jehutyno.yomikata.repository.migration.importYomikata
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -76,7 +77,7 @@ fun Context.restoreProgress(restoreLauncher: ActivityResultLauncher<Intent>) {
 }
 
 
-fun Activity.getBackupLauncher(result: ActivityResult) {
+fun ComponentActivity.getBackupLauncher(result: ActivityResult) {
     if (result.resultCode != Activity.RESULT_OK)
         return
 
@@ -100,11 +101,11 @@ fun Activity.getBackupLauncher(result: ActivityResult) {
  * @param uri Uri
  * @param updateProgressDialog Optional dialog to display progress on screen
  */
-private fun Activity.handleBackup(uri: Uri, updateProgressDialog: UpdateProgressDialog? = null) {
+private fun ComponentActivity.handleBackup(uri: Uri, updateProgressDialog: UpdateProgressDialog? = null) {
     // start a progress dialog
     updateProgressDialog?.show()
 
-    CoroutineScope(Dispatchers.Main).launch {
+    lifecycleScope.launch {
         var data: ByteArray? = null
         var errorMessage : String? = null
 
@@ -156,7 +157,7 @@ private fun Activity.handleBackup(uri: Uri, updateProgressDialog: UpdateProgress
  * @param create_backup If true -> create backup and add undo button to dialog
  *                      If false -> don't create backup and don't show undo button
  */
-fun Activity.getRestoreLauncher(result: ActivityResult, create_backup: Boolean = true) {
+fun ComponentActivity.getRestoreLauncher(result: ActivityResult, create_backup: Boolean = true) {
     if (result.resultCode != Activity.RESULT_OK)
         return
 
@@ -173,7 +174,7 @@ fun Activity.getRestoreLauncher(result: ActivityResult, create_backup: Boolean =
     updateProgressDialogMigrate.prepare(getString(R.string.migrating), getString(R.string.may_take_a_while))
     updateProgressDialogMigrate.destroyOnFinish = true
 
-    CoroutineScope(Dispatchers.Main).launch {
+    lifecycleScope.launch {
         val inputStream =
             result.data?.data?.let { uri ->
                 val contentResolver = this@getRestoreLauncher.contentResolver
@@ -222,7 +223,7 @@ fun Activity.getRestoreLauncher(result: ActivityResult, create_backup: Boolean =
  * @param updateProgressDialog Optional dialog to show progress
  * @return True if success, False if failure
  */
-private suspend fun Activity.handleRestore(inputStream: InputStream,
+private suspend fun ComponentActivity.handleRestore(inputStream: InputStream,
            updateProgressDialog: UpdateProgressDialog? = null, create_backup: Boolean = true)
                                                         : Boolean = withContext(Dispatchers.IO) {
     val buffer = ByteArray(4096)

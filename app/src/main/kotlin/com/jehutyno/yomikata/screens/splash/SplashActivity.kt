@@ -24,7 +24,7 @@ import com.jehutyno.yomikata.util.getRestartDialog
 import com.jehutyno.yomikata.util.getRestoreLauncher
 import com.jehutyno.yomikata.util.restoreProgress
 import com.jehutyno.yomikata.util.triggerRebirth
-import kotlinx.coroutines.CoroutineScope
+import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -116,7 +116,7 @@ class SplashActivity : AppCompatActivity() {
         }
 
         var success = false
-        val job = CoroutineScope(Dispatchers.Main).launch {
+        val job = lifecycleScope.launch {
             // do migration
             YomikataDatabase.setUpdateProgressDialog(updateProgressDialogMigrate)
             success = withContext(Dispatchers.IO) {
@@ -152,7 +152,7 @@ class SplashActivity : AppCompatActivity() {
 //                    importYomikata("????")
 //                    pref.edit().putBoolean("migrationYomiDone", true).apply()
 //                }
-                CoroutineScope(Dispatchers.Main).launch {
+                lifecycleScope.launch {
                     // finish the migration & destroy progress dialog (if it was shown at all)
                     job.join()
                     updateProgressDialogMigrate.destroy()
