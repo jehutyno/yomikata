@@ -16,6 +16,8 @@ import com.jehutyno.yomikata.util.QuizType
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkStatic
+import io.mockk.unmockkStatic
 import io.mockk.verify
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -117,11 +119,13 @@ class QuizPresenterTest(private val length: Int, private val type: QuizType) {
         every { sharedPrefMock.getBoolean(Prefs.FURI_DISPLAYED.pref, any()) } returns false
 
         val context = mockk<Context>(relaxed = true)
+        mockkStatic(PreferenceManager::class)
         every { PreferenceManager.getDefaultSharedPreferences(context) } returns sharedPrefMock
 
         // always insert correct answer into option 1 (index 0)
-        val rngMock = mockk<Random>()
-        every { rngMock.nextInt(4) } returns 0
+        val rngMock = object : Random() {
+            override fun nextInt(bound: Int) = 0
+        }
 
         quizPresenter = QuizPresenter(context, wordRepoMock, sentenceRepoMock,
             statsRepoMock, quizViewMock, longArrayOf(), QuizStrategy.STRAIGHT, null,
@@ -132,6 +136,7 @@ class QuizPresenterTest(private val length: Int, private val type: QuizType) {
     @After
     fun tearDown() {
         scope.cancel()
+        unmockkStatic(PreferenceManager::class)
     }
 
     @Test
