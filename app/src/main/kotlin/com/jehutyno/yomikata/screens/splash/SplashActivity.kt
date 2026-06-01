@@ -117,8 +117,6 @@ class SplashActivity : AppCompatActivity() {
 
         var success = false
         val job = lifecycleScope.launch {
-            // do migration
-            YomikataDatabase.setUpdateProgressDialog(updateProgressDialogMigrate)
             success = withContext(Dispatchers.IO) {
                 try {
                     YomikataDatabase.forceLoadDatabase(this@SplashActivity)
@@ -147,16 +145,10 @@ class SplashActivity : AppCompatActivity() {
         }, 250)
         handler.postDelayed(
             {
-                // TODO: handle old yomikata database type?
-//                if (!pref.getBoolean("migrationYomiDone", false)) {
-//                    importYomikata("????")
-//                    pref.edit().putBoolean("migrationYomiDone", true).apply()
-//                }
                 lifecycleScope.launch {
                     // finish the migration & destroy progress dialog (if it was shown at all)
                     job.join()
                     updateProgressDialogMigrate.destroy()
-                    YomikataDatabase.setUpdateProgressDialog(null)
 
                     if (!success) { // failure -> show error dialog and don't load main activity
                         // if the error was caused due to loading a bad database from PrefsActivity,

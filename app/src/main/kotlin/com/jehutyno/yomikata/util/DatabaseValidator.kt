@@ -4,15 +4,12 @@ import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteException
 import com.jehutyno.yomikata.repository.database.DATABASE_VERSION
-import com.jehutyno.yomikata.repository.migration.MigrationTable
-import com.jehutyno.yomikata.repository.migration.MigrationTables
 import java.io.File
 
 
 enum class DatabaseType {
     UP_TO_DATE,     // the latest database version
-    OLD_VERSION,    // a previous version
-    OLD_YOMIKATA    // the old yomikata database schema
+    OLD_VERSION,    // a previous version that Room can migrate
 }
 
 /**
@@ -32,10 +29,6 @@ fun validateDatabase(databaseFile: File): DatabaseType {
         // optional schema check
 //        checkSchema(db, listOf(???).toIntArray())
 
-        if (isOldYomikata(db)) {
-            return DatabaseType.OLD_YOMIKATA
-        }
-        // sentences table is not required since it did not exist yet in versions <= 8
         val requiredTables = arrayOf("words", "quiz", "quiz_word", "kanji_solo", "radicals", "stat_entry")
         if (!containsTables(db, requiredTables)) {
             throw IllegalStateException("Database does not contain some table(s)")
@@ -53,17 +46,6 @@ fun validateDatabase(databaseFile: File): DatabaseType {
     } finally {
         db?.close()
     }
-}
-
-/**
- * Is old yomikata.
- *
- * @param database SQLiteDatabase
- * @return True if Old type of yomikata database
- */
-fun isOldYomikata(database: SQLiteDatabase): Boolean {
-    val requiredTables = MigrationTable.allTables(MigrationTables.values())
-    return containsTables(database, requiredTables)
 }
 
 /**

@@ -16,7 +16,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.repository.database.YomikataDatabase
-import com.jehutyno.yomikata.repository.migration.importYomikata
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -186,7 +185,6 @@ fun ComponentActivity.getRestoreLauncher(result: ActivityResult, create_backup: 
             return@launch
 
         // do migration
-        YomikataDatabase.setUpdateProgressDialog(updateProgressDialogMigrate)
         updateProgressDialogMigrate.show()
         val successAndMessage = withContext(Dispatchers.IO) {
             try {
@@ -199,7 +197,6 @@ fun ComponentActivity.getRestoreLauncher(result: ActivityResult, create_backup: 
         val migrationSuccess = successAndMessage.first
         try {
             updateProgressDialogMigrate.destroy()
-            YomikataDatabase.setUpdateProgressDialog(null)
         } finally {
             if (!migrationSuccess) {
                 YomikataDatabase.restoreLocalBackup(this@getRestoreLauncher)
@@ -258,11 +255,7 @@ private suspend fun ComponentActivity.handleRestore(inputStream: InputStream,
             return@withContext false
         }
 
-        if (type == DatabaseType.OLD_YOMIKATA) {
-            importYomikata(this@handleRestore, data, null, create_backup)
-        } else {
-            YomikataDatabase.overwriteDatabase(this@handleRestore, data, create_backup)
-        }
+        YomikataDatabase.overwriteDatabase(this@handleRestore, data, create_backup)
         flag = true
 
         updateProgressDialog?.updateProgress(75)

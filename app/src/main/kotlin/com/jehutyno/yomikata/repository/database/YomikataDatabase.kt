@@ -11,8 +11,6 @@ import com.jehutyno.yomikata.dao.QuizDao
 import com.jehutyno.yomikata.dao.SentenceDao
 import com.jehutyno.yomikata.dao.StatsDao
 import com.jehutyno.yomikata.dao.WordDao
-import com.jehutyno.yomikata.repository.migration.OldMigrations
-import com.jehutyno.yomikata.util.UpdateProgressDialog
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -52,11 +50,8 @@ abstract class YomikataDatabase : RoomDatabase() {
                             DATABASE_FILE_NAME
                         )
                             .createFromAsset(DATABASE_FILE_NAME)
-                            .addMigrations(
-                                *OldMigrations.getOldMigrations(),
-                                OldMigrations.MIGRATION_12_13(context),
-                                MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16
-                            )
+                            .addMigrations(MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16)
+                            .fallbackToDestructiveMigration()
                             .build()
                 }
             }
@@ -200,10 +195,6 @@ abstract class YomikataDatabase : RoomDatabase() {
 
         fun getDatabaseFile(context: Context): File {
             return context.getDatabasePath(DATABASE_FILE_NAME)
-        }
-
-        fun setUpdateProgressDialog(updateProgressDialog: UpdateProgressDialog?) {
-            OldMigrations.updateProgressDialogGetter = { updateProgressDialog }
         }
 
         ///////// DEFINE MIGRATIONS /////////
