@@ -36,8 +36,8 @@ class RoomMigrationTest {
 
     // add new migrations to this list
     private val ALL_MIGRATIONS = YomikataDatabase.let {
-        arrayOf (
-            it.MIGRATION_14_15, it.MIGRATION_15_16
+        arrayOf(
+            it.MIGRATION_14_15, it.MIGRATION_15_16, it.MIGRATION_16_17
         )
     }
 
@@ -160,6 +160,82 @@ class RoomMigrationTest {
             assert( newEnglish == value.newEnglish )
         }
         assert( foundIds == englishValues.map{ it.id }.toSet() )
+    }
+
+    @Test
+    fun migrate16To17() {
+        // Insert test data in v16 schema
+        val database = migrationHelper.createDatabase(TEST_DB_NAME, 16).apply {
+
+            // phantom word — all fields empty/invalid, should be deleted
+            execSQL("""
+                INSERT INTO words
+                VALUES (3537, '', '', '', '', -1, 0, 0, 0, -1, -1, 0, -1, 0, NULL)
+            """.trimIndent())
+
+            // word with double space in english
+            execSQL("""
+                INSERT INTO words
+                VALUES (1, '有難う', 'thank  you', 'merci', 'ありがとう', 0, 0, 0, 0, 0, -1, 0, 7, 0, NULL)
+            """.trimIndent())
+
+            // word with leading space in french
+            execSQL("""
+                INSERT INTO words
+                VALUES (2, '月', 'moon; month', ' lune; mois', 'つき', 0, 0, 0, 0, 0, -1, 0, 2, 0, NULL)
+            """.trimIndent())
+
+            // word with trailing space in english
+            execSQL("""
+                INSERT INTO words
+                VALUES (3, '猫', 'cat ', 'chat', 'ねこ', 0, 0, 0, 0, 0, -1, 0, 2, 0, NULL)
+            """.trimIndent())
+
+            // sentence with double space in en and trailing space in fr
+            execSQL("""
+                INSERT INTO sentences
+                VALUES (1, '猫がいる', 'There  is a cat', 'Il y a un chat ', 0)
+            """.trimIndent())
+
+            close()
+        }
+
+        val migratedDb = migrationHelper.runMigrationsAndValidate(
+            TEST_DB_NAME, 17, true, YomikataDatabase.MIGRATION_16_17
+        )
+
+        // phantom word must be gone
+        migratedDb.query("SELECT _id FROM words WHERE _id = 3537").use {
+            assertEquals("phantom word 3537 should be deleted", 0, it.count)
+        }
+
+        // verify all words are cleaned
+        val wordCursor = migratedDb.query("SELECT _id, english, french FROM words ORDER BY _id")
+        wordCursor.use {
+            assertTrue(it.moveToNext())
+            assertEquals(1L, it.getLong(0))
+            assertEquals("thank you", it.getString(1))   // double space removed
+            assertEquals("merci", it.getString(2))        // unchanged
+
+            assertTrue(it.moveToNext())
+            assertEquals(2L, it.getLong(0))
+            assertEquals("moon; month", it.getString(1))  // unchanged
+            assertEquals("lune; mois", it.getString(2))   // leading space removed
+
+            assertTrue(it.moveToNext())
+            assertEquals(3L, it.getLong(0))
+            assertEquals("cat", it.getString(1))          // trailing space removed
+            assertEquals("chat", it.getString(2))          // unchanged
+
+            assertFalse("No more rows expected", it.moveToNext())
+        }
+
+        // verify sentence is cleaned
+        migratedDb.query("SELECT en, fr FROM sentences WHERE _id = 1").use {
+            assertTrue(it.moveToNext())
+            assertEquals("There is a cat", it.getString(0))  // double space removed
+            assertEquals("Il y a un chat", it.getString(1))   // trailing space removed
+        }
     }
 
     @Test

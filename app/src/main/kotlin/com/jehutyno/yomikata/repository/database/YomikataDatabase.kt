@@ -18,7 +18,7 @@ import java.io.OutputStream
 import java.nio.channels.FileLock
 
 
-const val DATABASE_VERSION = 16
+const val DATABASE_VERSION = 17
 
 @Database(entities = [RoomKanjiSolo::class, RoomQuiz::class, RoomSentences::class,
                       RoomStatEntry::class, RoomWords::class, RoomQuizWord::class,
@@ -50,7 +50,9 @@ abstract class YomikataDatabase : RoomDatabase() {
                             DATABASE_FILE_NAME
                         )
                             .createFromAsset(DATABASE_FILE_NAME)
-                            .addMigrations(MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16)
+                            .addMigrations(
+                                MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17
+                            )
                             .fallbackToDestructiveMigration()
                             .build()
                 }
@@ -199,6 +201,38 @@ abstract class YomikataDatabase : RoomDatabase() {
 
         ///////// DEFINE MIGRATIONS /////////
         // do not use values, constants, entities, daos, etc. that may be changed externally
+
+        // data cleanup: remove phantom word, fix double spaces and leading/trailing spaces
+        val MIGRATION_16_17 = object : Migration(16, 17) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                // Remove the phantom word (id=3537) whose all fields are empty/invalid
+                database.execSQL("DELETE FROM words WHERE _id = 3537")
+
+                // Fix double spaces and leading/trailing spaces in words
+                database.execSQL("""
+                    UPDATE words
+                    SET english = TRIM(REPLACE(english, '  ', ' '))
+                    WHERE english LIKE '%  %' OR english != TRIM(english)
+                """.trimIndent())
+                database.execSQL("""
+                    UPDATE words
+                    SET french = TRIM(REPLACE(french, '  ', ' '))
+                    WHERE french LIKE '%  %' OR french != TRIM(french)
+                """.trimIndent())
+
+                // Fix double spaces and leading/trailing spaces in sentences
+                database.execSQL("""
+                    UPDATE sentences
+                    SET en = TRIM(REPLACE(en, '  ', ' '))
+                    WHERE en LIKE '%  %' OR en != TRIM(en)
+                """.trimIndent())
+                database.execSQL("""
+                    UPDATE sentences
+                    SET fr = TRIM(REPLACE(fr, '  ', ' '))
+                    WHERE fr LIKE '%  %' OR fr != TRIM(fr)
+                """.trimIndent())
+            }
+        }
 
         // clean up english and french translations of words
         val MIGRATION_15_16 = object: Migration(15, 16) {
