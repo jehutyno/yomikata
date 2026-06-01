@@ -7,12 +7,19 @@ import com.jehutyno.yomikata.util.LanguageManager
  * Created by valentin on 27/09/2016.
  */
 open class KanjiSolo(val kanji: String, val strokes: Int, val en: String, val fr: String,
-                     val kunyomi: String, val onyomi: String, val radical: String) {
+                     val kunyomi: String, val onyomi: String, val radical: String,
+                     // Translation columns added in v18 (empty until populated in Phase 3c+)
+                     val de: String = "", val es: String = "",
+                     val pt: String = "", val zh: String = "") {
 
     fun getTrad(): String {
         return when (LanguageManager.current) {
-            AppLanguage.FRENCH -> fr
-            else -> en   // Phase 3a: DE/ES/PT/ZH added in Phase 3b
+            AppLanguage.FRENCH     -> fr
+            AppLanguage.GERMAN     -> de.ifEmpty { en }
+            AppLanguage.SPANISH    -> es.ifEmpty { en }
+            AppLanguage.PORTUGUESE -> pt.ifEmpty { en }
+            AppLanguage.CHINESE    -> zh.ifEmpty { en }
+            else                   -> en
         }
     }
 

@@ -37,7 +37,7 @@ class RoomMigrationTest {
     // add new migrations to this list
     private val ALL_MIGRATIONS = YomikataDatabase.let {
         arrayOf(
-            it.MIGRATION_14_15, it.MIGRATION_15_16, it.MIGRATION_16_17
+            it.MIGRATION_14_15, it.MIGRATION_15_16, it.MIGRATION_16_17, it.MIGRATION_17_18
         )
     }
 
@@ -235,6 +235,54 @@ class RoomMigrationTest {
             assertTrue(it.moveToNext())
             assertEquals("There is a cat", it.getString(0))  // double space removed
             assertEquals("Il y a un chat", it.getString(1))   // trailing space removed
+        }
+    }
+
+    @Test
+    fun migrate17To18() {
+        // Create a v17 database with sample rows
+        migrationHelper.createDatabase(TEST_DB_NAME, 17).apply {
+            execSQL("INSERT INTO words VALUES (1,'犬','dog','chien','いぬ',0,0,0,0,0,-1,0,2,0,NULL)")
+            execSQL("INSERT INTO sentences VALUES (1,'犬がいる','There is a dog','Il y a un chien',0)")
+            execSQL("INSERT INTO kanji_solo VALUES ('犬',4,'dog','chien','いぬ','ケン','大')")
+            execSQL("INSERT INTO radicals VALUES ('大',3,'おおがい','big','grand')")
+            execSQL("INSERT INTO quiz VALUES (1,'JLPT N5','JLPT N5',7,0)")
+            close()
+        }
+
+        val db = migrationHelper.runMigrationsAndValidate(
+            TEST_DB_NAME, 18, true, YomikataDatabase.MIGRATION_17_18
+        )
+
+        // All new columns should exist with empty-string defaults
+        db.query("SELECT german, spanish, portuguese, chinese FROM words WHERE _id = 1").use {
+            assertTrue(it.moveToFirst())
+            assertEquals("", it.getString(0))   // german
+            assertEquals("", it.getString(1))   // spanish
+            assertEquals("", it.getString(2))   // portuguese
+            assertEquals("", it.getString(3))   // chinese
+        }
+        db.query("SELECT de, es, pt, zh FROM sentences WHERE _id = 1").use {
+            assertTrue(it.moveToFirst())
+            assertEquals("", it.getString(0))
+            assertEquals("", it.getString(1))
+            assertEquals("", it.getString(2))
+            assertEquals("", it.getString(3))
+        }
+        db.query("SELECT de, es, pt, zh FROM kanji_solo WHERE kanji = '犬'").use {
+            assertTrue(it.moveToFirst())
+            assertEquals("", it.getString(0))
+        }
+        db.query("SELECT de, es, pt, zh FROM radicals WHERE radical = '大'").use {
+            assertTrue(it.moveToFirst())
+            assertEquals("", it.getString(0))
+        }
+        db.query("SELECT name_de, name_es, name_pt, name_zh FROM quiz WHERE _id = 1").use {
+            assertTrue(it.moveToFirst())
+            assertEquals("", it.getString(0))
+            assertEquals("", it.getString(1))
+            assertEquals("", it.getString(2))
+            assertEquals("", it.getString(3))
         }
     }
 

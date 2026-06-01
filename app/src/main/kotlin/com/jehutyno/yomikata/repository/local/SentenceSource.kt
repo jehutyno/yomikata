@@ -29,9 +29,10 @@ class SentenceSource(private val sentenceDao: SentenceDao) : SentenceRepository 
 
     override suspend fun updateSentence(updateSentence: Sentence, sentence: Sentence?) {
         if (sentence != null) {
-            // update only jap, en, fr (NOT id, level)
+            // update only jap, en, fr (NOT id, level, language columns)
             val roomUpdateSentence = RoomSentences(sentence.id, updateSentence.jap,
-                                    updateSentence.en, updateSentence.fr, sentence.level)
+                                    updateSentence.en, updateSentence.fr, sentence.level,
+                                    sentence.de, sentence.es, sentence.pt, sentence.zh)
             sentenceDao.updateSentence(roomUpdateSentence)
         } else {
             sentenceDao.addSentence(RoomSentences.from(updateSentence))

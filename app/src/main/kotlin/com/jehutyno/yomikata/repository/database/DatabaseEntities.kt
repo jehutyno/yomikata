@@ -24,16 +24,21 @@ data class RoomQuiz (
     @ColumnInfo val name_en: String,
     @ColumnInfo val name_fr: String,
     @ColumnInfo val category: Int,
-    @ColumnInfo(defaultValue = "0") val isSelected: Boolean
+    @ColumnInfo(defaultValue = "0") val isSelected: Boolean,
+    @ColumnInfo(defaultValue = "") val name_de: String = "",
+    @ColumnInfo(defaultValue = "") val name_es: String = "",
+    @ColumnInfo(defaultValue = "") val name_pt: String = "",
+    @ColumnInfo(defaultValue = "") val name_zh: String = ""
 ) {
     companion object {
         fun from(quiz: Quiz): RoomQuiz {
-            return RoomQuiz(quiz.id, quiz.nameEn, quiz.nameFr, quiz.category, quiz.isSelected)
+            return RoomQuiz(quiz.id, quiz.nameEn, quiz.nameFr, quiz.category, quiz.isSelected,
+                            quiz.nameDe, quiz.nameEs, quiz.namePt, quiz.nameZh)
         }
     }
 
     fun toQuiz(): Quiz {
-        return Quiz(_id, name_en, name_fr, category, isSelected)
+        return Quiz(_id, name_en, name_fr, category, isSelected, name_de, name_es, name_pt, name_zh)
     }
 }
 
@@ -63,21 +68,27 @@ data class RoomWords (
     @ColumnInfo(defaultValue = "0") val points: Int,
     @ColumnInfo val base_category: Int,
     @ColumnInfo(defaultValue = "0") val isSelected: Int,
-    @ColumnInfo(index = true) val sentence_id: Long?
+    @ColumnInfo(index = true) val sentence_id: Long?,
+    @ColumnInfo(defaultValue = "") val german: String = "",
+    @ColumnInfo(defaultValue = "") val spanish: String = "",
+    @ColumnInfo(defaultValue = "") val portuguese: String = "",
+    @ColumnInfo(defaultValue = "") val chinese: String = ""
 ) {
     companion object {
         fun from(word: Word): RoomWords {
             return RoomWords(word.id, word.japanese, word.english, word.french,
                              word.reading, word.level.level, word.countTry, word.countSuccess,
                              word.countFail, word.isKana, word.repetition, word.points,
-                             word.baseCategory, word.isSelected, word.sentenceId)
+                             word.baseCategory, word.isSelected, word.sentenceId,
+                             word.german, word.spanish, word.portuguese, word.chinese)
         }
     }
 
     fun toWord(): Word {
         return Word(
             _id, japanese, english, french, reading, level.toLevel(), count_try, count_success,
-            count_fail, is_kana, repetition, points, base_category, isSelected, sentence_id
+            count_fail, is_kana, repetition, points, base_category, isSelected, sentence_id,
+            german, spanish, portuguese, chinese
         )
     }
 }
@@ -165,17 +176,22 @@ data class RoomKanjiSolo (
     @ColumnInfo val fr: String,
     @ColumnInfo val kunyomi: String,
     @ColumnInfo val onyomi: String,
-    @ColumnInfo val radical: String
+    @ColumnInfo val radical: String,
+    @ColumnInfo(defaultValue = "") val de: String = "",
+    @ColumnInfo(defaultValue = "") val es: String = "",
+    @ColumnInfo(defaultValue = "") val pt: String = "",
+    @ColumnInfo(defaultValue = "") val zh: String = ""
 ) {
     companion object {
         fun from(kanjiSolo: KanjiSolo): RoomKanjiSolo {
             return RoomKanjiSolo(kanjiSolo.kanji, kanjiSolo.strokes, kanjiSolo.en,
-                                 kanjiSolo.fr, kanjiSolo.kunyomi, kanjiSolo.onyomi, kanjiSolo.radical)
+                                 kanjiSolo.fr, kanjiSolo.kunyomi, kanjiSolo.onyomi, kanjiSolo.radical,
+                                 kanjiSolo.de, kanjiSolo.es, kanjiSolo.pt, kanjiSolo.zh)
         }
     }
 
     fun toKanjiSolo(): KanjiSolo {
-        return KanjiSolo(kanji, strokes, en, fr, kunyomi, onyomi, radical)
+        return KanjiSolo(kanji, strokes, en, fr, kunyomi, onyomi, radical, de, es, pt, zh)
     }
 }
 
@@ -185,17 +201,22 @@ data class RoomRadicals (
     @ColumnInfo val strokes: Int,
     @ColumnInfo val reading: String,
     @ColumnInfo val en: String,
-    @ColumnInfo val fr: String
+    @ColumnInfo val fr: String,
+    @ColumnInfo(defaultValue = "") val de: String = "",
+    @ColumnInfo(defaultValue = "") val es: String = "",
+    @ColumnInfo(defaultValue = "") val pt: String = "",
+    @ColumnInfo(defaultValue = "") val zh: String = ""
 ) {
     companion object {
         fun from(radical: Radical): RoomRadicals {
             return RoomRadicals(radical.radical, radical.strokes,
-                                radical.reading, radical.en, radical.fr)
+                                radical.reading, radical.en, radical.fr,
+                                radical.de, radical.es, radical.pt, radical.zh)
         }
     }
 
     fun toRadical(): Radical {
-        return Radical(radical, strokes, reading, en, fr)
+        return Radical(radical, strokes, reading, en, fr, de, es, pt, zh)
     }
 }
 
@@ -205,16 +226,21 @@ data class RoomSentences (
     @ColumnInfo val jap: String,
     @ColumnInfo val en: String,
     @ColumnInfo val fr: String,
-    @ColumnInfo val level: Int      // used for voice file downloads
+    @ColumnInfo val level: Int,      // used for voice file downloads
+    @ColumnInfo(defaultValue = "") val de: String = "",
+    @ColumnInfo(defaultValue = "") val es: String = "",
+    @ColumnInfo(defaultValue = "") val pt: String = "",
+    @ColumnInfo(defaultValue = "") val zh: String = ""
 ) {
     companion object {
         fun from(sentence: Sentence): RoomSentences {
-            return RoomSentences(sentence.id, sentence.jap, sentence.en, sentence.fr, sentence.level)
+            return RoomSentences(sentence.id, sentence.jap, sentence.en, sentence.fr, sentence.level,
+                                 sentence.de, sentence.es, sentence.pt, sentence.zh)
         }
     }
 
     fun toSentence(): Sentence {
-        return Sentence(_id, jap, en, fr, level)
+        return Sentence(_id, jap, en, fr, level, de, es, pt, zh)
     }
 }
 
@@ -230,27 +256,38 @@ data class RoomKanjiSoloRadical (
     val radStroke: Int,
     val radReading: String,
     val radEn: String,
-    val radFr: String
+    val radFr: String,
+    val de: String = "",
+    val es: String = "",
+    val pt: String = "",
+    val zh: String = "",
+    val radDe: String = "",
+    val radEs: String = "",
+    val radPt: String = "",
+    val radZh: String = ""
 )  {
     companion object {
         fun from(kanjiSolo: KanjiSolo, radical: Radical): RoomKanjiSoloRadical {
             return RoomKanjiSoloRadical(kanjiSolo.kanji, kanjiSolo.strokes, kanjiSolo.en,
                                         kanjiSolo.fr, kanjiSolo.kunyomi, kanjiSolo.onyomi, kanjiSolo.radical,
-                                        radical.strokes, radical.reading, radical.en, radical.fr)
+                                        radical.strokes, radical.reading, radical.en, radical.fr,
+                                        kanjiSolo.de, kanjiSolo.es, kanjiSolo.pt, kanjiSolo.zh,
+                                        radical.de, radical.es, radical.pt, radical.zh)
         }
     }
 
     fun toKanjiSoloRadical(): KanjiSoloRadical {
         return KanjiSoloRadical(kanji, strokes, en, fr, kunyomi, onyomi, radical,
-                                radStroke, radReading, radEn, radFr)
+                                radStroke, radReading, radEn, radFr,
+                                de, es, pt, zh, radDe, radEs, radPt, radZh)
     }
 
     fun toKanjiSolo(): KanjiSolo {
-        return KanjiSolo(kanji, strokes, en, fr, kunyomi, onyomi, radical)
+        return KanjiSolo(kanji, strokes, en, fr, kunyomi, onyomi, radical, de, es, pt, zh)
     }
 
     fun toRadical(): Radical {
-        return Radical(radical, radStroke, radReading, radEn, radFr)
+        return Radical(radical, radStroke, radReading, radEn, radFr, radDe, radEs, radPt, radZh)
     }
 
 }

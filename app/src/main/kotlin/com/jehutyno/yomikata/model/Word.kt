@@ -22,12 +22,16 @@ import java.io.Serializable
 open class Word(var id: Long, var japanese: String, var english: String, var french: String,
                 var reading: String, var level: Level, var countTry: Int, var countSuccess: Int,
                 var countFail: Int, var isKana: Int, var repetition: Int, var points: Int,
-                var baseCategory: Int, var isSelected: Int, var sentenceId: Long?) : Parcelable, Serializable {
+                var baseCategory: Int, var isSelected: Int, var sentenceId: Long?,
+                // Translation columns added in v18 (empty until populated in Phase 3c+)
+                var german: String = "", var spanish: String = "",
+                var portuguese: String = "", var chinese: String = "") : Parcelable, Serializable {
 
     constructor(source: Parcel): this(source.readLong(), source.readString()!!,
         source.readString()!!, source.readString()!!, source.readString()!!, source.readInt().toLevel(),
         source.readInt(), source.readInt(), source.readInt(), source.readInt(), source.readInt(),
-        source.readInt(), source.readInt(), source.readInt(), source.readLong().takeIf { it != -1L } )
+        source.readInt(), source.readInt(), source.readInt(), source.readLong().takeIf { it != -1L },
+        source.readString()!!, source.readString()!!, source.readString()!!, source.readString()!!)
 
     override fun writeToParcel(dest: Parcel, flags: Int) {
         dest.writeLong(id)
@@ -44,7 +48,11 @@ open class Word(var id: Long, var japanese: String, var english: String, var fre
         dest.writeInt(points)
         dest.writeInt(baseCategory)
         dest.writeInt(isSelected)
-        dest.writeLong(sentenceId ?: -1L)   // write as -1 if null
+        dest.writeLong(sentenceId ?: -1L)
+        dest.writeString(german)
+        dest.writeString(spanish)
+        dest.writeString(portuguese)
+        dest.writeString(chinese)
     }
 
     override fun describeContents(): Int {
@@ -66,8 +74,12 @@ open class Word(var id: Long, var japanese: String, var english: String, var fre
 
     fun getTrad(): String {
         return when (LanguageManager.current) {
-            AppLanguage.FRENCH -> french
-            else -> english   // Phase 3a: DE/ES/PT/ZH columns added in Phase 3b
+            AppLanguage.FRENCH     -> french
+            AppLanguage.GERMAN     -> german.ifEmpty { english }
+            AppLanguage.SPANISH    -> spanish.ifEmpty { english }
+            AppLanguage.PORTUGUESE -> portuguese.ifEmpty { english }
+            AppLanguage.CHINESE    -> chinese.ifEmpty { english }
+            else                   -> english
         }.readableTranslationFormat()
     }
 }

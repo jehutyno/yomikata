@@ -8,10 +8,15 @@ import com.jehutyno.yomikata.util.LanguageManager
 /**
  * Created by valentinlanfranchi on 19/05/2017.
  */
-open class Sentence(var id: Long = -1, val jap: String = "", val en: String = "", val fr: String = "", val level: Int = -1): Parcelable {
+open class Sentence(var id: Long = -1, val jap: String = "", val en: String = "",
+                    val fr: String = "", val level: Int = -1,
+                    // Translation columns added in v18 (empty until populated in Phase 3c+)
+                    val de: String = "", val es: String = "",
+                    val pt: String = "", val zh: String = ""): Parcelable {
 
     constructor(source: Parcel): this(source.readLong(), source.readString()!!,
-        source.readString()!!, source.readString()!!, source.readInt())
+        source.readString()!!, source.readString()!!, source.readInt(),
+        source.readString()!!, source.readString()!!, source.readString()!!, source.readString()!!)
 
     override fun writeToParcel(dest: Parcel, flags: Int) {
         dest.writeLong(id)
@@ -19,6 +24,10 @@ open class Sentence(var id: Long = -1, val jap: String = "", val en: String = ""
         dest.writeString(en)
         dest.writeString(fr)
         dest.writeInt(level)
+        dest.writeString(de)
+        dest.writeString(es)
+        dest.writeString(pt)
+        dest.writeString(zh)
     }
 
     override fun describeContents(): Int {
@@ -41,8 +50,12 @@ open class Sentence(var id: Long = -1, val jap: String = "", val en: String = ""
 
     fun getTrad(): String {
         return when (LanguageManager.current) {
-            AppLanguage.FRENCH -> fr
-            else -> en   // Phase 3a: DE/ES/PT/ZH added in Phase 3b
+            AppLanguage.FRENCH     -> fr
+            AppLanguage.GERMAN     -> de.ifEmpty { en }
+            AppLanguage.SPANISH    -> es.ifEmpty { en }
+            AppLanguage.PORTUGUESE -> pt.ifEmpty { en }
+            AppLanguage.CHINESE    -> zh.ifEmpty { en }
+            else                   -> en
         }
     }
 

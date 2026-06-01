@@ -18,7 +18,7 @@ import java.io.OutputStream
 import java.nio.channels.FileLock
 
 
-const val DATABASE_VERSION = 17
+const val DATABASE_VERSION = 18
 
 @Database(entities = [RoomKanjiSolo::class, RoomQuiz::class, RoomSentences::class,
                       RoomStatEntry::class, RoomWords::class, RoomQuizWord::class,
@@ -51,7 +51,8 @@ abstract class YomikataDatabase : RoomDatabase() {
                         )
                             .createFromAsset(DATABASE_FILE_NAME)
                             .addMigrations(
-                                MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17
+                                MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16,
+                                MIGRATION_16_17, MIGRATION_17_18
                             )
                             .fallbackToDestructiveMigration()
                             .build()
@@ -201,6 +202,32 @@ abstract class YomikataDatabase : RoomDatabase() {
 
         ///////// DEFINE MIGRATIONS /////////
         // do not use values, constants, entities, daos, etc. that may be changed externally
+
+        // add translation columns for DE, ES, PT, ZH to all translatable tables
+        val MIGRATION_17_18 = object : Migration(17, 18) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                // words: full language names (consistent with english / french)
+                for (col in listOf("german", "spanish", "portuguese", "chinese")) {
+                    database.execSQL("ALTER TABLE words ADD COLUMN $col TEXT NOT NULL DEFAULT ''")
+                }
+                // sentences: ISO codes (consistent with en / fr)
+                for (col in listOf("de", "es", "pt", "zh")) {
+                    database.execSQL("ALTER TABLE sentences ADD COLUMN $col TEXT NOT NULL DEFAULT ''")
+                }
+                // kanji_solo: ISO codes (consistent with en / fr)
+                for (col in listOf("de", "es", "pt", "zh")) {
+                    database.execSQL("ALTER TABLE kanji_solo ADD COLUMN $col TEXT NOT NULL DEFAULT ''")
+                }
+                // radicals: ISO codes (consistent with en / fr)
+                for (col in listOf("de", "es", "pt", "zh")) {
+                    database.execSQL("ALTER TABLE radicals ADD COLUMN $col TEXT NOT NULL DEFAULT ''")
+                }
+                // quiz: name_XX (consistent with name_en / name_fr)
+                for (col in listOf("name_de", "name_es", "name_pt", "name_zh")) {
+                    database.execSQL("ALTER TABLE quiz ADD COLUMN $col TEXT NOT NULL DEFAULT ''")
+                }
+            }
+        }
 
         // data cleanup: remove phantom word, fix double spaces and leading/trailing spaces
         val MIGRATION_16_17 = object : Migration(16, 17) {

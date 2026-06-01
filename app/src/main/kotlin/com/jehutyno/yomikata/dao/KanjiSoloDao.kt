@@ -33,7 +33,9 @@ interface KanjiSoloDao {
 
     @Query("SELECT kanji_solo.*, " +
            "radicals.strokes AS radStroke, radicals.reading AS radReading, " +
-           "radicals.en AS radEn, radicals.fr AS radFr " +
+           "radicals.en AS radEn, radicals.fr AS radFr, " +
+           "radicals.de AS radDe, radicals.es AS radEs, " +
+           "radicals.pt AS radPt, radicals.zh AS radZh " +
            "FROM kanji_solo JOIN radicals " +
            "ON kanji_solo.radical = radicals.radical " +
            "WHERE kanji_solo.kanji = :kanji " +
