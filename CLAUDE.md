@@ -186,12 +186,13 @@ Le hash est dans `app/schemas/.../VERSION.json` champ `identityHash`. Sans ça, 
 - ✅ **Phase 3a** : LanguageManager + refactoring getTrad() (6 langues)
 - ✅ **Phase 3b** : Migration 18 — ajout colonnes DE/ES/PT/ZH dans 5 tables
 - ✅ **Phase 3c** : Allemand — UI strings + quiz names + **7 503/7 503 mots (100%)** — JMdict (3 196) + traduction manuelle (4 307)
-- ✅ **Phase 3d** : Espagnol — UI strings + quiz names + JMdict (1 932/7 503, 26%) — PT/ZH absent de JMdict
+- ✅ **Phase 3d** : Espagnol — UI strings + quiz names + JMdict (1 932/7 503, 26%)
+- ✅ **Phase 3d bis** : Espagnol mots complets — **7 503/7 503 mots (100%)** — traduction manuelle Claude (5 571 mots)
 - ✅ **Phase 3e** : Portugais — UI strings + quiz names (mots = 0% — `por` absent de JMdict, déferré à 3g)
 
 ### Phases suivantes
 - **3f** : Mandarin — UI strings + quiz names, mots déferrés à 3g
-- **3g** : Traduction automatique (mots ES non-JMdict + PT + ZH entiers) — peut être fait par Claude directement (pas besoin de DeepL)
+- **3g** : Traduction manuelle par Claude (PT + ZH entiers)
 - **Phase 4** : Tags POS (architecture dédiée — implications UI + quiz)
 - **Phase 5** : Tests intégrité BDD (`DatabaseIntegrityTest`)
 
@@ -199,7 +200,7 @@ Le hash est dans `app/schemas/.../VERSION.json` champ `identityHash`. Sans ça, 
 | Langue | Mots traduits | Source |
 |---|---|---|
 | Allemand (DE) | 7 503/7 503 (100%) | JMdict + traduction manuelle Claude |
-| Espagnol (ES) | 1 932/7 503 (26%) | JMdict uniquement |
+| Espagnol (ES) | 7 503/7 503 (100%) | JMdict (1 932) + traduction manuelle Claude (5 571) |
 | Portugais (PT) | 0/7 503 (0%) | Déferré (por absent JMdict) |
 | Mandarin (ZH) | 0/7 503 (0%) | Déferré (chi absent JMdict) |
 
