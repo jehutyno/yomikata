@@ -49,16 +49,14 @@ class QuizzesAdapter(val context: Context, val category: Int, private val callba
             }
             is ViewHolder.ViewHolderQuiz -> {
                 val quiz = items[position]
-                val quizNames = quiz.getName().split("%")
-                holder.quizName.text = quizNames[0]
-                if (quizNames.size > 1) {
-                    holder.quizSubtitle.text = quiz.getName().split("%")[1]
-                    // Force Japanese locale for glyph rendering so CJK font fallback triggers
-                    // regardless of the active app locale (without this, German locale omits CJK fonts)
-                    holder.quizSubtitle.textLocale = Locale.JAPANESE
-                } else {
-                    holder.quizSubtitle.text = ""
-                }
+                // Localized name: only the human-readable part (before %)
+                holder.quizName.text = quiz.getName().split("%")[0]
+                // Subtitle: always the Japanese characters from nameEn — the Japanese part
+                // is language-independent and nameEn is always correctly encoded.
+                // Using getName() here would pick nameDe/etc. which can have encoding issues.
+                val japanesePart = quiz.nameEn.split("%").getOrElse(1) { "" }
+                holder.quizSubtitle.text = japanesePart
+                holder.quizSubtitle.textLocale = Locale.JAPANESE
                 flag = true
                 holder.quizCheck.isChecked = quiz.isSelected
                 flag = false
