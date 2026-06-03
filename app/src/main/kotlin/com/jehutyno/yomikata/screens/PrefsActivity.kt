@@ -9,6 +9,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.os.LocaleListCompat
 import androidx.preference.ListPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
@@ -80,10 +81,13 @@ class PrefsActivity : AppCompatActivity(), DIAware {
             findPreference<ListPreference>(Prefs.APP_LANGUAGE.pref)?.apply {
                 value = LanguageManager.current.isoCode
                 setOnPreferenceChangeListener { _, newValue ->
-                    LanguageManager.current = AppLanguage.fromIsoCode(newValue as String)
-                    requireActivity()
-                        .getRestartDialog(RestartDialogMessage.LANGUAGE_CHANGED, null)
-                        .show()
+                    val lang = AppLanguage.fromIsoCode(newValue as String)
+                    LanguageManager.current = lang
+                    // Sync Android UI locale — AppCompat recreates the activity automatically,
+                    // no manual restart dialog needed.
+                    AppCompatDelegate.setApplicationLocales(
+                        LocaleListCompat.forLanguageTags(lang.isoCode)
+                    )
                     true    // allow ListPreference to persist the new value to SharedPreferences
                 }
             }

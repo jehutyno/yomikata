@@ -1,6 +1,8 @@
 package com.jehutyno.yomikata.util
 
 import android.content.SharedPreferences
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.os.LocaleListCompat
 
 /**
  * Language manager.
@@ -45,6 +47,11 @@ class LanguageManager(private val prefs: SharedPreferences) {
             } else {
                 AppLanguage.fromSystemLocale()
             }
+            // Sync Android resource locale (UI strings) with the translation language.
+            // Called from Application.onCreate() before any Activity, so no recreation occurs here.
+            AppCompatDelegate.setApplicationLocales(
+                LocaleListCompat.forLanguageTags(current.isoCode)
+            )
         }
     }
 
@@ -59,5 +66,10 @@ class LanguageManager(private val prefs: SharedPreferences) {
     fun setLanguage(language: AppLanguage) {
         current = language
         prefs.edit().putString(Prefs.APP_LANGUAGE.pref, language.isoCode).apply()
+        // Sync Android resource locale so UI strings update automatically.
+        // AppCompat will recreate the current activity to apply the new locale.
+        AppCompatDelegate.setApplicationLocales(
+            LocaleListCompat.forLanguageTags(language.isoCode)
+        )
     }
 }
