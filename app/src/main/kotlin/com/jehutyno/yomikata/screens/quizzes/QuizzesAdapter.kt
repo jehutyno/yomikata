@@ -5,7 +5,6 @@ import androidx.recyclerview.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.viewbinding.ViewBinding
-import java.util.Locale
 import com.jehutyno.yomikata.databinding.VhNewSelectionBinding
 import com.jehutyno.yomikata.databinding.VhQuizBinding
 import com.jehutyno.yomikata.model.Quiz
@@ -51,12 +50,9 @@ class QuizzesAdapter(val context: Context, val category: Int, private val callba
                 val quiz = items[position]
                 val quizNames = quiz.getName().split("%")
                 holder.quizName.text = quizNames[0]
-                if (quizNames.size > 1) {
+                if (quizNames.size > 1)
                     holder.quizSubtitle.text = quiz.getName().split("%")[1]
-                    // Force Japanese locale on the subtitle so the font system uses CJK glyph
-                    // fallbacks regardless of the current app locale (fixes ? characters in DE/ES/…)
-                    holder.quizSubtitle.textLocale = Locale.JAPANESE
-                } else {
+                else {
                     holder.quizSubtitle.text = ""
                 }
                 flag = true
