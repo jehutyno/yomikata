@@ -142,6 +142,42 @@ Doit être appelé AVANT tout accès au DI ou à `getTrad()`.
 
 ---
 
+## Langue de l'application
+
+### Architecture langue unifiée
+Depuis la dernière session, langue UI (strings Android) et langue des traductions (mots/quiz) sont **couplées** via `AppCompatDelegate.setApplicationLocales()` :
+
+- `LanguageManager.initFromPrefs()` → appelle `AppCompatDelegate.setApplicationLocales(current.isoCode)` au démarrage
+- `LanguageManager.setLanguage()` → appelle `AppCompatDelegate.setApplicationLocales(lang.isoCode)` + persiste en prefs
+- `PrefsActivity` → appelle directement `AppCompatDelegate.setApplicationLocales()` en plus du changement de `LanguageManager.current`
+- AppCompat recrée l'activité automatiquement → **plus de dialog "redémarrer l'app"**
+- `res/xml/locale_config.xml` déclare les locales supportées (obligatoire Android 13+)
+
+### Comportement de détection
+- Pas de prefs sauvegardée → `fromSystemLocale()` (suit la locale du device)
+- Prefs sauvegardée (choix explicite user) → utilise cette valeur
+- **Ne pas persister la détection automatique** — sinon le changement de langue système ne se reflète plus
+
+### Piège quiz_subtitle (glyphes CJK en locale non-japonaise)
+Dans `QuizzesAdapter`, le subtitle affiche les caractères japonais des noms de quiz. **Toujours** :
+1. Lire depuis `quiz.nameEn.split("%").getOrElse(1) { "" }` — source unique correcte, indépendante de la langue
+2. Mettre `holder.quizSubtitle.textLocale = Locale.JAPANESE` — déclenche le fallback CJK dans les locales DE/ES/PT/etc.
+
+### Piège scripts PowerShell quiz names
+Tout script PS5.1 qui lit des données SQLite via pipe et les ré-écrit dans la DB **corrompt les caractères non-ASCII** (CJK et accents). Pattern obligatoire :
+- Lire les données SQLite via `.read` d'un fichier UTF-8 NoBOM, pas via pipe
+- Pour les accents dans les string literals (ö, ä, ü, etc.) : utiliser `[char]0x00F6` etc.
+- Après exécution : vérifier avec hex check qu'aucun `0x3F` n'apparaît dans les colonnes localisées
+
+### Piège room_master_table
+Après chaque modification de schéma qui crée ou modifie des tables, **mettre à jour `room_master_table`** dans l'asset :
+```sql
+UPDATE room_master_table SET identity_hash = '<hash_from_schemas/VERSION.json>' WHERE id = 42;
+```
+Le hash est dans `app/schemas/.../VERSION.json` champ `identityHash`. Sans ça, crash au démarrage ("Migration Error").
+
+---
+
 ## Plan en cours — Audit BDD multi-langues
 
 ### Phases terminées
@@ -149,21 +185,28 @@ Doit être appelé AVANT tout accès au DI ou à `getTrad()`.
 - ✅ **Phase 2** : Migration 17 — nettoyage données (fantôme id=3537, espaces doubles)
 - ✅ **Phase 3a** : LanguageManager + refactoring getTrad() (6 langues)
 - ✅ **Phase 3b** : Migration 18 — ajout colonnes DE/ES/PT/ZH dans 5 tables
-- ✅ **Phase 3c** : Allemand — UI strings + quiz names + JMdict (3 196/7 503 mots, 43%)
+- ✅ **Phase 3c** : Allemand — UI strings + quiz names + **7 503/7 503 mots (100%)** — JMdict (3 196) + traduction manuelle (4 307)
+- ✅ **Phase 3d** : Espagnol — UI strings + quiz names + JMdict (1 932/7 503, 26%) — PT/ZH absent de JMdict
+- ✅ **Phase 3e** : Portugais — UI strings + quiz names (mots = 0% — `por` absent de JMdict, déferré à 3g)
 
 ### Phases suivantes
-- **3d** : Espagnol — réutiliser `extract_jmdict_de.ps1`, changer lang `ger`→`spa`, créer `values-es/strings.xml`
-- **3e** : Portugais — idem avec `pt`/`por`, `values-pt/strings.xml`
-- **3f** : Mandarin — idem avec `zh`/`chi`, `values-zh/strings.xml`, vérifier rendu CJK
-- **3g** : Traduction automatique DeepL (EN→DE/ES/PT/ZH) pour les mots non couverts par JMdict — nécessite clé API DeepL Free
+- **3f** : Mandarin — UI strings + quiz names, mots déferrés à 3g
+- **3g** : Traduction automatique (mots ES non-JMdict + PT + ZH entiers) — peut être fait par Claude directement (pas besoin de DeepL)
 - **Phase 4** : Tags POS (architecture dédiée — implications UI + quiz)
 - **Phase 5** : Tests intégrité BDD (`DatabaseIntegrityTest`)
 
-### Script JMdict réutilisable
-`extract_jmdict_de.ps1` — paramétrisable. Pour l'espagnol :
-- Changer `xml:lang="ger"` → `xml:lang="spa"` dans le parser
-- Changer la colonne cible `german` → `spanish`
-- Le fichier JMdict.xml est mis en cache dans `$env:TEMP`, pas besoin de re-télécharger
+### Couverture mots par langue (état actuel)
+| Langue | Mots traduits | Source |
+|---|---|---|
+| Allemand (DE) | 7 503/7 503 (100%) | JMdict + traduction manuelle Claude |
+| Espagnol (ES) | 1 932/7 503 (26%) | JMdict uniquement |
+| Portugais (PT) | 0/7 503 (0%) | Déferré (por absent JMdict) |
+| Mandarin (ZH) | 0/7 503 (0%) | Déferré (chi absent JMdict) |
+
+### Scripts disponibles
+- `extract_jmdict_de.ps1` / `extract_jmdict_es.ps1` / `extract_jmdict_pt.ps1` — extraction JMdict par langue
+- `update_quiz_de.ps1` / `update_quiz_es.ps1` / `update_quiz_pt.ps1` — noms de quiz localisés
+- JMdict.xml mis en cache dans `$env:TEMP` — pas besoin de re-télécharger
 
 ---
 

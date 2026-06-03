@@ -91,9 +91,16 @@ Singleton Kodein. Gère la langue active de façon centralisée.
 - **`initFromPrefs(prefs)`** — appelé dans `Application.onCreate()`, avant tout DI. Détecte la locale système au premier lancement et la persiste.
 - **`setLanguage(lang)`** — met à jour `current` et écrit dans `SharedPreferences`.
 
-### Sélection de langue dans les prefs
+### Langue UI et langue de traduction — couplées
 
-`PrefsActivity` contient une `ListPreference` avec clé `app_language` (→ `Prefs.APP_LANGUAGE`). Un changement de langue affiche une boîte de dialogue de redémarrage pour recharger les chaînes Android.
+Depuis la migration vers `AppCompatDelegate.setApplicationLocales()`, la langue UI (strings Android) et la langue des traductions (mots, quiz) sont **synchronisées** :
+
+- `initFromPrefs()` appelle `AppCompatDelegate.setApplicationLocales(current.isoCode)` au démarrage de l'app
+- `setLanguage()` fait pareil lors d'un changement en cours de session
+- AppCompat recrée automatiquement l'activité courante → plus de dialog "redémarrer l'app"
+- `res/xml/locale_config.xml` déclare les locales supportées (requis Android 13+)
+
+**Comportement de détection** : si aucun choix explicite n'est sauvegardé, suit la locale système. Le choix explicite (via `PrefsActivity`) est persisté dans `SharedPreferences` (`app_language`).
 
 ### Chaîne de fallback dans `getTrad()`
 
@@ -233,14 +240,18 @@ Les schémas Room sont exportés à partir de la version 14 dans `app/schemas/`.
 | `radicals` | 320 |
 | `quiz` | 96 |
 
-**Couverture des traductions allemandes (v18, après extraction JMdict) :**
+**Couverture des traductions par langue (état actuel) :**
 
-| Catégorie | Mots traduits EN DE |
-|---|---|
-| Kanji Beginner | 63% |
-| Hiragana | 48% |
-| JLPT N1–N5 | 41–47% |
-| Katakana (loanwords) | 4% (normal) |
+| Langue | Mots | Source |
+|---|---|---|
+| Anglais (EN) | 7 503/7 503 (100%) | Original JMdict |
+| Français (FR) | 7 503/7 503 (100%) | Original |
+| Allemand (DE) | 7 503/7 503 (100%) | JMdict (3 196) + traduction manuelle (4 307) |
+| Espagnol (ES) | 1 932/7 503 (26%) | JMdict uniquement |
+| Portugais (PT) | 0/7 503 (0%) | Déferré (`por` absent JMdict) |
+| Mandarin (ZH) | 0/7 503 (0%) | Déferré (`chi` absent JMdict) |
+
+**Langues d'interface disponibles :** EN, FR, DE, ES, PT (strings.xml complets). ZH à faire.
 
 ---
 
