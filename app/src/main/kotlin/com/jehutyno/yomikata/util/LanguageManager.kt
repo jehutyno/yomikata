@@ -37,12 +37,13 @@ class LanguageManager(private val prefs: SharedPreferences) {
          */
         fun initFromPrefs(prefs: SharedPreferences) {
             val saved = prefs.getString(Prefs.APP_LANGUAGE.pref, null)
+            // If the user has explicitly chosen a language in Settings, use it.
+            // Otherwise fall back to the system locale — do NOT persist the detected
+            // value so that changing the device language is always picked up on restart.
             current = if (saved != null) {
                 AppLanguage.fromIsoCode(saved)
             } else {
-                AppLanguage.fromSystemLocale().also { detected ->
-                    prefs.edit().putString(Prefs.APP_LANGUAGE.pref, detected.isoCode).apply()
-                }
+                AppLanguage.fromSystemLocale()
             }
         }
     }
