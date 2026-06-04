@@ -249,9 +249,9 @@ Les schémas Room sont exportés à partir de la version 14 dans `app/schemas/`.
 | Allemand (DE) | 7 503/7 503 (100%) | JMdict (3 196) + traduction manuelle (4 307) |
 | Espagnol (ES) | 7 503/7 503 (100%) | JMdict (1 932) + traduction manuelle Claude (5 571) |
 | Portugais (PT) | 7 503/7 503 (100%) | Traduction manuelle Claude (7 503) |
-| Mandarin (ZH) | 0/7 503 (0%) | Déferré (`chi` absent JMdict) |
+| Mandarin (ZH) | 7 503/7 503 (100%) | Traduction manuelle Claude (7 503) |
 
-**Langues d'interface disponibles :** EN, FR, DE, ES, PT (strings.xml complets). ZH à faire.
+**Langues d'interface disponibles :** EN, FR, DE, ES, PT (strings.xml complets). ZH à faire (UI strings).
 
 ---
 

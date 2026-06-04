@@ -190,10 +190,10 @@ Le hash est dans `app/schemas/.../VERSION.json` champ `identityHash`. Sans ça, 
 - ✅ **Phase 3d bis** : Espagnol mots complets — **7 503/7 503 mots (100%)** — traduction manuelle Claude (5 571 mots)
 - ✅ **Phase 3e** : Portugais — UI strings + quiz names (mots = 0% — `por` absent de JMdict, déferré à 3g)
 - ✅ **Phase 3g bis** : Portugais mots complets — **7 503/7 503 mots (100%)** — traduction manuelle Claude (7 503 mots)
+- ✅ **Phase 3g ter** : Mandarin mots complets — **7 503/7 503 mots (100%)** — traduction manuelle Claude (7 503 mots)
 
 ### Phases suivantes
-- **3f** : Mandarin — UI strings + quiz names, mots déferrés à 3g
-- **3g** : Traduction manuelle par Claude (ZH entier)
+- **3f** : Mandarin — UI strings + quiz names (mots déjà complets)
 - **Phase 4** : Tags POS (architecture dédiée — implications UI + quiz)
 - **Phase 5** : Tests intégrité BDD (`DatabaseIntegrityTest`)
 
@@ -203,7 +203,7 @@ Le hash est dans `app/schemas/.../VERSION.json` champ `identityHash`. Sans ça, 
 | Allemand (DE) | 7 503/7 503 (100%) | JMdict + traduction manuelle Claude |
 | Espagnol (ES) | 7 503/7 503 (100%) | JMdict (1 932) + traduction manuelle Claude (5 571) |
 | Portugais (PT) | 7 503/7 503 (100%) | Traduction manuelle Claude |
-| Mandarin (ZH) | 0/7 503 (0%) | Déferré (chi absent JMdict) |
+| Mandarin (ZH) | 7 503/7 503 (100%) | Traduction manuelle Claude |
 
 ### Scripts disponibles
 - `extract_jmdict_de.ps1` / `extract_jmdict_es.ps1` / `extract_jmdict_pt.ps1` — extraction JMdict par langue
