@@ -189,10 +189,11 @@ Le hash est dans `app/schemas/.../VERSION.json` champ `identityHash`. Sans ça, 
 - ✅ **Phase 3d** : Espagnol — UI strings + quiz names + JMdict (1 932/7 503, 26%)
 - ✅ **Phase 3d bis** : Espagnol mots complets — **7 503/7 503 mots (100%)** — traduction manuelle Claude (5 571 mots)
 - ✅ **Phase 3e** : Portugais — UI strings + quiz names (mots = 0% — `por` absent de JMdict, déferré à 3g)
+- ✅ **Phase 3g bis** : Portugais mots complets — **7 503/7 503 mots (100%)** — traduction manuelle Claude (7 503 mots)
 
 ### Phases suivantes
 - **3f** : Mandarin — UI strings + quiz names, mots déferrés à 3g
-- **3g** : Traduction manuelle par Claude (PT + ZH entiers)
+- **3g** : Traduction manuelle par Claude (ZH entier)
 - **Phase 4** : Tags POS (architecture dédiée — implications UI + quiz)
 - **Phase 5** : Tests intégrité BDD (`DatabaseIntegrityTest`)
 
@@ -201,7 +202,7 @@ Le hash est dans `app/schemas/.../VERSION.json` champ `identityHash`. Sans ça, 
 |---|---|---|
 | Allemand (DE) | 7 503/7 503 (100%) | JMdict + traduction manuelle Claude |
 | Espagnol (ES) | 7 503/7 503 (100%) | JMdict (1 932) + traduction manuelle Claude (5 571) |
-| Portugais (PT) | 0/7 503 (0%) | Déferré (por absent JMdict) |
+| Portugais (PT) | 7 503/7 503 (100%) | Traduction manuelle Claude |
 | Mandarin (ZH) | 0/7 503 (0%) | Déferré (chi absent JMdict) |
 
 ### Scripts disponibles
