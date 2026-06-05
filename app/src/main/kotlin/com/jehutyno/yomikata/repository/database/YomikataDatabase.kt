@@ -1,6 +1,7 @@
 package com.jehutyno.yomikata.repository.database
 
 import android.content.Context
+import android.database.sqlite.SQLiteDatabase as RawSQLiteDatabase
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
@@ -55,6 +56,14 @@ abstract class YomikataDatabase : RoomDatabase() {
                                 MIGRATION_16_17, MIGRATION_17_18,
                                 createMigration18to19(context)
                             )
+                            .addCallback(object : RoomDatabase.Callback() {
+                                // onOpen runs AFTER all migrations are committed, outside any
+                                // Room transaction. ATTACH DATABASE is safe here (no WAL deadlock).
+                                override fun onOpen(db: SupportSQLiteDatabase) {
+                                    super.onOpen(db)
+                                    populateTranslationsIfNeeded(context, db)
+                                }
+                            })
                             .fallbackToDestructiveMigration()
                             .build()
                 }
@@ -65,14 +74,80 @@ abstract class YomikataDatabase : RoomDatabase() {
         /**
          * Force load database.
          *
-         * Will force the database to be loaded (and migrated if needed).
-         * Room may still keep the old version loaded as well, so it is best to restart the app anyway.
+         * Applies any pre-Room data migrations, then forces Room to open and migrate the database.
          *
          * @param context Context
          */
         @Synchronized
         fun forceLoadDatabase(context: Context) {
+            // MIGRATION_18_19 is a data-only migration (translations).
+            // ATTACH DATABASE is unreliable inside Room's transaction wrapper on Android,
+            // so we apply the translation copy here with a raw SQLiteDatabase connection,
+            // BEFORE Room opens the file. Room's MIGRATION_18_19 then becomes a no-op.
+            applyTranslationsBeforeRoomMigration(context)
             getDatabase(context).openHelper.writableDatabase
+        }
+
+        /**
+         * Pre-migration: if the database is at version 18 (word/quiz translation columns exist
+         * but are empty), populate them from the bundled asset database using a raw Android
+         * SQLiteDatabase connection. ATTACH DATABASE works fine outside of Room's transaction.
+         *
+         * Safe to call multiple times — exits immediately if the DB does not exist (fresh install)
+         * or is already beyond version 18.
+         */
+        private fun applyTranslationsBeforeRoomMigration(context: Context) {
+            if (INSTANCE != null) return  // Room already open, migrations already done
+            val dbFile = getDatabaseFile(context)
+            if (!dbFile.exists()) return  // Fresh install: Room will copy the full asset
+
+            val rawDb = RawSQLiteDatabase.openDatabase(
+                dbFile.absolutePath, null, RawSQLiteDatabase.OPEN_READWRITE
+            )
+            val currentVersion = rawDb.version
+
+            if (currentVersion != 18) {
+                rawDb.close()
+                return  // Nothing to do: already migrated, or not yet at v18
+            }
+
+            // DB is at v18: translation columns exist but are empty.
+            // Copy the v19 asset to a temp file and ATTACH it.
+            val tempFile = File(context.cacheDir, "asset_translation_temp.db")
+            try {
+                context.assets.open("yomikataz_translations.db").use { input ->
+                    FileOutputStream(tempFile).use { output -> input.copyTo(output) }
+                }
+                rawDb.execSQL("ATTACH DATABASE '${tempFile.absolutePath}' AS assetdb")
+                rawDb.beginTransaction()
+                try {
+                    // Populate word translations from asset (only rows still empty)
+                    rawDb.execSQL("""
+                        UPDATE words
+                        SET german     = (SELECT a.german     FROM assetdb.words a WHERE a._id = words._id),
+                            spanish    = (SELECT a.spanish    FROM assetdb.words a WHERE a._id = words._id),
+                            portuguese = (SELECT a.portuguese FROM assetdb.words a WHERE a._id = words._id),
+                            chinese    = (SELECT a.chinese    FROM assetdb.words a WHERE a._id = words._id)
+                        WHERE german = '' OR spanish = '' OR portuguese = '' OR chinese = ''
+                    """.trimIndent())
+                    // Populate quiz name translations from asset
+                    rawDb.execSQL("""
+                        UPDATE quiz
+                        SET name_de = (SELECT a.name_de FROM assetdb.quiz a WHERE a._id = quiz._id),
+                            name_es = (SELECT a.name_es FROM assetdb.quiz a WHERE a._id = quiz._id),
+                            name_pt = (SELECT a.name_pt FROM assetdb.quiz a WHERE a._id = quiz._id),
+                            name_zh = (SELECT a.name_zh FROM assetdb.quiz a WHERE a._id = quiz._id)
+                        WHERE name_de = '' OR name_es = '' OR name_pt = '' OR name_zh = ''
+                    """.trimIndent())
+                    rawDb.setTransactionSuccessful()
+                } finally {
+                    rawDb.endTransaction()
+                }
+                rawDb.execSQL("DETACH DATABASE assetdb")
+            } finally {
+                rawDb.close()
+                tempFile.delete()
+            }
         }
 
         /**
@@ -205,53 +280,62 @@ abstract class YomikataDatabase : RoomDatabase() {
         // do not use values, constants, entities, daos, etc. that may be changed externally
 
         /**
-         * Migration 18 → 19 — populate DE/ES/PT/ZH word and quiz translations.
+         * Migration 18 → 19 — schema-only version bump, no DDL changes.
          *
-         * Schema does not change: this is a pure data migration.
-         * Users who upgraded from v17 to v18 received empty translation columns.
-         * This migration fills them by attaching the bundled asset database and
-         * running two correlated UPDATE statements (one for words, one for quiz).
-         *
-         * The Context is needed to read the asset file; it is captured via closure
-         * since getDatabase() already has access to it.
+         * Translation data is populated by [populateTranslationsIfNeeded] in the
+         * [RoomDatabase.Callback.onOpen] callback, which runs AFTER this transaction is
+         * committed. ATTACH DATABASE cannot be used inside Room's write-transaction (it deadlocks
+         * in WAL mode), but works fine in onOpen which executes outside any transaction.
          */
         fun createMigration18to19(context: Context): Migration = object : Migration(18, 19) {
             override fun migrate(database: SupportSQLiteDatabase) {
-                // Copy the asset (v19, with all translations) to a temp file so we can ATTACH it.
-                // We cannot ATTACH the live database itself, and the asset stream is not a file path.
-                val tempFile = File(context.cacheDir, "migration_18_to_19_asset.db")
-                try {
-                    context.assets.open("yomikataz.db").use { input ->
-                        FileOutputStream(tempFile).use { output -> input.copyTo(output) }
-                    }
+                // No DDL. Translations are applied by the onOpen callback after commit.
+            }
+        }
 
-                    database.execSQL("ATTACH DATABASE '${tempFile.absolutePath}' AS assetdb")
+        /**
+         * Returns true if the words table still has empty translation columns.
+         * Called by the onOpen callback to decide whether to run the translation copy.
+         */
+        fun needsTranslations(db: SupportSQLiteDatabase): Boolean {
+            return db.query("SELECT COUNT(*) FROM words WHERE german = '' LIMIT 1").use {
+                it.moveToFirst() && it.getInt(0) > 0
+            }
+        }
 
-                    // Copy word translations (german, spanish, portuguese, chinese) from asset.
-                    // Only updates rows where at least one language is still empty.
-                    database.execSQL("""
-                        UPDATE words
-                        SET german     = (SELECT a.german     FROM assetdb.words a WHERE a._id = words._id),
-                            spanish    = (SELECT a.spanish    FROM assetdb.words a WHERE a._id = words._id),
-                            portuguese = (SELECT a.portuguese FROM assetdb.words a WHERE a._id = words._id),
-                            chinese    = (SELECT a.chinese    FROM assetdb.words a WHERE a._id = words._id)
-                        WHERE german = '' OR spanish = '' OR portuguese = '' OR chinese = ''
-                    """.trimIndent())
+        /**
+         * Populates word/quiz translation columns from [yomikataz_translations.db] (the v19
+         * reference database bundled as a separate asset).  Runs OUTSIDE any Room transaction
+         * so ATTACH DATABASE works without deadlocking in WAL mode.
+         */
+        fun populateTranslationsIfNeeded(context: Context, db: SupportSQLiteDatabase) {
+            if (!needsTranslations(db)) return
 
-                    // Copy quiz name translations (name_de, name_es, name_pt, name_zh) from asset.
-                    database.execSQL("""
-                        UPDATE quiz
-                        SET name_de = (SELECT a.name_de FROM assetdb.quiz a WHERE a._id = quiz._id),
-                            name_es = (SELECT a.name_es FROM assetdb.quiz a WHERE a._id = quiz._id),
-                            name_pt = (SELECT a.name_pt FROM assetdb.quiz a WHERE a._id = quiz._id),
-                            name_zh = (SELECT a.name_zh FROM assetdb.quiz a WHERE a._id = quiz._id)
-                        WHERE name_de = '' OR name_es = '' OR name_pt = '' OR name_zh = ''
-                    """.trimIndent())
-
-                    database.execSQL("DETACH DATABASE assetdb")
-                } finally {
-                    tempFile.delete()
+            val tempFile = File(context.cacheDir, "translations_onopen_temp.db")
+            try {
+                context.assets.open("yomikataz_translations.db").use { input ->
+                    FileOutputStream(tempFile).use { output -> input.copyTo(output) }
                 }
+                db.execSQL("ATTACH DATABASE '${tempFile.absolutePath}' AS transdb")
+                db.execSQL("""
+                    UPDATE words
+                    SET german     = (SELECT a.german     FROM transdb.words a WHERE a._id = words._id),
+                        spanish    = (SELECT a.spanish    FROM transdb.words a WHERE a._id = words._id),
+                        portuguese = (SELECT a.portuguese FROM transdb.words a WHERE a._id = words._id),
+                        chinese    = (SELECT a.chinese    FROM transdb.words a WHERE a._id = words._id)
+                    WHERE german = '' OR spanish = '' OR portuguese = '' OR chinese = ''
+                """.trimIndent())
+                db.execSQL("""
+                    UPDATE quiz
+                    SET name_de = (SELECT a.name_de FROM transdb.quiz a WHERE a._id = quiz._id),
+                        name_es = (SELECT a.name_es FROM transdb.quiz a WHERE a._id = quiz._id),
+                        name_pt = (SELECT a.name_pt FROM transdb.quiz a WHERE a._id = quiz._id),
+                        name_zh = (SELECT a.name_zh FROM transdb.quiz a WHERE a._id = quiz._id)
+                    WHERE name_de = '' OR name_es = '' OR name_pt = '' OR name_zh = ''
+                """.trimIndent())
+                db.execSQL("DETACH DATABASE transdb")
+            } finally {
+                tempFile.delete()
             }
         }
 
