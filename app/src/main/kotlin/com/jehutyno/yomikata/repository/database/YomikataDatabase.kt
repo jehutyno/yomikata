@@ -18,7 +18,7 @@ import java.io.OutputStream
 import java.nio.channels.FileLock
 
 
-const val DATABASE_VERSION = 18
+const val DATABASE_VERSION = 19
 
 @Database(entities = [RoomKanjiSolo::class, RoomQuiz::class, RoomSentences::class,
                       RoomStatEntry::class, RoomWords::class, RoomQuizWord::class,
@@ -52,7 +52,8 @@ abstract class YomikataDatabase : RoomDatabase() {
                             .createFromAsset(DATABASE_FILE_NAME)
                             .addMigrations(
                                 MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16,
-                                MIGRATION_16_17, MIGRATION_17_18
+                                MIGRATION_16_17, MIGRATION_17_18,
+                                createMigration18to19(context)
                             )
                             .fallbackToDestructiveMigration()
                             .build()
@@ -202,6 +203,57 @@ abstract class YomikataDatabase : RoomDatabase() {
 
         ///////// DEFINE MIGRATIONS /////////
         // do not use values, constants, entities, daos, etc. that may be changed externally
+
+        /**
+         * Migration 18 → 19 — populate DE/ES/PT/ZH word and quiz translations.
+         *
+         * Schema does not change: this is a pure data migration.
+         * Users who upgraded from v17 to v18 received empty translation columns.
+         * This migration fills them by attaching the bundled asset database and
+         * running two correlated UPDATE statements (one for words, one for quiz).
+         *
+         * The Context is needed to read the asset file; it is captured via closure
+         * since getDatabase() already has access to it.
+         */
+        fun createMigration18to19(context: Context): Migration = object : Migration(18, 19) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                // Copy the asset (v19, with all translations) to a temp file so we can ATTACH it.
+                // We cannot ATTACH the live database itself, and the asset stream is not a file path.
+                val tempFile = File(context.cacheDir, "migration_18_to_19_asset.db")
+                try {
+                    context.assets.open("yomikataz.db").use { input ->
+                        FileOutputStream(tempFile).use { output -> input.copyTo(output) }
+                    }
+
+                    database.execSQL("ATTACH DATABASE '${tempFile.absolutePath}' AS assetdb")
+
+                    // Copy word translations (german, spanish, portuguese, chinese) from asset.
+                    // Only updates rows where at least one language is still empty.
+                    database.execSQL("""
+                        UPDATE words
+                        SET german     = (SELECT a.german     FROM assetdb.words a WHERE a._id = words._id),
+                            spanish    = (SELECT a.spanish    FROM assetdb.words a WHERE a._id = words._id),
+                            portuguese = (SELECT a.portuguese FROM assetdb.words a WHERE a._id = words._id),
+                            chinese    = (SELECT a.chinese    FROM assetdb.words a WHERE a._id = words._id)
+                        WHERE german = '' OR spanish = '' OR portuguese = '' OR chinese = ''
+                    """.trimIndent())
+
+                    // Copy quiz name translations (name_de, name_es, name_pt, name_zh) from asset.
+                    database.execSQL("""
+                        UPDATE quiz
+                        SET name_de = (SELECT a.name_de FROM assetdb.quiz a WHERE a._id = quiz._id),
+                            name_es = (SELECT a.name_es FROM assetdb.quiz a WHERE a._id = quiz._id),
+                            name_pt = (SELECT a.name_pt FROM assetdb.quiz a WHERE a._id = quiz._id),
+                            name_zh = (SELECT a.name_zh FROM assetdb.quiz a WHERE a._id = quiz._id)
+                        WHERE name_de = '' OR name_es = '' OR name_pt = '' OR name_zh = ''
+                    """.trimIndent())
+
+                    database.execSQL("DETACH DATABASE assetdb")
+                } finally {
+                    tempFile.delete()
+                }
+            }
+        }
 
         // add translation columns for DE, ES, PT, ZH to all translatable tables
         val MIGRATION_17_18 = object : Migration(17, 18) {

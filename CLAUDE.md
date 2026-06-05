@@ -111,7 +111,7 @@ Doit être appelé AVANT tout accès au DI ou à `getTrad()`.
 
 ## Base de données
 
-- **Version courante : 18**
+- **Version courante : 19**
 - Asset : `app/src/main/assets/yomikataz.db`
 - `fallbackToDestructiveMigration()` est activé → les utilisateurs sur version < 13 ont un reset propre sans crash
 - Les migrations 1→12 ont été supprimées (code mort, no-op)

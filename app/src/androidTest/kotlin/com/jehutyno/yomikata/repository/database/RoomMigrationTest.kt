@@ -34,12 +34,18 @@ class RoomMigrationTest {
         YomikataDatabase::class.java
     )
 
+    // Shorthand for the instrumentation context (available at any point during tests)
+    private val context get() = InstrumentationRegistry.getInstrumentation().targetContext
+
     // add new migrations to this list
-    private val ALL_MIGRATIONS = YomikataDatabase.let {
-        arrayOf(
-            it.MIGRATION_14_15, it.MIGRATION_15_16, it.MIGRATION_16_17, it.MIGRATION_17_18
-        )
-    }
+    // createMigration18to19 requires a Context, so ALL_MIGRATIONS is a computed property
+    private val ALL_MIGRATIONS get() = arrayOf(
+        YomikataDatabase.MIGRATION_14_15,
+        YomikataDatabase.MIGRATION_15_16,
+        YomikataDatabase.MIGRATION_16_17,
+        YomikataDatabase.MIGRATION_17_18,
+        YomikataDatabase.createMigration18to19(context)
+    )
 
     @Test
     fun migrate14To15() {
@@ -283,6 +289,50 @@ class RoomMigrationTest {
             assertEquals("", it.getString(1))
             assertEquals("", it.getString(2))
             assertEquals("", it.getString(3))
+        }
+    }
+
+    @Test
+    fun migrate18To19() {
+        // Create a v18 database with words and quiz entries that have empty translation columns
+        migrationHelper.createDatabase(TEST_DB_NAME, 18).apply {
+            // Word _id=1 (ア — "Asia") is known to be in the asset with all translations filled.
+            // sentence_id=NULL to avoid FK constraint issues in the test environment.
+            execSQL("""
+                INSERT INTO words
+                VALUES (1,'ア','Asia','Asie','a',0,0,0,0,2,-1,0,1,0,NULL,'','','','')
+            """.trimIndent())
+            // Quiz _id=1 is known to be in the asset with all name translations filled.
+            execSQL("""
+                INSERT INTO quiz
+                VALUES (1,'Katakana - Vowels%ア　イ　ウ　エ　オ　ン',
+                          'Katakana - Les voyelles%ア イ ウ エ オ ン',1,0,'','','','')
+            """.trimIndent())
+            close()
+        }
+
+        val db = migrationHelper.runMigrationsAndValidate(
+            TEST_DB_NAME, 19, true, YomikataDatabase.createMigration18to19(context)
+        )
+
+        // Verify that word translations were populated from the asset database
+        db.query("SELECT german, spanish, portuguese, chinese FROM words WHERE _id = 1").use {
+            assertTrue("word should be found", it.moveToFirst())
+            // Asset has german="Asien", spanish="Asia", portuguese="Ásia", chinese="亚洲" for _id=1
+            assertTrue("german should be populated after migration", it.getString(0).isNotEmpty())
+            assertTrue("spanish should be populated after migration", it.getString(1).isNotEmpty())
+            assertTrue("portuguese should be populated after migration", it.getString(2).isNotEmpty())
+            assertTrue("chinese should be populated after migration", it.getString(3).isNotEmpty())
+        }
+
+        // Verify that quiz name translations were populated from the asset database
+        db.query("SELECT name_de, name_es, name_pt, name_zh FROM quiz WHERE _id = 1").use {
+            assertTrue("quiz row should be found", it.moveToFirst())
+            // Asset has name_de="Katakana - Vokale%…", name_zh="片假名 - 元音%…" for _id=1
+            assertTrue("name_de should be populated after migration", it.getString(0).isNotEmpty())
+            assertTrue("name_es should be populated after migration", it.getString(1).isNotEmpty())
+            assertTrue("name_pt should be populated after migration", it.getString(2).isNotEmpty())
+            assertTrue("name_zh should be populated after migration", it.getString(3).isNotEmpty())
         }
     }
 
