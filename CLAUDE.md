@@ -191,9 +191,9 @@ Le hash est dans `app/schemas/.../VERSION.json` champ `identityHash`. Sans ça, 
 - ✅ **Phase 3e** : Portugais — UI strings + quiz names (mots = 0% — `por` absent de JMdict, déferré à 3g)
 - ✅ **Phase 3g bis** : Portugais mots complets — **7 503/7 503 mots (100%)** — traduction manuelle Claude (7 503 mots)
 - ✅ **Phase 3g ter** : Mandarin mots complets — **7 503/7 503 mots (100%)** — traduction manuelle Claude (7 503 mots)
+- ✅ **Phase 3f** : Mandarin — UI strings (238 strings, values-zh/strings.xml) + noms de quiz (96/96)
 
 ### Phases suivantes
-- **3f** : Mandarin — UI strings + quiz names (mots déjà complets)
 - **Phase 4** : Tags POS (architecture dédiée — implications UI + quiz)
 - **Phase 5** : Tests intégrité BDD (`DatabaseIntegrityTest`)
 

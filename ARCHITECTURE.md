@@ -251,7 +251,7 @@ Les schémas Room sont exportés à partir de la version 14 dans `app/schemas/`.
 | Portugais (PT) | 7 503/7 503 (100%) | Traduction manuelle Claude (7 503) |
 | Mandarin (ZH) | 7 503/7 503 (100%) | Traduction manuelle Claude (7 503) |
 
-**Langues d'interface disponibles :** EN, FR, DE, ES, PT (strings.xml complets). ZH à faire (UI strings).
+**Langues d'interface disponibles :** EN, FR, DE, ES, PT, ZH (strings.xml complets pour toutes les langues).
 
 ---
 
