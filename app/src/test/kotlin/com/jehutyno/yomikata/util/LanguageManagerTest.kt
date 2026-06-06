@@ -78,11 +78,11 @@ class LanguageManagerTest {
         assertEquals(AppLanguage.DEFAULT, LanguageManager.current)
     }
 
-    @Test fun `initFromPrefs saves detected locale to prefs on first launch`() {
+    @Test fun `initFromPrefs does not persist detected locale on first launch`() {
         every { prefsMock.getString(Prefs.APP_LANGUAGE.pref, null) } returns null
         LanguageManager.initFromPrefs(prefsMock)
-        // The detected locale (whatever it is) must be persisted
-        verify { editorMock.putString(eq(Prefs.APP_LANGUAGE.pref), any()) }
+        // Auto-detected locale must NOT be saved — device language changes must be picked up on restart
+        verify(exactly = 0) { editorMock.putString(eq(Prefs.APP_LANGUAGE.pref), any()) }
     }
 
     // ─── LanguageManager.setLanguage ────────────────────────────────────────
