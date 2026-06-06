@@ -113,7 +113,7 @@ Doit être appelé AVANT tout accès au DI ou à `getTrad()`.
 
 - **Version courante : 19**
 - Asset : `app/src/main/assets/yomikataz.db`
-- `fallbackToDestructiveMigration()` est activé → les utilisateurs sur version < 13 ont un reset propre sans crash
+- `fallbackToDestructiveMigrationFrom(0..12)` est utilisé (PAS `fallbackToDestructiveMigration()`) → les utilisateurs sur version < 13 ont un reset propre sans crash. **Piège Room 2.6.1** : `fallbackToDestructiveMigration()` seul + `createFromAsset` efface la DB de TOUS les utilisateurs (isMigrationRequired retourne false → SQLiteCopyOpenHelper remplace la DB par l'asset pour toute version ≠ cible)
 - Les migrations 1→12 ont été supprimées (code mort, no-op)
 - Schémas exportés disponibles à partir de la v14 dans `app/schemas/`
 

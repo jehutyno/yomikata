@@ -28,7 +28,7 @@ L'interface et les traductions sont disponibles en **6 langues** : anglais (EN),
 ├─────────────────────────────────────────────────────┤
 │  DAOs  (Room — KotlinFlow / suspend)                 │
 ├─────────────────────────────────────────────────────┤
-│  YomikataDatabase  (Room, SQLite, asset DB v18)      │
+│  YomikataDatabase  (Room, SQLite, asset DB v19)      │
 └─────────────────────────────────────────────────────┘
          Injection de dépendances : Kodein DI 7.x
 ```
@@ -201,9 +201,11 @@ La validation est centralisée dans `AnswerValidator.checkWord()` : le tiret ASC
 
 ## Base de données (Room)
 
-Fichier : `yomikataz.db` — livré dans `assets/`, copié au premier lancement.
+Fichier : `yomikataz.db` — livré dans `assets/` à la version 16 (sans colonnes de traduction), copié au premier lancement. Les traductions sont copiées depuis `yomikataz_translations.db` (v19) via le callback `onOpen`.
 
-**Version courante : 18.** Toutes les migrations sont définies dans `YomikataDatabase`. `fallbackToDestructiveMigration()` est activé pour les utilisateurs encore sur une version < 13 (reset propre sans crash).
+**Version courante : 19.** Toutes les migrations sont définies dans `YomikataDatabase`. `fallbackToDestructiveMigrationFrom(0..12)` est utilisé (PAS `fallbackToDestructiveMigration()`) pour les utilisateurs encore sur une version < 13 (reset propre sans crash).
+
+> **Piège Room 2.6.1** : `fallbackToDestructiveMigration()` seul + `createFromAsset` provoque l'effacement de la DB de TOUS les utilisateurs dont la version ≠ cible, car `isMigrationRequired` retourne toujours `false` → `SQLiteCopyOpenHelper` remplace la DB par l'asset même quand les migrations existent.
 
 ### Tables
 
@@ -227,10 +229,11 @@ Fichier : `yomikataz.db` — livré dans `assets/`, copié au premier lancement.
 | 15→16 | Nettoyage des traductions EN : suppression du suffixe `;(P)` issu de JMdict. |
 | 16→17 | Nettoyage des données : suppression du mot fantôme id=3537, espaces doubles et leading/trailing dans `words` et `sentences`. |
 | 17→18 | Ajout des 4 colonnes de traduction dans 5 tables (20 colonnes au total, DEFAULT ''). |
+| 18→19 | No-op (bump de version). Traductions peuplées via `onOpen` callback depuis `yomikataz_translations.db`. |
 
 Les schémas Room sont exportés à partir de la version 14 dans `app/schemas/`.
 
-### Contenu de la base (v18)
+### Contenu de la base (v19)
 
 | Table | Lignes |
 |---|---|
