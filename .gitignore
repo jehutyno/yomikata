@@ -6,3 +6,7 @@
 /build
 /captures
 .externalNativeBuild
+/app/release
+keystore.properties
+.claude/
+.kotlin/
