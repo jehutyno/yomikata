@@ -1,12 +1,12 @@
 [versions]
-kotlin             = "2.1.20"
-ksp                = "2.1.20-1.0.31"
-agp                = "8.13.2"
-room               = "2.6.1"
-lifecycle          = "2.8.7"
-coroutines         = "1.9.0"
-media3             = "1.5.0"
-firebase-bom       = "33.7.0"
+kotlin             = "2.3.21"
+ksp                = "2.3.7"
+agp                = "9.2.0"
+room               = "2.7.1"
+lifecycle          = "2.10.0"
+coroutines         = "1.10.2"
+media3             = "1.10.1"
+firebase-bom       = "34.0.0"
 google-services    = "4.4.2"
 gradle-versions    = "0.51.0"
 
@@ -19,11 +19,11 @@ preference-ktx     = "1.2.1"
 kodein             = "7.22.0"
 splashscreen       = "1.0.1"
 splitties          = "3.0.0"
-mockk              = "1.13.5"
-truth              = "1.0.1"
+mockk              = "1.14.6"
+truth              = "1.4.5"
 junit              = "4.13.2"
-androidx-junit     = "1.1.5"
-espresso           = "3.5.1"
+androidx-junit     = "1.3.0"
+espresso           = "3.7.0"
 arch-core-testing  = "2.2.0"
 
 kotlin-logging     = "3.0.5"
@@ -61,14 +61,15 @@ kotlinx-coroutines-test    = { group = "org.jetbrains.kotlinx", name = "kotlinx-
 
 # Media3
 androidx-media3-exoplayer = { group = "androidx.media3", name = "media3-exoplayer", version.ref = "media3" }
+androidx-media3-session   = { group = "androidx.media3", name = "media3-session",   version.ref = "media3" }
 androidx-media3-ui        = { group = "androidx.media3", name = "media3-ui",        version.ref = "media3" }
 androidx-media3-common    = { group = "androidx.media3", name = "media3-common",    version.ref = "media3" }
 
 # Firebase (versions gérées par le BOM — pas de version.ref ici)
 firebase-bom      = { group = "com.google.firebase", name = "firebase-bom",          version.ref = "firebase-bom" }
-firebase-database = { group = "com.google.firebase", name = "firebase-database-ktx" }
-firebase-messaging = { group = "com.google.firebase", name = "firebase-messaging-ktx" }
-firebase-storage  = { group = "com.google.firebase", name = "firebase-storage-ktx" }
+firebase-database = { group = "com.google.firebase", name = "firebase-database" }
+firebase-messaging = { group = "com.google.firebase", name = "firebase-messaging" }
+firebase-storage  = { group = "com.google.firebase", name = "firebase-storage" }
 
 # DI
 androidx-splashscreen = { group = "androidx.core", name = "core-splashscreen", version.ref = "splashscreen" }
@@ -101,7 +102,7 @@ truth                 = { group = "com.google.truth",        name = "truth",    
 mockk                 = { group = "io.mockk",                name = "mockk",          version.ref = "mockk" }
 
 [bundles]
-media3   = ["androidx-media3-exoplayer", "androidx-media3-ui", "androidx-media3-common"]
+media3   = ["androidx-media3-exoplayer", "androidx-media3-session", "androidx-media3-ui", "androidx-media3-common"]
 firebase = ["firebase-database", "firebase-messaging", "firebase-storage"]
 
 [plugins]

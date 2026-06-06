@@ -295,7 +295,7 @@ data class Wordv13(var id: Long, var japanese: String, var english: String, var 
                     ${if (preserve_id) "${newWord.id}," else ""}
                     ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
                 )
-            """.trimIndent(), arrayOf(
+            """.trimIndent(), arrayOf<Any>(
                     newWord.japanese, newWord.english, newWord.french, newWord.reading, newWord.level,
                     newWord.countTry, newWord.countSuccess, newWord.countFail, newWord.isKana,
                     newWord.repetition, newWord.points, newWord.baseCategory, newWord.isSelected, newWord.sentenceId
@@ -370,7 +370,7 @@ data class Quizv13(val id: Long, var nameEn: String, var nameFr: String,
                     ${if (preserve_id) "${newQuiz.id}," else ""}
                     ?, ?, ?, ?
                 )
-            """.trimIndent(), arrayOf(
+            """.trimIndent(), arrayOf<Any>(
                     newQuiz.nameEn, newQuiz.nameFr, newQuiz.category, newQuiz.isSelected
                 )
             )

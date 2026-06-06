@@ -47,11 +47,11 @@ class QuizPresenterTest(private val length: Int, private val type: QuizType) {
         @JvmStatic
         @Parameterized.Parameters
         fun data() = listOf(
-            arrayOf(5, QuizType.TYPE_JAP_EN),
-            arrayOf(10, QuizType.TYPE_JAP_EN),
-            arrayOf(100, QuizType.TYPE_EN_JAP),
-            arrayOf(1000, QuizType.TYPE_AUDIO),
-            arrayOf(-1, QuizType.TYPE_PRONUNCIATION_QCM)
+            arrayOf<Any>(5, QuizType.TYPE_JAP_EN),
+            arrayOf<Any>(10, QuizType.TYPE_JAP_EN),
+            arrayOf<Any>(100, QuizType.TYPE_EN_JAP),
+            arrayOf<Any>(1000, QuizType.TYPE_AUDIO),
+            arrayOf<Any>(-1, QuizType.TYPE_PRONUNCIATION_QCM)
         )
     }
 

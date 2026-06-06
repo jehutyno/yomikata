@@ -150,7 +150,7 @@ Doit être appelé AVANT tout accès au DI ou à `getTrad()`.
 - Pour mocker `Random` : utiliser `object : Random() { override fun nextInt(bound: Int) = 0 }` (pas `mockk<Random>()` — NPE JvmAutoHinter)
 
 ### Comptage actuel
-**117 tests unitaires JVM**, tous verts.
+**117 tests unitaires JVM** — 116 verts, 1 rouge préexistant (`LanguageManagerTest > initFromPrefs saves detected locale to prefs on first launch` : le test vérifie que la locale détectée est persistée, mais le code ne le fait PAS exprès — voir CLAUDE.md "Ne pas persister la détection automatique").
 
 ---
 

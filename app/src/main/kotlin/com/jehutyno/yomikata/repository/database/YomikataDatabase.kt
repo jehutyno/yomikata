@@ -434,7 +434,7 @@ abstract class YomikataDatabase : RoomDatabase() {
 
                 val update = """UPDATE words SET english = ? WHERE _id = ?"""
                 idAndEnglish.forEach { (id, english) ->
-                    database.execSQL(update, arrayOf(english, id))
+                    database.execSQL(update, arrayOf<Any>(english, id))
                 }
             }
         }
@@ -518,7 +518,7 @@ abstract class YomikataDatabase : RoomDatabase() {
                 // update database
                 val update = "UPDATE words SET level = ?, points = ? WHERE _id = ?"
                 newIdLevelPoints.forEach { (id, level, points) ->
-                    database.execSQL(update, arrayOf(level, points, id))
+                    database.execSQL(update, arrayOf<Any>(level, points, id))
                 }
             }
         }
