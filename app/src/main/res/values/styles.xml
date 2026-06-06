@@ -9,6 +9,12 @@
         <item name="windowActionModeOverlay">true</item>
     </style>
 
+    <!-- Thème du splash screen système (Android 12+) -->
+    <style name="SplashTheme" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/colorPrimary</item>
+        <item name="postSplashScreenTheme">@style/AppTheme</item>
+    </style>
+
     <style name="Toolbar" parent="ThemeOverlay.AppCompat.Dark.ActionBar">
         <item name="android:textColorPrimary">@color/colorAccent</item>
     </style>

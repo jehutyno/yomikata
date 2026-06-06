@@ -32,15 +32,14 @@
             </intent-filter>
         </service>
 
-        <activity android:name="com.jehutyno.yomikata.screens.splash.SplashActivity"
-            android:exported="true">
+        <activity android:name="com.jehutyno.yomikata.screens.quizzes.QuizzesActivity"
+            android:exported="true"
+            android:theme="@style/SplashTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
-
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
-        <activity android:name="com.jehutyno.yomikata.screens.quizzes.QuizzesActivity"/>
         <activity android:name="com.jehutyno.yomikata.screens.content.ContentActivity"/>
         <activity android:name="com.jehutyno.yomikata.screens.answers.AnswersActivity"/>
 

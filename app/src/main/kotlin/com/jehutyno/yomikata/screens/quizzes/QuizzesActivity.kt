@@ -22,16 +22,24 @@ import android.widget.ImageView
 import android.widget.TextView
 import android.window.OnBackInvokedDispatcher
 import androidx.activity.addCallback
+import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.widget.SwitchCompat
 import androidx.appcompat.widget.Toolbar
 import androidx.core.content.ContextCompat
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
+import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
 import androidx.viewpager2.widget.ViewPager2
+import com.jehutyno.yomikata.repository.database.YomikataDatabase
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import com.flaviofaria.kenburnsview.KenBurnsView
 import com.getbase.floatingactionbutton.FloatingActionButton
 import com.getbase.floatingactionbutton.FloatingActionsMenu
@@ -56,6 +64,11 @@ import java.util.*
 class QuizzesActivity : AppCompatActivity(), DIAware {
 
     override val di: DI by closestDI()
+
+    @Volatile private var dbReady = false
+
+    private lateinit var backupLauncher: ActivityResultLauncher<Intent>
+    private lateinit var restoreLauncher: ActivityResultLauncher<Intent>
 
     private var selectedCategory: Int = 0
     private lateinit var toolbar: Toolbar
@@ -94,9 +107,37 @@ class QuizzesActivity : AppCompatActivity(), DIAware {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
+
         val pref = PreferenceManager.getDefaultSharedPreferences(this)
         AppCompatDelegate.setDefaultNightMode(pref.getInt(Prefs.DAY_NIGHT_MODE.pref, AppCompatDelegate.MODE_NIGHT_YES))
+
+        // Enregistrement avant onStart (obligatoire pour ActivityResultLauncher)
+        backupLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult())
+            { result -> getBackupLauncher(result) }
+        restoreLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult())
+            { result -> getRestoreLauncher(result, false) }
+
+        // Maintient le splash visible jusqu'à ce que la DB soit prête
+        splashScreen.setKeepOnScreenCondition { !dbReady }
+
+        // Chargement de la base de données — libère le splash à la fin
+        lifecycleScope.launch {
+            val success = withContext(Dispatchers.IO) {
+                try {
+                    YomikataDatabase.forceLoadDatabase(this@QuizzesActivity)
+                    true
+                } catch (e: Exception) {
+                    false
+                }
+            }
+            dbReady = true  // libère le splash (prochain frame)
+
+            if (!success) {
+                handleDatabaseError(pref)
+            }
+        }
 
         binding = ActivityQuizzesBinding.inflate(layoutInflater)
         val view = binding.root
@@ -234,11 +275,10 @@ class QuizzesActivity : AppCompatActivity(), DIAware {
     }
 
     private fun tutos() {
-        spotlightWelcome(this, binding.anchor, getString(R.string.tuto_yomikataz), getString(R.string.tuto_welcome)
-        ) {
-            spotlightTuto(this, getNavButtonView(toolbar), getString(R.string.tuto_categories),
-                getString(R.string.tuto_categories_message)
-            ) {}
+        val prefs = PreferenceManager.getDefaultSharedPreferences(this)
+        showTutoAlways(this, binding.anchor, getString(R.string.tuto_yomikataz), getString(R.string.tuto_welcome)) {
+            showTutoOnce(prefs, TutoId.CATEGORIES, this, getNavButtonView(toolbar),
+                getString(R.string.tuto_categories), getString(R.string.tuto_categories_message)) {}
         }
     }
 
@@ -480,5 +520,58 @@ class QuizzesActivity : AppCompatActivity(), DIAware {
     override fun onPause() {
         super.onPause()
         handler.removeCallbacks(runnable)
+    }
+
+    private fun handleDatabaseError(prefs: android.content.SharedPreferences) {
+        val recoveryDialog = alertDialog {
+            titleResource = R.string.recovery
+            positiveButton(R.string.choose_file_short) { restoreProgress(restoreLauncher) }
+            neutralButton(R.string.prefs_reinit) {
+                alertDialog {
+                    messageResource = R.string.prefs_reinit_sure
+                    okButton {
+                        YomikataDatabase.resetDatabase(this@QuizzesActivity)
+                        YomikataDatabase.forceLoadDatabase(this@QuizzesActivity)
+                        getRestartDialog(RestartDialogMessage.RESET, null).show()
+                    }
+                    cancelButton()
+                }.show()
+            }
+            cancelButton()
+            setCancelable(false)
+        }
+
+        val errorDialog = alertDialog {
+            titleResource = R.string.migration_error
+            message = getString(R.string.contact_devs_for_help) + "\n" +
+                      getString(R.string.create_backup_is_recommended)
+            positiveButton(R.string.contact) {}
+            neutralButton(R.string.create_backup) {}
+            negativeButton(R.string.recovery) {}
+            setCancelable(false)
+        }
+        errorDialog.setOnShowListener {
+            errorDialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener { contactDiscord(this) }
+            errorDialog.getButton(AlertDialog.BUTTON_NEUTRAL).setOnClickListener { backupProgress(backupLauncher) }
+            errorDialog.getButton(AlertDialog.BUTTON_NEGATIVE).setOnClickListener { recoveryDialog.show() }
+        }
+
+        // Tente une restauration automatique si une migration était en cours
+        var restoredSuccessfully = false
+        if (prefs.getBoolean(Prefs.DB_RESTORE_ONGOING.pref, false)) {
+            restoredSuccessfully = YomikataDatabase.restoreLocalBackup(this)
+        }
+        prefs.edit().putBoolean(Prefs.DB_RESTORE_ONGOING.pref, false).apply()
+
+        if (restoredSuccessfully) {
+            alertDialog {
+                titleResource = R.string.restore_error
+                messageResource = R.string.app_closed_data_recovered
+                okButton { triggerRebirth() }
+                setCancelable(false)
+            }.show()
+        } else {
+            errorDialog.show()
+        }
     }
 }

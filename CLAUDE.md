@@ -31,7 +31,7 @@ Sans ça, `gradlew.bat` échoue avec "JAVA_HOME is set to an invalid directory".
 
 ### Version Catalog
 
-Toutes les dépendances sont dans `gradle/libs.versions.toml`. Pour mettre à jour une version, modifier `[versions]` dans ce fichier — **ne jamais écrire de version inline** dans les `.gradle` (exception : `android-pathview` avec `@aar`, voir `app/build.gradle`).
+Toutes les dépendances sont dans `gradle/libs.versions.toml`. Pour mettre à jour une version, modifier `[versions]` dans ce fichier — **ne jamais écrire de version inline** dans les `.gradle`.
 
 Les repos sont centralisés dans `settings.gradle` via `dependencyResolutionManagement`. Ne pas ajouter de bloc `repositories {}` dans les sous-modules.
 

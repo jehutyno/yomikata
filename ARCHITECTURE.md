@@ -54,8 +54,7 @@ Les presenters reçoivent un `CoroutineScope` (le `lifecycleScope` du fragment h
 
 | Package | Activité principale | Rôle |
 |---|---|---|
-| `splash` | `SplashActivity` | Démarrage, migration DB, backup/restore |
-| `quizzes` | `QuizzesActivity` | Navigation principale (ViewPager2 : Home + liste des catégories) |
+| `quizzes` | `QuizzesActivity` | **Activité de démarrage** — chargement DB, navigation principale (ViewPager2 : Home + liste des catégories), gestion erreur DB |
 | `home` | `HomeFragment` | Dashboard — stats globales, accès rapide, fil d'actualité Firebase |
 | `content` | `ContentActivity` | Liste des mots d'une catégorie, graphique de progression |
 | `content/word` | `WordDetailDialogFragment` | Détail d'un mot (kanji, radical, exemple de phrase) |
@@ -366,8 +365,6 @@ Depuis la migration (juin 2026), toutes les versions et dépendances sont centra
 | `[bundles]` | `media3` (exoplayer + ui + common), `firebase` (database + messaging + storage) |
 | `[plugins]` | android-application, kotlin-android, ksp, google-services, gradle-versions |
 
-**Exception :** `com.eftimoff:android-pathview:1.0.8@aar` est déclaré inline dans `app/build.gradle` car le format TOML ne supporte pas la notation `@aar` nécessaire pour résoudre les attributs SVG personnalisés de cette lib.
-
 **Repos centralisés dans `settings.gradle`** via `dependencyResolutionManagement` (mode `FAIL_ON_PROJECT_REPOS`) — plus de bloc `repositories {}` dans les sous-modules.
 
 ---
@@ -382,7 +379,8 @@ Depuis la migration (juin 2026), toutes les versions et dépendances sont centra
 | ExoPlayer (Media3) | Lecture audio |
 | Calligraphy + ViewPump | Police personnalisée (Roboto) |
 | Splitties | DSL dialogs AlertDialog |
-| KenBurnsView, PathView | Animations splash / tracés de kanjis |
+| KenBurnsView | Animations fond (diaporama photos dans QuizzesActivity) |
+| androidx.core:core-splashscreen | Contrôle du splash screen système (Android 12+) |
 | HiraganaEditText | Saisie IME hiragana |
 | Firebase BOM 33.x | RTDB, FCM, Storage |
 | MockK 1.13.x | Mocking pour les tests unitaires |

@@ -80,6 +80,9 @@ dependencies {
     implementation platform(libs.firebase.bom)
     implementation libs.bundles.firebase
 
+    // Splash screen
+    implementation libs.androidx.splashscreen
+
     // DI
     implementation libs.kodein
 
@@ -92,7 +95,6 @@ dependencies {
 
     // UI libs
     implementation libs.kenburnsview
-    implementation 'com.eftimoff:android-pathview:1.0.8@aar'  // @aar obligatoire pour résoudre les attrs SVG
     implementation libs.circleimageview
     implementation libs.hiraganaedittext
     implementation libs.fab

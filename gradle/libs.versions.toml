@@ -17,6 +17,7 @@ viewpager2         = "1.1.0"
 preference-ktx     = "1.2.1"
 
 kodein             = "7.22.0"
+splashscreen       = "1.0.1"
 splitties          = "3.0.0"
 mockk              = "1.13.5"
 truth              = "1.0.1"
@@ -28,7 +29,6 @@ arch-core-testing  = "2.2.0"
 kotlin-logging     = "3.0.5"
 slf4j-android      = "1.7.21"
 kenburnsview       = "1.0.7"
-pathview           = "1.0.8"
 circleimageview    = "3.1.0"
 hiraganaedittext   = "1.0.7"
 fab                = "1.10.4"
@@ -71,6 +71,7 @@ firebase-messaging = { group = "com.google.firebase", name = "firebase-messaging
 firebase-storage  = { group = "com.google.firebase", name = "firebase-storage-ktx" }
 
 # DI
+androidx-splashscreen = { group = "androidx.core", name = "core-splashscreen", version.ref = "splashscreen" }
 kodein = { group = "org.kodein.di", name = "kodein-di-framework-android-x", version.ref = "kodein" }
 
 # Splitties
@@ -82,7 +83,6 @@ slf4j-android  = { group = "org.slf4j",            name = "slf4j-android",   ver
 
 # UI libs
 kenburnsview    = { group = "com.flaviofaria",             name = "kenburnsview",                   version.ref = "kenburnsview" }
-# android-pathview: @aar requis — déclaré inline dans app/build.gradle
 circleimageview = { group = "de.hdodenhof",                name = "circleimageview",                version.ref = "circleimageview" }
 hiraganaedittext = { group = "com.github.jehutyno",        name = "hiraganaedittext",               version.ref = "hiraganaedittext" }
 fab             = { group = "com.github.jehutyno",         name = "android-floating-action-button", version.ref = "fab" }
