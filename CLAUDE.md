@@ -29,6 +29,12 @@ Sans ça, `gradlew.bat` échoue avec "JAVA_HOME is set to an invalid directory".
 .\gradlew.bat kspDebugKotlin
 ```
 
+### Version Catalog
+
+Toutes les dépendances sont dans `gradle/libs.versions.toml`. Pour mettre à jour une version, modifier `[versions]` dans ce fichier — **ne jamais écrire de version inline** dans les `.gradle` (exception : `android-pathview` avec `@aar`, voir `app/build.gradle`).
+
+Les repos sont centralisés dans `settings.gradle` via `dependencyResolutionManagement`. Ne pas ajouter de bloc `repositories {}` dans les sous-modules.
+
 ### SQLite3 (scripts de données)
 ```powershell
 $sq = "C:\Users\valen\AppData\Local\Android\Sdk\platform-tools\sqlite3.exe"
@@ -89,6 +95,12 @@ Toujours passer par `Prefs` enum (dans `util/Prefs.kt`) pour les clés. Ne jamai
 
 ### Coroutines
 Les presenters reçoivent leur `CoroutineScope` en paramètre constructeur (le `lifecycleScope` du fragment/activity hôte). Ne jamais créer `CoroutineScope(Dispatchers.Main)` manuellement dans un presenter ou helper — utiliser `lifecycleScope` dans les composants Android.
+
+### Tutoriels au premier lancement (`util/TutoOverlay.kt`)
+- Utiliser `showTutoOnce(prefs, TutoId.XXX, activity, targetView, title, message) { }` — affichage unique automatique.
+- Utiliser `showTutoAlways()` uniquement pour l'écran de bienvenue (pas de mémorisation d'état).
+- Pour ajouter un nouveau tutoriel : ajouter une entrée dans l'enum `TutoId` avec une clé snake_case stable (ex. `tuto_mon_truc`) — ne jamais utiliser un string localisé comme clé.
+- `resetAllTutos(prefs)` est appelé depuis `PrefsActivity` ("reset_tuto") — toute nouvelle entrée `TutoId` est automatiquement réinitialisée.
 
 ---
 

@@ -351,6 +351,27 @@ La logique de choix est dans `VoicesManager` ; la coordination avec l'UI est dan
 
 ---
 
+## Build & gestion des dépendances
+
+### Version Catalog (`gradle/libs.versions.toml`)
+
+Depuis la migration (juin 2026), toutes les versions et dépendances sont centralisées dans `gradle/libs.versions.toml`, conformément aux recommandations Android Developer. Les fichiers de build (`build.gradle`, `app/build.gradle`) utilisent exclusivement des références `libs.*`.
+
+**Structure du catalog :**
+
+| Section | Contenu |
+|---|---|
+| `[versions]` | Toutes les versions (kotlin, agp, room, lifecycle, media3, firebase-bom, …) |
+| `[libraries]` | 40+ entrées groupées par domaine (AndroidX, Room, Firebase, UI libs, tests…) |
+| `[bundles]` | `media3` (exoplayer + ui + common), `firebase` (database + messaging + storage) |
+| `[plugins]` | android-application, kotlin-android, ksp, google-services, gradle-versions |
+
+**Exception :** `com.eftimoff:android-pathview:1.0.8@aar` est déclaré inline dans `app/build.gradle` car le format TOML ne supporte pas la notation `@aar` nécessaire pour résoudre les attributs SVG personnalisés de cette lib.
+
+**Repos centralisés dans `settings.gradle`** via `dependencyResolutionManagement` (mode `FAIL_ON_PROJECT_REPOS`) — plus de bloc `repositories {}` dans les sous-modules.
+
+---
+
 ## Dépendances tierces notables
 
 | Bibliothèque | Usage |
@@ -366,3 +387,29 @@ La logique de choix est dans `VoicesManager` ; la coordination avec l'UI est dan
 | Firebase BOM 33.x | RTDB, FCM, Storage |
 | MockK 1.13.x | Mocking pour les tests unitaires |
 | androidx.arch.core:core-testing | `InstantTaskExecutorRule` pour les tests LiveData |
+
+---
+
+## Tutoriels au premier lancement (`util/TutoOverlay.kt`)
+
+Les tutoriels contextuels (overlay qui met en valeur un élément d'interface au premier lancement d'un écran) sont implémentés en natif — sans dépendance tierce.
+
+### Composants
+
+| Élément | Rôle |
+|---|---|
+| `TutoId` | Enum des 11 tutoriels, chacun avec une clé SharedPreferences stable (ex. `tuto_quiz_type`) |
+| `showTutoAlways()` | Affiche l'overlay sans vérifier l'état — utilisé pour l'écran de bienvenue |
+| `showTutoOnce()` | Affiche l'overlay une seule fois (clé mémorisée dans `SharedPreferences`) ; no-op si déjà vu |
+| `resetAllTutos()` | Efface les 11 clés `TutoId` des `SharedPreferences` (appelé depuis `PrefsActivity`) |
+| `TutoOverlayView` | `FrameLayout` custom ajouté au `DecorView` ; dessine fond semi-transparent + découpe circulaire (`PorterDuff.CLEAR`) + anneau `colorAccent` autour de la cible ; texte repositionné automatiquement au-dessus ou en-dessous selon la position à l'écran ; se retire et appelle `onDismiss` au premier touch |
+
+### Points d'utilisation
+
+| Écran | Tutoriels |
+|---|---|
+| `QuizzesActivity` | Bienvenue (anchor) → bouton navigation catégories |
+| `QuizzesFragment` | Type de quiz → barre de progression → checkbox sélection partielle (séquence chainée) |
+| `QuizzesFragment` (onClick) | Un tutoriel par bouton de type de quiz (6 boutons, affiché une seule fois chacun) |
+
+L'état est stocké dans les `SharedPreferences` de l'app (même instance Kodein que le reste). Les clés sont des constantes stables indépendantes de la locale (contrairement à l'ancienne lib Spotlight qui utilisait le texte localisé du titre comme clé, créant un bug potentiel au changement de langue).
