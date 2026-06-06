@@ -200,22 +200,24 @@ La validation est centralisée dans `AnswerValidator.checkWord()` : le tiret ASC
 
 ## Base de données (Room)
 
-Fichier : `yomikataz.db` — livré dans `assets/` à la version 16 (sans colonnes de traduction), copié au premier lancement. Les traductions sont copiées depuis `yomikataz_translations.db` (v19) via le callback `onOpen`.
+Fichier : `yomikataz.db` — livré dans `assets/` à la version 21, copié au premier lancement. Les traductions DE/ES/PT/ZH et les POS sont déjà dans l'asset ; pour les utilisateurs en upgrade, ils sont copiés depuis les assets via le callback `onOpen`.
 
-**Version courante : 19.** Toutes les migrations sont définies dans `YomikataDatabase`. `fallbackToDestructiveMigrationFrom(0..12)` est utilisé (PAS `fallbackToDestructiveMigration()`) pour les utilisateurs encore sur une version < 13 (reset propre sans crash).
+**Version courante : 21.** Toutes les migrations sont définies dans `YomikataDatabase`. `fallbackToDestructiveMigrationFrom(0..12)` est utilisé (PAS `fallbackToDestructiveMigration()`) pour les utilisateurs encore sur une version < 13 (reset propre sans crash).
 
 > **Piège Room 2.6.1** : `fallbackToDestructiveMigration()` seul + `createFromAsset` provoque l'effacement de la DB de TOUS les utilisateurs dont la version ≠ cible, car `isMigrationRequired` retourne toujours `false` → `SQLiteCopyOpenHelper` remplace la DB par l'asset même quand les migrations existent.
+
+> **Piège Room 2.7+** : `room_table_modification_log` est requis par `TriggerBasedInvalidationTracker` mais n'est créé par Room que lors d'un `onCreate` (installation fraîche). Pour les migrations depuis d'anciennes versions, il faut le créer explicitement — dans `MIGRATION_16_21` ET dans le callback `onOpen` (garde-fou pour les devices déjà à v21 sans la table).
 
 ### Tables
 
 | Table | Entité Room | Notes |
 |---|---|---|
-| `words` | `RoomWords` | Colonnes `german`, `spanish`, `portuguese`, `chinese` ajoutées en v18 |
-| `quiz` | `RoomQuiz` | Colonnes `name_de`, `name_es`, `name_pt`, `name_zh` ajoutées en v18 |
+| `words` | `RoomWords` | `german`, `spanish`, `portuguese`, `chinese` (v18) ; `pos` (v20) |
+| `quiz` | `RoomQuiz` | `name_de`, `name_es`, `name_pt`, `name_zh` (v18) |
 | `quiz_word` | `RoomQuizWord` | Clé composite `quiz_id` + `word_id` |
-| `sentences` | `RoomSentences` | Colonnes `de`, `es`, `pt`, `zh` ajoutées en v18 |
-| `kanji_solo` | `RoomKanjiSolo` | Colonnes `de`, `es`, `pt`, `zh` ajoutées en v18 |
-| `radicals` | `RoomRadicals` | Colonnes `de`, `es`, `pt`, `zh` ajoutées en v18 |
+| `sentences` | `RoomSentences` | `de`, `es`, `pt`, `zh` (v18) |
+| `kanji_solo` | `RoomKanjiSolo` | `de`, `es`, `pt`, `zh` (v18) |
+| `radicals` | `RoomRadicals` | `de`, `es`, `pt`, `zh` (v18) |
 | `stat_entry` | `RoomStatEntry` | |
 
 ### Historique des migrations
@@ -226,29 +228,33 @@ Fichier : `yomikataz.db` — livré dans `assets/` à la version 16 (sans colonn
 | 13→14 | Refactoring Room : DROP/CREATE de toutes les tables pour uniformiser les types. |
 | 14→15 | Nouveau système de points (0–850 cumulatifs, ancienne remise à zéro supprimée). |
 | 15→16 | Nettoyage des traductions EN : suppression du suffixe `;(P)` issu de JMdict. |
-| 16→17 | Nettoyage des données : suppression du mot fantôme id=3537, espaces doubles et leading/trailing dans `words` et `sentences`. |
-| 17→18 | Ajout des 4 colonnes de traduction dans 5 tables (20 colonnes au total, DEFAULT ''). |
-| 18→19 | No-op (bump de version). Traductions peuplées via `onOpen` callback depuis `yomikataz_translations.db`. |
+| **16→21** | **Migration consolidée** (prod APK code 65 = DB v16) : nettoyage données (fantôme id=3537, espaces doubles), ADD COLUMN DE/ES/PT/ZH sur 5 tables, ADD COLUMN `pos` + extraction POS du champ `english`, CREATE `room_table_modification_log`. Traductions peuplées via `onOpen`. |
 
 Les schémas Room sont exportés à partir de la version 14 dans `app/schemas/`.
 
-### Contenu de la base (v19)
+### Colonne `pos` (v20)
+
+La colonne `pos` dans `words` stocke les Part-of-Speech extraits du champ `english` (format JMdict : `(n)`, `(v1,vt)`, etc.), sous forme de tokens séparés par virgule (`n`, `v1,vt`, etc.). L'extraction se fait par regex lors de `MIGRATION_16_21` ; les mots manquants (JLPT4/5 sans préfixe JMdict) sont complétés via `populatePosIfNeeded` dans `onOpen` depuis l'asset.
+
+Les POS sont affichés sous forme de chips colorés dans la fiche détail d'un mot (`vh_word_detail.xml`), avec labels localisés en 6 langues et couleur par catégorie (bleu=nom, orange=verbe, vert=adjectif, violet=adverbe, gris=autre).
+
+### Contenu de la base (v21)
 
 | Table | Lignes |
 |---|---|
-| `words` | 7 503 (7 504 − fantôme supprimé) |
+| `words` | 7 503 |
 | `sentences` | 7 425 |
 | `kanji_solo` | 1 993 |
 | `radicals` | 320 |
 | `quiz` | 96 |
 
-**Couverture des traductions par langue (état actuel) :**
+**Couverture des traductions par langue :**
 
 | Langue | Mots | Source |
 |---|---|---|
 | Anglais (EN) | 7 503/7 503 (100%) | Original JMdict |
 | Français (FR) | 7 503/7 503 (100%) | Original |
-| Allemand (DE) | 7 503/7 503 (100%) | JMdict (3 196) + traduction manuelle (4 307) |
+| Allemand (DE) | 7 503/7 503 (100%) | JMdict (3 196) + traduction manuelle Claude (4 307) |
 | Espagnol (ES) | 7 503/7 503 (100%) | JMdict (1 932) + traduction manuelle Claude (5 571) |
 | Portugais (PT) | 7 503/7 503 (100%) | Traduction manuelle Claude (7 503) |
 | Mandarin (ZH) | 7 503/7 503 (100%) | Traduction manuelle Claude (7 503) |
@@ -344,7 +350,7 @@ La logique de choix est dans `VoicesManager` ; la coordination avec l'UI est dan
 
 | Fichier | Couverture |
 |---|---|
-| `RoomMigrationTest` | Migrations 14→15, 15→16, 16→17, 17→18, chemin complet 14→18 |
+| `RoomMigrationTest` | Migrations 14→15, 15→16, 16→21 (consolidée), 19→20, 20→21, chemin complet 14→21 |
 | `OldMigrationTest` | Migration 13→14 (depuis schéma SQLite v13) |
 | `WordDaoTest`, `QuizDaoTest`, `SentenceDaoTest`, `KanjiSoloDaoTest`, `StatsDaoTest` | DAOs Room |
 

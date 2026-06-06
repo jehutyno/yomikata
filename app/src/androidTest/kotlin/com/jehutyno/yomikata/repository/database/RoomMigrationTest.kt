@@ -38,13 +38,10 @@ class RoomMigrationTest {
     private val context get() = InstrumentationRegistry.getInstrumentation().targetContext
 
     // add new migrations to this list
-    // createMigration18to19 requires a Context, so ALL_MIGRATIONS is a computed property
     private val ALL_MIGRATIONS get() = arrayOf(
         YomikataDatabase.MIGRATION_14_15,
         YomikataDatabase.MIGRATION_15_16,
-        YomikataDatabase.MIGRATION_16_17,
-        YomikataDatabase.MIGRATION_17_18,
-        YomikataDatabase.createMigration18to19(context)
+        YomikataDatabase.MIGRATION_16_21
     )
 
     @Test
@@ -333,6 +330,139 @@ class RoomMigrationTest {
             assertTrue("name_es should be populated after migration", it.getString(1).isNotEmpty())
             assertTrue("name_pt should be populated after migration", it.getString(2).isNotEmpty())
             assertTrue("name_zh should be populated after migration", it.getString(3).isNotEmpty())
+        }
+    }
+
+    @Test
+    fun migrate19To20() {
+        // v19 words: english contains POS prefix "(n)", "(v1,vt)", no POS ("eye")
+        migrationHelper.createDatabase(TEST_DB_NAME, 19).apply {
+            execSQL("""
+                INSERT INTO words
+                VALUES (1,'重力','(n) gravity;weight','gravité','じゅうりょく',0,0,0,0,0,-1,0,4,0,NULL,'Schwerkraft','gravedad','gravidade','重力')
+            """.trimIndent())
+            execSQL("""
+                INSERT INTO words
+                VALUES (2,'炒る','(v5r,vt) to parch;to fry;to roast','frire','いる',0,0,0,0,0,-1,0,4,0,NULL,'rösten','tostar','torrar','烘')
+            """.trimIndent())
+            execSQL("""
+                INSERT INTO words
+                VALUES (3,'目','eye','oeil','め',0,0,0,0,0,-1,0,2,0,NULL,'Auge','ojo','olho','眼')
+            """.trimIndent())
+            close()
+        }
+
+        val db = migrationHelper.runMigrationsAndValidate(
+            TEST_DB_NAME, 20, true, YomikataDatabase.MIGRATION_19_20
+        )
+
+        // pos column must exist and be populated; english must be stripped of POS tokens
+        db.query("SELECT _id, english, pos FROM words ORDER BY _id").use {
+            assertTrue(it.moveToNext())
+            assertEquals(1L, it.getLong(0))
+            assertEquals("gravity;weight", it.getString(1))   // POS stripped
+            assertEquals("n", it.getString(2))                 // POS extracted
+
+            assertTrue(it.moveToNext())
+            assertEquals(2L, it.getLong(0))
+            assertEquals("to parch;to fry;to roast", it.getString(1))
+            val pos2 = it.getString(2)
+            assertTrue("pos should contain v5r", pos2.contains("v5r"))
+            assertTrue("pos should contain vt", pos2.contains("vt"))
+
+            assertTrue(it.moveToNext())
+            assertEquals(3L, it.getLong(0))
+            assertEquals("eye", it.getString(1))              // no POS to strip
+            assertEquals("", it.getString(2))                 // no POS tokens
+        }
+    }
+
+    @Test
+    fun migrate20To21() {
+        // v20 word with pos already set (must not be overwritten)
+        // v20 word with pos empty (must be left empty — populatePosIfNeeded runs in onOpen, not here)
+        migrationHelper.createDatabase(TEST_DB_NAME, 20).apply {
+            execSQL("""
+                INSERT INTO words
+                VALUES (1,'重力','gravity;weight','gravité','じゅうりょく',0,0,0,0,0,-1,0,4,0,NULL,'Schwerkraft','gravedad','gravidade','重力','n')
+            """.trimIndent())
+            execSQL("""
+                INSERT INTO words
+                VALUES (2,'目','eye','oeil','め',0,0,0,0,0,-1,0,2,0,NULL,'Auge','ojo','olho','眼','')
+            """.trimIndent())
+            close()
+        }
+
+        val db = migrationHelper.runMigrationsAndValidate(
+            TEST_DB_NAME, 21, true, YomikataDatabase.MIGRATION_20_21
+        )
+
+        // Existing pos must be preserved
+        db.query("SELECT pos FROM words WHERE _id = 1").use {
+            assertTrue(it.moveToFirst())
+            assertEquals("n", it.getString(0))
+        }
+        // Empty pos stays empty after migration (populatePosIfNeeded runs in onOpen)
+        db.query("SELECT pos FROM words WHERE _id = 2").use {
+            assertTrue(it.moveToFirst())
+            assertEquals("", it.getString(0))
+        }
+        // room_table_modification_log must exist (required by TriggerBasedInvalidationTracker in Room 2.7+)
+        db.query("SELECT name FROM sqlite_master WHERE type='table' AND name='room_table_modification_log'").use {
+            assertTrue("room_table_modification_log table must exist after migration 20→21", it.moveToFirst())
+        }
+    }
+
+    @Test
+    fun migrate16To21() {
+        // Simulates the production upgrade path: prod APK code 65 has DB v16.
+        migrationHelper.createDatabase(TEST_DB_NAME, 16).apply {
+            // Insert a word with POS prefix in english (should be extracted into pos)
+            execSQL("""
+                INSERT INTO words VALUES
+                (1,'走る','(v5r,vi) to run','courir','はしる',0,0,0,0,0,-1,0,2,0,NULL)
+            """.trimIndent())
+            // Insert the phantom word that must be deleted
+            execSQL("""
+                INSERT INTO words VALUES
+                (3537,'','','','',0,0,0,0,0,-1,0,0,0,NULL)
+            """.trimIndent())
+            // Insert a word without POS prefix
+            execSQL("""
+                INSERT INTO words VALUES
+                (2,'目','eye','oeil','め',0,0,0,0,0,-1,0,2,0,NULL)
+            """.trimIndent())
+            close()
+        }
+
+        val db = migrationHelper.runMigrationsAndValidate(
+            TEST_DB_NAME, 21, true, YomikataDatabase.MIGRATION_16_21
+        )
+
+        // Phantom word must be gone
+        db.query("SELECT COUNT(*) FROM words WHERE _id = 3537").use {
+            assertTrue(it.moveToFirst())
+            assertEquals(0, it.getInt(0))
+        }
+        // POS must be extracted and english cleaned
+        db.query("SELECT english, pos FROM words WHERE _id = 1").use {
+            assertTrue(it.moveToFirst())
+            assertEquals("to run", it.getString(0))
+            assertEquals("v5r,vi", it.getString(1))
+        }
+        // Word without POS: english unchanged, pos empty
+        db.query("SELECT english, pos FROM words WHERE _id = 2").use {
+            assertTrue(it.moveToFirst())
+            assertEquals("eye", it.getString(0))
+            assertEquals("", it.getString(1))
+        }
+        // Multilingual columns must exist (spot-check on words table)
+        db.query("SELECT german, spanish, portuguese, chinese FROM words WHERE _id = 2").use {
+            assertTrue(it.moveToFirst())
+        }
+        // room_table_modification_log must exist
+        db.query("SELECT name FROM sqlite_master WHERE type='table' AND name='room_table_modification_log'").use {
+            assertTrue("room_table_modification_log must exist", it.moveToFirst())
         }
     }
 

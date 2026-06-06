@@ -28,7 +28,8 @@ import com.jehutyno.yomikata.util.getLevelDownloadVersion
 import com.jehutyno.yomikata.util.getRestartDialog
 import com.jehutyno.yomikata.util.getRestoreLauncher
 import com.jehutyno.yomikata.util.restoreProgress
-import com.wooplr.spotlight.prefs.PreferencesManager
+import com.jehutyno.yomikata.util.TutoId
+import com.jehutyno.yomikata.util.resetAllTutos
 import mu.KLogging
 import splitties.alertdialog.appcompat.alertDialog
 import splitties.alertdialog.appcompat.cancelButton
@@ -153,7 +154,7 @@ class PrefsActivity : AppCompatActivity(), DIAware {
 
                 // Tutorials
                 "reset_tuto" -> {
-                    PreferencesManager(activity).resetAll()
+                    resetAllTutos(PreferenceManager.getDefaultSharedPreferences(requireActivity()))
                     // tell quizzes activity to start in home screen fragment
                     val intent = Intent()
                     intent.putExtra("gotoCategory", Categories.HOME)

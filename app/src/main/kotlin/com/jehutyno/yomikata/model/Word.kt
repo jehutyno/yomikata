@@ -25,13 +25,16 @@ open class Word(var id: Long, var japanese: String, var english: String, var fre
                 var baseCategory: Int, var isSelected: Int, var sentenceId: Long?,
                 // Translation columns added in v18 (empty until populated in Phase 3c+)
                 var german: String = "", var spanish: String = "",
-                var portuguese: String = "", var chinese: String = "") : Parcelable, Serializable {
+                var portuguese: String = "", var chinese: String = "",
+                // POS column added in v20, comma-separated tokens e.g. "n" or "v1,vt"
+                var pos: String = "") : Parcelable, Serializable {
 
     constructor(source: Parcel): this(source.readLong(), source.readString()!!,
         source.readString()!!, source.readString()!!, source.readString()!!, source.readInt().toLevel(),
         source.readInt(), source.readInt(), source.readInt(), source.readInt(), source.readInt(),
         source.readInt(), source.readInt(), source.readInt(), source.readLong().takeIf { it != -1L },
-        source.readString()!!, source.readString()!!, source.readString()!!, source.readString()!!)
+        source.readString()!!, source.readString()!!, source.readString()!!, source.readString()!!,
+        source.readString()!!)
 
     override fun writeToParcel(dest: Parcel, flags: Int) {
         dest.writeLong(id)
@@ -53,6 +56,7 @@ open class Word(var id: Long, var japanese: String, var english: String, var fre
         dest.writeString(spanish)
         dest.writeString(portuguese)
         dest.writeString(chinese)
+        dest.writeString(pos)
     }
 
     override fun describeContents(): Int {
@@ -81,6 +85,12 @@ open class Word(var id: Long, var japanese: String, var english: String, var fre
             AppLanguage.CHINESE    -> chinese.ifEmpty { english }
             else                   -> english
         }.readableTranslationFormat()
+    }
+
+    /** Returns the list of POS token strings, e.g. ["v1", "vt"] or ["n"]. Empty if none. */
+    fun getPosTokens(): List<String> {
+        return if (pos.isBlank()) emptyList()
+        else pos.split(",").map { it.trim() }.filter { it.isNotEmpty() }
     }
 }
 

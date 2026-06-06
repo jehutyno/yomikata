@@ -35,7 +35,8 @@ import com.jehutyno.yomikata.util.getLevelDownloadSize
 import com.jehutyno.yomikata.util.getLevelDownloadVersion
 import com.jehutyno.yomikata.util.onTTSinit
 import com.jehutyno.yomikata.util.speechNotSupportedAlert
-import com.jehutyno.yomikata.util.spotlightTuto
+import com.jehutyno.yomikata.util.TutoId
+import com.jehutyno.yomikata.util.showTutoOnce
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -152,17 +153,17 @@ class QuizzesFragment(private val di: DI) : Fragment(), QuizzesContract.View, Qu
 
         binding.btnPronunciationQcmSwitch.setOnClickListener {
             mpresenter.quizTypeSwitch(QuizType.TYPE_PRONUNCIATION_QCM)
-            spotlightTuto(requireActivity(), binding.btnPronunciationQcmSwitch, getString(R.string.tutos_pronunciation_mcq), getString(R.string.tutos_pronunciation_mcq_message)
-            ) { }
+            showTutoOnce(prefs, TutoId.PRONUNCIATION_MCQ, requireActivity(), binding.btnPronunciationQcmSwitch,
+                getString(R.string.tutos_pronunciation_mcq), getString(R.string.tutos_pronunciation_mcq_message)) {}
         }
         binding.btnPronunciationSwitch.setOnClickListener {
             mpresenter.quizTypeSwitch(QuizType.TYPE_PRONUNCIATION)
-            spotlightTuto(requireActivity(), binding.btnPronunciationSwitch, getString(R.string.tutos_pronunciation_quiz), getString(R.string.tutos_pronunciation_quiz_message)
-            ) { }
+            showTutoOnce(prefs, TutoId.PRONUNCIATION, requireActivity(), binding.btnPronunciationSwitch,
+                getString(R.string.tutos_pronunciation_quiz), getString(R.string.tutos_pronunciation_quiz_message)) {}
         }
         binding.btnAudioSwitch.setOnClickListener {
-            spotlightTuto(requireActivity(), binding.btnAudioSwitch, getString(R.string.tutos_audio_quiz), getString(R.string.tutos_audio_quiz_message)
-            ) { }
+            showTutoOnce(prefs, TutoId.AUDIO, requireActivity(), binding.btnAudioSwitch,
+                getString(R.string.tutos_audio_quiz), getString(R.string.tutos_audio_quiz_message)) {}
             when (checkSpeechAvailability(requireActivity(), ttsSupported, getCategoryLevel(selectedCategory))) {
                 SpeechAvailability.NOT_AVAILABLE -> speechNotSupportedAlert(requireActivity(), getCategoryLevel(selectedCategory)) {
                     (activity as QuizzesActivity).quizzesAdapter.notifyDataSetChanged()
@@ -172,18 +173,18 @@ class QuizzesFragment(private val di: DI) : Fragment(), QuizzesContract.View, Qu
         }
         binding.btnEnJapSwitch.setOnClickListener {
             mpresenter.quizTypeSwitch(QuizType.TYPE_EN_JAP)
-            spotlightTuto(requireActivity(), binding.btnEnJapSwitch, getString(R.string.tutos_en_jp), getString(R.string.tutos_en_jp_message)
-            ) { }
+            showTutoOnce(prefs, TutoId.EN_JP, requireActivity(), binding.btnEnJapSwitch,
+                getString(R.string.tutos_en_jp), getString(R.string.tutos_en_jp_message)) {}
         }
         binding.btnJapEnSwitch.setOnClickListener {
             mpresenter.quizTypeSwitch(QuizType.TYPE_JAP_EN)
-            spotlightTuto(requireActivity(), binding.btnJapEnSwitch, getString(R.string.tutos_jp_en), getString(R.string.tutos_jp_en_message)
-            ) { }
+            showTutoOnce(prefs, TutoId.JP_EN, requireActivity(), binding.btnJapEnSwitch,
+                getString(R.string.tutos_jp_en), getString(R.string.tutos_jp_en_message)) {}
         }
         binding.btnAutoSwitch.setOnClickListener {
             mpresenter.quizTypeSwitch(QuizType.TYPE_AUTO)
-            spotlightTuto(requireActivity(), binding.btnAutoSwitch, getString(R.string.tutos_auto_quiz), getString(R.string.tutos_auto_quiz_message)
-            ) { }
+            showTutoOnce(prefs, TutoId.AUTO, requireActivity(), binding.btnAutoSwitch,
+                getString(R.string.tutos_auto_quiz), getString(R.string.tutos_auto_quiz_message)) {}
         }
 
         binding.playLow.setOnClickListener {
@@ -404,29 +405,18 @@ class QuizzesFragment(private val di: DI) : Fragment(), QuizzesContract.View, Qu
     }
 
     private fun tutos() = lifecycleScope.launch {
-        withContext(IO) {
-            sleep(500)
-        }
-        if (activity != null) {
-            spotlightTuto(requireActivity(), binding.btnPronunciationQcmSwitch, getString(R.string.tuto_quiz_type), getString(R.string.tuto_quiz_type_message)
-            ) {
-                if (activity != null) {
-                    spotlightTuto(requireActivity(),
-                        binding.textLow,
-                        getString(R.string.tuto_progress),
-                        getString(R.string.tuto_progress_message)
-                    ) {
-                        if (activity != null) {
-                            spotlightTuto(requireActivity(),
-                                binding.recyclerview.findViewHolderForAdapterPosition(0)?.itemView?.findViewById(
-                                    R.id.quiz_check
-                                ),
-                                getString(R.string.tuto_part_selection),
-                                getString(R.string.tuto_part_selection_message)
-                            ) { }
-                        }
-                    }
-                }
+        withContext(IO) { sleep(500) }
+        val act = activity ?: return@launch
+        showTutoOnce(prefs, TutoId.QUIZ_TYPE, act, binding.btnPronunciationQcmSwitch,
+            getString(R.string.tuto_quiz_type), getString(R.string.tuto_quiz_type_message)) {
+            val act2 = activity ?: return@showTutoOnce
+            showTutoOnce(prefs, TutoId.PROGRESS, act2, binding.textLow,
+                getString(R.string.tuto_progress), getString(R.string.tuto_progress_message)) {
+                val act3 = activity ?: return@showTutoOnce
+                showTutoOnce(prefs, TutoId.PART_SELECTION, act3,
+                    binding.recyclerview.findViewHolderForAdapterPosition(0)
+                        ?.itemView?.findViewById(R.id.quiz_check),
+                    getString(R.string.tuto_part_selection), getString(R.string.tuto_part_selection_message)) {}
             }
         }
     }

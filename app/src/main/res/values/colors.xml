@@ -43,6 +43,14 @@
     <color name="level_low_2">#d24328</color>
     <color name="level_low_1">#d22828</color>
 
+    <!-- Parts of Speech chip colors -->
+    <color name="pos_noun">#1565C0</color>        <!-- blue -->
+    <color name="pos_verb">#E65100</color>        <!-- deep orange -->
+    <color name="pos_adjective">#2E7D32</color>   <!-- green -->
+    <color name="pos_adverb">#6A1B9A</color>      <!-- purple -->
+    <color name="pos_other">#546E7A</color>       <!-- blue-grey -->
+    <color name="pos_chip_text">#FFFFFF</color>   <!-- white text on all chips -->
+
     <color name="transparent">#00000000</color>
     <color name="blackTransparent">#44000000</color>
     <color name="blackTransparentLight">#22000000</color>

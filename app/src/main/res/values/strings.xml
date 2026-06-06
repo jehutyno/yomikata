@@ -263,4 +263,31 @@
     <string name="never_review">Never review</string>
     <string name="after_flawless_session">After flawless session</string>
     <string name="automatically_continue">Automatically continue</string>
+
+    <!-- Parts of Speech chip labels -->
+    <string name="pos_noun">Noun</string>
+    <string name="pos_pronoun">Pronoun</string>
+    <string name="pos_verb">Verb</string>
+    <string name="pos_verb_ichidan">Ichidan</string>
+    <string name="pos_verb_godan">Godan</string>
+    <string name="pos_verb_suru">Suru</string>
+    <string name="pos_verb_zuru">Zuru</string>
+    <string name="pos_intransitive">Intransitive</string>
+    <string name="pos_transitive">Transitive</string>
+    <string name="pos_adjective">Adjective</string>
+    <string name="pos_adj_i">Adj. -i</string>
+    <string name="pos_adj_na">Adj. -na</string>
+    <string name="pos_adj_no">Adj. -no</string>
+    <string name="pos_adj_t">Adj. -taru</string>
+    <string name="pos_adverb">Adverb</string>
+    <string name="pos_prefix">Prefix</string>
+    <string name="pos_suffix">Suffix</string>
+    <string name="pos_expression">Expression</string>
+    <string name="pos_number">Number</string>
+    <string name="pos_counter">Counter</string>
+    <string name="pos_auxiliary">Auxiliary</string>
+    <string name="pos_abbreviation">Abbreviation</string>
+    <string name="pos_polite">Polite</string>
+    <string name="pos_humble">Humble</string>
+    <string name="pos_interjection">Interjection</string>
 </resources>

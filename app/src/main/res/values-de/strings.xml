@@ -235,4 +235,23 @@
     <string name="prefs_language_section">Sprache</string>
     <string name="prefs_language_title">Übersetzungssprache</string>
     <string name="language_changed_title">Sprache geändert</string>
+
+    <!-- Parts of Speech chip labels -->
+    <string name="pos_noun">Nomen</string>
+    <string name="pos_pronoun">Pronomen</string>
+    <string name="pos_verb">Verb</string>
+    <string name="pos_intransitive">Intransitiv</string>
+    <string name="pos_transitive">Transitiv</string>
+    <string name="pos_adjective">Adjektiv</string>
+    <string name="pos_adverb">Adverb</string>
+    <string name="pos_prefix">Präfix</string>
+    <string name="pos_suffix">Suffix</string>
+    <string name="pos_expression">Ausdruck</string>
+    <string name="pos_number">Zahl</string>
+    <string name="pos_counter">Zählwort</string>
+    <string name="pos_auxiliary">Hilfsverb</string>
+    <string name="pos_abbreviation">Abkürzung</string>
+    <string name="pos_polite">Höflich</string>
+    <string name="pos_humble">Bescheiden</string>
+    <string name="pos_interjection">Interjektion</string>
 </resources>

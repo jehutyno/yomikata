@@ -22,10 +22,6 @@ import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.YomikataZKApplication
 import com.jehutyno.yomikata.model.Sentence
 import com.jehutyno.yomikata.model.Word
-import com.wooplr.spotlight.SpotlightConfig
-import com.wooplr.spotlight.SpotlightView
-import com.wooplr.spotlight.prefs.PreferencesManager
-import com.wooplr.spotlight.utils.SpotlightListener
 import splitties.alertdialog.appcompat.*
 import java.io.File
 import java.util.*
@@ -346,74 +342,3 @@ fun launchVoicesDownload(activity: Activity, level: Int, finishedListener: () ->
 }
 
 
-fun spotlightWelcome(activity: Activity, target: View, title: String, message: String, listener: SpotlightListener) {
-    SpotlightView.Builder(activity)
-            .introAnimationDuration(0)
-            .performClick(true)
-            .fadeinTextDuration(400)
-            .headingTvColor(ContextCompat.getColor(activity, R.color.colorAccent))
-            .headingTvSize(32)
-            .headingTvText(title)
-            .subHeadingTvColor(ContextCompat.getColor(activity, R.color.spotlight_subhead))
-            .subHeadingTvSize(16)
-            .subHeadingTvText(message)
-            .maskColor(ContextCompat.getColor(activity, R.color.blackTransparentDarker))
-            .target(target)
-            .lineAnimDuration(200)
-            .lineAndArcColor(ContextCompat.getColor(activity, R.color.colorAccent))
-            .dismissOnTouch(true)
-            .dismissOnBackPress(true)
-            .enableDismissAfterShown(true)
-            .enableRevealAnimation(false)
-            .usageId(title)
-            .setListener(listener)
-            .show()
-}
-
-fun spotlightTuto(activity: Activity, target: View?, title: String, message: String, listener: SpotlightListener): Boolean {
-    val pm = PreferencesManager(activity)
-    val ret = pm.isDisplayed(title)
-    if (target != null) {
-        SpotlightView.Builder(activity)
-                .introAnimationDuration(200)
-                .performClick(true)
-                .fadeinTextDuration(400)
-                .headingTvColor(ContextCompat.getColor(activity, R.color.colorAccent))
-                .headingTvSize(21)
-                .headingTvText(title)
-                .subHeadingTvColor(ContextCompat.getColor(activity, R.color.spotlight_subhead))
-                .subHeadingTvSize(16)
-                .subHeadingTvText(message)
-                .maskColor(ContextCompat.getColor(activity, R.color.blackTransparentDark))
-                .target(target)
-                .lineAnimDuration(200)
-                .lineAndArcColor(ContextCompat.getColor(activity, R.color.colorAccent))
-                .dismissOnTouch(true)
-                .dismissOnBackPress(true)
-                .enableDismissAfterShown(true)
-                .usageId(title)
-                .setListener(listener)
-                .show()
-    }
-
-    return ret
-}
-
-fun spotlightConfig(activity: Activity): SpotlightConfig {
-    val config = SpotlightConfig()
-    config.introAnimationDuration = 200
-    config.isPerformClick = true
-    config.fadingTextDuration = 400
-    config.headingTvColor = ContextCompat.getColor(activity, R.color.colorAccent)
-    config.headingTvSize = 21
-    config.subHeadingTvColor = ContextCompat.getColor(activity, R.color.spotlight_subhead)
-    config.subHeadingTvSize = 16
-    config.maskColor = ContextCompat.getColor(activity, R.color.blackTransparentDark)
-    config.lineAnimationDuration = 200
-    config.lineAndArcColor = ContextCompat.getColor(activity, R.color.colorAccent)
-    config.isDismissOnTouch = true
-    config.isDismissOnBackpress = true
-    config.isDismissOnTouch = true
-
-    return config
-}

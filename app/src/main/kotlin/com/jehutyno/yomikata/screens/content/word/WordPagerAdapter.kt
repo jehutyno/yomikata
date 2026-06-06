@@ -10,7 +10,10 @@ import android.view.View.VISIBLE
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.appcompat.widget.PopupMenu
+import android.view.ContextThemeWrapper
+import androidx.core.content.ContextCompat
 import androidx.viewpager.widget.PagerAdapter
+import com.google.android.material.chip.Chip
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.databinding.VhKanjiSoloBinding
 import com.jehutyno.yomikata.databinding.VhWordDetailBinding
@@ -49,6 +52,7 @@ class WordPagerAdapter(val activity: Activity, var quizType: QuizType?, var call
         binding.levelUp.visibility = if (quizType != null) GONE else VISIBLE
         wordDisplay.let { binding.furiWord.text_set(wordDisplay, 0, it.length, getWordColor(container.context, word.first.points)) }
         binding.textTraduction.text = word.first.getTrad()
+        populatePosChips(binding, word.first, container.context)
 //        val sentenceNoFuri = sentenceNoFuri(word.third)
         val wordTruePosition = word.third.jap.let { getWordPositionInFuriSentence(it, word.first) }
         wordTruePosition.let {
@@ -122,6 +126,66 @@ class WordPagerAdapter(val activity: Activity, var quizType: QuizType?, var call
         val view = binding.root
         container.addView(view)
         return view
+    }
+
+    private fun populatePosChips(binding: VhWordDetailBinding, word: Word, context: Context) {
+        binding.chipGroupPos.removeAllViews()
+        val tokens = word.getPosTokens()
+        if (tokens.isEmpty()) return
+
+        val chipContext = ContextThemeWrapper(context, com.google.android.material.R.style.Theme_MaterialComponents_DayNight)
+        tokens.forEach { token ->
+            val (labelRes, colorRes) = posTokenToResources(token) ?: return@forEach
+            val chip = Chip(chipContext).apply {
+                text = context.getString(labelRes)
+                isClickable = false
+                isCheckable = false
+                isChipIconVisible = false
+                isCheckedIconVisible = false
+                isCloseIconVisible = false
+                chipBackgroundColor = android.content.res.ColorStateList.valueOf(
+                    ContextCompat.getColor(context, colorRes)
+                )
+                setTextColor(ContextCompat.getColor(context, R.color.pos_chip_text))
+                textSize = 11f
+                // Padding symétrique pour centrer le texte dans le chip
+                chipStartPadding = 8f
+                chipEndPadding = 8f
+            }
+            binding.chipGroupPos.addView(chip)
+        }
+    }
+
+    /** Maps a POS token string to a (labelStringRes, chipColorRes) pair, or null to skip. */
+    private fun posTokenToResources(token: String): Pair<Int, Int>? {
+        return when {
+            token == "n" || token == "n-t"   -> Pair(R.string.pos_noun,         R.color.pos_noun)
+            token == "n-suf"                 -> Pair(R.string.pos_suffix,       R.color.pos_noun)
+            token == "n-adv"                 -> Pair(R.string.pos_adverb,       R.color.pos_adverb)
+            token == "pn"                    -> Pair(R.string.pos_pronoun,      R.color.pos_noun)
+            token == "vi"                    -> Pair(R.string.pos_intransitive, R.color.pos_verb)
+            token == "vt"                    -> Pair(R.string.pos_transitive,   R.color.pos_verb)
+            token == "v1"                    -> Pair(R.string.pos_verb_ichidan, R.color.pos_verb)
+            token == "vz"                    -> Pair(R.string.pos_verb_zuru,    R.color.pos_verb)
+            token == "vs"                    -> Pair(R.string.pos_verb_suru,    R.color.pos_verb)
+            token.startsWith("v5")           -> Pair(R.string.pos_verb_godan,   R.color.pos_verb)
+            token == "aux-v" || token == "aux-adj" -> Pair(R.string.pos_auxiliary, R.color.pos_verb)
+            token == "adj-i"                 -> Pair(R.string.pos_adj_i,        R.color.pos_adjective)
+            token == "adj-na"                -> Pair(R.string.pos_adj_na,       R.color.pos_adjective)
+            token == "adj-no"                -> Pair(R.string.pos_adj_no,       R.color.pos_adjective)
+            token == "adj-t"                 -> Pair(R.string.pos_adj_t,        R.color.pos_adjective)
+            token == "adv" || token == "adv-to" -> Pair(R.string.pos_adverb,   R.color.pos_adverb)
+            token == "pref"                  -> Pair(R.string.pos_prefix,       R.color.pos_other)
+            token == "suf"                   -> Pair(R.string.pos_suffix,       R.color.pos_other)
+            token == "exp"                   -> Pair(R.string.pos_expression,   R.color.pos_other)
+            token == "num"                   -> Pair(R.string.pos_number,       R.color.pos_other)
+            token == "ctr"                   -> Pair(R.string.pos_counter,      R.color.pos_other)
+            token == "abbr"                  -> Pair(R.string.pos_abbreviation, R.color.pos_other)
+            token == "pol"                   -> Pair(R.string.pos_polite,       R.color.pos_other)
+            token == "hum"                   -> Pair(R.string.pos_humble,       R.color.pos_other)
+            token == "int"                   -> Pair(R.string.pos_interjection, R.color.pos_other)
+            else                             -> null
+        }
     }
 
     fun replaceData(list: List<Triple<Word, List<KanjiSoloRadical?>, Sentence>>) {

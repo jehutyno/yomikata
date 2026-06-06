@@ -72,7 +72,8 @@ data class RoomWords (
     @ColumnInfo(defaultValue = "") val german: String = "",
     @ColumnInfo(defaultValue = "") val spanish: String = "",
     @ColumnInfo(defaultValue = "") val portuguese: String = "",
-    @ColumnInfo(defaultValue = "") val chinese: String = ""
+    @ColumnInfo(defaultValue = "") val chinese: String = "",
+    @ColumnInfo(defaultValue = "") val pos: String = ""
 ) {
     companion object {
         fun from(word: Word): RoomWords {
@@ -80,7 +81,7 @@ data class RoomWords (
                              word.reading, word.level.level, word.countTry, word.countSuccess,
                              word.countFail, word.isKana, word.repetition, word.points,
                              word.baseCategory, word.isSelected, word.sentenceId,
-                             word.german, word.spanish, word.portuguese, word.chinese)
+                             word.german, word.spanish, word.portuguese, word.chinese, word.pos)
         }
     }
 
@@ -88,7 +89,7 @@ data class RoomWords (
         return Word(
             _id, japanese, english, french, reading, level.toLevel(), count_try, count_success,
             count_fail, is_kana, repetition, points, base_category, isSelected, sentence_id,
-            german, spanish, portuguese, chinese
+            german, spanish, portuguese, chinese, pos
         )
     }
 }

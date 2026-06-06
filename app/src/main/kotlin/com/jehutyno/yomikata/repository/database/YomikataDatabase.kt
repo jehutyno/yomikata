@@ -19,7 +19,7 @@ import java.io.OutputStream
 import java.nio.channels.FileLock
 
 
-const val DATABASE_VERSION = 19
+const val DATABASE_VERSION = 21
 
 @Database(entities = [RoomKanjiSolo::class, RoomQuiz::class, RoomSentences::class,
                       RoomStatEntry::class, RoomWords::class, RoomQuizWord::class,
@@ -53,15 +53,24 @@ abstract class YomikataDatabase : RoomDatabase() {
                             .createFromAsset(DATABASE_FILE_NAME)
                             .addMigrations(
                                 MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16,
-                                MIGRATION_16_17, MIGRATION_17_18,
-                                createMigration18to19(context)
+                                MIGRATION_16_21
                             )
                             .addCallback(object : RoomDatabase.Callback() {
                                 // onOpen runs AFTER all migrations are committed, outside any
                                 // Room transaction. ATTACH DATABASE is safe here (no WAL deadlock).
                                 override fun onOpen(db: SupportSQLiteDatabase) {
                                     super.onOpen(db)
+                                    // Room 2.7+ requires room_table_modification_log for
+                                    // TriggerBasedInvalidationTracker. createAllTables() creates it
+                                    // on fresh installs, but not during migrations from old versions.
+                                    // onOpen runs before any Flow observer triggers syncTriggers().
+                                    db.execSQL(
+                                        "CREATE TABLE IF NOT EXISTS `room_table_modification_log` " +
+                                        "(`table_id` INTEGER NOT NULL, `invalidated` INTEGER NOT NULL DEFAULT 0, " +
+                                        "PRIMARY KEY(`table_id`))"
+                                    )
                                     populateTranslationsIfNeeded(context, db)
+                                    populatePosIfNeeded(context, db)
                                 }
                             })
                             .fallbackToDestructiveMigrationFrom(
@@ -296,6 +305,118 @@ abstract class YomikataDatabase : RoomDatabase() {
         }
 
         /**
+         * Migration 19 → 20 — extract Parts of Speech from english column into dedicated pos column.
+         *
+         * For each word, the POS tokens (e.g. "(n)", "(v1,vt)") are extracted from the english
+         * field, stored comma-separated in the new pos column, and stripped from english.
+         * Self-contained: the regex is re-declared here so it does not depend on TranslationParser.
+         */
+        val MIGRATION_19_20 = object : Migration(19, 20) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("ALTER TABLE words ADD COLUMN pos TEXT NOT NULL DEFAULT ''")
+
+                // Re-declare the POS regex inline (migration must be self-contained)
+                val godanEndings = "utrnbmkgs"
+                val possiblePopTokens = arrayOf(
+                    "n", "n-suf", "n-adv",
+                    "pn",
+                    "vs", "vi", "vt",
+                    "adj-na", "adj-no", "adj-i", "adj-t",
+                    "adv", "adv-to", "n-adv", "n-t",
+                    "pref", "suf",
+                    "exp",
+                    "num", "ctr",
+                    "pol", "hum",
+                    "abbr",
+                    "int",
+                    "v1", "vz",
+                    "aux-v", "aux-adj",
+                    *godanEndings.map { "v5$it" }.toTypedArray()
+                ).distinct()
+                val concat = possiblePopTokens.joinToString("|")
+                val regexPop = Regex("""\(($concat)(,($concat))*\)\s*""")
+
+                // Read all words
+                val rows = mutableListOf<Triple<Long, String, String>>() // id, pos, cleaned english
+                database.query("SELECT _id, english FROM words").use { cursor ->
+                    val idIdx = cursor.getColumnIndexOrThrow("_id")
+                    val enIdx = cursor.getColumnIndexOrThrow("english")
+                    while (cursor.moveToNext()) {
+                        val id = cursor.getLong(idIdx)
+                        val english = cursor.getString(enIdx)
+                        // Collect all POS tokens found in this english string
+                        val tokens = regexPop.findAll(english)
+                            .flatMap { match ->
+                                match.value.trim().removeSurrounding("(", ")")
+                                    .trimEnd()
+                                    .split(",")
+                            }
+                            .distinct()
+                            .toList()
+                        val posStr = tokens.joinToString(",")
+                        val cleanedEnglish = regexPop.replace(english, "").trim()
+                        rows.add(Triple(id, posStr, cleanedEnglish))
+                    }
+                }
+
+                // Write back extracted POS and cleaned english
+                val update = "UPDATE words SET pos = ?, english = ? WHERE _id = ?"
+                rows.forEach { (id, pos, english) ->
+                    database.execSQL(update, arrayOf<Any>(pos, english, id))
+                }
+            }
+        }
+
+        /**
+         * Migration 20 → 21 — schema-only version bump, no DDL changes.
+         *
+         * POS data enrichment (JLPT4/5 words missing POS after migration 19→20) is applied by
+         * [populatePosIfNeeded] in the [RoomDatabase.Callback.onOpen] callback, which runs
+         * outside any Room transaction so ATTACH DATABASE works without WAL deadlock.
+         */
+        val MIGRATION_20_21 = object : Migration(20, 21) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                // Room 2.7+ requires room_table_modification_log for TriggerBasedInvalidationTracker.
+                // This table is created by createAllTables() on fresh installs but NOT automatically
+                // during migrations from older schema versions — so we create it explicitly here.
+                database.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `room_table_modification_log` " +
+                    "(`table_id` INTEGER NOT NULL, `invalidated` INTEGER NOT NULL DEFAULT 0, " +
+                    "PRIMARY KEY(`table_id`))"
+                )
+            }
+        }
+
+        /**
+         * Populates pos column for words that still have an empty pos, using the bundled
+         * asset database as source. Runs outside any Room transaction (onOpen callback).
+         * Safe to call multiple times — exits immediately if no words need updating.
+         */
+        fun populatePosIfNeeded(context: Context, db: SupportSQLiteDatabase) {
+            val needsUpdate = db.query("SELECT COUNT(*) FROM words WHERE pos = '' LIMIT 1").use {
+                it.moveToFirst() && it.getInt(0) > 0
+            }
+            if (!needsUpdate) return
+
+            val tempFile = File(context.cacheDir, "asset_pos_temp.db")
+            try {
+                context.assets.open(DATABASE_FILE_NAME).use { input ->
+                    FileOutputStream(tempFile).use { output -> input.copyTo(output) }
+                }
+                db.execSQL("ATTACH DATABASE '${tempFile.absolutePath}' AS assetpos")
+                db.execSQL("""
+                    UPDATE words
+                    SET pos = (SELECT a.pos FROM assetpos.words a WHERE a._id = words._id)
+                    WHERE pos = ''
+                      AND EXISTS (SELECT 1 FROM assetpos.words a WHERE a._id = words._id AND a.pos != '')
+                """.trimIndent())
+                db.execSQL("DETACH DATABASE assetpos")
+            } finally {
+                tempFile.delete()
+            }
+        }
+
+        /**
          * Returns true if the words table still has empty translation columns.
          * Called by the onOpen callback to decide whether to run the translation copy.
          */
@@ -364,6 +485,89 @@ abstract class YomikataDatabase : RoomDatabase() {
                 for (col in listOf("name_de", "name_es", "name_pt", "name_zh")) {
                     database.execSQL("ALTER TABLE quiz ADD COLUMN $col TEXT NOT NULL DEFAULT ''")
                 }
+            }
+        }
+
+        /**
+         * Migration 16 → 21 — single consolidated migration for production users (prod DB v16).
+         *
+         * Combines all changes from the 16→17→18→19→20→21 chain:
+         *  - 16→17 : data cleanup (phantom word, double spaces)
+         *  - 17→18 : ADD COLUMN for DE/ES/PT/ZH translations in all tables
+         *  - 18→19 : translation data populated by [populateTranslationsIfNeeded] in onOpen
+         *  - 19→20 : ADD COLUMN pos + POS extraction from english field
+         *  - 20→21 : CREATE room_table_modification_log (Room 2.7+ TriggerBasedInvalidationTracker)
+         */
+        val MIGRATION_16_21 = object : Migration(16, 21) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                // --- 16→17: Data cleanup ---
+                database.execSQL("DELETE FROM words WHERE _id = 3537")
+                database.execSQL("""
+                    UPDATE words SET english = TRIM(REPLACE(english, '  ', ' '))
+                    WHERE english LIKE '%  %' OR english != TRIM(english)
+                """.trimIndent())
+                database.execSQL("""
+                    UPDATE words SET french = TRIM(REPLACE(french, '  ', ' '))
+                    WHERE french LIKE '%  %' OR french != TRIM(french)
+                """.trimIndent())
+                database.execSQL("""
+                    UPDATE sentences SET en = TRIM(REPLACE(en, '  ', ' '))
+                    WHERE en LIKE '%  %' OR en != TRIM(en)
+                """.trimIndent())
+                database.execSQL("""
+                    UPDATE sentences SET fr = TRIM(REPLACE(fr, '  ', ' '))
+                    WHERE fr LIKE '%  %' OR fr != TRIM(fr)
+                """.trimIndent())
+
+                // --- 17→18: Add multilingual columns ---
+                for (col in listOf("german", "spanish", "portuguese", "chinese"))
+                    database.execSQL("ALTER TABLE words ADD COLUMN $col TEXT NOT NULL DEFAULT ''")
+                for (col in listOf("de", "es", "pt", "zh"))
+                    database.execSQL("ALTER TABLE sentences ADD COLUMN $col TEXT NOT NULL DEFAULT ''")
+                for (col in listOf("de", "es", "pt", "zh"))
+                    database.execSQL("ALTER TABLE kanji_solo ADD COLUMN $col TEXT NOT NULL DEFAULT ''")
+                for (col in listOf("de", "es", "pt", "zh"))
+                    database.execSQL("ALTER TABLE radicals ADD COLUMN $col TEXT NOT NULL DEFAULT ''")
+                for (col in listOf("name_de", "name_es", "name_pt", "name_zh"))
+                    database.execSQL("ALTER TABLE quiz ADD COLUMN $col TEXT NOT NULL DEFAULT ''")
+
+                // --- 18→19: Translations populated by onOpen (populateTranslationsIfNeeded) ---
+
+                // --- 19→20: Extract POS from english field into dedicated pos column ---
+                database.execSQL("ALTER TABLE words ADD COLUMN pos TEXT NOT NULL DEFAULT ''")
+                val godanEndings = "utrnbmkgs"
+                val possiblePosTokens = arrayOf(
+                    "n", "n-suf", "n-adv", "pn", "vs", "vi", "vt",
+                    "adj-na", "adj-no", "adj-i", "adj-t", "adv", "adv-to", "n-t",
+                    "pref", "suf", "exp", "num", "ctr", "pol", "hum", "abbr", "int",
+                    "v1", "vz", "aux-v", "aux-adj",
+                    *godanEndings.map { "v5$it" }.toTypedArray()
+                ).distinct()
+                val concat = possiblePosTokens.joinToString("|")
+                val regexPos = Regex("""\(($concat)(,($concat))*\)\s*""")
+                val rows = mutableListOf<Triple<Long, String, String>>()
+                database.query("SELECT _id, english FROM words").use { cursor ->
+                    val idIdx = cursor.getColumnIndexOrThrow("_id")
+                    val enIdx = cursor.getColumnIndexOrThrow("english")
+                    while (cursor.moveToNext()) {
+                        val id = cursor.getLong(idIdx)
+                        val english = cursor.getString(enIdx)
+                        val tokens = regexPos.findAll(english)
+                            .flatMap { it.value.trim().removeSurrounding("(", ")").trimEnd().split(",") }
+                            .distinct().toList()
+                        rows.add(Triple(id, tokens.joinToString(","), regexPos.replace(english, "").trim()))
+                    }
+                }
+                rows.forEach { (id, pos, english) ->
+                    database.execSQL("UPDATE words SET pos = ?, english = ? WHERE _id = ?", arrayOf<Any>(pos, english, id))
+                }
+
+                // --- 20→21: Room 2.7+ internal invalidation tracking table ---
+                database.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `room_table_modification_log` " +
+                    "(`table_id` INTEGER NOT NULL, `invalidated` INTEGER NOT NULL DEFAULT 0, " +
+                    "PRIMARY KEY(`table_id`))"
+                )
             }
         }
 

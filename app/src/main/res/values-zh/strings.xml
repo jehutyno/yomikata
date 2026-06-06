@@ -235,4 +235,31 @@
     <string name="prefs_language_section">语言</string>
     <string name="prefs_language_title">翻译语言</string>
     <string name="language_changed_title">语言已更改</string>
+
+    <!-- Parts of Speech chip labels -->
+    <string name="pos_noun">名词</string>
+    <string name="pos_pronoun">代词</string>
+    <string name="pos_verb">动词</string>
+    <string name="pos_verb_ichidan">一段动词</string>
+    <string name="pos_verb_godan">五段动词</string>
+    <string name="pos_verb_suru">サ変动词</string>
+    <string name="pos_verb_zuru">ザ変动词</string>
+    <string name="pos_intransitive">不及物</string>
+    <string name="pos_transitive">及物</string>
+    <string name="pos_adjective">形容词</string>
+    <string name="pos_adj_i">い形容词</string>
+    <string name="pos_adj_na">な形容词</string>
+    <string name="pos_adj_no">の形容词</string>
+    <string name="pos_adj_t">たる形容词</string>
+    <string name="pos_adverb">副词</string>
+    <string name="pos_prefix">前缀</string>
+    <string name="pos_suffix">后缀</string>
+    <string name="pos_expression">表达</string>
+    <string name="pos_number">数词</string>
+    <string name="pos_counter">量词</string>
+    <string name="pos_auxiliary">助动词</string>
+    <string name="pos_abbreviation">缩写</string>
+    <string name="pos_polite">敬语</string>
+    <string name="pos_humble">谦语</string>
+    <string name="pos_interjection">感叹词</string>
 </resources>

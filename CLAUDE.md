@@ -123,9 +123,10 @@ Doit être appelé AVANT tout accès au DI ou à `getTrad()`.
 
 ## Base de données
 
-- **Version courante : 19**
+- **Version courante : 21** — migration consolidée `MIGRATION_16_21` (prod APK code 65 = DB v16 → v21 en un seul saut)
 - Asset : `app/src/main/assets/yomikataz.db`
 - `fallbackToDestructiveMigrationFrom(0..12)` est utilisé (PAS `fallbackToDestructiveMigration()`) → les utilisateurs sur version < 13 ont un reset propre sans crash. **Piège Room 2.6.1** : `fallbackToDestructiveMigration()` seul + `createFromAsset` efface la DB de TOUS les utilisateurs (isMigrationRequired retourne false → SQLiteCopyOpenHelper remplace la DB par l'asset pour toute version ≠ cible)
+- **Piège Room 2.7+** : `room_table_modification_log` requis par `TriggerBasedInvalidationTracker` — créer explicitement dans les migrations ET dans `onOpen` (`CREATE TABLE IF NOT EXISTS`)
 - Les migrations 1→12 ont été supprimées (code mort, no-op)
 - Schémas exportés disponibles à partir de la v14 dans `app/schemas/`
 
@@ -206,7 +207,7 @@ Le hash est dans `app/schemas/.../VERSION.json` champ `identityHash`. Sans ça, 
 - ✅ **Phase 3f** : Mandarin — UI strings (238 strings, values-zh/strings.xml) + noms de quiz (96/96)
 
 ### Phases suivantes
-- **Phase 4** : Tags POS (architecture dédiée — implications UI + quiz)
+- ✅ **Phase 4** : Tags POS — colonne `pos` dans `words` (migration 19→20), extraction depuis `english`, chips localisés dans la fiche détail du mot
 - **Phase 5** : Tests intégrité BDD (`DatabaseIntegrityTest`)
 
 ### Couverture mots par langue (état actuel)
