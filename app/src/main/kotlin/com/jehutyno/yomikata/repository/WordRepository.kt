@@ -1,8 +1,8 @@
 package com.jehutyno.yomikata.repository
 
 import com.jehutyno.yomikata.model.Word
-import com.jehutyno.yomikata.util.Level
-import com.jehutyno.yomikata.util.QuizType
+import com.jehutyno.yomikata.util.quiz.Level
+import com.jehutyno.yomikata.util.quiz.QuizType
 import kotlinx.coroutines.flow.Flow
 
 

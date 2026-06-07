@@ -61,11 +61,11 @@ Les presenters reçoivent un `CoroutineScope` (le `lifecycleScope` du fragment h
 | `quiz` | `QuizActivity` / `QuizFragment` | Session de quiz complète |
 | `answers` | `AnswersActivity` | Récapitulatif des réponses après une session |
 | `search` | `SearchResultActivity` | Recherche de mots dans toute la base |
-| `PrefsActivity` | `PrefsActivity` | Paramètres (thème, vitesse TTS, voix, langue de traduction) |
+| `prefs` | `PrefsActivity` | Paramètres (thème, vitesse TTS, voix, langue de traduction) |
 
 ---
 
-## Système de langues (`util/AppLanguage.kt`, `util/LanguageManager.kt`)
+## Système de langues (`util/language/AppLanguage.kt`, `util/language/LanguageManager.kt`)
 
 ### `AppLanguage`
 
@@ -142,7 +142,7 @@ Journal d'événements (action, résultat, date, id associé).
 
 ---
 
-## Système de niveaux (`util/LevelSystem.kt`)
+## Système de niveaux (`util/quiz/LevelSystem.kt`)
 
 Les mots sont notés de 0 à 850 points. Le niveau (`Level`) en découle directement :
 
@@ -290,7 +290,7 @@ Les `Activity` et `Fragment` étendent `DIAware` et récupèrent leurs dépendan
 
 ---
 
-## Préférences utilisateur (`util/Prefs.kt`)
+## Préférences utilisateur (`util/Prefs.kt`, `util/Extras.kt`)
 
 | Clé | Type | Rôle |
 |---|---|---|
@@ -395,6 +395,51 @@ Depuis la migration (juin 2026), toutes les versions et dépendances sont centra
 | Firebase BOM 33.x | RTDB, FCM, Storage |
 | MockK 1.13.x | Mocking pour les tests unitaires |
 | androidx.arch.core:core-testing | `InstantTaskExecutorRule` pour les tests LiveData |
+
+---
+
+## Tutoriels au premier lancement (`util/TutoOverlay.kt`)
+
+---
+
+## Structure des packages
+
+```
+com.jehutyno.yomikata/
+├── YomikataZKApplication.kt
+├── ApplicationModule.kt
+├── audio/                       ← ExoPlayerAudio, VoicesManager, VoicesManagerModule
+├── filechooser/                 ← FileChooserDialog (Java legacy)
+├── model/                       ← Word, Quiz, Sentence, KanjiSolo, Radical, Answer, StatEntry
+├── presenters/                  ← BasePresenter + interfaces (SelectionsInterface, etc.)
+│   └── impl/                   ← SelectionsPresenter, WordInQuizPresenter, WordCountPresenter, PresenterModule
+├── repository/                  ← interfaces XxxRepository (5 fichiers)
+│   ├── database/               ← YomikataDatabase, DatabaseEntities, DatabaseModule
+│   │   └── dao/                ← les 5 DAOs Room + DaoModule
+│   ├── local/                  ← implémentations XxxSource + RepositoryModule
+│   └── migration/              ← SqliteTestHelper
+├── screens/                     ← un sous-package par écran
+│   ├── answers/
+│   ├── content/
+│   │   └── word/
+│   ├── home/
+│   ├── prefs/                  ← PrefsActivity
+│   ├── quiz/
+│   ├── quizzes/
+│   └── search/
+├── util/                        ← utilitaires généraux (Prefs, Extras, TutoOverlay, etc.)
+│   ├── backup/                 ← BackupAndRestore, CopyUtils, LocalPersistence, InsecureSHA1PRNGKeyDerivator
+│   ├── japanese/               ← HiraganaTable, HiraganaUtils
+│   ├── language/               ← AppLanguage, LanguageManager, TranslationParser
+│   └── quiz/                   ← Categories, QuizStrategy, QuizType, LevelSystem
+└── view/                        ← vues custom Android
+    ├── furigana/               ← FuriganaView, QuadraticOptimizer
+    │   └── utils/              ← FuriganaUtils
+    ├── AppBarStateChangeListener.java
+    ├── SwipeDirection.java
+    ├── SwipeDirectionViewPager.java
+    └── WordSelectorActionModeCallback.kt
+```
 
 ---
 

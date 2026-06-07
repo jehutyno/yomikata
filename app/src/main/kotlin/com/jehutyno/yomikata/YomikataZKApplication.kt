@@ -3,11 +3,11 @@ package com.jehutyno.yomikata
 import android.app.Application
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.preference.PreferenceManager
-import com.jehutyno.yomikata.dao.daoModule
-import com.jehutyno.yomikata.presenters.source.presenterModule
+import com.jehutyno.yomikata.repository.database.dao.daoModule
+import com.jehutyno.yomikata.presenters.impl.presenterModule
 import com.jehutyno.yomikata.repository.database.databaseModule
 import com.jehutyno.yomikata.repository.local.repositoryModule
-import com.jehutyno.yomikata.util.LanguageManager
+import com.jehutyno.yomikata.util.language.LanguageManager
 import com.jehutyno.yomikata.util.Prefs
 import io.github.inflationx.calligraphy3.CalligraphyConfig
 import io.github.inflationx.calligraphy3.CalligraphyInterceptor

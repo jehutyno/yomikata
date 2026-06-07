@@ -18,7 +18,7 @@ import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.databinding.FragmentHomeBinding
 import com.jehutyno.yomikata.model.StatEntry
 import com.jehutyno.yomikata.screens.quizzes.QuizzesActivity
-import com.jehutyno.yomikata.util.Categories
+import com.jehutyno.yomikata.util.quiz.Categories
 import com.jehutyno.yomikata.util.Prefs
 import com.jehutyno.yomikata.util.contactDiscord
 import com.jehutyno.yomikata.util.contactFacebook

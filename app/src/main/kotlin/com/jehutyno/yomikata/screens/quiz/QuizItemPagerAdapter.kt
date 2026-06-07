@@ -14,13 +14,13 @@ import androidx.core.content.ContextCompat
 import androidx.viewpager.widget.PagerAdapter
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.databinding.VhQuizItemBinding
-import com.jehutyno.yomikata.furigana.FuriganaView
+import com.jehutyno.yomikata.view.furigana.FuriganaView
 import com.jehutyno.yomikata.model.Sentence
 import com.jehutyno.yomikata.model.Word
 import com.jehutyno.yomikata.model.getWordColor
 import com.jehutyno.yomikata.util.Prefs
-import com.jehutyno.yomikata.util.QuizType
-import com.jehutyno.yomikata.util.cleanForQCM
+import com.jehutyno.yomikata.util.quiz.QuizType
+import com.jehutyno.yomikata.util.language.cleanForQCM
 import com.jehutyno.yomikata.util.getWordPositionInFuriSentence
 import com.jehutyno.yomikata.util.sentenceNoAnswerFuri
 import com.jehutyno.yomikata.util.sentenceNoFuri

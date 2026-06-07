@@ -6,7 +6,7 @@ import com.jehutyno.yomikata.presenters.WordCountInterface
 import com.jehutyno.yomikata.repository.QuizRepository
 import com.jehutyno.yomikata.repository.StatsRepository
 import com.jehutyno.yomikata.util.Prefs
-import com.jehutyno.yomikata.util.QuizType
+import com.jehutyno.yomikata.util.quiz.QuizType
 import io.mockk.coJustRun
 import io.mockk.every
 import io.mockk.mockk

@@ -1,14 +1,14 @@
 package com.jehutyno.yomikata.screens.quiz
 
 import android.os.Bundle
-import com.jehutyno.yomikata.BasePresenter
+import com.jehutyno.yomikata.presenters.BasePresenter
 import com.jehutyno.yomikata.model.Answer
 import com.jehutyno.yomikata.model.Sentence
 import com.jehutyno.yomikata.model.Word
 import com.jehutyno.yomikata.presenters.SelectionsInterface
 import com.jehutyno.yomikata.presenters.WordInQuizInterface
-import com.jehutyno.yomikata.util.Level
-import com.jehutyno.yomikata.util.QuizType
+import com.jehutyno.yomikata.util.quiz.Level
+import com.jehutyno.yomikata.util.quiz.QuizType
 
 
 /**

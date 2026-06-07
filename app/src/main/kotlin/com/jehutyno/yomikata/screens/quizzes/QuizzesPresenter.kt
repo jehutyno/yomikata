@@ -12,10 +12,10 @@ import com.jehutyno.yomikata.model.StatResult
 import com.jehutyno.yomikata.presenters.WordCountInterface
 import com.jehutyno.yomikata.repository.QuizRepository
 import com.jehutyno.yomikata.repository.StatsRepository
-import com.jehutyno.yomikata.util.Categories
+import com.jehutyno.yomikata.util.quiz.Categories
 import com.jehutyno.yomikata.util.Prefs
-import com.jehutyno.yomikata.util.QuizType
-import com.jehutyno.yomikata.util.toQuizType
+import com.jehutyno.yomikata.util.quiz.QuizType
+import com.jehutyno.yomikata.util.quiz.toQuizType
 import kotlinx.coroutines.flow.first
 import mu.KLogging
 import java.util.Calendar

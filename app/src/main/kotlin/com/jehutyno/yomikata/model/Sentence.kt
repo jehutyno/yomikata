@@ -2,8 +2,8 @@ package com.jehutyno.yomikata.model
 
 import android.os.Parcel
 import android.os.Parcelable
-import com.jehutyno.yomikata.util.AppLanguage
-import com.jehutyno.yomikata.util.LanguageManager
+import com.jehutyno.yomikata.util.language.AppLanguage
+import com.jehutyno.yomikata.util.language.LanguageManager
 
 /**
  * Created by valentinlanfranchi on 19/05/2017.

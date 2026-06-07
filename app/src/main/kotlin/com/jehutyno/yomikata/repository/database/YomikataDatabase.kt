@@ -7,11 +7,11 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
-import com.jehutyno.yomikata.dao.KanjiSoloDao
-import com.jehutyno.yomikata.dao.QuizDao
-import com.jehutyno.yomikata.dao.SentenceDao
-import com.jehutyno.yomikata.dao.StatsDao
-import com.jehutyno.yomikata.dao.WordDao
+import com.jehutyno.yomikata.repository.database.dao.KanjiSoloDao
+import com.jehutyno.yomikata.repository.database.dao.QuizDao
+import com.jehutyno.yomikata.repository.database.dao.SentenceDao
+import com.jehutyno.yomikata.repository.database.dao.StatsDao
+import com.jehutyno.yomikata.repository.database.dao.WordDao
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream

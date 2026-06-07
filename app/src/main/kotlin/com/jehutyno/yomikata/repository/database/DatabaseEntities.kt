@@ -15,7 +15,7 @@ import com.jehutyno.yomikata.model.Radical
 import com.jehutyno.yomikata.model.Sentence
 import com.jehutyno.yomikata.model.StatEntry
 import com.jehutyno.yomikata.model.Word
-import com.jehutyno.yomikata.util.toLevel
+import com.jehutyno.yomikata.util.quiz.toLevel
 
 
 @Entity(tableName = "quiz")

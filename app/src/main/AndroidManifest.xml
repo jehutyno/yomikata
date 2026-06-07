@@ -53,7 +53,7 @@
             android:launchMode="singleTop">
         </activity>
         <activity android:name="com.jehutyno.yomikata.screens.quiz.QuizActivity"/>
-        <activity android:name="com.jehutyno.yomikata.screens.PrefsActivity"/>
+        <activity android:name="com.jehutyno.yomikata.screens.prefs.PrefsActivity"/>
     </application>
 
 </manifest>

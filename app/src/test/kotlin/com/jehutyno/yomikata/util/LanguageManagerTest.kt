@@ -6,7 +6,9 @@ import com.jehutyno.yomikata.model.Quiz
 import com.jehutyno.yomikata.model.Radical
 import com.jehutyno.yomikata.model.Sentence
 import com.jehutyno.yomikata.model.Word
-import com.jehutyno.yomikata.util.getLevelFromPoints
+import com.jehutyno.yomikata.util.language.AppLanguage
+import com.jehutyno.yomikata.util.language.LanguageManager
+import com.jehutyno.yomikata.util.quiz.getLevelFromPoints
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify

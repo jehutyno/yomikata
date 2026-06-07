@@ -24,12 +24,15 @@ import androidx.lifecycle.lifecycleScope
 import androidx.viewpager.widget.ViewPager
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.databinding.FragmentQuizBinding
-import com.jehutyno.yomikata.furigana.FuriganaView
-import com.jehutyno.yomikata.managers.VoicesManager
+import com.jehutyno.yomikata.view.furigana.FuriganaView
+import com.jehutyno.yomikata.audio.VoicesManager
 import com.jehutyno.yomikata.model.*
 import com.jehutyno.yomikata.screens.answers.AnswersActivity
 import com.jehutyno.yomikata.screens.content.word.WordDetailDialogFragment
 import com.jehutyno.yomikata.util.*
+import com.jehutyno.yomikata.util.backup.LocalPersistence
+import com.jehutyno.yomikata.util.quiz.QuizType
+import com.jehutyno.yomikata.util.quiz.getCategoryLevel
 import com.jehutyno.yomikata.view.SwipeDirection
 import kotlinx.coroutines.launch
 import org.kodein.di.*

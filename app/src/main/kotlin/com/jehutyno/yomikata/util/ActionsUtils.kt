@@ -19,6 +19,8 @@ import androidx.core.content.ContextCompat
 import androidx.preference.PreferenceManager
 import com.google.firebase.storage.FirebaseStorage
 import com.jehutyno.yomikata.R
+import com.jehutyno.yomikata.util.quiz.getLevelDownloadSize
+import com.jehutyno.yomikata.util.quiz.getLevelDownloadVersion
 import com.jehutyno.yomikata.YomikataZKApplication
 import com.jehutyno.yomikata.model.Sentence
 import com.jehutyno.yomikata.model.Word

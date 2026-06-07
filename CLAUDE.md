@@ -176,6 +176,15 @@ Dans `QuizzesAdapter`, le subtitle affiche les caractères japonais des noms de 
 1. Lire depuis `quiz.nameEn.split("%").getOrElse(1) { "" }` — source unique correcte, indépendante de la langue
 2. Mettre `holder.quizSubtitle.textLocale = Locale.JAPANESE` — déclenche le fallback CJK dans les locales DE/ES/PT/etc.
 
+### Piège encodage XML layouts (PowerShell Set-Content)
+Quand on modifie un fichier XML de layout via PowerShell `Set-Content`, le fichier est écrit avec un BOM UTF-8. Android AAPT rejette les fichiers XML avec BOM. Toujours supprimer le BOM après :
+```powershell
+$bytes = [System.IO.File]::ReadAllBytes($f)
+if ($bytes[0] -eq 0xEF -and $bytes[1] -eq 0xBB -and $bytes[2] -eq 0xBF) {
+    [System.IO.File]::WriteAllBytes($f, $bytes[3..($bytes.Length-1)])
+}
+```
+
 ### Piège scripts PowerShell quiz names
 Tout script PS5.1 qui lit des données SQLite via pipe et les ré-écrit dans la DB **corrompt les caractères non-ASCII** (CJK et accents). Pattern obligatoire :
 - Lire les données SQLite via `.read` d'un fichier UTF-8 NoBOM, pas via pipe
@@ -209,6 +218,7 @@ Le hash est dans `app/schemas/.../VERSION.json` champ `identityHash`. Sans ça, 
 ### Phases suivantes
 - ✅ **Phase 4** : Tags POS — colonne `pos` dans `words` (migration 19→20), extraction depuis `english`, chips localisés dans la fiche détail du mot
 - ✅ **Migration phrases v16** : `populateTranslationsIfNeeded` étendue pour `sentences` (DE/ES/PT/ZH) depuis `yomikataz_translations.db` ; `needsTranslations` vérifie `words.german` ET `sentences.de` pour couvrir les utilisateurs déjà migrés avant l'ajout des traductions de phrases
+- ✅ **Refactoring packages** : réorganisation complète des packages (dao→repository/database/dao, managers→audio, furigana→view/furigana, presenters/source→presenters/impl, util sous-packages language/quiz/backup/japanese, screens/prefs)
 - **Phase 5** : Tests intégrité BDD (`DatabaseIntegrityTest`)
 
 ### Couverture traductions (état actuel)

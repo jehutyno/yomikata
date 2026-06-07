@@ -7,7 +7,7 @@ import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.screens.home.HomeFragment
 import com.jehutyno.yomikata.screens.quizzes.QuizzesActivity
 import com.jehutyno.yomikata.screens.quizzes.QuizzesFragment
-import com.jehutyno.yomikata.util.Categories
+import com.jehutyno.yomikata.util.quiz.Categories
 import com.jehutyno.yomikata.util.Extras
 import org.kodein.di.DI
 

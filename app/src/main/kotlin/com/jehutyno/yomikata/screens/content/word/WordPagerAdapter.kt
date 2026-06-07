@@ -21,7 +21,7 @@ import com.jehutyno.yomikata.model.KanjiSoloRadical
 import com.jehutyno.yomikata.model.Sentence
 import com.jehutyno.yomikata.model.Word
 import com.jehutyno.yomikata.model.getWordColor
-import com.jehutyno.yomikata.util.QuizType
+import com.jehutyno.yomikata.util.quiz.QuizType
 import com.jehutyno.yomikata.util.getWordPositionInFuriSentence
 import com.jehutyno.yomikata.util.sentenceNoAnswerFuri
 import com.jehutyno.yomikata.util.sentenceNoFuri

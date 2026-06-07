@@ -1,11 +1,11 @@
 package com.jehutyno.yomikata.repository.local
 
-import com.jehutyno.yomikata.dao.QuizDao
+import com.jehutyno.yomikata.repository.database.dao.QuizDao
 import com.jehutyno.yomikata.model.Quiz
 import com.jehutyno.yomikata.repository.QuizRepository
 import com.jehutyno.yomikata.repository.database.RoomQuiz
 import com.jehutyno.yomikata.repository.database.RoomQuizWord
-import com.jehutyno.yomikata.util.Level
+import com.jehutyno.yomikata.util.quiz.Level
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 

@@ -1,5 +1,8 @@
 package com.jehutyno.yomikata.util
 
+import com.jehutyno.yomikata.util.language.removeAnyJapanese
+import com.jehutyno.yomikata.util.language.removePartsOfSpeechInfo
+import com.jehutyno.yomikata.util.language.removeSynonyms
 import org.junit.Test
 
 

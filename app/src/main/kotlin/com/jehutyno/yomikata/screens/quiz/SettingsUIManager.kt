@@ -7,7 +7,7 @@ import android.speech.tts.TextToSpeech
 import android.view.View.GONE
 import android.view.View.VISIBLE
 import com.jehutyno.yomikata.databinding.FragmentQuizBinding
-import com.jehutyno.yomikata.managers.VoicesManager
+import com.jehutyno.yomikata.audio.VoicesManager
 import com.jehutyno.yomikata.util.Prefs
 import android.widget.SeekBar
 

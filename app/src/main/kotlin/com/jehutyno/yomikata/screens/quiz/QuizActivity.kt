@@ -16,10 +16,10 @@ import androidx.preference.PreferenceManager
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.databinding.ActivityQuizBinding
 import com.jehutyno.yomikata.util.Extras
-import com.jehutyno.yomikata.util.Level
+import com.jehutyno.yomikata.util.quiz.Level
 import com.jehutyno.yomikata.util.Prefs
-import com.jehutyno.yomikata.util.QuizStrategy
-import com.jehutyno.yomikata.util.QuizType
+import com.jehutyno.yomikata.util.quiz.QuizStrategy
+import com.jehutyno.yomikata.util.quiz.QuizType
 import com.jehutyno.yomikata.util.addOrReplaceFragment
 import com.jehutyno.yomikata.util.getParcelableArrayListExtraHelper
 import com.jehutyno.yomikata.util.getParcelableArrayListHelper

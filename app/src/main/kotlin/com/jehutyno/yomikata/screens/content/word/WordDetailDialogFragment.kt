@@ -12,11 +12,16 @@ import androidx.lifecycle.lifecycleScope
 import androidx.viewpager.widget.ViewPager
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.databinding.DialogWordDetailBinding
-import com.jehutyno.yomikata.managers.VoicesManager
+import com.jehutyno.yomikata.audio.VoicesManager
 import com.jehutyno.yomikata.model.KanjiSoloRadical
 import com.jehutyno.yomikata.model.Sentence
 import com.jehutyno.yomikata.model.Word
 import com.jehutyno.yomikata.util.*
+import com.jehutyno.yomikata.util.quiz.getLevelFromPoints
+import com.jehutyno.yomikata.util.quiz.Level
+import com.jehutyno.yomikata.util.quiz.QuizType
+import com.jehutyno.yomikata.util.quiz.levelDown
+import com.jehutyno.yomikata.util.quiz.levelUp
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.kodein.di.*

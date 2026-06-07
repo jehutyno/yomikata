@@ -28,7 +28,7 @@
             android:background="@drawable/rounded_bg"
             android:foreground="?attr/selectableItemBackground">
 
-            <com.jehutyno.yomikata.furigana.FuriganaView
+            <com.jehutyno.yomikata.view.furigana.FuriganaView
                 android:id="@+id/option_1_furi"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -67,7 +67,7 @@
             android:background="@drawable/rounded_bg"
             android:foreground="?attr/selectableItemBackground">
 
-            <com.jehutyno.yomikata.furigana.FuriganaView
+            <com.jehutyno.yomikata.view.furigana.FuriganaView
                 android:id="@+id/option_2_furi"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -114,7 +114,7 @@
             android:background="@drawable/rounded_bg"
             android:foreground="?attr/selectableItemBackground">
 
-            <com.jehutyno.yomikata.furigana.FuriganaView
+            <com.jehutyno.yomikata.view.furigana.FuriganaView
                 android:id="@+id/option_3_furi"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -152,7 +152,7 @@
             android:background="@drawable/rounded_bg"
             android:foreground="?attr/selectableItemBackground">
 
-            <com.jehutyno.yomikata.furigana.FuriganaView
+            <com.jehutyno.yomikata.view.furigana.FuriganaView
                 android:id="@+id/option_4_furi"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"

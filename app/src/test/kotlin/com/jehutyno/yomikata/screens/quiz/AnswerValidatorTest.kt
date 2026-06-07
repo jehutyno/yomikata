@@ -1,8 +1,8 @@
 package com.jehutyno.yomikata.screens.quiz
 
 import com.jehutyno.yomikata.model.Word
-import com.jehutyno.yomikata.util.Level
-import com.jehutyno.yomikata.util.QuizType
+import com.jehutyno.yomikata.util.quiz.Level
+import com.jehutyno.yomikata.util.quiz.QuizType
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test

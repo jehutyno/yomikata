@@ -3,7 +3,7 @@ package com.jehutyno.yomikata
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.preference.PreferenceManager
-import com.jehutyno.yomikata.util.LanguageManager
+import com.jehutyno.yomikata.util.language.LanguageManager
 import org.kodein.di.DI
 import org.kodein.di.bind
 import org.kodein.di.instance

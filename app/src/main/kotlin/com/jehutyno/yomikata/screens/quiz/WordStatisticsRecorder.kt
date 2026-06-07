@@ -5,7 +5,7 @@ import com.jehutyno.yomikata.model.StatResult
 import com.jehutyno.yomikata.model.Word
 import com.jehutyno.yomikata.repository.StatsRepository
 import com.jehutyno.yomikata.repository.WordRepository
-import com.jehutyno.yomikata.util.Level
+import com.jehutyno.yomikata.util.quiz.Level
 import java.util.Calendar
 
 

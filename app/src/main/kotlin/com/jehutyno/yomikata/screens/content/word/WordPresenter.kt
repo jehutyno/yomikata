@@ -11,8 +11,8 @@ import com.jehutyno.yomikata.presenters.WordInQuizInterface
 import com.jehutyno.yomikata.repository.KanjiSoloRepository
 import com.jehutyno.yomikata.repository.SentenceRepository
 import com.jehutyno.yomikata.repository.WordRepository
-import com.jehutyno.yomikata.util.Level
-import com.jehutyno.yomikata.util.getLevelFromPoints
+import com.jehutyno.yomikata.util.quiz.Level
+import com.jehutyno.yomikata.util.quiz.getLevelFromPoints
 import mu.KLogging
 
 
@@ -67,13 +67,13 @@ class WordPresenter(
     }
 
     override suspend fun levelUp(id: Long, points: Int) {
-        val newPoints = com.jehutyno.yomikata.util.levelUp(points)
+        val newPoints = com.jehutyno.yomikata.util.quiz.levelUp(points)
         wordRepository.updateWordPoints(id, newPoints)
         wordRepository.updateWordLevel(id, getLevelFromPoints(newPoints))
     }
 
     override suspend fun levelDown(id: Long, points: Int) {
-        val newPoints = com.jehutyno.yomikata.util.levelDown(points)
+        val newPoints = com.jehutyno.yomikata.util.quiz.levelDown(points)
         wordRepository.updateWordPoints(id, newPoints)
         wordRepository.updateWordLevel(id, getLevelFromPoints(newPoints))
     }

@@ -5,14 +5,14 @@ import android.os.Parcel
 import android.os.Parcelable
 import androidx.core.content.ContextCompat
 import com.jehutyno.yomikata.R
-import com.jehutyno.yomikata.util.Categories
-import com.jehutyno.yomikata.util.Level
-import com.jehutyno.yomikata.util.getLevelFromPoints
-import com.jehutyno.yomikata.util.getProgressToNextLevel
-import com.jehutyno.yomikata.util.AppLanguage
-import com.jehutyno.yomikata.util.LanguageManager
-import com.jehutyno.yomikata.util.readableTranslationFormat
-import com.jehutyno.yomikata.util.toLevel
+import com.jehutyno.yomikata.util.quiz.Categories
+import com.jehutyno.yomikata.util.quiz.Level
+import com.jehutyno.yomikata.util.quiz.getLevelFromPoints
+import com.jehutyno.yomikata.util.quiz.getProgressToNextLevel
+import com.jehutyno.yomikata.util.language.AppLanguage
+import com.jehutyno.yomikata.util.language.LanguageManager
+import com.jehutyno.yomikata.util.language.readableTranslationFormat
+import com.jehutyno.yomikata.util.quiz.toLevel
 import java.io.Serializable
 
 

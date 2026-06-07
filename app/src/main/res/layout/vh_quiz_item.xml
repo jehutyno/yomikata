@@ -26,7 +26,7 @@
             android:textColor="@color/light_gray"
             tools:text="1 / 10"/>
 
-        <com.jehutyno.yomikata.furigana.FuriganaView
+        <com.jehutyno.yomikata.view.furigana.FuriganaView
             android:id="@+id/furi_sentence"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -35,7 +35,7 @@
             android:layout_marginTop="8dp"
             android:textColor="@color/lighter_gray"
             android:textSize="18sp"
-            tools:text="あり"/>
+            tools:text="ã‚ã‚Š"/>
 
         <TextView
             android:id="@+id/trad_sentence"

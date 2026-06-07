@@ -35,7 +35,7 @@
                 android:orientation="vertical"
                 android:padding="8dp">
 
-                <com.jehutyno.yomikata.furigana.FuriganaView
+                <com.jehutyno.yomikata.view.furigana.FuriganaView
                     android:id="@+id/furi_word"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -105,7 +105,7 @@
                         android:padding="5dp"
                         android:src="@drawable/ic_sentence_jap" />
 
-                    <com.jehutyno.yomikata.furigana.FuriganaView
+                    <com.jehutyno.yomikata.view.furigana.FuriganaView
                         android:id="@+id/furi_sentence"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"

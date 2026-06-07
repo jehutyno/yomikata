@@ -1,7 +1,7 @@
 package com.jehutyno.yomikata.model
 
-import com.jehutyno.yomikata.util.AppLanguage
-import com.jehutyno.yomikata.util.LanguageManager
+import com.jehutyno.yomikata.util.language.AppLanguage
+import com.jehutyno.yomikata.util.language.LanguageManager
 
 
 /**

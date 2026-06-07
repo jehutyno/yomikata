@@ -9,7 +9,7 @@ import java.util.Locale
 import com.jehutyno.yomikata.databinding.VhNewSelectionBinding
 import com.jehutyno.yomikata.databinding.VhQuizBinding
 import com.jehutyno.yomikata.model.Quiz
-import com.jehutyno.yomikata.util.Categories
+import com.jehutyno.yomikata.util.quiz.Categories
 
 /**
  * Created by valentin on 04/10/2016.

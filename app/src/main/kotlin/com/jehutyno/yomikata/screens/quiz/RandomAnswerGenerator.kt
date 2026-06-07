@@ -2,7 +2,7 @@ package com.jehutyno.yomikata.screens.quiz
 
 import com.jehutyno.yomikata.model.Word
 import com.jehutyno.yomikata.repository.WordRepository
-import com.jehutyno.yomikata.util.QuizType
+import com.jehutyno.yomikata.util.quiz.QuizType
 import java.util.Random
 
 

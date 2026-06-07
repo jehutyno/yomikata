@@ -2,7 +2,7 @@ package com.jehutyno.yomikata.model
 
 import android.os.Parcel
 import android.os.Parcelable
-import com.jehutyno.yomikata.util.QuizType
+import com.jehutyno.yomikata.util.quiz.QuizType
 import com.jehutyno.yomikata.util.readParcelableHelper
 import java.io.Serializable
 

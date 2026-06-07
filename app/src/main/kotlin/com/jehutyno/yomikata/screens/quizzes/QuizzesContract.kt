@@ -1,12 +1,12 @@
 package com.jehutyno.yomikata.screens.quizzes
 
 import androidx.lifecycle.LiveData
-import com.jehutyno.yomikata.BasePresenter
+import com.jehutyno.yomikata.presenters.BasePresenter
 import com.jehutyno.yomikata.model.Quiz
 import com.jehutyno.yomikata.presenters.WordCountInterface
-import com.jehutyno.yomikata.util.Level
-import com.jehutyno.yomikata.util.QuizStrategy
-import com.jehutyno.yomikata.util.QuizType
+import com.jehutyno.yomikata.util.quiz.Level
+import com.jehutyno.yomikata.util.quiz.QuizStrategy
+import com.jehutyno.yomikata.util.quiz.QuizType
 
 
 /**

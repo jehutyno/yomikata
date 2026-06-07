@@ -1,6 +1,6 @@
 package com.jehutyno.yomikata.repository.local
 
-import com.jehutyno.yomikata.dao.SentenceDao
+import com.jehutyno.yomikata.repository.database.dao.SentenceDao
 import com.jehutyno.yomikata.model.Sentence
 import com.jehutyno.yomikata.model.Word
 import com.jehutyno.yomikata.repository.SentenceRepository

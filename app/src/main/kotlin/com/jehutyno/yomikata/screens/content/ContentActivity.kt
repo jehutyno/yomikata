@@ -30,10 +30,10 @@ import com.jehutyno.yomikata.util.Extras.EXTRA_QUIZ_POSITION
 import com.jehutyno.yomikata.util.Extras.EXTRA_QUIZ_STRATEGY
 import com.jehutyno.yomikata.util.Extras.EXTRA_QUIZ_TITLE
 import com.jehutyno.yomikata.util.Extras.EXTRA_QUIZ_TYPES
-import com.jehutyno.yomikata.util.Level
+import com.jehutyno.yomikata.util.quiz.Level
 import com.jehutyno.yomikata.util.Prefs
-import com.jehutyno.yomikata.util.QuizStrategy
-import com.jehutyno.yomikata.util.QuizType
+import com.jehutyno.yomikata.util.quiz.QuizStrategy
+import com.jehutyno.yomikata.util.quiz.QuizType
 import com.jehutyno.yomikata.util.addOrReplaceFragment
 import com.jehutyno.yomikata.util.getParcelableArrayListExtraHelper
 import com.jehutyno.yomikata.util.getSerializableExtraHelper

@@ -1,4 +1,4 @@
-package com.jehutyno.yomikata.dao
+package com.jehutyno.yomikata.repository.database.dao
 
 import com.jehutyno.yomikata.repository.database.RoomKanjiSolo
 import com.jehutyno.yomikata.repository.database.RoomKanjiSoloRadical

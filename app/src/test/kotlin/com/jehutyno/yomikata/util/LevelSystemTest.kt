@@ -1,5 +1,13 @@
 package com.jehutyno.yomikata.util
 
+import com.jehutyno.yomikata.util.quiz.Level
+import com.jehutyno.yomikata.util.quiz.QuizType
+import com.jehutyno.yomikata.util.quiz.addPoints
+import com.jehutyno.yomikata.util.quiz.getLevelFromPoints
+import com.jehutyno.yomikata.util.quiz.getProgressToNextLevel
+import com.jehutyno.yomikata.util.quiz.getRepetition
+import com.jehutyno.yomikata.util.quiz.levelDown
+import com.jehutyno.yomikata.util.quiz.levelUp
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test

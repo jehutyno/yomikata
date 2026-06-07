@@ -1,7 +1,7 @@
 package com.jehutyno.yomikata.repository
 
 import com.jehutyno.yomikata.model.Quiz
-import com.jehutyno.yomikata.util.Level
+import com.jehutyno.yomikata.util.quiz.Level
 import kotlinx.coroutines.flow.Flow
 
 

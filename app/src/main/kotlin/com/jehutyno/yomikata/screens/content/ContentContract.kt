@@ -1,7 +1,7 @@
 package com.jehutyno.yomikata.screens.content
 
 import androidx.lifecycle.LiveData
-import com.jehutyno.yomikata.BasePresenter
+import com.jehutyno.yomikata.presenters.BasePresenter
 import com.jehutyno.yomikata.model.Word
 import com.jehutyno.yomikata.presenters.SelectionsInterface
 import com.jehutyno.yomikata.presenters.WordCountInterface

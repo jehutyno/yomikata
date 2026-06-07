@@ -1,4 +1,4 @@
-package com.jehutyno.yomikata.dao
+package com.jehutyno.yomikata.repository.database.dao
 
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider

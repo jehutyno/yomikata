@@ -1,7 +1,7 @@
 package com.jehutyno.yomikata.screens.home
 
 import androidx.lifecycle.LiveData
-import com.jehutyno.yomikata.BasePresenter
+import com.jehutyno.yomikata.presenters.BasePresenter
 import com.jehutyno.yomikata.model.StatEntry
 
 

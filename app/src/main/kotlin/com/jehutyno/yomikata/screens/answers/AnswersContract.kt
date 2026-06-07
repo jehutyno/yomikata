@@ -1,6 +1,6 @@
 package com.jehutyno.yomikata.screens.answers
 
-import com.jehutyno.yomikata.BasePresenter
+import com.jehutyno.yomikata.presenters.BasePresenter
 import com.jehutyno.yomikata.model.Answer
 import com.jehutyno.yomikata.model.Sentence
 import com.jehutyno.yomikata.model.Word
