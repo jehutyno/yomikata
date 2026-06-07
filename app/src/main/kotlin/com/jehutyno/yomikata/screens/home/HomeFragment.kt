@@ -27,7 +27,8 @@ import com.jehutyno.yomikata.util.shareApp
 import org.kodein.di.DI
 import org.kodein.di.instance
 import org.kodein.di.newInstance
-import java.util.Locale
+import com.jehutyno.yomikata.util.language.AppLanguage
+import com.jehutyno.yomikata.util.language.LanguageManager
 
 
 /**
@@ -74,10 +75,15 @@ class HomeFragment(di: DI) : Fragment(), HomeContract.View {
         super.onViewCreated(view, savedInstanceState)
 
         val database = FirebaseDatabase.getInstance()
-        newsRef = if (Locale.getDefault().language == "fr")
-            database.getReference("news_fr")
-        else
-            database.getReference("news_en")
+        val newsNode = when (LanguageManager.current) {
+            AppLanguage.FRENCH     -> "news_fr"
+            AppLanguage.GERMAN     -> "news_de"
+            AppLanguage.SPANISH    -> "news_es"
+            AppLanguage.PORTUGUESE -> "news_pt"
+            AppLanguage.CHINESE    -> "news_zh"
+            else                   -> "news_en"
+        }
+        newsRef = database.getReference(newsNode)
 
         binding.expandTextView.text = getString(R.string.news_loading)
         newsRef.addListenerForSingleValueEvent(object : ValueEventListener {

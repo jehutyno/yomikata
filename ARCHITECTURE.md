@@ -329,6 +329,21 @@ La logique de choix est dans `VoicesManager` ; la coordination avec l'UI est dan
 | Cloud Messaging | Notifications push |
 | Storage | Téléchargement des packs de voix par niveau |
 
+### Realtime Database — nœuds de news
+
+Le fil d'actualité est un `String` stocké à la racine de la RTDB, avec un nœud par langue :
+
+| Nœud | Langue |
+|---|---|
+| `news_en` | Anglais (fallback par défaut) |
+| `news_fr` | Français |
+| `news_de` | Allemand |
+| `news_es` | Espagnol |
+| `news_pt` | Portugais |
+| `news_zh` | Mandarin |
+
+`HomeFragment` sélectionne le nœud via `LanguageManager.current` (mapping `when` → `AppLanguage`). Le fallback est `news_en` pour toute langue non listée.
+
 ---
 
 ## Tests
