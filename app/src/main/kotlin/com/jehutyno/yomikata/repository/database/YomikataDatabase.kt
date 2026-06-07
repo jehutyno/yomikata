@@ -417,19 +417,25 @@ abstract class YomikataDatabase : RoomDatabase() {
         }
 
         /**
-         * Returns true if the words table still has empty translation columns.
+         * Returns true if any translation columns still need to be populated.
+         * Checks words (german) and sentences (de) to catch users who upgraded before
+         * sentence translations were added to [yomikataz_translations.db].
          * Called by the onOpen callback to decide whether to run the translation copy.
          */
         fun needsTranslations(db: SupportSQLiteDatabase): Boolean {
-            return db.query("SELECT COUNT(*) FROM words WHERE german = '' LIMIT 1").use {
+            val wordsNeed = db.query("SELECT COUNT(*) FROM words WHERE german = '' LIMIT 1").use {
+                it.moveToFirst() && it.getInt(0) > 0
+            }
+            if (wordsNeed) return true
+            return db.query("SELECT COUNT(*) FROM sentences WHERE de = '' LIMIT 1").use {
                 it.moveToFirst() && it.getInt(0) > 0
             }
         }
 
         /**
-         * Populates word/quiz translation columns from [yomikataz_translations.db] (the v19
-         * reference database bundled as a separate asset).  Runs OUTSIDE any Room transaction
-         * so ATTACH DATABASE works without deadlocking in WAL mode.
+         * Populates word/quiz/sentence translation columns from [yomikataz_translations.db]
+         * (the reference database bundled as a separate asset).  Runs OUTSIDE any Room
+         * transaction so ATTACH DATABASE works without deadlocking in WAL mode.
          */
         fun populateTranslationsIfNeeded(context: Context, db: SupportSQLiteDatabase) {
             if (!needsTranslations(db)) return
@@ -455,6 +461,14 @@ abstract class YomikataDatabase : RoomDatabase() {
                         name_pt = (SELECT a.name_pt FROM transdb.quiz a WHERE a._id = quiz._id),
                         name_zh = (SELECT a.name_zh FROM transdb.quiz a WHERE a._id = quiz._id)
                     WHERE name_de = '' OR name_es = '' OR name_pt = '' OR name_zh = ''
+                """.trimIndent())
+                db.execSQL("""
+                    UPDATE sentences
+                    SET de = (SELECT a.de FROM transdb.sentences a WHERE a._id = sentences._id),
+                        es = (SELECT a.es FROM transdb.sentences a WHERE a._id = sentences._id),
+                        pt = (SELECT a.pt FROM transdb.sentences a WHERE a._id = sentences._id),
+                        zh = (SELECT a.zh FROM transdb.sentences a WHERE a._id = sentences._id)
+                    WHERE de = '' OR es = '' OR pt = '' OR zh = ''
                 """.trimIndent())
                 db.execSQL("DETACH DATABASE transdb")
             } finally {

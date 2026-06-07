@@ -200,7 +200,9 @@ La validation est centralisée dans `AnswerValidator.checkWord()` : le tiret ASC
 
 ## Base de données (Room)
 
-Fichier : `yomikataz.db` — livré dans `assets/` à la version 21, copié au premier lancement. Les traductions DE/ES/PT/ZH et les POS sont déjà dans l'asset ; pour les utilisateurs en upgrade, ils sont copiés depuis les assets via le callback `onOpen`.
+Fichier : `yomikataz.db` — livré dans `assets/` à la version 21, copié au premier lancement. Les traductions DE/ES/PT/ZH et les POS sont déjà dans l'asset ; pour les utilisateurs en upgrade, ils sont copiés depuis `yomikataz_translations.db` (second asset) via le callback `onOpen`.
+
+Un second asset `yomikataz_translations.db` contient les données de référence (tables `words`, `quiz`, `sentences`) avec toutes les colonnes DE/ES/PT/ZH remplies. La fonction `populateTranslationsIfNeeded` l'attache via `ATTACH DATABASE` depuis `onOpen` et met à jour les tables manquantes. La garde `needsTranslations()` vérifie `words.german` **et** `sentences.de` pour couvrir les utilisateurs qui avaient migré avant l'ajout des traductions de phrases.
 
 **Version courante : 21.** Toutes les migrations sont définies dans `YomikataDatabase`. `fallbackToDestructiveMigrationFrom(0..12)` est utilisé (PAS `fallbackToDestructiveMigration()`) pour les utilisateurs encore sur une version < 13 (reset propre sans crash).
 
@@ -250,14 +252,16 @@ Les POS sont affichés sous forme de chips colorés dans la fiche détail d'un m
 
 **Couverture des traductions par langue :**
 
-| Langue | Mots | Source |
-|---|---|---|
-| Anglais (EN) | 7 503/7 503 (100%) | Original JMdict |
-| Français (FR) | 7 503/7 503 (100%) | Original |
-| Allemand (DE) | 7 503/7 503 (100%) | JMdict (3 196) + traduction manuelle Claude (4 307) |
-| Espagnol (ES) | 7 503/7 503 (100%) | JMdict (1 932) + traduction manuelle Claude (5 571) |
-| Portugais (PT) | 7 503/7 503 (100%) | Traduction manuelle Claude (7 503) |
-| Mandarin (ZH) | 7 503/7 503 (100%) | Traduction manuelle Claude (7 503) |
+| Langue | Mots (7 503) | Phrases (7 425) | Source mots |
+|---|---|---|---|
+| Anglais (EN) | 100% | 100% | Original JMdict |
+| Français (FR) | 100% | 100% | Original |
+| Allemand (DE) | 100% | 100% | JMdict (3 196) + traduction manuelle Claude (4 307) |
+| Espagnol (ES) | 100% | 100% | JMdict (1 932) + traduction manuelle Claude (5 571) |
+| Portugais (PT) | 100% | 100% | Traduction manuelle Claude (7 503) |
+| Mandarin (ZH) | 100% | 100% | Traduction manuelle Claude (7 503) |
+
+Les traductions de phrases (DE/ES/PT/ZH) ont été générées via `translate_sentences.ps1` (Haiku 4.5, batches de 1–80) et stockées dans l'asset principal `yomikataz.db` ainsi que dans `yomikataz_translations.db` pour les migrations.
 
 **Langues d'interface disponibles :** EN, FR, DE, ES, PT, ZH (strings.xml complets pour toutes les langues).
 

@@ -208,19 +208,21 @@ Le hash est dans `app/schemas/.../VERSION.json` champ `identityHash`. Sans ça, 
 
 ### Phases suivantes
 - ✅ **Phase 4** : Tags POS — colonne `pos` dans `words` (migration 19→20), extraction depuis `english`, chips localisés dans la fiche détail du mot
+- ✅ **Migration phrases v16** : `populateTranslationsIfNeeded` étendue pour `sentences` (DE/ES/PT/ZH) depuis `yomikataz_translations.db` ; `needsTranslations` vérifie `words.german` ET `sentences.de` pour couvrir les utilisateurs déjà migrés avant l'ajout des traductions de phrases
 - **Phase 5** : Tests intégrité BDD (`DatabaseIntegrityTest`)
 
-### Couverture mots par langue (état actuel)
-| Langue | Mots traduits | Source |
-|---|---|---|
-| Allemand (DE) | 7 503/7 503 (100%) | JMdict + traduction manuelle Claude |
-| Espagnol (ES) | 7 503/7 503 (100%) | JMdict (1 932) + traduction manuelle Claude (5 571) |
-| Portugais (PT) | 7 503/7 503 (100%) | Traduction manuelle Claude |
-| Mandarin (ZH) | 7 503/7 503 (100%) | Traduction manuelle Claude |
+### Couverture traductions (état actuel)
+| Langue | Mots (7 503) | Phrases (7 425) | Source mots |
+|---|---|---|---|
+| Allemand (DE) | 100% | 100% | JMdict + traduction manuelle Claude |
+| Espagnol (ES) | 100% | 100% | JMdict (1 932) + traduction manuelle Claude (5 571) |
+| Portugais (PT) | 100% | 100% | Traduction manuelle Claude |
+| Mandarin (ZH) | 100% | 100% | Traduction manuelle Claude |
 
 ### Scripts disponibles
 - `extract_jmdict_de.ps1` / `extract_jmdict_es.ps1` / `extract_jmdict_pt.ps1` — extraction JMdict par langue
 - `update_quiz_de.ps1` / `update_quiz_es.ps1` / `update_quiz_pt.ps1` — noms de quiz localisés
+- `translate_sentences.ps1` — traduction des phrases via Haiku 4.5 (7 425 phrases × 4 langues, 100% complet)
 - JMdict.xml mis en cache dans `$env:TEMP` — pas besoin de re-télécharger
 
 ---
