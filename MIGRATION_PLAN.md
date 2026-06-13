@@ -158,7 +158,7 @@
 ---
 
 ### Session 1.1 — Composants Quiz : AnswerButton + ProgressSegmentBar
-**Statut** : `[ ]`
+**Statut** : `[x]`
 
 **Objectif** : créer les deux composants spécifiques à l'écran Quiz.
 
