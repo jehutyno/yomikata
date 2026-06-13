@@ -243,3 +243,21 @@ Le hash est dans `app/schemas/.../VERSION.json` champ `identityHash`. Sans ça, 
 1. Mettre à jour `ARCHITECTURE.md` (structure, version DB, tests, couverture)
 2. Mettre à jour `CLAUDE.md` si une convention ou commande a changé
 3. Puis `/compact`
+
+## Design System
+
+Le design system de Yomikata est documenté dans `DESIGN.md` à la racine.
+**Toujours consulter DESIGN.md avant de créer ou modifier un composant UI.**
+
+### Règles absolues
+- Aucune couleur hardcodée. Toujours utiliser les tokens de `Color.kt`.
+- Aucun radius arbitraire. Utiliser les valeurs de `Shape.kt` (RadiusXs→RadiusXl).
+- Aucun rouge sur les kanji ou furigana (rouge = mauvaise réponse uniquement).
+- Toujours inclure une `@Preview` dark mode sur les composants Compose.
+- Les section headers sont bilingues : format `"JP · EN"`.
+
+### Fichiers design
+- `app/src/main/java/fr/yomisuite/yomikata/ui/theme/Color.kt`
+- `app/src/main/java/fr/yomisuite/yomikata/ui/theme/Theme.kt`
+- `app/src/main/java/fr/yomisuite/yomikata/ui/theme/Type.kt`
+- `app/src/main/java/fr/yomisuite/yomikata/ui/theme/Shape.kt`

@@ -102,7 +102,7 @@
 ---
 
 ### Session 0.2 — Composants atomiques partagés
-**Statut** : `[ ]`
+**Statut** : `[x]`
 
 **Objectif** : créer les 4 briques réutilisables utilisées par plusieurs écrans.
 
