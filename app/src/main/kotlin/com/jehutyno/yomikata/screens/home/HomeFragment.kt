@@ -23,6 +23,7 @@ import com.jehutyno.yomikata.util.Prefs
 import com.jehutyno.yomikata.util.contactDiscord
 import com.jehutyno.yomikata.util.contactFacebook
 import com.jehutyno.yomikata.util.contactPlayStore
+import com.jehutyno.yomikata.util.openGithubSponsors
 import com.jehutyno.yomikata.util.shareApp
 import org.kodein.di.DI
 import org.kodein.di.instance
@@ -102,6 +103,7 @@ class HomeFragment(di: DI) : Fragment(), HomeContract.View {
         binding.facebook.setOnClickListener { contactFacebook(activity) }
         binding.playStore.setOnClickListener { contactPlayStore(requireActivity()) }
         binding.discord.setOnClickListener { contactDiscord(requireActivity()) }
+        binding.sponsor.setOnClickListener { openGithubSponsors(requireActivity()) }
 
     }
 

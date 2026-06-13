@@ -262,4 +262,6 @@
     <string name="pos_polite">敬语</string>
     <string name="pos_humble">谦语</string>
     <string name="pos_interjection">感叹词</string>
+    <string name="sponsor_message">Yomikata Z 重新开始积极开发，现在借助 AI 辅助。如果本应用对您有帮助，您的支持将有助于资助使其成为可能的工具。</string>
+    <string name="sponsor_button">♥ 在 GitHub 上支持</string>
 </resources>

@@ -55,7 +55,7 @@ Les presenters reçoivent un `CoroutineScope` (le `lifecycleScope` du fragment h
 | Package | Activité principale | Rôle |
 |---|---|---|
 | `quizzes` | `QuizzesActivity` | **Activité de démarrage** — chargement DB, navigation principale (ViewPager2 : Home + liste des catégories), gestion erreur DB |
-| `home` | `HomeFragment` | Dashboard — stats globales, accès rapide, fil d'actualité Firebase |
+| `home` | `HomeFragment` | Dashboard — stats globales, accès rapide, fil d'actualité Firebase, lien GitHub Sponsors |
 | `content` | `ContentActivity` | Liste des mots d'une catégorie, graphique de progression |
 | `content/word` | `WordDetailDialogFragment` | Détail d'un mot (kanji, radical, exemple de phrase) |
 | `quiz` | `QuizActivity` / `QuizFragment` | Session de quiz complète |

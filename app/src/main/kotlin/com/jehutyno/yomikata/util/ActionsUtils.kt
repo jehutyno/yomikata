@@ -109,6 +109,10 @@ fun contactDiscord(context: Context) {
     context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(context.getString(R.string.discord_link))).setFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
 }
 
+fun openGithubSponsors(context: Context) {
+    context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/sponsors/jehutyno")).setFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+}
+
 fun onTTSinit(context: Context?, status: Int, tts: TextToSpeech?): Int {
     var supported: Int = TextToSpeech.LANG_NOT_SUPPORTED
     try {

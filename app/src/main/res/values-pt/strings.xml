@@ -254,4 +254,6 @@
     <string name="pos_polite">Cortês</string>
     <string name="pos_humble">Humilde</string>
     <string name="pos_interjection">Interjeição</string>
+    <string name="sponsor_message">Yomikata Z está de volta ao desenvolvimento ativo, agora assistido por IA. Se o app é útil para você, seu apoio ajuda a financiar as ferramentas que tornam isso possível.</string>
+    <string name="sponsor_button">♥ Apoiar no GitHub</string>
 </resources>

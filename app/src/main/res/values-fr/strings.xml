@@ -254,4 +254,6 @@
     <string name="pos_polite">Poli</string>
     <string name="pos_humble">Humble</string>
     <string name="pos_interjection">Interjection</string>
+    <string name="sponsor_message">Yomikata Z est de retour en développement actif, assisté par l\'IA. Si l\'application vous est utile, votre soutien aide à financer les outils qui le rendent possible.</string>
+    <string name="sponsor_button">♥ Soutenir sur GitHub</string>
 </resources>
