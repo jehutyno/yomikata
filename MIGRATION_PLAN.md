@@ -129,7 +129,7 @@
 ---
 
 ### Session 0.3 — Composant BottomNavigationBar
-**Statut** : `[ ]`
+**Statut** : `[x]`
 
 **Objectif** : créer `YomikataBottomBar` Compose (4 onglets) sans encore l'intégrer dans l'app.
 
