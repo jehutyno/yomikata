@@ -13,8 +13,8 @@ android {
         applicationId "com.jehutyno.yomikata"
         minSdkVersion 23
         targetSdkVersion 37
-        versionCode 65
-        versionName "1.25"
+        versionCode 66
+        versionName "1.26"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
