@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.google.services)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.kotlin.compose)
 }
 
 android {
@@ -24,6 +25,7 @@ android {
 
     buildFeatures {
         viewBinding = true
+        compose true
     }
 
     buildTypes {
@@ -52,6 +54,16 @@ android {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
+
+    // Compose
+    implementation platform(libs.compose.bom)
+    implementation libs.compose.ui
+    implementation libs.compose.ui.tooling.preview
+    implementation libs.compose.material3
+    implementation libs.compose.runtime.livedata
+    implementation libs.activity.compose
+    implementation libs.lifecycle.runtime.compose
+    debugImplementation libs.compose.ui.tooling
 
     // AndroidX
     implementation libs.androidx.appcompat

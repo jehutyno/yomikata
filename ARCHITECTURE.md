@@ -388,7 +388,7 @@ Depuis la migration (juin 2026), toutes les versions et dépendances sont centra
 | `[versions]` | Toutes les versions (kotlin, agp, room, lifecycle, media3, firebase-bom, …) |
 | `[libraries]` | 40+ entrées groupées par domaine (AndroidX, Room, Firebase, UI libs, tests…) |
 | `[bundles]` | `media3` (exoplayer + ui + common), `firebase` (database + messaging + storage) |
-| `[plugins]` | android-application, kotlin-android, ksp, google-services, gradle-versions |
+| `[plugins]` | android-application, kotlin-android, kotlin-compose, ksp, google-services, gradle-versions |
 
 **Repos centralisés dans `settings.gradle`** via `dependencyResolutionManagement` (mode `FAIL_ON_PROJECT_REPOS`) — plus de bloc `repositories {}` dans les sous-modules.
 
@@ -407,6 +407,7 @@ Depuis la migration (juin 2026), toutes les versions et dépendances sont centra
 | KenBurnsView | Animations fond (diaporama photos dans QuizzesActivity) |
 | androidx.core:core-splashscreen | Contrôle du splash screen système (Android 12+) |
 | HiraganaEditText | Saisie IME hiragana |
+| Compose BOM 2025.05 + Material 3 | UI Compose (migration en cours — Phase 0) |
 | Firebase BOM 33.x | RTDB, FCM, Storage |
 | MockK 1.13.x | Mocking pour les tests unitaires |
 | androidx.arch.core:core-testing | `InstantTaskExecutorRule` pour les tests LiveData |

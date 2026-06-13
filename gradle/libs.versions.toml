@@ -10,6 +10,9 @@ firebase-bom       = "34.0.0"
 google-services    = "4.4.2"
 gradle-versions    = "0.51.0"
 
+compose-bom        = "2025.05.01"
+activity-compose   = "1.10.1"
+
 appcompat          = "1.7.0"
 material           = "1.12.0"
 cardview           = "1.0.0"
@@ -39,6 +42,16 @@ calligraphy        = "3.1.1"
 viewpump           = "2.0.3"
 
 [libraries]
+# Compose (versions gérées par le BOM sauf activity-compose et lifecycle-runtime-compose)
+compose-bom               = { group = "androidx.compose",          name = "compose-bom",           version.ref = "compose-bom" }
+compose-ui                = { group = "androidx.compose.ui",       name = "ui" }
+compose-ui-tooling-preview = { group = "androidx.compose.ui",      name = "ui-tooling-preview" }
+compose-ui-tooling        = { group = "androidx.compose.ui",       name = "ui-tooling" }
+compose-material3         = { group = "androidx.compose.material3", name = "material3" }
+compose-runtime-livedata  = { group = "androidx.compose.runtime",  name = "runtime-livedata" }
+activity-compose          = { group = "androidx.activity",         name = "activity-compose",      version.ref = "activity-compose" }
+lifecycle-runtime-compose = { group = "androidx.lifecycle",        name = "lifecycle-runtime-compose", version.ref = "lifecycle" }
+
 # AndroidX
 androidx-appcompat        = { group = "androidx.appcompat",          name = "appcompat",               version.ref = "appcompat" }
 androidx-material         = { group = "com.google.android.material", name = "material",                version.ref = "material" }
@@ -111,3 +124,4 @@ kotlin-android      = { id = "org.jetbrains.kotlin.android",  version.ref = "kot
 ksp                 = { id = "com.google.devtools.ksp",       version.ref = "ksp" }
 google-services     = { id = "com.google.gms.google-services", version.ref = "google-services" }
 gradle-versions     = { id = "com.github.ben-manes.versions", version.ref = "gradle-versions" }
+kotlin-compose      = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
