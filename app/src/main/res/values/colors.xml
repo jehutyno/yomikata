@@ -51,6 +51,48 @@
     <color name="pos_other">#546E7A</color>       <!-- blue-grey -->
     <color name="pos_chip_text">#FFFFFF</color>   <!-- white text on all chips -->
 
+    <!-- Design System v2 tokens (Session 0.1) -->
+
+    <!-- Backgrounds -->
+    <color name="color_bg">#0a0e17</color>
+    <color name="color_bg_hero">#0d1520</color>
+    <color name="color_bg_hero_warm">#130a02</color>
+    <color name="color_bg_nav">#0d1218</color>
+    <color name="color_bg_correct">#0b1a10</color>
+    <color name="color_bg_wrong">#200d0d</color>
+
+    <!-- Surfaces -->
+    <color name="color_surface">#141c26</color>
+    <color name="color_surface_accent">#1a1508</color>
+    <color name="color_surface_correct">#0d2318</color>
+    <color name="color_surface_wrong">#1a0808</color>
+
+    <!-- Borders -->
+    <color name="color_border">#1e2b3a</color>
+    <color name="color_border_subtle">#0f1520</color>
+    <color name="color_border_accent">#40fb8c00</color>
+    <color name="color_border_correct">#4ade80</color>
+    <color name="color_border_correct_bg">#404ade80</color>
+    <color name="color_border_wrong">#f87171</color>
+
+    <!-- Accent / Brand -->
+    <color name="color_accent">#fb8c00</color>
+    <color name="color_accent_on">#0a0500</color>
+    <color name="color_accent_warm">#7a5030</color>
+
+    <!-- Semantic -->
+    <color name="color_correct">#4ade80</color>
+    <color name="color_correct_on">#051a0a</color>
+    <color name="color_wrong">#f87171</color>
+
+    <!-- Text -->
+    <color name="color_text_primary">#e8ecf0</color>
+    <color name="color_text_secondary">#c0ccd8</color>
+    <color name="color_text_muted">#5a7090</color>
+    <color name="color_text_dim">#3d4d5e</color>
+    <color name="color_text_ghost">#2e3f52</color>
+    <color name="color_text_warm">#e8d8c0</color>
+
     <color name="transparent">#00000000</color>
     <color name="blackTransparent">#44000000</color>
     <color name="blackTransparentLight">#22000000</color>

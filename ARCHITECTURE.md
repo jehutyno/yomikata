@@ -407,7 +407,7 @@ Depuis la migration (juin 2026), toutes les versions et dépendances sont centra
 | KenBurnsView | Animations fond (diaporama photos dans QuizzesActivity) |
 | androidx.core:core-splashscreen | Contrôle du splash screen système (Android 12+) |
 | HiraganaEditText | Saisie IME hiragana |
-| Compose BOM 2025.05 + Material 3 | UI Compose (migration en cours — Phase 0) |
+| Compose BOM 2025.05 + Material 3 | UI Compose (migration en cours — Phase 0, Session 0.1 terminée) |
 | Firebase BOM 33.x | RTDB, FCM, Storage |
 | MockK 1.13.x | Mocking pour les tests unitaires |
 | androidx.arch.core:core-testing | `InstantTaskExecutorRule` pour les tests LiveData |
@@ -448,6 +448,8 @@ com.jehutyno.yomikata/
 │   ├── japanese/               ← HiraganaTable, HiraganaUtils
 │   ├── language/               ← AppLanguage, LanguageManager, TranslationParser
 │   └── quiz/                   ← Categories, QuizStrategy, QuizType, LevelSystem
+├── ui/
+│   └── theme/                  ← Color.kt, Shape.kt, Type.kt, Theme.kt (design tokens + YomikataTheme)
 └── view/                        ← vues custom Android
     ├── furigana/               ← FuriganaView, QuadraticOptimizer
     │   └── utils/              ← FuriganaUtils

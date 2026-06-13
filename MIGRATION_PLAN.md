@@ -72,7 +72,7 @@
 ---
 
 ### Session 0.1 — Tokens : colors.xml + Color.kt / Shape.kt / Type.kt / Theme.kt
-**Statut** : `[ ]`
+**Statut** : `[x]`
 
 **Objectif** : créer tous les tokens de design en Compose ET étendre `colors.xml` pour les vues XML restantes.
 
