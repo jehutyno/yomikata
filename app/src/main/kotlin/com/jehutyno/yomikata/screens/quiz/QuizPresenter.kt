@@ -477,6 +477,14 @@ class QuizPresenter(
      * @param answer User's answer
      * @param choice Index corresponding to multiple choice (0, 1, 2, 3), or -1 if keyboard entry
      */
+    // P6 : après une mauvaise réponse QCM, révéler la bonne réponse en vert
+    private fun revealCorrectAnswer(word: Word) {
+        val correctIdx = randoms.indexOfFirst { it.first.id == word.id }
+        if (correctIdx >= 0) {
+            randoms[correctIdx] = Pair(randoms[correctIdx].first, R.color.level_master_4)
+        }
+    }
+
     private suspend fun onAnswerGiven(answer: String, choice: Int) {
         val word = sessionState.getCurrentWord()
         val quizType = sessionState.getCurrentQuizType()
@@ -501,22 +509,34 @@ class QuizPresenter(
             }
             QuizType.TYPE_PRONUNCIATION_QCM -> {
                 if (choice == -1) Log.e("QuizTypeissue", "Type Issue. QuizType = ${quizType.type}, but choice -1")
-                else randoms[choice] = Pair(randoms[choice].first, color)
+                else {
+                    randoms[choice] = Pair(randoms[choice].first, color)
+                    if (!result) revealCorrectAnswer(word)
+                }
                 setupQCMPronunciationQuiz()
             }
             QuizType.TYPE_AUDIO -> {
                 if (choice == -1) Log.e("QuizTypeissue", "Type Issue. QuizType = ${quizType.type}, but choice -1")
-                else randoms[choice] = Pair(randoms[choice].first, color)
+                else {
+                    randoms[choice] = Pair(randoms[choice].first, color)
+                    if (!result) revealCorrectAnswer(word)
+                }
                 setupQCMQAudioQuiz()
             }
             QuizType.TYPE_EN_JAP -> {
                 if (choice == -1) Log.e("QuizTypeissue", "Type Issue. QuizType = ${quizType.type}, but choice -1")
-                else randoms[choice] = Pair(randoms[choice].first, color)
+                else {
+                    randoms[choice] = Pair(randoms[choice].first, color)
+                    if (!result) revealCorrectAnswer(word)
+                }
                 setupQCMEnJapQuiz()
             }
             QuizType.TYPE_JAP_EN -> {
                 if (choice == -1) Log.e("QuizTypeissue", "Type Issue. QuizType = ${quizType.type}, but choice -1")
-                else randoms[choice] = Pair(randoms[choice].first, color)
+                else {
+                    randoms[choice] = Pair(randoms[choice].first, color)
+                    if (!result) revealCorrectAnswer(word)
+                }
                 setupQCMJapEnQuiz()
             }
             QuizType.TYPE_AUTO -> TODO()

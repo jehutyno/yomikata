@@ -375,6 +375,65 @@ Le fil d'actualité est un `String` stocké à la racine de la RTDB, avec un nœ
 
 ---
 
+## Migration UI — Jetpack Compose
+
+Le projet migre progressivement de XML/MVP vers Jetpack Compose (dark-only, Material 3). La migration suit le plan décrit dans `MIGRATION_PLAN.md`.
+
+### Avancement (juin 2026)
+
+| Phase | Sessions | Statut |
+|---|---|---|
+| Phase 0 — Design system | 0.1 tokens, 0.2 composants atomiques, 0.3 BottomBar | ✅ Terminé |
+| Phase 1 — Écrans fort gain | 1.1 QuizComponents, 1.2 QuizFragment | ✅ Terminé |
+| Phase 1 suite | 1.3 composants mot, 1.4–1.x autres écrans | 🔜 À faire |
+
+### Architecture Quiz (Session 1.2)
+
+`QuizFragment` conserve son shell MVP (`QuizContract.View`) mais son layout est un `ComposeView` unique. Le state Compose est géré par `QuizUiState` (data class dans `QuizFragment.kt`), alimenté par les callbacks du Presenter via `mutableStateOf`.
+
+**Flux de données :**
+```
+QuizPresenter → QuizContract.View callbacks
+    → uiState = uiState.copy(...)    (mutableStateOf dans QuizFragment)
+    → QuizScreen(state = uiState)    (Compose stateless)
+```
+
+**Fichiers clés :**
+- `ui/quiz/QuizScreen.kt` — composables principaux (`QuizScreen`, `QuestionZone`, `QcmAnswers`, `FuriganaAndroidView`)
+- `ui/quiz/QuizComponents.kt` — `AnswerButton`, `ProgressSegmentBar`, enums `AnswerButtonState`, `SegmentState`
+- `screens/quiz/QuizFragment.kt` — shell MVP + `QuizUiState` + bindings Compose
+
+### Interop FuriganaView (`AndroidView`)
+
+`FuriganaView` est une View Java custom (`view/furigana/FuriganaView.java`) avec un `onDraw` entièrement manuel — `gravity` n'a aucun effet.
+
+**Pattern pour centrer un mot vedette :**
+```kotlin
+Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+    FuriganaAndroidView(
+        text = largeWordText,
+        modifier = Modifier.wrapContentWidth()  // AT_MOST → FuriganaView retourne m_linemax
+    )
+}
+```
+- `fillMaxWidth()` → contrainte EXACTLY → FuriganaView utilise la largeur écran → texte à gauche
+- `wrapContentWidth()` → contrainte AT_MOST → FuriganaView retourne `m_linemax` (largeur du texte) → Box peut centrer
+
+Pour une phrase pleine largeur (avec surlignage), utiliser `fillMaxWidth()` (comportement souhaité).
+
+### `painterResource` et StateListDrawable
+
+`painterResource` ne supporte PAS les `<selector>` (StateListDrawable). Pour les drawables conditionnels :
+```kotlin
+// ❌ Crash : ic_trad_selector.xml est un <selector>
+painterResource(R.drawable.ic_trad_selector)
+
+// ✅ Correct : choisir le PNG directement
+painterResource(if (showTranslation) R.drawable.ic_trad_check else R.drawable.ic_trad_uncheck)
+```
+
+---
+
 ## Build & gestion des dépendances
 
 ### Version Catalog (`gradle/libs.versions.toml`)
@@ -407,7 +466,7 @@ Depuis la migration (juin 2026), toutes les versions et dépendances sont centra
 | KenBurnsView | Animations fond (diaporama photos dans QuizzesActivity) |
 | androidx.core:core-splashscreen | Contrôle du splash screen système (Android 12+) |
 | HiraganaEditText | Saisie IME hiragana |
-| Compose BOM 2025.05 + Material 3 | UI Compose (migration en cours — Phase 1, Session 1.1 terminée) |
+| Compose BOM 2025.05 + Material 3 | UI Compose (migration en cours — Phase 1, Session 1.2 terminée : QuizFragment migré) |
 | Firebase BOM 33.x | RTDB, FCM, Storage |
 | MockK 1.13.x | Mocking pour les tests unitaires |
 | androidx.arch.core:core-testing | `InstantTaskExecutorRule` pour les tests LiveData |
@@ -451,7 +510,7 @@ com.jehutyno.yomikata/
 ├── ui/
 │   ├── theme/                  ← Color.kt, Shape.kt, Type.kt, Theme.kt (design tokens + YomikataTheme)
 │   ├── components/             ← SectionHeader, MasteryDots, FABBar (+ FABBarState), LevelChip (+ StudyLevel, LevelChipRow), YomikataBottomBar
-│   └── quiz/                   ← QuizComponents (AnswerButton + AnswerButtonState, ProgressSegmentBar + SegmentState)
+│   └── quiz/                   ← QuizComponents (AnswerButton + AnswerButtonState, ProgressSegmentBar + SegmentState), QuizScreen (QuizUiState + composables), QuizUiState
 └── view/                        ← vues custom Android
     ├── furigana/               ← FuriganaView, QuadraticOptimizer
     │   └── utils/              ← FuriganaUtils

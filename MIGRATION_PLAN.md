@@ -182,7 +182,7 @@
 ---
 
 ### Session 1.2 — Écran Quiz
-**Statut** : `[ ]`
+**Statut** : `[x]`
 
 **Objectif** : remplacer le contenu visuel de `QuizFragment` par un `ComposeView` utilisant `QuizScreen`.
 

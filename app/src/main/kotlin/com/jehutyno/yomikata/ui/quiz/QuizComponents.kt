@@ -50,7 +50,7 @@ fun AnswerButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val isUnselectedWrong = isRevealed && state == AnswerButtonState.Wrong && !isSelected
+    val dimmed = isRevealed && state == AnswerButtonState.Default
 
     val bgColor = when (state) {
         AnswerButtonState.Default -> SurfacePrimary
@@ -69,10 +69,12 @@ fun AnswerButton(
     }
     val letterBg = when (state) {
         AnswerButtonState.Correct -> Color(0xFF1A3A1A)
+        AnswerButtonState.Wrong -> if (isSelected) Color(0xFF3A1A1A) else Color(0xFF1E2B3A)
         else -> Color(0xFF1E2B3A)
     }
     val letterTextColor = when (state) {
         AnswerButtonState.Correct -> Correct
+        AnswerButtonState.Wrong -> if (isSelected) Wrong else TextDim
         else -> TextDim
     }
 
@@ -80,7 +82,7 @@ fun AnswerButton(
         modifier = modifier
             .fillMaxWidth()
             .height(58.dp)
-            .alpha(if (isUnselectedWrong) 0.4f else 1f)
+            .alpha(if (dimmed) 0.4f else 1f)
             .clip(RoundedCornerShape(RadiusLg))
             .background(bgColor)
             .border(
