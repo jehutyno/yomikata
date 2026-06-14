@@ -9,6 +9,7 @@ val BackgroundHeroWarm = Color(0xFF130A02)
 val BackgroundNav = Color(0xFF0D1218)
 val BackgroundCorrect = Color(0xFF0B1A10)
 val BackgroundWrong = Color(0xFF200D0D)
+val BackgroundHeroWrong = Color(0xFF180808)
 
 // Surfaces
 val SurfacePrimary = Color(0xFF141C26)
@@ -22,7 +23,9 @@ val BorderSubtle = Color(0xFF0F1520)
 val BorderAccent = Color(0x40FB8C00)
 val BorderCorrect = Color(0xFF4ADE80)
 val BorderCorrectBg = Color(0x404ADE80)
+val BorderHeroCorrect = Color(0x304ADE80)
 val BorderWrong = Color(0xFFF87171)
+val BorderHeroWrong = Color(0x30F87171)
 
 // Accent / Brand
 val AccentOrange = Color(0xFFFB8C00)

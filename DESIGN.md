@@ -18,6 +18,7 @@
 | `color_bg_nav`           | `#0d1218`   | Bottom navigation bar, footer zones                 |
 | `color_bg_correct`       | `#0b1a10`   | Fond card état bonne réponse                        |
 | `color_bg_wrong`         | `#200d0d`   | Fond card état mauvaise réponse                     |
+| `color_bg_hero_wrong`    | `#180808`   | Fond card hero quiz après mauvaise réponse          |
 
 ### Surfaces (cards, listes)
 
@@ -37,7 +38,9 @@
 | `color_border_accent`    | `#fb8c0040` | Bordure légère teintée orange (item en vedette)     |
 | `color_border_correct`   | `#4ade80`   | Bordure état correct (bonne réponse)                |
 | `color_border_correct_bg`| `#4ade8040` | Bordure correcte atténuée (card reveal)             |
+| `color_border_hero_correct`| `#4ade8030` | Bordure subtile card hero quiz — bonne réponse    |
 | `color_border_wrong`     | `#f87171`   | Bordure état incorrect                              |
+| `color_border_hero_wrong`| `#f8717130` | Bordure subtile card hero quiz — mauvaise réponse   |
 
 ### Accent / Brand
 
@@ -298,14 +301,16 @@ Bottom Navigation Bar (permanente, 4 onglets)
 ### Quiz
 1. AppBar (✕ + titre niveau + 🔊 + ⚙ + compteur)
 2. ProgressSegmentBar (N segments)
-3. Zone question (fond `color_bg_hero`) :
-   - Contexte phrase (furigana + sentence avec mot orange highlighted)
-   - Séparateur
-   - Mot en vedette (furigana + kanji large)
+3. Card question (fond `color_bg_hero` animé, `radius_xl`, marges 12dp h / 8dp v) :
+   - Centrage vertical du bloc principal
+   - **Mot en vedette** (kanji large 46sp, centré, couleur animée blanc→vert/rouge)
+   - **Phrase d'exemple** (18sp, centrée horizontalement, mot cible surligné orange)
+   - Traduction phrase (masquable via alpha, réserve toujours son espace)
    - Actions secondaires (あ / ★ / ⚠ / 📋)
-4. Grille 2×2 AnswerButtons
-5. FABBar → devient "Suivant →" (fond `color_correct`) après réponse
-6. Bottom nav
+4. Instruction (label uppercase, AccentOrange 75%, 11sp, letter-spacing 1.2sp)
+5. Grille 2×2 AnswerButtons
+6. FABBar → devient "Suivant →" (fond `color_correct`) après réponse
+7. Bottom nav
 
 ---
 
@@ -339,6 +344,7 @@ val BackgroundHeroWarm = Color(0xFF130A02)
 val BackgroundNav = Color(0xFF0D1218)
 val BackgroundCorrect = Color(0xFF0B1A10)
 val BackgroundWrong = Color(0xFF200D0D)
+val BackgroundHeroWrong = Color(0xFF180808)
 
 val SurfacePrimary = Color(0xFF141C26)
 val SurfaceAccent = Color(0xFF1A1508)
@@ -348,7 +354,10 @@ val BorderDefault = Color(0xFF1E2B3A)
 val BorderSubtle = Color(0xFF0F1520)
 val BorderAccent = Color(0x40FB8C00)
 val BorderCorrect = Color(0xFF4ADE80)
+val BorderCorrectBg = Color(0x404ADE80)
+val BorderHeroCorrect = Color(0x304ADE80)
 val BorderWrong = Color(0xFFF87171)
+val BorderHeroWrong = Color(0x30F87171)
 
 val AccentOrange = Color(0xFFFB8C00)
 val AccentOnOrange = Color(0xFF0A0500)

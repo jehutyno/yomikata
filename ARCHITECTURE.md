@@ -387,9 +387,9 @@ Le projet migre progressivement de XML/MVP vers Jetpack Compose (dark-only, Mate
 | Phase 1 — Écrans fort gain | 1.1 QuizComponents, 1.2 QuizFragment | ✅ Terminé |
 | Phase 1 suite | 1.3 composants mot, 1.4–1.x autres écrans | 🔜 À faire |
 
-### Architecture Quiz (Session 1.2)
+### Architecture Quiz (Sessions 1.2 → 1.3)
 
-`QuizFragment` conserve son shell MVP (`QuizContract.View`) mais son layout est un `ComposeView` unique. Le state Compose est géré par `QuizUiState` (data class dans `QuizFragment.kt`), alimenté par les callbacks du Presenter via `mutableStateOf`.
+`QuizFragment` conserve son shell MVP (`QuizContract.View`) mais son layout est un `ComposeView` unique. Le state Compose est géré par `QuizUiState` (data class dans `QuizScreen.kt`), alimenté par les callbacks du Presenter via `mutableStateOf`.
 
 **Flux de données :**
 ```
@@ -402,6 +402,31 @@ QuizPresenter → QuizContract.View callbacks
 - `ui/quiz/QuizScreen.kt` — composables principaux (`QuizScreen`, `QuestionZone`, `QcmAnswers`, `FuriganaAndroidView`)
 - `ui/quiz/QuizComponents.kt` — `AnswerButton`, `ProgressSegmentBar`, enums `AnswerButtonState`, `SegmentState`
 - `screens/quiz/QuizFragment.kt` — shell MVP + `QuizUiState` + bindings Compose
+
+### Layout QuestionZone (état actuel)
+
+Le contenu japonais est centré verticalement dans une card (`RadiusXl`, marges `12dp h / 8dp v`) :
+
+```
+Card hero (fond animé + bordure animée selon résultat)
+└── Box(weight=1f, center) ← centrage vertical
+    └── Column(CenterHorizontally)
+        ├── Mot vedette large (46sp, animé : couleur + spring scale + shake offset)
+        └── Column(CenterHorizontally)
+            ├── Phrase d'exemple (18sp, wrapContentWidth → centrée)
+            └── Traduction phrase (alpha=0f si masquée — réserve l'espace sans décaler)
+Instruction (label uppercase, AccentOrange 75%, 11sp, letterSpacing 1.2sp)
+Grille 2×2 AnswerButtons
+FABBar
+```
+
+**Animations de feedback (dérivées dans le composable, sans état ViewModel) :**
+- `isCorrect` / `isWrong` déduits de `isRevealed` + `wordHighlightColor`
+- Fond card : `BackgroundHero` → `BackgroundCorrect` / `BackgroundHeroWrong` (animateColorAsState)
+- Bordure card : `Transparent` → `BorderHeroCorrect` / `BorderHeroWrong` (animateColorAsState)
+- Couleur kanji : `TextPrimary` → `Correct` / `Wrong` via `textColor` (setTextColor sur FuriganaView)
+- Scale : spring bounce 1f → 1.13f (DampingRatioMediumBouncy) sur bonne réponse
+- Shake : Animatable keyframes 450ms (±14f → ±10f → ±6f → 0f) sur mauvaise réponse
 
 ### Interop FuriganaView (`AndroidView`)
 
@@ -420,6 +445,9 @@ Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
 - `wrapContentWidth()` → contrainte AT_MOST → FuriganaView retourne `m_linemax` (largeur du texte) → Box peut centrer
 
 Pour une phrase pleine largeur (avec surlignage), utiliser `fillMaxWidth()` (comportement souhaité).
+
+**`FuriganaAndroidView` — paramètre `textColor` :**
+Le paramètre `highlightColor` ne colore que les caractères dans `[markStart, markEnd)`. Pour changer la couleur de tout le texte (kanji vedette avec mark 0..0), passer `textColor` : il appelle `view.setTextColor()` dans le bloc `update` à chaque recomposition.
 
 ### `painterResource` et StateListDrawable
 

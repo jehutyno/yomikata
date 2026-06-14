@@ -5,11 +5,14 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -25,6 +28,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.jehutyno.yomikata.ui.theme.AccentOrange
 import com.jehutyno.yomikata.ui.theme.BackgroundCorrect
 import com.jehutyno.yomikata.ui.theme.BackgroundWrong
 import com.jehutyno.yomikata.ui.theme.BorderCorrect
@@ -128,60 +132,108 @@ enum class SegmentState { Pending, Current, Correct, Wrong }
 
 private val SegmentCorrectColor = Correct
 private val SegmentWrongColor = Wrong
-private val SegmentCurrentColor = Color(0xFFFB8C00)
-private val SegmentPendingColor = Color(0xFF1E2B3A)
+private val SegmentCurrentColor = AccentOrange
+private val SegmentPendingColor = BorderDefault
+
+private const val MAX_INDIVIDUAL_SEGMENTS = 33
 
 @Composable
 fun ProgressSegmentBar(
-    segments: List<SegmentState>,
+    total: Int,
+    correctCount: Int,
+    wrongCount: Int,
+    current: Int,
     modifier: Modifier = Modifier
 ) {
-    val correctCount = segments.count { it == SegmentState.Correct }
-    val wrongCount = segments.count { it == SegmentState.Wrong }
+    if (total == 0) return
 
     Column(modifier = modifier.fillMaxWidth()) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(2.dp)
-        ) {
-            segments.forEach { seg ->
-                val color = when (seg) {
-                    SegmentState.Correct -> SegmentCorrectColor
-                    SegmentState.Wrong -> SegmentWrongColor
-                    SegmentState.Current -> SegmentCurrentColor
-                    SegmentState.Pending -> SegmentPendingColor
+        if (total <= MAX_INDIVIDUAL_SEGMENTS) {
+            // Mode 1 — individual segments
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(2.dp)
+            ) {
+                repeat(total) { index ->
+                    val color = when {
+                        index == current -> SegmentCurrentColor
+                        index < correctCount -> SegmentCorrectColor
+                        index < correctCount + wrongCount -> SegmentWrongColor
+                        else -> SegmentPendingColor
+                    }
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(4.dp)
+                            .clip(RoundedCornerShape(2.dp))
+                            .background(color)
+                    )
                 }
+            }
+        } else {
+            // Mode 2 — proportional bar
+            BoxWithConstraints(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(8.dp)
+            ) {
+                val fullWidth = maxWidth
+
+                // Layer 1: background
                 Box(
                     modifier = Modifier
-                        .weight(1f)
+                        .fillMaxWidth()
                         .height(4.dp)
+                        .align(Alignment.Center)
                         .clip(RoundedCornerShape(2.dp))
-                        .background(color)
+                        .background(SegmentPendingColor)
+                )
+
+                // Layer 2: correct + wrong fills
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(4.dp)
+                        .align(Alignment.Center)
+                ) {
+                    if (correctCount > 0) {
+                        Box(
+                            modifier = Modifier
+                                .width(fullWidth * correctCount / total)
+                                .fillMaxHeight()
+                                .background(SegmentCorrectColor)
+                        )
+                    }
+                    if (wrongCount > 0) {
+                        Box(
+                            modifier = Modifier
+                                .width(fullWidth * wrongCount / total)
+                                .fillMaxHeight()
+                                .background(SegmentWrongColor)
+                        )
+                    }
+                }
+
+                // Layer 3: current position marker
+                Box(
+                    modifier = Modifier
+                        .offset(x = fullWidth * current / total - 1.dp)
+                        .width(2.dp)
+                        .height(8.dp)
+                        .align(Alignment.CenterStart)
+                        .background(SegmentCurrentColor)
                 )
             }
         }
-        if (correctCount > 0 || wrongCount > 0) {
-            Spacer(modifier = Modifier.height(4.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End
-            ) {
-                if (correctCount > 0) {
-                    Text(
-                        text = "$correctCount ✓",
-                        fontSize = 10.sp,
-                        color = Correct
-                    )
-                }
-                if (wrongCount > 0) {
-                    if (correctCount > 0) Spacer(Modifier.width(8.dp))
-                    Text(
-                        text = "$wrongCount ✗",
-                        fontSize = 10.sp,
-                        color = Wrong
-                    )
-                }
-            }
+
+        Spacer(modifier = Modifier.height(4.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(text = "$correctCount ✓", fontSize = 8.sp, color = SegmentCorrectColor)
+            Text(text = "${current + 1} / $total", fontSize = 8.sp, color = TextDim)
+            Text(text = "$wrongCount ✗", fontSize = 8.sp, color = SegmentWrongColor)
         }
     }
 }
@@ -282,18 +334,40 @@ private fun PreviewProgressSegmentBar() {
     YomikataTheme {
         Column(modifier = Modifier.padding(16.dp)) {
             ProgressSegmentBar(
-                segments = listOf(
-                    SegmentState.Correct,
-                    SegmentState.Correct,
-                    SegmentState.Wrong,
-                    SegmentState.Correct,
-                    SegmentState.Current,
-                    SegmentState.Pending,
-                    SegmentState.Pending,
-                    SegmentState.Pending,
-                    SegmentState.Pending,
-                    SegmentState.Pending,
-                )
+                total = 10,
+                correctCount = 3,
+                wrongCount = 1,
+                current = 4,
+            )
+        }
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF0A0E17, name = "ProgressSegmentBar — Long quiz début")
+@Composable
+private fun PreviewProgressSegmentBarLongStart() {
+    YomikataTheme {
+        Column(modifier = Modifier.padding(16.dp)) {
+            ProgressSegmentBar(
+                total = 424,
+                correctCount = 3,
+                wrongCount = 1,
+                current = 4,
+            )
+        }
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF0A0E17, name = "ProgressSegmentBar — Long quiz milieu")
+@Composable
+private fun PreviewProgressSegmentBarLongMiddle() {
+    YomikataTheme {
+        Column(modifier = Modifier.padding(16.dp)) {
+            ProgressSegmentBar(
+                total = 424,
+                correctCount = 180,
+                wrongCount = 40,
+                current = 220,
             )
         }
     }

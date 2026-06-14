@@ -5,11 +5,18 @@ import android.text.InputType
 import android.text.TextWatcher
 import android.view.KeyEvent
 import android.view.inputmethod.EditorInfo
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.keyframes
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -26,14 +33,21 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -47,10 +61,14 @@ import com.jehutyno.yomikata.ui.components.FABBarState
 import com.jehutyno.yomikata.ui.theme.AccentOrange
 import com.jehutyno.yomikata.ui.theme.BackgroundCorrect
 import com.jehutyno.yomikata.ui.theme.BackgroundHero
+import com.jehutyno.yomikata.ui.theme.BackgroundHeroWrong
 import com.jehutyno.yomikata.ui.theme.BackgroundPrimary
 import com.jehutyno.yomikata.ui.theme.BackgroundWrong
 import com.jehutyno.yomikata.ui.theme.BorderCorrect
 import com.jehutyno.yomikata.ui.theme.BorderDefault
+import com.jehutyno.yomikata.ui.theme.BorderHeroCorrect
+import com.jehutyno.yomikata.ui.theme.RadiusXl
+import com.jehutyno.yomikata.ui.theme.BorderHeroWrong
 import com.jehutyno.yomikata.ui.theme.BorderSubtle
 import com.jehutyno.yomikata.ui.theme.BorderWrong
 import com.jehutyno.yomikata.ui.theme.Correct
@@ -62,8 +80,10 @@ import com.jehutyno.yomikata.ui.theme.TextSecondary
 import com.jehutyno.yomikata.ui.theme.Wrong
 import com.jehutyno.yomikata.ui.theme.YomikataTheme
 import com.jehutyno.yomikata.util.getWordPositionInFuriSentence
+import kotlin.math.roundToInt
 import com.jehutyno.yomikata.util.language.cleanForQCM
 import com.jehutyno.yomikata.util.quiz.QuizType
+import com.jehutyno.yomikata.util.quiz.Level
 import com.jehutyno.yomikata.util.sentenceNoAnswerFuri
 import com.jehutyno.yomikata.util.sentenceNoFuri
 import com.jehutyno.yomikata.view.furigana.FuriganaView
@@ -130,6 +150,27 @@ fun QuizScreen(
     val word = uiState.currentWord
     val quizType = uiState.currentQuizType
 
+    val answered = uiState.isRevealed
+    val isCorrect = answered && uiState.wordHighlightColor == Correct.toArgb()
+    val isWrong = answered && !isCorrect
+
+    val heroBg by animateColorAsState(
+        targetValue = when {
+            isCorrect -> BackgroundCorrect
+            isWrong -> BackgroundHeroWrong
+            else -> BackgroundHero
+        },
+        label = "heroBg",
+    )
+    val heroBorder by animateColorAsState(
+        targetValue = when {
+            isCorrect -> BorderHeroCorrect
+            isWrong -> BorderHeroWrong
+            else -> Color.Transparent
+        },
+        label = "heroBorder",
+    )
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -145,7 +186,10 @@ fun QuizScreen(
         ) {
             if (uiState.segments.isNotEmpty()) {
                 ProgressSegmentBar(
-                    segments = uiState.segments,
+                    total = uiState.segments.size,
+                    correctCount = uiState.segments.count { it == SegmentState.Correct },
+                    wrongCount = uiState.segments.count { it == SegmentState.Wrong },
+                    current = uiState.currentIndex,
                     modifier = Modifier.weight(1f),
                 )
             } else {
@@ -159,12 +203,15 @@ fun QuizScreen(
             )
         }
 
-        // Question zone (fond BackgroundHero, prend l'espace disponible)
+        // Question zone — card avec bords arrondis et marges
         Box(
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth()
-                .background(BackgroundHero),
+                .padding(horizontal = 12.dp, vertical = 8.dp)
+                .clip(RoundedCornerShape(RadiusXl))
+                .border(1.5.dp, heroBorder, RoundedCornerShape(RadiusXl))
+                .background(heroBg),
         ) {
             QuestionZone(
                 word = word,
@@ -174,6 +221,8 @@ fun QuizScreen(
                 showTranslation = uiState.showTranslation,
                 wordHighlightColor = uiState.wordHighlightColor,
                 isRevealed = uiState.isRevealed,
+                isCorrect = isCorrect,
+                isWrong = isWrong,
                 onItemClick = onItemClick,
                 onSelectionClick = onSelectionClick,
                 onReportClick = onReportClick,
@@ -185,16 +234,18 @@ fun QuizScreen(
             )
         }
 
-        // Hint text for QCM
+        // Instruction label for QCM
         if (!uiState.hintText.isNullOrEmpty() && uiState.answerMode == AnswerMode.QCM) {
             Text(
-                text = uiState.hintText,
-                color = TextSecondary,
-                fontSize = 14.sp,
+                text = uiState.hintText.uppercase(),
+                color = AccentOrange.copy(alpha = 0.75f),
+                fontSize = 11.sp,
+                fontWeight = FontWeight.W600,
+                letterSpacing = 1.2.sp,
                 textAlign = TextAlign.Center,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 12.dp, vertical = 4.dp),
+                    .padding(horizontal = 16.dp, vertical = 10.dp),
             )
         }
 
@@ -247,6 +298,8 @@ private fun QuestionZone(
     showTranslation: Boolean,
     wordHighlightColor: Int,
     isRevealed: Boolean,
+    isCorrect: Boolean,
+    isWrong: Boolean,
     onItemClick: () -> Unit,
     onSelectionClick: () -> Unit,
     onReportClick: () -> Unit,
@@ -259,13 +312,9 @@ private fun QuestionZone(
     // P4: orange si non répondu, green après bonne réponse (défault si 0 → orange)
     val sentenceHighlight = if (wordHighlightColor != 0) wordHighlightColor else AccentOrange.toArgb()
 
-    // P7 : SpaceBetween pour le cas japonais, weight(1f) pour audio/EN-JAP
-    val isJapanese = word != null &&
-        quizType != QuizType.TYPE_AUDIO && quizType != QuizType.TYPE_EN_JAP
-
     Column(
         modifier = modifier.padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalArrangement = if (isJapanese) Arrangement.SpaceBetween else Arrangement.Top,
+        verticalArrangement = Arrangement.Top,
     ) {
         when {
             // TYPE_AUDIO : juste l'icône speaker centrée
@@ -309,8 +358,46 @@ private fun QuestionZone(
                 }
             }
 
-            // Cas japonais : 3 groupes avec SpaceBetween
+            // Cas japonais : kanji en vedette au-dessus de la phrase, bloc centré verticalement
             word != null -> {
+                val kanjiColor by animateColorAsState(
+                    targetValue = when {
+                        isCorrect -> Correct
+                        isWrong -> Wrong
+                        else -> TextPrimary
+                    },
+                    label = "kanjiColor",
+                )
+                val scale by animateFloatAsState(
+                    targetValue = if (isCorrect) 1.13f else 1f,
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                        stiffness = Spring.StiffnessMedium,
+                    ),
+                    label = "kanjiScale",
+                )
+                val shakeOffset = remember { Animatable(0f) }
+                LaunchedEffect(isWrong) {
+                    if (isWrong) {
+                        shakeOffset.animateTo(
+                            targetValue = 0f,
+                            animationSpec = keyframes {
+                                durationMillis = 450
+                                0f at 0
+                                14f at 60
+                                -14f at 120
+                                10f at 180
+                                -10f at 240
+                                6f at 300
+                                -6f at 360
+                                0f at 450
+                            },
+                        )
+                    } else {
+                        shakeOffset.snapTo(0f)
+                    }
+                }
+
                 val colorEntireWord = word.isKana == 2 && quizType == QuizType.TYPE_JAP_EN
                 val wordPos = if (colorEntireWord) 0 else getWordPositionInFuriSentence(sentence.jap, word)
                 val furiText = if (showFurigana) {
@@ -325,33 +412,6 @@ private fun QuestionZone(
                     word.japanese.length
                 }
 
-                // GROUPE 1 : phrase de contexte (top)
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    FuriganaAndroidView(
-                        text = furiText,
-                        markStart = wordPos,
-                        markEnd = markEnd,
-                        highlightColor = sentenceHighlight,
-                        textSizeSp = 18f,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable(onClick = onItemClick),
-                    )
-                    if (showTranslation && quizType != QuizType.TYPE_JAP_EN) {
-                        Text(
-                            text = sentence.getTrad(),
-                            color = TextSecondary,
-                            fontSize = 14.sp,
-                            modifier = Modifier.fillMaxWidth(),
-                        )
-                    }
-                    HorizontalDivider(
-                        color = BorderSubtle,
-                        modifier = Modifier.padding(vertical = 4.dp),
-                    )
-                }
-
-                // GROUPE 2 : mot en vedette centré (milieu)
                 // P3 : furigana masqué pour les types "donner la lecture" avant révélation
                 val hideReadingFuri = !isRevealed &&
                     (quizType == QuizType.TYPE_PRONUNCIATION || quizType == QuizType.TYPE_PRONUNCIATION_QCM)
@@ -362,19 +422,63 @@ private fun QuestionZone(
                     word.japanese
                 }
 
-                // P1 : wrapContentWidth() → FuriganaView retourne sa largeur texte → Box centre horizontalement
+                // Bloc centré verticalement dans l'espace disponible
                 Box(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth(),
                     contentAlignment = Alignment.Center,
                 ) {
-                    FuriganaAndroidView(
-                        text = largeWordText,
-                        markStart = 0,
-                        markEnd = 0,
-                        highlightColor = TextPrimary.toArgb(),
-                        textSizeSp = 46f,
-                        modifier = Modifier.wrapContentWidth(),
-                    )
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                    ) {
+                        // Mot en vedette — centré, avec spring bounce + shake
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .graphicsLayer { scaleX = scale; scaleY = scale }
+                                .offset { IntOffset(shakeOffset.value.roundToInt(), 0) },
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            FuriganaAndroidView(
+                                text = largeWordText,
+                                markStart = 0,
+                                markEnd = 0,
+                                highlightColor = kanjiColor.toArgb(),
+                                textColor = kanjiColor.toArgb(),
+                                textSizeSp = 46f,
+                                modifier = Modifier.wrapContentWidth(),
+                            )
+                        }
+
+                        // Phrase d'exemple + traduction — centrées horizontalement
+                        // La traduction utilise alpha() pour réserver l'espace sans décaler les autres éléments
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(4.dp),
+                        ) {
+                            FuriganaAndroidView(
+                                text = furiText,
+                                markStart = wordPos,
+                                markEnd = markEnd,
+                                highlightColor = sentenceHighlight,
+                                textSizeSp = 18f,
+                                modifier = Modifier
+                                    .wrapContentWidth()
+                                    .clickable(onClick = onItemClick),
+                            )
+                            Text(
+                                text = sentence.getTrad(),
+                                color = TextSecondary,
+                                fontSize = 14.sp,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.alpha(
+                                    if (showTranslation && quizType != QuizType.TYPE_JAP_EN) 1f else 0f
+                                ),
+                            )
+                        }
+                    }
                 }
             }
 
@@ -625,18 +729,19 @@ internal fun FuriganaAndroidView(
     markStart: Int,
     markEnd: Int,
     highlightColor: Int,
+    textColor: Int = TextPrimary.toArgb(),
     textSizeSp: Float = 18f,
     modifier: Modifier = Modifier,
 ) {
-    val defaultTextColor = TextPrimary.toArgb()
     AndroidView(
         factory = { ctx ->
             FuriganaView(ctx).apply {
-                setTextColor(defaultTextColor)
+                setTextColor(textColor)
                 textSize = textSizeSp
             }
         },
         update = { view ->
+            view.setTextColor(textColor)
             view.textSize = textSizeSp
             view.text_set(text, markStart, markEnd, highlightColor)
         },
@@ -646,7 +751,17 @@ internal fun FuriganaAndroidView(
 
 // ─── Previews ──────────────────────────────────────────────────────────────────
 
-@Preview(showBackground = true, backgroundColor = 0xFF0A0E17, name = "QuizScreen — avant réponse (2×2)")
+private val previewWord = Word(
+    id = 1L, japanese = "食べる", english = "to eat", french = "manger",
+    reading = "たべる", level = Level.LOW, countTry = 5, countSuccess = 3,
+    countFail = 2, isKana = 0, repetition = 0, points = 0,
+    baseCategory = 0, isSelected = 0, sentenceId = null,
+)
+private val previewSentence = Sentence(
+    jap = "毎日%食べる%のが好きです", en = "I like eating every day", fr = "J'aime manger tous les jours",
+)
+
+@Preview(showBackground = true, backgroundColor = 0xFF0A0E17, name = "QuizScreen — avant réponse")
 @Composable
 private fun PreviewQuizBeforeAnswer() {
     YomikataTheme {
@@ -668,8 +783,9 @@ private fun PreviewQuizBeforeAnswer() {
                 ),
                 hintText = "Give hiragana reading",
                 isRevealed = false,
-                currentIndex = 2,
-                words = emptyList(),
+                currentIndex = 0,
+                words = listOf(Pair(previewWord, QuizType.TYPE_JAP_EN)),
+                sentence = previewSentence,
                 wordHighlightColor = AccentOrange.toArgb(),
             ),
             onOptionClick = {},
@@ -711,8 +827,9 @@ private fun PreviewQuizCorrect() {
                 ),
                 hintText = "Give hiragana reading",
                 isRevealed = true,
-                currentIndex = 2,
-                words = emptyList(),
+                currentIndex = 0,
+                words = listOf(Pair(previewWord, QuizType.TYPE_JAP_EN)),
+                sentence = previewSentence,
                 wordHighlightColor = Correct.toArgb(),
             ),
             onOptionClick = {},
@@ -754,8 +871,9 @@ private fun PreviewQuizWrong() {
                 ),
                 hintText = "Give hiragana reading",
                 isRevealed = true,
-                currentIndex = 2,
-                words = emptyList(),
+                currentIndex = 0,
+                words = listOf(Pair(previewWord, QuizType.TYPE_JAP_EN)),
+                sentence = previewSentence,
                 wordHighlightColor = AccentOrange.toArgb(),
             ),
             onOptionClick = {},
