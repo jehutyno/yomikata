@@ -11,8 +11,6 @@ import android.view.View.GONE
 import android.view.View.VISIBLE
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.DefaultLifecycleObserver
-import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
@@ -20,7 +18,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.databinding.FragmentContentGraphBinding
 import com.jehutyno.yomikata.model.Word
-import com.jehutyno.yomikata.screens.content.word.WordDetailDialogFragment
+import com.jehutyno.yomikata.screens.content.word.WordDetailFragment
 import com.jehutyno.yomikata.util.Extras
 import com.jehutyno.yomikata.util.quiz.Level
 import com.jehutyno.yomikata.util.SeekBarsManager
@@ -44,7 +42,6 @@ class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, Wo
     private var quizTitle: String = ""
     private var level: Level? = null
     private var lastPosition = -1
-    private var dialog: WordDetailDialogFragment? = null
 
     // kodein
     private val subDI by DI.lazy {
@@ -168,22 +165,13 @@ class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, Wo
         bundle.putInt(Extras.EXTRA_WORD_POSITION, position)
         bundle.putString(Extras.EXTRA_SEARCH_STRING, "")
 
-        // unbind observer to prevent word from disappearing while viewing in detail dialog
-        mpresenter.words.removeObserver(wordsObserver)
-
-        val newDialog = WordDetailDialogFragment(di)
-        newDialog.arguments = bundle
-        newDialog.show(childFragmentManager, "")
-        newDialog.isCancelable = true
-        dialog = newDialog
-
-        newDialog.lifecycle.addObserver(object: DefaultLifecycleObserver {
-            override fun onDestroy(owner: LifecycleOwner) {
-                super.onDestroy(owner)
-                // continue observing
-                mpresenter.words.observe(viewLifecycleOwner, wordsObserver)
-            }
-        })
+        val fragment = WordDetailFragment(di)
+        fragment.arguments = bundle
+        requireActivity().supportFragmentManager
+            .beginTransaction()
+            .add(android.R.id.content, fragment, "word_detail")
+            .addToBackStack("word_detail")
+            .commit()
     }
 
     override fun onCategoryIconClick(position: Int) {

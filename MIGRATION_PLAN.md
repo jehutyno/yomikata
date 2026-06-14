@@ -239,7 +239,7 @@
 ---
 
 ### Session 1.4 — Écran Word Detail (Dialog → plein écran)
-**Statut** : `[ ]`
+**Statut** : `[x]`
 
 **Objectif** : convertir `WordDetailDialogFragment` (Dialog) en Fragment plein écran avec `ComposeView`.
 

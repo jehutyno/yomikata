@@ -57,10 +57,13 @@ public class FuriganaView extends androidx.appcompat.widget.AppCompatTextView {
         // Draw
         public void draw(Canvas canvas, float x, float y) {
             x -= m_width / 2.0f;
-            if (!is_colored)
+            if (m_furigana_color != -1) {
+                m_paint_f.setColor(m_furigana_color);
+            } else if (!is_colored) {
                 m_paint_f.setColor(m_paint_k_norm.getColor());
-            else
+            } else {
                 m_paint_f.setColor(m_paint_k_mark.getColor());
+            }
             canvas.drawText(m_text, 0, m_text.length(), x, y, m_paint_f);
         }
     }
@@ -184,15 +187,19 @@ public class FuriganaView extends androidx.appcompat.widget.AppCompatTextView {
 
         // Draw
         public void draw(Canvas canvas, float y) {
+            draw(canvas, y, 0.0f);
+        }
+
+        public void draw(Canvas canvas, float y, float xOffset) {
             y -= m_paint_f.descent();
             if (m_offset.size() == m_text.size()) {
                 // Render with fixed offsets
                 for (int i = 0; i < m_offset.size(); i++)
-                    m_text.get(i).draw(canvas, m_offset.get(i), y);
+                    m_text.get(i).draw(canvas, m_offset.get(i) + xOffset, y);
             } else {
                 // Render with original offsets
                 for (TextFurigana text : m_text)
-                    text.draw(canvas, text.offset_get(), y);
+                    text.draw(canvas, text.offset_get() + xOffset, y);
             }
         }
     }
@@ -210,10 +217,21 @@ public class FuriganaView extends androidx.appcompat.widget.AppCompatTextView {
             m_text.addAll(text);
         }
 
+        // Width
+        public float width() {
+            float w = 0.0f;
+            for (TextNormal text : m_text) w += text.m_width_total;
+            return w;
+        }
+
         // Draw
         public void draw(Canvas canvas, float y) {
+            draw(canvas, y, 0.0f);
+        }
+
+        public void draw(Canvas canvas, float y, float xOffset) {
             y -= m_paint_k_norm.descent();
-            float x = 0.0f;
+            float x = xOffset;
             for (TextNormal text : m_text)
                 x += text.draw(canvas, x, y);
         }
@@ -342,6 +360,12 @@ public class FuriganaView extends androidx.appcompat.widget.AppCompatTextView {
     private TextPaint m_paint_k_norm = new TextPaint();
     private TextPaint m_paint_k_mark = new TextPaint();
 
+    // Optional furigana color override (-1 = inherit from kanji paint)
+    private int m_furigana_color = -1;
+
+    // Whether to center each line horizontally
+    private boolean m_center = false;
+
     // Sizes
     private float m_linesize = 0.0f;
     private float m_height_n = 0.0f;
@@ -372,6 +396,16 @@ public class FuriganaView extends androidx.appcompat.widget.AppCompatTextView {
     @Override
     public void setTextColor(int color) {
         super.setTextColor(color);
+        invalidate();
+    }
+
+    public void setFuriganaColor(int color) {
+        m_furigana_color = color;
+        invalidate();
+    }
+
+    public void setCenter(boolean center) {
+        m_center = center;
         invalidate();
     }
 
@@ -619,8 +653,9 @@ public class FuriganaView extends androidx.appcompat.widget.AppCompatTextView {
 
         // Loop lines
         for (int i = 0; i < m_line_n.size(); i++) {
-            m_line_n.get(i).draw(canvas, y);
-            m_line_f.get(i).draw(canvas, y - m_height_n);
+            float xOffset = m_center ? (getWidth() - m_line_n.get(i).width()) / 2.0f : 0.0f;
+            m_line_n.get(i).draw(canvas, y, xOffset);
+            m_line_f.get(i).draw(canvas, y - m_height_n, xOffset);
             y += m_linesize;
         }
     }

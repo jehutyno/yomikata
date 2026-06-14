@@ -4,6 +4,8 @@ Ce fichier est lu automatiquement par Claude à chaque session. Il contient les 
 
 Pour la documentation technique complète, voir `ARCHITECTURE.md`.
 
+> **Sources Kotlin** : les sources se trouvent dans `app/src/main/kotlin/` (et non `java/`). Toujours chercher les classes dans ce dossier.
+
 ---
 
 ## Build & Tests

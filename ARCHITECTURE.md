@@ -57,7 +57,7 @@ Les presenters reçoivent un `CoroutineScope` (le `lifecycleScope` du fragment h
 | `quizzes` | `QuizzesActivity` | **Activité de démarrage** — chargement DB, navigation principale (ViewPager2 : Home + liste des catégories), gestion erreur DB |
 | `home` | `HomeFragment` | Dashboard — stats globales, accès rapide, fil d'actualité Firebase, lien GitHub Sponsors |
 | `content` | `ContentActivity` | Liste des mots d'une catégorie, graphique de progression |
-| `content/word` | `WordDetailDialogFragment` | Détail d'un mot (kanji, radical, exemple de phrase) |
+| `content/word` | `WordDetailFragment` | Détail d'un mot plein écran (Compose — Sessions 1.4) |
 | `quiz` | `QuizActivity` / `QuizFragment` | Session de quiz complète |
 | `answers` | `AnswersActivity` | Récapitulatif des réponses après une session |
 | `search` | `SearchResultActivity` | Recherche de mots dans toute la base |
@@ -238,7 +238,7 @@ Les schémas Room sont exportés à partir de la version 14 dans `app/schemas/`.
 
 La colonne `pos` dans `words` stocke les Part-of-Speech extraits du champ `english` (format JMdict : `(n)`, `(v1,vt)`, etc.), sous forme de tokens séparés par virgule (`n`, `v1,vt`, etc.). L'extraction se fait par regex lors de `MIGRATION_16_21` ; les mots manquants (JLPT4/5 sans préfixe JMdict) sont complétés via `populatePosIfNeeded` dans `onOpen` depuis l'asset.
 
-Les POS sont affichés sous forme de chips colorés dans la fiche détail d'un mot (`vh_word_detail.xml`), avec labels localisés en 6 langues et couleur par catégorie (bleu=nom, orange=verbe, vert=adjectif, violet=adverbe, gris=autre).
+Les POS sont affichés sous forme de chips colorés dans la fiche détail d'un mot (`WordDetailScreen.kt`), avec labels courts et couleur par catégorie (bleu=nom, orange=verbe, vert=adjectif, violet=adverbe, gris=autre).
 
 ### Contenu de la base (v21)
 
@@ -384,8 +384,31 @@ Le projet migre progressivement de XML/MVP vers Jetpack Compose (dark-only, Mate
 | Phase | Sessions | Statut |
 |---|---|---|
 | Phase 0 — Design system | 0.1 tokens, 0.2 composants atomiques, 0.3 BottomBar | ✅ Terminé |
-| Phase 1 — Écrans fort gain | 1.1 QuizComponents, 1.2 QuizFragment, 1.3 composants mot | ✅ Terminé |
-| Phase 1 suite | 1.4 WordDetailScreen et suivants | 🔜 À faire |
+| Phase 1 — Écrans fort gain | 1.1 QuizComponents, 1.2 QuizFragment, 1.3 composants mot, 1.4 WordDetail | ✅ Terminé |
+| Phase 2 — Changements fonctionnels | 2.1 WordList, 2.2 Study, 2.3 BottomNav | 🔜 À faire |
+
+### Architecture Word Detail (Session 1.4)
+
+`WordDetailDialogFragment` (DialogFragment + ViewPager + XML) remplacé par `WordDetailFragment` (Fragment standard + ComposeView).
+
+**Flux de données :**
+```
+WordPresenter → WordContract.View.displayWords(words)
+    → composeState = WordDetailUiState(words, currentIndex)    (mutableStateOf)
+    → WordDetailScreen(state = composeState)                   (Compose stateless)
+```
+
+**Navigation prev/next :** boutons ❮/❯ dans le `TopAppBar`. `wordPosition` est mis à jour dans le Fragment et synchronisé avec `composeState.currentIndex`. Le swipe ViewPager est supprimé.
+
+**Retour :** ← dans l'AppBar (`parentFragmentManager.popBackStack()`) ou back système (Fragment Manager intercepte automatiquement via `OnBackPressedDispatcher`).
+
+**Affichage dans `ContentFragment` :** `requireActivity().supportFragmentManager.beginTransaction().add(android.R.id.content, fragment).addToBackStack("word_detail").commit()` — `WordDetailFragment` recouvre l'activité entière (container `android.R.id.content`).
+
+**`updateCounter` dans `WordDetailUiState` :** champ incrément-seul utilisé pour forcer la recomposition après mutation directe des champs `points`/`level` du `Word` (le modèle `Word` est mutable). Sans ce champ, `mutableStateOf` ne détecte pas la mutation interne.
+
+**Fichiers clés :**
+- `ui/word/WordDetailScreen.kt` — `WordDetailUiState`, `WordDetailScreen`, `ExampleCard`, `PosChip`, `WordDetailFuriganaView`
+- `screens/content/word/WordDetailFragment.kt` — shell MVP + state Compose + TTS/VoicesManager + actions (sélections, level, copie, report)
 
 ### Architecture Quiz (Sessions 1.2 → 1.3)
 
@@ -430,9 +453,29 @@ FABBar
 
 ### Interop FuriganaView (`AndroidView`)
 
-`FuriganaView` est une View Java custom (`view/furigana/FuriganaView.java`) avec un `onDraw` entièrement manuel — `gravity` n'a aucun effet.
+`FuriganaView` est une View Java custom (`view/furigana/FuriganaView.java`) avec un `onDraw` entièrement manuel — `gravity` et `textAlignment` n'ont aucun effet sur le contenu.
 
-**Pattern pour centrer un mot vedette :**
+**API disponible (`FuriganaView.java`) :**
+
+| Méthode | Rôle |
+|---|---|
+| `text_set(text, markStart, markEnd, highlightColor)` | Pose le texte. Format `{kanji;reading}`. Mark colore la plage `[markStart, markEnd)`. |
+| `setTextColor(int)` | Couleur du texte kanji non-marqué. |
+| `setFuriganaColor(int)` | Couleur des furigana indépendante du kanji (-1 = hériter du kanji). **Ajouté Session 1.4.** |
+| `setCenter(boolean)` | Centre horizontalement chaque ligne dans la largeur du widget. **Ajouté Session 1.4.** |
+| `textSize = Float` | Taille du kanji en sp (furigana = taille/2 automatiquement). |
+
+**Pattern centrage avec `fillMaxWidth()` (Session 1.4) :**
+```kotlin
+WordDetailFuriganaView(
+    text = "{食べる;たべる}",
+    centered = true,            // appelle setCenter(true)
+    modifier = Modifier.fillMaxWidth(),
+)
+```
+→ `setCenter(true)` calcule `xOffset = (getWidth() - lineWidth) / 2` dans `onDraw()` sans modifier le mode de mesure.
+
+**Pattern centrage avec `wrapContentWidth()` (Session 1.2) :**
 ```kotlin
 Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
     FuriganaAndroidView(
@@ -444,7 +487,7 @@ Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
 - `fillMaxWidth()` → contrainte EXACTLY → FuriganaView utilise la largeur écran → texte à gauche
 - `wrapContentWidth()` → contrainte AT_MOST → FuriganaView retourne `m_linemax` (largeur du texte) → Box peut centrer
 
-Pour une phrase pleine largeur (avec surlignage), utiliser `fillMaxWidth()` (comportement souhaité).
+Pour une phrase pleine largeur (avec surlignage), utiliser `fillMaxWidth()` sans `setCenter` (comportement souhaité).
 
 **`FuriganaAndroidView` — paramètre `textColor` :**
 Le paramètre `highlightColor` ne colore que les caractères dans `[markStart, markEnd)`. Pour changer la couleur de tout le texte (kanji vedette avec mark 0..0), passer `textColor` : il appelle `view.setTextColor()` dans le bloc `update` à chaque recomposition.
