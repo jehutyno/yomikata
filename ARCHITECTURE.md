@@ -384,8 +384,8 @@ Le projet migre progressivement de XML/MVP vers Jetpack Compose (dark-only, Mate
 | Phase | Sessions | Statut |
 |---|---|---|
 | Phase 0 — Design system | 0.1 tokens, 0.2 composants atomiques, 0.3 BottomBar | ✅ Terminé |
-| Phase 1 — Écrans fort gain | 1.1 QuizComponents, 1.2 QuizFragment | ✅ Terminé |
-| Phase 1 suite | 1.3 composants mot, 1.4–1.x autres écrans | 🔜 À faire |
+| Phase 1 — Écrans fort gain | 1.1 QuizComponents, 1.2 QuizFragment, 1.3 composants mot | ✅ Terminé |
+| Phase 1 suite | 1.4 WordDetailScreen et suivants | 🔜 À faire |
 
 ### Architecture Quiz (Sessions 1.2 → 1.3)
 
@@ -494,7 +494,7 @@ Depuis la migration (juin 2026), toutes les versions et dépendances sont centra
 | KenBurnsView | Animations fond (diaporama photos dans QuizzesActivity) |
 | androidx.core:core-splashscreen | Contrôle du splash screen système (Android 12+) |
 | HiraganaEditText | Saisie IME hiragana |
-| Compose BOM 2025.05 + Material 3 | UI Compose (migration en cours — Phase 1, Session 1.2 terminée : QuizFragment migré) |
+| Compose BOM 2025.05 + Material 3 | UI Compose (migration en cours — Phase 1, Session 1.3 terminée : QuizFragment + composants mot) |
 | Firebase BOM 33.x | RTDB, FCM, Storage |
 | MockK 1.13.x | Mocking pour les tests unitaires |
 | androidx.arch.core:core-testing | `InstantTaskExecutorRule` pour les tests LiveData |
@@ -538,7 +538,8 @@ com.jehutyno.yomikata/
 ├── ui/
 │   ├── theme/                  ← Color.kt, Shape.kt, Type.kt, Theme.kt (design tokens + YomikataTheme)
 │   ├── components/             ← SectionHeader, MasteryDots, FABBar (+ FABBarState), LevelChip (+ StudyLevel, LevelChipRow), YomikataBottomBar
-│   └── quiz/                   ← QuizComponents (AnswerButton + AnswerButtonState, ProgressSegmentBar + SegmentState), QuizScreen (QuizUiState + composables), QuizUiState
+│   ├── quiz/                   ← QuizComponents (AnswerButton + AnswerButtonState, ProgressSegmentBar + SegmentState), QuizScreen (QuizUiState + composables), QuizUiState
+│   └── word/                   ← WordListRow, KanjiComponentCard, WordActionBar
 └── view/                        ← vues custom Android
     ├── furigana/               ← FuriganaView, QuadraticOptimizer
     │   └── utils/              ← FuriganaUtils

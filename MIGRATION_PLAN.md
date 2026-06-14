@@ -213,7 +213,7 @@
 ---
 
 ### Session 1.3 — Composants Mot : WordListRow, KanjiComponentCard, WordActionBar
-**Statut** : `[ ]`
+**Statut** : `[x]`
 
 **Objectif** : créer les 3 composants réutilisables de la vue mot.
 
