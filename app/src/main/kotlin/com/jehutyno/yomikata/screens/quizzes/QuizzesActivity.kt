@@ -1,10 +1,8 @@
 package com.jehutyno.yomikata.screens.quizzes
 
 import android.annotation.SuppressLint
-import android.app.Activity
 import android.content.Intent
 import android.content.pm.ActivityInfo
-import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.view.KeyEvent
@@ -18,22 +16,18 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
-import androidx.appcompat.widget.SwitchCompat
 import androidx.appcompat.widget.Toolbar
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import androidx.drawerlayout.widget.DrawerLayout
 import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
-import com.google.android.material.navigation.NavigationView
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.databinding.ActivityQuizzesBinding
 import com.jehutyno.yomikata.repository.database.YomikataDatabase
 import com.jehutyno.yomikata.screens.home.HomeFragment
-import com.jehutyno.yomikata.screens.prefs.PrefsActivity
 import com.jehutyno.yomikata.screens.search.SearchResultActivity
 import com.jehutyno.yomikata.screens.selections.SelectionsFragment
 import com.jehutyno.yomikata.screens.settings.SettingsFragment
@@ -48,7 +42,6 @@ import com.jehutyno.yomikata.util.backup.getRestartDialog
 import com.jehutyno.yomikata.util.backup.getRestoreLauncher
 import com.jehutyno.yomikata.util.backup.restoreProgress
 import com.jehutyno.yomikata.util.backup.triggerRebirth
-import com.jehutyno.yomikata.util.quiz.Categories
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -113,10 +106,6 @@ class QuizzesActivity : AppCompatActivity(), DIAware {
             setDisplayHomeAsUpEnabled(false)
             title = ""
         }
-
-        binding.drawerLayout.setStatusBarBackground(R.color.colorPrimaryDark)
-        binding.drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED)
-        setupDrawerContent(binding.navView)
 
         // Hide legacy floating action buttons — Study screen has its own FABBar
         binding.multipleActions.visibility = View.GONE
@@ -203,74 +192,6 @@ class QuizzesActivity : AppCompatActivity(), DIAware {
             ?.let { toolbar.getChildAt(it) }
     }
 
-    private fun setupDrawerContent(navigationView: NavigationView) {
-        val packageInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            packageManager.getPackageInfo(packageName, PackageManager.PackageInfoFlags.of(0))
-        } else {
-            @Suppress("DEPRECATION") packageManager.getPackageInfo(packageName, 0)
-        }
-        navigationView.getHeaderView(0).apply {
-            findViewById<android.widget.TextView>(R.id.version).text =
-                getString(R.string.yomiakataz_drawer, packageInfo.versionName)
-            findViewById<android.widget.ImageView>(R.id.facebook).setOnClickListener { contactFacebook(this@QuizzesActivity) }
-            findViewById<android.widget.ImageView>(R.id.discord).setOnClickListener { contactDiscord(this@QuizzesActivity) }
-            findViewById<android.widget.ImageView>(R.id.play_store).setOnClickListener { contactPlayStore(this@QuizzesActivity) }
-            findViewById<android.widget.ImageView>(R.id.share).setOnClickListener { shareApp(this@QuizzesActivity) }
-        }
-
-        navigationView.setNavigationItemSelectedListener { menuItem ->
-            val category = when (menuItem.itemId) {
-                R.id.hiragana_item -> Categories.CATEGORY_HIRAGANA
-                R.id.katakana_item -> Categories.CATEGORY_KATAKANA
-                R.id.kanji_item -> Categories.CATEGORY_KANJI
-                R.id.counters_item -> Categories.CATEGORY_COUNTERS
-                R.id.jlpt1_item -> Categories.CATEGORY_JLPT_1
-                R.id.jlpt2_item -> Categories.CATEGORY_JLPT_2
-                R.id.jlpt3_item -> Categories.CATEGORY_JLPT_3
-                R.id.jlpt4_item -> Categories.CATEGORY_JLPT_4
-                R.id.jlpt5_item -> Categories.CATEGORY_JLPT_5
-                else -> null
-            }
-            if (category != null) {
-                menuItem.isChecked = true
-                studyFragment()?.setCategory(category)
-            } else {
-                when (menuItem.itemId) {
-                    R.id.day_night_item -> {
-                        menuItem.isChecked = !menuItem.isChecked
-                        menuItem.actionView?.findViewById<SwitchCompat>(R.id.my_switch)?.toggle()
-                    }
-                    R.id.settings -> {
-                        menuItem.isChecked = false
-                        getResult.launch(Intent(this, PrefsActivity::class.java))
-                    }
-                }
-            }
-            binding.drawerLayout.closeDrawers()
-            true
-        }
-
-        navigationView.menu.findItem(R.id.day_night_item)?.actionView
-            ?.findViewById<SwitchCompat>(R.id.my_switch)?.apply {
-                isChecked = AppCompatDelegate.getDefaultNightMode() == AppCompatDelegate.MODE_NIGHT_YES
-                setOnCheckedChangeListener { _, isChecked ->
-                    navigationView.menu.findItem(R.id.day_night_item).isChecked = isChecked
-                    val pref = PreferenceManager.getDefaultSharedPreferences(this@QuizzesActivity)
-                    if (isChecked) {
-                        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
-                        pref.edit().putInt(Prefs.DAY_NIGHT_MODE.pref, AppCompatDelegate.MODE_NIGHT_YES).apply()
-                    } else {
-                        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
-                        pref.edit().putInt(Prefs.DAY_NIGHT_MODE.pref, AppCompatDelegate.MODE_NIGHT_NO).apply()
-                    }
-                    binding.drawerLayout.closeDrawers()
-                    recreate()
-                }
-            }
-        navigationView.menu.findItem(R.id.day_night_item)?.isChecked =
-            AppCompatDelegate.getDefaultNightMode() == AppCompatDelegate.MODE_NIGHT_YES
-    }
-
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.menu_home, menu)
         return true
@@ -283,14 +204,6 @@ class QuizzesActivity : AppCompatActivity(), DIAware {
             }
         }
         return super.onOptionsItemSelected(item)
-    }
-
-    private val getResult = registerForActivityResult(
-        ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            tutos()
-        }
     }
 
     private fun handleDatabaseError(prefs: android.content.SharedPreferences) {

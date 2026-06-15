@@ -57,7 +57,7 @@ Les presenters reçoivent un `CoroutineScope` (le `lifecycleScope` du fragment h
 | `quizzes` | `QuizzesActivity` | **Activité de démarrage** — chargement DB, navigation principale (BottomNav Compose — 4 onglets), gestion erreur DB |
 | `selections` | `SelectionsFragment` | Sélections personnelles (placeholder — Session 3.x) |
 | `settings` | `SettingsFragment` | Paramètres via BottomNav : toggle Night Mode, liens sociaux, version + `PrefsFragment` embarqué |
-| `home` | `HomeFragment` | Dashboard — stats globales, accès rapide, fil d'actualité Firebase, lien GitHub Sponsors |
+| `home` | `HomeFragment` | Dashboard Compose — hero, grille StatCards 2×2 (stats aujourd'hui), section Continue, news Firebase, FABBar |
 | `content` | `ContentActivity` | Liste des mots d'une catégorie, graphique de progression |
 | `content/word` | `WordDetailFragment` | Détail d'un mot plein écran (Compose — Sessions 1.4) |
 | `quiz` | `QuizActivity` / `QuizFragment` | Session de quiz complète |
@@ -389,7 +389,7 @@ Le projet migre progressivement de XML/MVP vers Jetpack Compose (dark-only, Mate
 | Phase 0 — Design system | 0.1 tokens, 0.2 composants atomiques, 0.3 BottomBar | ✅ Terminé |
 | Phase 1 — Écrans fort gain | 1.1 QuizComponents, 1.2 QuizFragment, 1.3 composants mot, 1.4 WordDetail | ✅ Terminé |
 | Phase 2 — Changements fonctionnels | 2.1 WordList ✅, 2.2 Study ✅, 2.3 BottomNav ✅ | ✅ Terminé |
-| Phase 3 — Home et Settings | 3.1 Settings ✅, 3.2 Home, 3.3 Nettoyage | ⏳ En cours |
+| Phase 3 — Home et Settings | 3.1 Settings ✅, 3.2 Home ✅, 3.3 Nettoyage ✅ | ✅ Terminé |
 
 ### Architecture Word Detail (Session 1.4)
 
@@ -420,8 +420,8 @@ WordPresenter → WordContract.View.displayWords(words)
 
 **Ce qui a changé :**
 - `ViewPager2` multi-pages (une page par catégorie) → `FragmentContainerView` hébergeant un seul `QuizzesFragment`
-- `QuizzesPagerAdapter` → inutilisé (conservé pour rollback)
-- Le Drawer de navigation appelle `studyFragment.setCategory(category)` au lieu de `pager.setCurrentItem()`
+- `QuizzesPagerAdapter` → supprimé (Session 3.3)
+- Le drawer de navigation est supprimé — `navigateToCategory(category)` appelle `studyFragment.setCategory()` directement
 
 **Flux de données :**
 ```
@@ -458,7 +458,7 @@ uiState (StudyUiState, mutableStateOf)
 **4 destinations :**
 | Destination | Fragment | Statut |
 |---|---|---|
-| `HOME` | `HomeFragment` | Existant (migration Compose Session 3.2) |
+| `HOME` | `HomeFragment` | Migré Compose (Session 3.2) |
 | `STUDY` | `QuizzesFragment` | Migré Compose (Session 2.2) |
 | `SELECTIONS` | `SelectionsFragment` | Placeholder (Session 3.x) |
 | `SETTINGS` | `SettingsFragment` | Night Mode + liens sociaux + version + `PrefsFragment` enfant ✅ (Session 3.1) |
@@ -467,7 +467,7 @@ uiState (StudyUiState, mutableStateOf)
 
 **Back press :** si onglet actif ≠ STUDY → revenir à STUDY. Si STUDY → dialog de quitter l'app.
 
-**DrawerLayout :** verrouillé (`LOCK_MODE_LOCKED_CLOSED`) et hamburger retiré. Le code XML reste pour rollback (Session 3.3 le supprimera).
+**DrawerLayout :** supprimé en Session 3.3. `activity_quizzes.xml` utilise désormais un `LinearLayout` vertical comme root.
 
 ---
 
@@ -497,6 +497,46 @@ SettingsFragment (LinearLayout vertical)
 - `screens/settings/SettingsFragment.kt` — hôte Fragment
 - `screens/prefs/PrefsFragment.kt` — `PreferenceFragmentCompat` standalone (extrait de `PrefsActivity`)
 - `screens/prefs/PrefsActivity.kt` — simplifié, délègue à `PrefsFragment`
+
+---
+
+### Architecture Home Screen (Session 3.2)
+
+`HomeFragment` conserve son shell MVP (`HomeContract.View`) mais son layout est un `ComposeView` unique. Le state Compose est géré par `HomeUiState` (data class dans `HomeScreen.kt`), alimenté par les LiveData du Presenter et la news Firebase.
+
+**Flux de données :**
+```
+HomePresenter.todayStatList (LiveData<List<StatEntry>>)
+    → displayTodayStats() → uiState.copy(quizLaunched, wordsSeen, correctAnswers, wrongAnswers)
+
+Firebase RTDB (nœud news_xx selon LanguageManager.current)
+    → ValueEventListener → uiState.copy(newsText, newsLoading=false)
+
+SharedPreferences (Prefs.LAST_SELECTED_LEVEL)
+    → refreshLastSession() → uiState.copy(lastSessionLevel = categoryName(cat) | null)
+
+uiState (HomeUiState, mutableStateOf)
+    → HomeScreen(state = uiState)    (Compose stateless)
+```
+
+**FABBar :**
+- `lastSessionLevel == null` → `FABBarState.Start` ("Commencer")
+- `lastSessionLevel != null` → `FABBarState.Continue(levelName)` ("Continuer — [niveau]")
+- Click → `QuizzesActivity.navigateToCategory(lastCategory)` (onglet Study + chip du niveau)
+
+**Section "続ける · Continue" :** masquée si `lastSessionLevel == null` (aucune session enregistrée — `LAST_SELECTED_LEVEL` absent des prefs).
+
+**Stat cards (grille 2×2) :** affichent les stats du jour (`todayStatList`). `wrongAnswers` en couleur `Wrong` (rouge), `correctAnswers` en `Correct` (vert).
+
+**Hero :** fond `BackgroundHeroWarm` + scrim `Brush.verticalGradient` (alpha 0xA6 → 0xB3, `0x0A0500`) + logo circle "読" (Box 64dp, `CircleShape`, bordure AccentOrange) + titre `TypeHeroTitle` + tagline AccentWarm.
+
+**Supprimé :** boutons sociaux (Discord, Facebook, Play Store, Share → Settings), section "Latest categories" (LATEST_CATEGORY_1/2), stats semaine/mois/total (allégement UI), `ExpandableTextView` tiers (remplacé par `NewsCard` Compose).
+
+**Fichiers clés :**
+- `ui/home/HomeScreen.kt` — `HomeUiState`, `HomeScreen`, `HomeHero`, `StatsGrid`, `ContinueCard`, `NewsCard`, `SupportCard`
+- `ui/home/StatCard.kt` — `StatCard` (fond `SurfacePrimary`, border `BorderDefault`, valeur colorée + label uppercase)
+- `screens/home/HomeFragment.kt` — shell MVP + state Compose + Firebase listener + refreshLastSession
+- `screens/home/HomePresenter.kt` — inchangé (expose 4 LiveData via `StatsRepository`)
 
 ---
 
@@ -655,7 +695,7 @@ Depuis la migration (juin 2026), toutes les versions et dépendances sont centra
 | KenBurnsView | Animations fond (diaporama photos dans QuizzesActivity) |
 | androidx.core:core-splashscreen | Contrôle du splash screen système (Android 12+) |
 | HiraganaEditText | Saisie IME hiragana |
-| Compose BOM 2025.05 + Material 3 | UI Compose (migration en cours — Phase 2 : WordList ✅, Study ✅, BottomNav à venir) |
+| Compose BOM 2025.05 + Material 3 | UI Compose — migration complète (toutes les phases 0→3 terminées) |
 | Firebase BOM 33.x | RTDB, FCM, Storage |
 | MockK 1.13.x | Mocking pour les tests unitaires |
 | androidx.arch.core:core-testing | `InstantTaskExecutorRule` pour les tests LiveData |
@@ -701,6 +741,7 @@ com.jehutyno.yomikata/
 │   ├── theme/                  ← Color.kt, Shape.kt, Type.kt, Theme.kt (design tokens + YomikataTheme)
 │   ├── components/             ← SectionHeader, MasteryDots, FABBar (+ FABBarState), LevelChip (+ StudyLevel, LevelChipRow), YomikataBottomBar
 │   ├── quiz/                   ← QuizComponents (AnswerButton + AnswerButtonState, ProgressSegmentBar + SegmentState), QuizScreen (QuizUiState + composables), QuizUiState
+│   ├── home/                   ← HomeScreen (HomeUiState, HomeHero, StatsGrid, ContinueCard, NewsCard, SupportCard), StatCard
 │   ├── settings/               ← SettingsScreen (Night Mode toggle, liens sociaux, version)
 │   ├── study/                  ← StudyScreen (StudyUiState, StudyLevels, LevelChip, StudyProgressBars, StudyQuizItem)
 │   └── word/                   ← WordListRow, KanjiComponentCard, WordActionBar

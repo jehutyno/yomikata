@@ -398,7 +398,7 @@
 ---
 
 ### Session 3.2 — Écran Home
-**Statut** : `[ ]`
+**Statut** : `[x]`
 
 **Objectif** : migrer `HomeFragment` vers Compose avec hero, StatCards 2×2, section Continue, News, FABBar.
 
@@ -431,7 +431,7 @@
 ---
 
 ### Session 3.3 — Nettoyage
-**Statut** : `[ ]`
+**Statut** : `[x]`
 
 **Objectif** : supprimer le code mort post-migration, vérifier la cohérence globale.
 
