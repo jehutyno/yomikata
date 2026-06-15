@@ -385,7 +385,7 @@ Le projet migre progressivement de XML/MVP vers Jetpack Compose (dark-only, Mate
 |---|---|---|
 | Phase 0 — Design system | 0.1 tokens, 0.2 composants atomiques, 0.3 BottomBar | ✅ Terminé |
 | Phase 1 — Écrans fort gain | 1.1 QuizComponents, 1.2 QuizFragment, 1.3 composants mot, 1.4 WordDetail | ✅ Terminé |
-| Phase 2 — Changements fonctionnels | 2.1 WordList, 2.2 Study, 2.3 BottomNav | 🔜 À faire |
+| Phase 2 — Changements fonctionnels | 2.1 WordList ✅, 2.2 Study, 2.3 BottomNav | 🔄 En cours |
 
 ### Architecture Word Detail (Session 1.4)
 
@@ -409,6 +409,34 @@ WordPresenter → WordContract.View.displayWords(words)
 **Fichiers clés :**
 - `ui/word/WordDetailScreen.kt` — `WordDetailUiState`, `WordDetailScreen`, `ExampleCard`, `PosChip`, `WordDetailFuriganaView`
 - `screens/content/word/WordDetailFragment.kt` — shell MVP + state Compose + TTS/VoicesManager + actions (sélections, level, copie, report)
+
+### Architecture Word List (Session 2.1)
+
+`ContentFragment` conserve son shell MVP (`ContentContract.View`) mais son layout est un `ComposeView` retourné directement depuis `onCreateView`. Le state Compose est géré par `WordListUiState` (data class dans `WordListScreen.kt`), alimenté par les 5 LiveData du Presenter via observation dans `onStart`.
+
+**Flux de données :**
+```
+ContentPresenter → LiveData<List<Word>> + LiveData<Int> (quizCount/low/medium/high/master)
+    → uiState = uiState.copy(...)    (mutableStateOf dans ContentFragment)
+    → WordListScreen(state = uiState)    (Compose stateless)
+```
+
+**Filtrage par onglet (in-memory) :**
+- Tous → tous les mots
+- À revoir → `level == LOW || level == MEDIUM`
+- Maîtrisés → `level == HIGH || level == MASTER`
+
+Le Presenter reçoit toujours `level = null` pour charger l'intégralité des mots de la catégorie. Si un `EXTRA_LEVEL` est passé dans les extras (accès depuis les stats de ContentActivity), il initialise l'onglet actif par défaut (LOW/MEDIUM → onglet 1, HIGH/MASTER → onglet 2).
+
+**Toolbar :** `ContentActivity` possède son propre `Toolbar`. `ContentFragment.onStart()` le masque via `supportActionBar?.hide()` et `onStop()` le restaure — seul le `TopAppBar` Compose reste visible.
+
+**Titre :** les noms de quiz ont le format "JP%EN" (ex. "あ行%a-row"). La portion avant `%` est affichée en titre ; le sous-titre est contextuel par onglet ("80 mots", "80 mots · 70 à revoir", "80 mots · 10 maîtrisés").
+
+**Fichiers clés :**
+- `ui/wordlist/WordListScreen.kt` — `WordListUiState`, `WordListScreen`, filtrage + recherche in-memory, toggle liste/grille
+- `screens/content/ContentFragment.kt` — shell MVP + state Compose + TTS/VoicesManager + navigation vers `WordDetailFragment`
+
+---
 
 ### Architecture Quiz (Sessions 1.2 → 1.3)
 
@@ -537,7 +565,7 @@ Depuis la migration (juin 2026), toutes les versions et dépendances sont centra
 | KenBurnsView | Animations fond (diaporama photos dans QuizzesActivity) |
 | androidx.core:core-splashscreen | Contrôle du splash screen système (Android 12+) |
 | HiraganaEditText | Saisie IME hiragana |
-| Compose BOM 2025.05 + Material 3 | UI Compose (migration en cours — Phase 1, Session 1.3 terminée : QuizFragment + composants mot) |
+| Compose BOM 2025.05 + Material 3 | UI Compose (migration en cours — Phase 2 : WordList ✅, Study + BottomNav à venir) |
 | Firebase BOM 33.x | RTDB, FCM, Storage |
 | MockK 1.13.x | Mocking pour les tests unitaires |
 | androidx.arch.core:core-testing | `InstantTaskExecutorRule` pour les tests LiveData |

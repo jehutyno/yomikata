@@ -275,7 +275,7 @@
 ---
 
 ### Session 2.1 — Écran Word List
-**Statut** : `[ ]`
+**Statut** : `[x]`
 
 **Objectif** : migrer `ContentFragment` vers Compose avec liste par défaut, 3 tabs et barre de recherche.
 
