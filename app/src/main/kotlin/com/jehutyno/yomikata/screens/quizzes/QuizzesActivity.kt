@@ -36,7 +36,7 @@ import com.jehutyno.yomikata.screens.home.HomeFragment
 import com.jehutyno.yomikata.screens.prefs.PrefsActivity
 import com.jehutyno.yomikata.screens.search.SearchResultActivity
 import com.jehutyno.yomikata.screens.selections.SelectionsFragment
-import com.jehutyno.yomikata.screens.settings.SettingsPlaceholderFragment
+import com.jehutyno.yomikata.screens.settings.SettingsFragment
 import com.jehutyno.yomikata.ui.components.BottomNavDestination
 import com.jehutyno.yomikata.ui.components.YomikataBottomBar
 import com.jehutyno.yomikata.ui.theme.YomikataTheme
@@ -166,14 +166,14 @@ class QuizzesActivity : AppCompatActivity(), DIAware {
         }
     }
 
-    private fun navigateTo(destination: BottomNavDestination) {
+    fun navigateTo(destination: BottomNavDestination) {
         val fm = supportFragmentManager
         val tag = destination.name
         val fragment = fm.findFragmentByTag(tag) ?: when (destination) {
             BottomNavDestination.HOME -> HomeFragment(di)
             BottomNavDestination.STUDY -> QuizzesFragment(di)
             BottomNavDestination.SELECTIONS -> SelectionsFragment()
-            BottomNavDestination.SETTINGS -> SettingsPlaceholderFragment()
+            BottomNavDestination.SETTINGS -> SettingsFragment()
         }
         fm.beginTransaction()
             .replace(R.id.study_fragment_container, fragment, tag)
@@ -189,7 +189,7 @@ class QuizzesActivity : AppCompatActivity(), DIAware {
         studyFragment()?.setCategory(category)
     }
 
-    private fun tutos() {
+    fun tutos() {
         val prefs = PreferenceManager.getDefaultSharedPreferences(this)
         showTutoAlways(this, binding.anchor, getString(R.string.tuto_yomikataz), getString(R.string.tuto_welcome)) {
             showTutoOnce(prefs, TutoId.CATEGORIES, this, getNavButtonView(toolbar),

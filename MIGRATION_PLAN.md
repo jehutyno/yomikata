@@ -371,7 +371,7 @@
 ---
 
 ### Session 3.1 — Écran Settings
-**Statut** : `[ ]`
+**Statut** : `[x]`
 
 **Objectif** : intégrer `PrefsActivity` comme Fragment dans la BottomNav et ajouter les éléments migrés (Night Mode, liens sociaux, version).
 

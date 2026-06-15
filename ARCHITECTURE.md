@@ -56,14 +56,14 @@ Les presenters reçoivent un `CoroutineScope` (le `lifecycleScope` du fragment h
 |---|---|---|
 | `quizzes` | `QuizzesActivity` | **Activité de démarrage** — chargement DB, navigation principale (BottomNav Compose — 4 onglets), gestion erreur DB |
 | `selections` | `SelectionsFragment` | Sélections personnelles (placeholder — Session 3.x) |
-| `settings` | `SettingsPlaceholderFragment` | Paramètres via BottomNav (placeholder — Session 3.1) |
+| `settings` | `SettingsFragment` | Paramètres via BottomNav : toggle Night Mode, liens sociaux, version + `PrefsFragment` embarqué |
 | `home` | `HomeFragment` | Dashboard — stats globales, accès rapide, fil d'actualité Firebase, lien GitHub Sponsors |
 | `content` | `ContentActivity` | Liste des mots d'une catégorie, graphique de progression |
 | `content/word` | `WordDetailFragment` | Détail d'un mot plein écran (Compose — Sessions 1.4) |
 | `quiz` | `QuizActivity` / `QuizFragment` | Session de quiz complète |
 | `answers` | `AnswersActivity` | Récapitulatif des réponses après une session |
 | `search` | `SearchResultActivity` | Recherche de mots dans toute la base |
-| `prefs` | `PrefsActivity` | Paramètres (thème, vitesse TTS, voix, langue de traduction) |
+| `prefs` | `PrefsActivity` + `PrefsFragment` | Paramètres (thème, vitesse TTS, voix, langue de traduction). `PrefsFragment` standalone réutilisé dans `SettingsFragment`. |
 
 ---
 
@@ -389,7 +389,7 @@ Le projet migre progressivement de XML/MVP vers Jetpack Compose (dark-only, Mate
 | Phase 0 — Design system | 0.1 tokens, 0.2 composants atomiques, 0.3 BottomBar | ✅ Terminé |
 | Phase 1 — Écrans fort gain | 1.1 QuizComponents, 1.2 QuizFragment, 1.3 composants mot, 1.4 WordDetail | ✅ Terminé |
 | Phase 2 — Changements fonctionnels | 2.1 WordList ✅, 2.2 Study ✅, 2.3 BottomNav ✅ | ✅ Terminé |
-| Phase 3 — Home et Settings | 3.1 Settings, 3.2 Home, 3.3 Nettoyage | ⏳ À venir |
+| Phase 3 — Home et Settings | 3.1 Settings ✅, 3.2 Home, 3.3 Nettoyage | ⏳ En cours |
 
 ### Architecture Word Detail (Session 1.4)
 
@@ -461,13 +461,42 @@ uiState (StudyUiState, mutableStateOf)
 | `HOME` | `HomeFragment` | Existant (migration Compose Session 3.2) |
 | `STUDY` | `QuizzesFragment` | Migré Compose (Session 2.2) |
 | `SELECTIONS` | `SelectionsFragment` | Placeholder (Session 3.x) |
-| `SETTINGS` | `SettingsPlaceholderFragment` | Placeholder → `PrefsActivity` (Session 3.1) |
+| `SETTINGS` | `SettingsFragment` | Night Mode + liens sociaux + version + `PrefsFragment` enfant ✅ (Session 3.1) |
 
 **Navigation :** `navigateTo(BottomNavDestination)` — `replace()` sans back stack. Les fragments sont retrouvés par tag (`BottomNavDestination.name`) pour éviter de recréer inutilement.
 
 **Back press :** si onglet actif ≠ STUDY → revenir à STUDY. Si STUDY → dialog de quitter l'app.
 
 **DrawerLayout :** verrouillé (`LOCK_MODE_LOCKED_CLOSED`) et hamburger retiré. Le code XML reste pour rollback (Session 3.3 le supprimera).
+
+---
+
+### Architecture Settings Screen (Session 3.1)
+
+L'onglet Settings de la BottomNav est géré par `SettingsFragment`, qui combine un `ComposeView` Compose et un `PrefsFragment` (child fragment).
+
+**Structure verticale :**
+```
+SettingsFragment (LinearLayout vertical)
+├── ComposeView (wrap_content) → SettingsScreen
+│   ├── Toggle Night Mode (Switch M3)
+│   ├── Rangée liens sociaux (Discord, Facebook, Play Store, Share)
+│   └── Numéro de version
+└── FrameLayout (weight=1) → PrefsFragment (PreferenceFragmentCompat)
+    └── Préférences XML (langue, vitesse, TTS, backup, reset…)
+```
+
+**`PrefsFragment`** (standalone) possède ses propres `ActivityResultLauncher` pour backup/restore (enregistrés dans `onCreate` du fragment). Les appels `getBackupLauncher`/`getRestoreLauncher` délèguent à `requireActivity() as ComponentActivity`. Le callback `onResetTuto` permet à l'hôte (ici `SettingsFragment`) de naviguer vers l'onglet HOME après un reset des tutoriels.
+
+**Night Mode :** le toggle appelle `AppCompatDelegate.setDefaultNightMode()`, persiste dans `SharedPreferences` (clé `Prefs.DAY_NIGHT_MODE`), et appelle `activity?.recreate()` — même comportement que l'ancien switch du Drawer.
+
+**`PrefsActivity`** reste fonctionnelle (accès legacy possible). Elle instancie désormais `PrefsFragment` directement au lieu d'avoir un `PrefsFragment` inner class.
+
+**Fichiers clés :**
+- `ui/settings/SettingsScreen.kt` — composables `SettingsScreen`, `SocialButton`
+- `screens/settings/SettingsFragment.kt` — hôte Fragment
+- `screens/prefs/PrefsFragment.kt` — `PreferenceFragmentCompat` standalone (extrait de `PrefsActivity`)
+- `screens/prefs/PrefsActivity.kt` — simplifié, délègue à `PrefsFragment`
 
 ---
 
@@ -658,10 +687,11 @@ com.jehutyno.yomikata/
 │   ├── content/
 │   │   └── word/
 │   ├── home/
-│   ├── prefs/                  ← PrefsActivity
+│   ├── prefs/                  ← PrefsActivity, PrefsFragment (standalone, réutilisé dans SettingsFragment)
 │   ├── quiz/
 │   ├── quizzes/
-│   └── search/
+│   ├── search/
+│   └── settings/               ← SettingsFragment (ComposeView + PrefsFragment enfant)
 ├── util/                        ← utilitaires généraux (Prefs, Extras, TutoOverlay, etc.)
 │   ├── backup/                 ← BackupAndRestore, CopyUtils, LocalPersistence, InsecureSHA1PRNGKeyDerivator
 │   ├── japanese/               ← HiraganaTable, HiraganaUtils
@@ -671,6 +701,7 @@ com.jehutyno.yomikata/
 │   ├── theme/                  ← Color.kt, Shape.kt, Type.kt, Theme.kt (design tokens + YomikataTheme)
 │   ├── components/             ← SectionHeader, MasteryDots, FABBar (+ FABBarState), LevelChip (+ StudyLevel, LevelChipRow), YomikataBottomBar
 │   ├── quiz/                   ← QuizComponents (AnswerButton + AnswerButtonState, ProgressSegmentBar + SegmentState), QuizScreen (QuizUiState + composables), QuizUiState
+│   ├── settings/               ← SettingsScreen (Night Mode toggle, liens sociaux, version)
 │   ├── study/                  ← StudyScreen (StudyUiState, StudyLevels, LevelChip, StudyProgressBars, StudyQuizItem)
 │   └── word/                   ← WordListRow, KanjiComponentCard, WordActionBar
 └── view/                        ← vues custom Android
