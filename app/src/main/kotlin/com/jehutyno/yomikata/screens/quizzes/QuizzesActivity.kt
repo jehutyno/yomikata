@@ -1,6 +1,5 @@
 package com.jehutyno.yomikata.screens.quizzes
 
-import android.R.id.home
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
@@ -21,8 +20,11 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.widget.SwitchCompat
 import androidx.appcompat.widget.Toolbar
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
@@ -30,8 +32,14 @@ import com.google.android.material.navigation.NavigationView
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.databinding.ActivityQuizzesBinding
 import com.jehutyno.yomikata.repository.database.YomikataDatabase
+import com.jehutyno.yomikata.screens.home.HomeFragment
 import com.jehutyno.yomikata.screens.prefs.PrefsActivity
 import com.jehutyno.yomikata.screens.search.SearchResultActivity
+import com.jehutyno.yomikata.screens.selections.SelectionsFragment
+import com.jehutyno.yomikata.screens.settings.SettingsPlaceholderFragment
+import com.jehutyno.yomikata.ui.components.BottomNavDestination
+import com.jehutyno.yomikata.ui.components.YomikataBottomBar
+import com.jehutyno.yomikata.ui.theme.YomikataTheme
 import com.jehutyno.yomikata.util.*
 import com.jehutyno.yomikata.util.backup.RestartDialogMessage
 import com.jehutyno.yomikata.util.backup.backupProgress
@@ -61,6 +69,8 @@ class QuizzesActivity : AppCompatActivity(), DIAware {
 
     private lateinit var toolbar: Toolbar
     private lateinit var binding: ActivityQuizzesBinding
+
+    private var currentDestination by mutableStateOf(BottomNavDestination.STUDY)
 
     @SuppressLint("MissingSuperCall")
     override fun onSaveInstanceState(outState: Bundle) {
@@ -100,27 +110,42 @@ class QuizzesActivity : AppCompatActivity(), DIAware {
         toolbar = binding.toolbar
         setSupportActionBar(toolbar)
         supportActionBar?.apply {
-            setHomeAsUpIndicator(R.drawable.ic_menu)
-            setDisplayHomeAsUpEnabled(true)
+            setDisplayHomeAsUpEnabled(false)
             title = ""
         }
 
         binding.drawerLayout.setStatusBarBackground(R.color.colorPrimaryDark)
+        binding.drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED)
         setupDrawerContent(binding.navView)
 
         // Hide legacy floating action buttons — Study screen has its own FABBar
         binding.multipleActions.visibility = View.GONE
 
-        // Show the Study fragment
+        // Initialize BottomNav
+        binding.bottomNavCompose.apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                YomikataTheme {
+                    YomikataBottomBar(
+                        selected = currentDestination,
+                        onDestinationSelected = { navigateTo(it) }
+                    )
+                }
+            }
+        }
+
+        // Show the initial fragment
         if (savedInstanceState == null) {
-            supportFragmentManager.beginTransaction()
-                .replace(R.id.study_fragment_container, QuizzesFragment(di), TAG_STUDY)
-                .commitNow()
+            navigateTo(BottomNavDestination.STUDY)
         }
 
         binding.anchor.postDelayed({ tutos() }, 500)
 
         fun collapseOrQuit() {
+            if (currentDestination != BottomNavDestination.STUDY) {
+                navigateTo(BottomNavDestination.STUDY)
+                return
+            }
             alertDialog {
                 titleResource = R.string.app_quit
                 okButton { finishAffinity() }
@@ -141,10 +166,26 @@ class QuizzesActivity : AppCompatActivity(), DIAware {
         }
     }
 
+    private fun navigateTo(destination: BottomNavDestination) {
+        val fm = supportFragmentManager
+        val tag = destination.name
+        val fragment = fm.findFragmentByTag(tag) ?: when (destination) {
+            BottomNavDestination.HOME -> HomeFragment(di)
+            BottomNavDestination.STUDY -> QuizzesFragment(di)
+            BottomNavDestination.SELECTIONS -> SelectionsFragment()
+            BottomNavDestination.SETTINGS -> SettingsPlaceholderFragment()
+        }
+        fm.beginTransaction()
+            .replace(R.id.study_fragment_container, fragment, tag)
+            .commitNow()
+        currentDestination = destination
+    }
+
     private fun studyFragment(): QuizzesFragment? =
-        supportFragmentManager.findFragmentByTag(TAG_STUDY) as? QuizzesFragment
+        supportFragmentManager.findFragmentByTag(BottomNavDestination.STUDY.name) as? QuizzesFragment
 
     fun navigateToCategory(category: Int) {
+        navigateTo(BottomNavDestination.STUDY)
         studyFragment()?.setCategory(category)
     }
 
@@ -237,10 +278,6 @@ class QuizzesActivity : AppCompatActivity(), DIAware {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
-            home -> {
-                binding.drawerLayout.openDrawer(GravityCompat.START)
-                return true
-            }
             R.id.search -> {
                 startActivity(Intent(this, SearchResultActivity::class.java))
             }
@@ -308,7 +345,5 @@ class QuizzesActivity : AppCompatActivity(), DIAware {
         }
     }
 
-    companion object {
-        private const val TAG_STUDY = "study"
-    }
+    companion object
 }

@@ -8,13 +8,15 @@
                                         tools:context=".screens.quizzes.QuizzesActivity"
                                         tools:openDrawer="start">
 
-    <FrameLayout
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:orientation="vertical">
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
             android:background="@color/colorPrimaryDark"
             android:orientation="vertical">
 
@@ -174,7 +176,12 @@
 
         </LinearLayout>
 
-    </FrameLayout>
+        <androidx.compose.ui.platform.ComposeView
+            android:id="@+id/bottom_nav_compose"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
+    </LinearLayout>
 
     <!-- Navigation Drawer -->
     <com.google.android.material.navigation.NavigationView

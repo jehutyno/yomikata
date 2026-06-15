@@ -54,7 +54,9 @@ Les presenters reçoivent un `CoroutineScope` (le `lifecycleScope` du fragment h
 
 | Package | Activité principale | Rôle |
 |---|---|---|
-| `quizzes` | `QuizzesActivity` | **Activité de démarrage** — chargement DB, navigation principale (Drawer + `StudyFragment` Compose), gestion erreur DB |
+| `quizzes` | `QuizzesActivity` | **Activité de démarrage** — chargement DB, navigation principale (BottomNav Compose — 4 onglets), gestion erreur DB |
+| `selections` | `SelectionsFragment` | Sélections personnelles (placeholder — Session 3.x) |
+| `settings` | `SettingsPlaceholderFragment` | Paramètres via BottomNav (placeholder — Session 3.1) |
 | `home` | `HomeFragment` | Dashboard — stats globales, accès rapide, fil d'actualité Firebase, lien GitHub Sponsors |
 | `content` | `ContentActivity` | Liste des mots d'une catégorie, graphique de progression |
 | `content/word` | `WordDetailFragment` | Détail d'un mot plein écran (Compose — Sessions 1.4) |
@@ -386,7 +388,8 @@ Le projet migre progressivement de XML/MVP vers Jetpack Compose (dark-only, Mate
 |---|---|---|
 | Phase 0 — Design system | 0.1 tokens, 0.2 composants atomiques, 0.3 BottomBar | ✅ Terminé |
 | Phase 1 — Écrans fort gain | 1.1 QuizComponents, 1.2 QuizFragment, 1.3 composants mot, 1.4 WordDetail | ✅ Terminé |
-| Phase 2 — Changements fonctionnels | 2.1 WordList ✅, 2.2 Study ✅, 2.3 BottomNav | 🔄 En cours |
+| Phase 2 — Changements fonctionnels | 2.1 WordList ✅, 2.2 Study ✅, 2.3 BottomNav ✅ | ✅ Terminé |
+| Phase 3 — Home et Settings | 3.1 Settings, 3.2 Home, 3.3 Nettoyage | ⏳ À venir |
 
 ### Architecture Word Detail (Session 1.4)
 
@@ -443,8 +446,28 @@ uiState (StudyUiState, mutableStateOf)
 **Fichiers clés :**
 - `ui/study/StudyScreen.kt` — `StudyUiState`, `StudyLevels`, `LevelChip`, `StudyProgressBars`, `StudyQuizItem`, `StudyScreen`
 - `screens/quizzes/QuizzesFragment.kt` — shell dynamique + `MutableStateFlow<Int>` + `WordCountPresenter` réactif + `setCategory()` public
-- `screens/quizzes/QuizzesActivity.kt` — `FragmentContainerView` + `navigateToCategory()` publique
-- `res/layout/activity_quizzes.xml` — `ViewPager2` remplacé par `FragmentContainerView` (id: `study_fragment_container`)
+- `screens/quizzes/QuizzesActivity.kt` — `YomikataBottomBar` Compose câblée + `navigateTo(BottomNavDestination)` + `navigateToCategory()` publique
+- `res/layout/activity_quizzes.xml` — LinearLayout vertical : CoordinatorLayout (`weight=1`) + `ComposeView` BottomNav en bas
+
+---
+
+### Architecture BottomNav (Session 2.3)
+
+`QuizzesActivity` est le host unique de la navigation. La `YomikataBottomBar` (Compose) est intégrée dans un `ComposeView` en bas de `activity_quizzes.xml`.
+
+**4 destinations :**
+| Destination | Fragment | Statut |
+|---|---|---|
+| `HOME` | `HomeFragment` | Existant (migration Compose Session 3.2) |
+| `STUDY` | `QuizzesFragment` | Migré Compose (Session 2.2) |
+| `SELECTIONS` | `SelectionsFragment` | Placeholder (Session 3.x) |
+| `SETTINGS` | `SettingsPlaceholderFragment` | Placeholder → `PrefsActivity` (Session 3.1) |
+
+**Navigation :** `navigateTo(BottomNavDestination)` — `replace()` sans back stack. Les fragments sont retrouvés par tag (`BottomNavDestination.name`) pour éviter de recréer inutilement.
+
+**Back press :** si onglet actif ≠ STUDY → revenir à STUDY. Si STUDY → dialog de quitter l'app.
+
+**DrawerLayout :** verrouillé (`LOCK_MODE_LOCKED_CLOSED`) et hamburger retiré. Le code XML reste pour rollback (Session 3.3 le supprimera).
 
 ---
 

@@ -337,7 +337,7 @@
 ---
 
 ### Session 2.3 — Navigation : BottomNav permanente
-**Statut** : `[ ]`
+**Statut** : `[x]`
 
 **Objectif** : intégrer `YomikataBottomBar` dans `QuizzesActivity` et câbler les 4 destinations.
 
