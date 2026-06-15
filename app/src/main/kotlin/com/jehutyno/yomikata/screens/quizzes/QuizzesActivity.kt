@@ -6,20 +6,12 @@ import android.app.Activity
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
-import android.graphics.drawable.ColorDrawable
 import android.os.Build
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.view.KeyEvent
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
-import android.view.View.GONE
-import android.view.View.VISIBLE
-import android.widget.ImageButton
-import android.widget.ImageView
-import android.widget.TextView
 import android.window.OnBackInvokedDispatcher
 import androidx.activity.addCallback
 import androidx.activity.result.ActivityResultLauncher
@@ -29,26 +21,16 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.widget.SwitchCompat
 import androidx.appcompat.widget.Toolbar
-import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
-import androidx.viewpager2.widget.ViewPager2
-import com.jehutyno.yomikata.repository.database.YomikataDatabase
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import com.flaviofaria.kenburnsview.KenBurnsView
-import com.getbase.floatingactionbutton.FloatingActionButton
-import com.getbase.floatingactionbutton.FloatingActionsMenu
-import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.navigation.NavigationView
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.databinding.ActivityQuizzesBinding
+import com.jehutyno.yomikata.repository.database.YomikataDatabase
 import com.jehutyno.yomikata.screens.prefs.PrefsActivity
-import com.jehutyno.yomikata.screens.content.QuizzesPagerAdapter
 import com.jehutyno.yomikata.screens.search.SearchResultActivity
 import com.jehutyno.yomikata.util.*
 import com.jehutyno.yomikata.util.backup.RestartDialogMessage
@@ -59,15 +41,13 @@ import com.jehutyno.yomikata.util.backup.getRestoreLauncher
 import com.jehutyno.yomikata.util.backup.restoreProgress
 import com.jehutyno.yomikata.util.backup.triggerRebirth
 import com.jehutyno.yomikata.util.quiz.Categories
-import com.jehutyno.yomikata.util.quiz.QuizStrategy
-import com.jehutyno.yomikata.view.AppBarStateChangeListener
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.kodein.di.DI
 import org.kodein.di.DIAware
 import org.kodein.di.android.closestDI
-import org.kodein.di.direct
-import org.kodein.di.instance
 import splitties.alertdialog.appcompat.*
-import java.util.*
 
 
 class QuizzesActivity : AppCompatActivity(), DIAware {
@@ -79,40 +59,12 @@ class QuizzesActivity : AppCompatActivity(), DIAware {
     private lateinit var backupLauncher: ActivityResultLauncher<Intent>
     private lateinit var restoreLauncher: ActivityResultLauncher<Intent>
 
-    private var selectedCategory: Int = 0
     private lateinit var toolbar: Toolbar
-    lateinit var fabMenu: FloatingActionsMenu
-    private var recreate = false
-    lateinit var quizzesAdapter: QuizzesPagerAdapter
-    private lateinit var kenburns: KenBurnsView
-    private var menu: Menu? = null
-
-    val handler = Handler(Looper.getMainLooper())
-    val runnable = object : Runnable {
-        override fun run() {
-            setImageRandom()
-            handler.postDelayed(this, 7000)
-        }
-    }
-
-    val homeImages = intArrayOf(R.drawable.pic_04, R.drawable.pic_05, R.drawable.pic_06,
-        R.drawable.pic_07, R.drawable.pic_08, R.drawable.pic_21, R.drawable.pic_22,
-        R.drawable.pic_23, R.drawable.pic_24, R.drawable.pic_25)
-
-    // View Binding
     private lateinit var binding: ActivityQuizzesBinding
-
-
-    fun voicesDownload(level: Int, onSuccess: () -> Unit) {
-        launchVoicesDownload(this, level) {
-            quizzesAdapter.notifyDataSetChanged()
-            onSuccess()
-        }
-    }
 
     @SuppressLint("MissingSuperCall")
     override fun onSaveInstanceState(outState: Bundle) {
-        // super.onSaveInstanceState(outState);
+        // prevent ViewPager2/Fragment state restoration conflicts during migration
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -122,37 +74,24 @@ class QuizzesActivity : AppCompatActivity(), DIAware {
         val pref = PreferenceManager.getDefaultSharedPreferences(this)
         AppCompatDelegate.setDefaultNightMode(pref.getInt(Prefs.DAY_NIGHT_MODE.pref, AppCompatDelegate.MODE_NIGHT_YES))
 
-        // Enregistrement avant onStart (obligatoire pour ActivityResultLauncher)
         backupLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult())
             { result -> getBackupLauncher(result) }
         restoreLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult())
             { result -> getRestoreLauncher(result, false) }
 
-        // Maintient le splash visible jusqu'à ce que la DB soit prête
         splashScreen.setKeepOnScreenCondition { !dbReady }
 
-        // Chargement de la base de données — libère le splash à la fin
         lifecycleScope.launch {
             val success = withContext(Dispatchers.IO) {
-                try {
-                    YomikataDatabase.forceLoadDatabase(this@QuizzesActivity)
-                    true
-                } catch (e: Exception) {
-                    false
-                }
+                try { YomikataDatabase.forceLoadDatabase(this@QuizzesActivity); true }
+                catch (e: Exception) { false }
             }
-            dbReady = true  // libère le splash (prochain frame)
-
-            if (!success) {
-                handleDatabaseError(pref)
-            }
+            dbReady = true
+            if (!success) handleDatabaseError(pref)
         }
 
         binding = ActivityQuizzesBinding.inflate(layoutInflater)
-        val view = binding.root
-        setContentView(view)
-
-        kenburns = binding.imageSectionIcon
+        setContentView(binding.root)
 
         if (resources.getBoolean(R.bool.portrait_only)) {
             requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
@@ -166,121 +105,47 @@ class QuizzesActivity : AppCompatActivity(), DIAware {
             title = ""
         }
 
-        binding.appbar.addOnOffsetChangedListener(object : AppBarStateChangeListener() {
-            override fun onStateChanged(appBarLayout: AppBarLayout, state: State) {
-                when (state) {
-                    State.COLLAPSED -> {
-                        supportActionBar?.setBackgroundDrawable(ColorDrawable(ContextCompat.getColor(this@QuizzesActivity, R.color.toolbarColor)))
-                    }
-                    else -> {
-                        supportActionBar?.setBackgroundDrawable(ColorDrawable(ContextCompat.getColor(this@QuizzesActivity, R.color.transparent)))
-                    }
-                }
-            }
-        })
-
-        selectedCategory = Categories.HOME
-        displayCategoryTitle(Categories.HOME)
-        binding.multipleActions.visibility = GONE
-
-        // Set up the navigation drawer.
         binding.drawerLayout.setStatusBarBackground(R.color.colorPrimaryDark)
         setupDrawerContent(binding.navView)
 
-        // keep all fragments loaded for performance reasons
-//        binding.pagerQuizzes.offscreenPageLimit = 10
+        // Hide legacy floating action buttons — Study screen has its own FABBar
+        binding.multipleActions.visibility = View.GONE
 
-        quizzesAdapter = QuizzesPagerAdapter(this, di)
-        binding.pagerQuizzes.adapter = quizzesAdapter
-        binding.pagerQuizzes.currentItem = quizzesAdapter.positionFromCategory(selectedCategory)
-        binding.pagerQuizzes.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
-
-            override fun onPageSelected(position: Int) {
-                super.onPageSelected(position)
-                selectedCategory = quizzesAdapter.categories[position]
-                if (selectedCategory == Categories.HOME) {
-                    binding.multipleActions.visibility = GONE
-                } else {
-                    binding.multipleActions.visibility = VISIBLE
-                }
-                pref.edit().putInt(Prefs.SELECTED_CATEGORY.pref, selectedCategory).apply()
-                displayCategoryTitle(selectedCategory)
-                binding.navView.setCheckedItem(quizzesAdapter.getMenuItemFromPosition(position))
-            }
-
-        })
-
-        // set onClick for quiz strategies in floating action button
-        fun FloatingActionButton.setLaunchQuizOnClickListener(quizStrategy: QuizStrategy) {
-            this.setOnClickListener {
-                // Hacky way of finding selected fragment:
-                // Viewpager2 uses the tag: "f" + position to store its fragments
-                val fragment = supportFragmentManager.findFragmentByTag("f${binding.pagerQuizzes.currentItem}")
-                if (fragment is QuizzesFragment) {
-                    fragment.launchQuizClick(quizStrategy, null, binding.textTitle.text.toString())
-                    binding.multipleActions.collapseImmediately()
-                }
-            }
+        // Show the Study fragment
+        if (savedInstanceState == null) {
+            supportFragmentManager.beginTransaction()
+                .replace(R.id.study_fragment_container, QuizzesFragment(di), TAG_STUDY)
+                .commitNow()
         }
-        binding.progressivePlay.setLaunchQuizOnClickListener(QuizStrategy.PROGRESSIVE)
-        binding.normalPlay.setLaunchQuizOnClickListener(QuizStrategy.STRAIGHT)
-        binding.shufflePlay.setLaunchQuizOnClickListener(QuizStrategy.SHUFFLE)
-
-        fabMenu = binding.multipleActions
 
         binding.anchor.postDelayed({ tutos() }, 500)
 
-        binding.drawerLayout.addDrawerListener(object : DrawerLayout.DrawerListener {
-            override fun onDrawerClosed(drawerView: View) {
-                if (recreate) {
-                    recreate()
-                    recreate = false
-                }
-            }
-
-            override fun onDrawerStateChanged(newState: Int) {
-
-            }
-
-            override fun onDrawerSlide(drawerView: View, slideOffset: Float) {
-
-            }
-
-            override fun onDrawerOpened(drawerView: View) {
-
-            }
-
-        })
-
         fun collapseOrQuit() {
-            if (binding.multipleActions.isExpanded)
-                binding.multipleActions.collapse()
-            else
-                alertDialog {
-                    titleResource = R.string.app_quit
-                    okButton { finishAffinity() }
-                    cancelButton()
-                    setOnKeyListener { _, keyCode, _ ->
-                        if (keyCode == KeyEvent.KEYCODE_BACK)
-                            finishAffinity()
-                        true
-                    }
-                }.show()
+            alertDialog {
+                titleResource = R.string.app_quit
+                okButton { finishAffinity() }
+                cancelButton()
+                setOnKeyListener { _, keyCode, _ ->
+                    if (keyCode == KeyEvent.KEYCODE_BACK) finishAffinity()
+                    true
+                }
+            }.show()
         }
 
-        // set back button to close floating actions menu or show alertDialog
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             onBackInvokedDispatcher.registerOnBackInvokedCallback(
-                    OnBackInvokedDispatcher.PRIORITY_DEFAULT
-            ) {
-                collapseOrQuit()
-            }
+                OnBackInvokedDispatcher.PRIORITY_DEFAULT
+            ) { collapseOrQuit() }
         } else {
-            onBackPressedDispatcher.addCallback(this) {
-                collapseOrQuit()
-            }
+            onBackPressedDispatcher.addCallback(this) { collapseOrQuit() }
         }
+    }
 
+    private fun studyFragment(): QuizzesFragment? =
+        supportFragmentManager.findFragmentByTag(TAG_STUDY) as? QuizzesFragment
+
+    fun navigateToCategory(category: Int) {
+        studyFragment()?.setCategory(category)
     }
 
     private fun tutos() {
@@ -293,8 +158,8 @@ class QuizzesActivity : AppCompatActivity(), DIAware {
 
     private fun getNavButtonView(toolbar: Toolbar): View? {
         return (0 until toolbar.childCount)
-            .firstOrNull { toolbar.getChildAt(it) is ImageButton }
-            ?.let { toolbar.getChildAt(it) as ImageButton }
+            .firstOrNull { toolbar.getChildAt(it) is androidx.appcompat.widget.AppCompatImageButton }
+            ?.let { toolbar.getChildAt(it) }
     }
 
     private fun setupDrawerContent(navigationView: NavigationView) {
@@ -303,186 +168,69 @@ class QuizzesActivity : AppCompatActivity(), DIAware {
         } else {
             @Suppress("DEPRECATION") packageManager.getPackageInfo(packageName, 0)
         }
-        navigationView.getHeaderView(0).findViewById<TextView>(R.id.version).text = getString(R.string.yomiakataz_drawer, packageInfo.versionName)
-        navigationView.getHeaderView(0).findViewById<ImageView>(R.id.facebook).setOnClickListener { contactFacebook(this) }
-        navigationView.getHeaderView(0).findViewById<ImageView>(R.id.discord).setOnClickListener { contactDiscord(this) }
-        navigationView.getHeaderView(0).findViewById<ImageView>(R.id.play_store).setOnClickListener { contactPlayStore(this) }
-        navigationView.getHeaderView(0).findViewById<ImageView>(R.id.share).setOnClickListener { shareApp(this) }
+        navigationView.getHeaderView(0).apply {
+            findViewById<android.widget.TextView>(R.id.version).text =
+                getString(R.string.yomiakataz_drawer, packageInfo.versionName)
+            findViewById<android.widget.ImageView>(R.id.facebook).setOnClickListener { contactFacebook(this@QuizzesActivity) }
+            findViewById<android.widget.ImageView>(R.id.discord).setOnClickListener { contactDiscord(this@QuizzesActivity) }
+            findViewById<android.widget.ImageView>(R.id.play_store).setOnClickListener { contactPlayStore(this@QuizzesActivity) }
+            findViewById<android.widget.ImageView>(R.id.share).setOnClickListener { shareApp(this@QuizzesActivity) }
+        }
 
         navigationView.setNavigationItemSelectedListener { menuItem ->
-            binding.multipleActions.collapse()
-            // set smoothScroll to false because scrolling through all of the pages can be bad for performance
-            when (menuItem.itemId) {
-                R.id.home -> {
-                    menuItem.isChecked = true
-                    binding.pagerQuizzes.setCurrentItem(quizzesAdapter.positionFromCategory(Categories.HOME), false)
-                }
-                R.id.your_selections_item -> {
-                    menuItem.isChecked = true
-                    binding.pagerQuizzes.setCurrentItem(quizzesAdapter.positionFromCategory(Categories.CATEGORY_SELECTIONS), false)
-                }
-                R.id.hiragana_item -> {
-                    menuItem.isChecked = true
-                    binding.pagerQuizzes.setCurrentItem(quizzesAdapter.positionFromCategory(Categories.CATEGORY_HIRAGANA), false)
-                }
-                R.id.katakana_item -> {
-                    menuItem.isChecked = true
-                    binding.pagerQuizzes.setCurrentItem(quizzesAdapter.positionFromCategory(Categories.CATEGORY_KATAKANA), false)
-                }
-                R.id.kanji_item -> {
-                    menuItem.isChecked = true
-                    binding.pagerQuizzes.setCurrentItem(quizzesAdapter.positionFromCategory(Categories.CATEGORY_KANJI), false)
-                }
-                R.id.counters_item -> {
-                    menuItem.isChecked = true
-                    binding.pagerQuizzes.setCurrentItem(quizzesAdapter.positionFromCategory(Categories.CATEGORY_COUNTERS), false)
-                }
-                R.id.jlpt1_item -> {
-                    menuItem.isChecked = true
-                    binding.pagerQuizzes.setCurrentItem(quizzesAdapter.positionFromCategory(Categories.CATEGORY_JLPT_1), false)
-                }
-                R.id.jlpt2_item -> {
-                    menuItem.isChecked = true
-                    binding.pagerQuizzes.setCurrentItem(quizzesAdapter.positionFromCategory(Categories.CATEGORY_JLPT_2), false)
-                }
-                R.id.jlpt3_item -> {
-                    menuItem.isChecked = true
-                    binding.pagerQuizzes.setCurrentItem(quizzesAdapter.positionFromCategory(Categories.CATEGORY_JLPT_3), false)
-                }
-                R.id.jlpt4_item -> {
-                    menuItem.isChecked = true
-                    binding.pagerQuizzes.setCurrentItem(quizzesAdapter.positionFromCategory(Categories.CATEGORY_JLPT_4), false)
-                }
-                R.id.jlpt5_item -> {
-                    menuItem.isChecked = true
-                    binding.pagerQuizzes.setCurrentItem(quizzesAdapter.positionFromCategory(Categories.CATEGORY_JLPT_5), false)
-                }
-                R.id.day_night_item -> {
-                    menuItem.isChecked = !menuItem.isChecked
-                    menuItem.actionView?.findViewById<SwitchCompat>(R.id.my_switch)?.toggle()
-                }
-                R.id.settings -> {
-                    menuItem.isChecked = false
-                    val intent = Intent(this, PrefsActivity::class.java)
-                    getResult.launch(intent)
-                }
-                else -> {
+            val category = when (menuItem.itemId) {
+                R.id.hiragana_item -> Categories.CATEGORY_HIRAGANA
+                R.id.katakana_item -> Categories.CATEGORY_KATAKANA
+                R.id.kanji_item -> Categories.CATEGORY_KANJI
+                R.id.counters_item -> Categories.CATEGORY_COUNTERS
+                R.id.jlpt1_item -> Categories.CATEGORY_JLPT_1
+                R.id.jlpt2_item -> Categories.CATEGORY_JLPT_2
+                R.id.jlpt3_item -> Categories.CATEGORY_JLPT_3
+                R.id.jlpt4_item -> Categories.CATEGORY_JLPT_4
+                R.id.jlpt5_item -> Categories.CATEGORY_JLPT_5
+                else -> null
+            }
+            if (category != null) {
+                menuItem.isChecked = true
+                studyFragment()?.setCategory(category)
+            } else {
+                when (menuItem.itemId) {
+                    R.id.day_night_item -> {
+                        menuItem.isChecked = !menuItem.isChecked
+                        menuItem.actionView?.findViewById<SwitchCompat>(R.id.my_switch)?.toggle()
+                    }
+                    R.id.settings -> {
+                        menuItem.isChecked = false
+                        getResult.launch(Intent(this, PrefsActivity::class.java))
+                    }
                 }
             }
             binding.drawerLayout.closeDrawers()
             true
         }
 
-        navigationView.menu.findItem(R.id.day_night_item).actionView?.findViewById<SwitchCompat>(R.id.my_switch)?.isChecked = AppCompatDelegate.getDefaultNightMode() == AppCompatDelegate.MODE_NIGHT_YES
-        navigationView.menu.findItem(R.id.day_night_item).isChecked = AppCompatDelegate.getDefaultNightMode() == AppCompatDelegate.MODE_NIGHT_YES
-        navigationView.menu.findItem(R.id.day_night_item).actionView?.findViewById<SwitchCompat>(R.id.my_switch)?.setOnCheckedChangeListener {
-            _, isChecked ->
-            navigationView.menu.findItem(R.id.day_night_item).isChecked = isChecked
-            val pref = PreferenceManager.getDefaultSharedPreferences(this)
-            if (isChecked) {
-                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
-                pref.edit().putInt(Prefs.DAY_NIGHT_MODE.pref, AppCompatDelegate.MODE_NIGHT_YES).apply()
-            } else {
-                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
-                pref.edit().putInt(Prefs.DAY_NIGHT_MODE.pref, AppCompatDelegate.MODE_NIGHT_NO).apply()
+        navigationView.menu.findItem(R.id.day_night_item)?.actionView
+            ?.findViewById<SwitchCompat>(R.id.my_switch)?.apply {
+                isChecked = AppCompatDelegate.getDefaultNightMode() == AppCompatDelegate.MODE_NIGHT_YES
+                setOnCheckedChangeListener { _, isChecked ->
+                    navigationView.menu.findItem(R.id.day_night_item).isChecked = isChecked
+                    val pref = PreferenceManager.getDefaultSharedPreferences(this@QuizzesActivity)
+                    if (isChecked) {
+                        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+                        pref.edit().putInt(Prefs.DAY_NIGHT_MODE.pref, AppCompatDelegate.MODE_NIGHT_YES).apply()
+                    } else {
+                        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+                        pref.edit().putInt(Prefs.DAY_NIGHT_MODE.pref, AppCompatDelegate.MODE_NIGHT_NO).apply()
+                    }
+                    binding.drawerLayout.closeDrawers()
+                    recreate()
+                }
             }
-            binding.drawerLayout.closeDrawers()
-            recreate = true
-        }
-    }
-
-    private fun setImageRandom() {
-        // change images randomly
-        val ran = Random()
-        val i = ran.nextInt(homeImages.size)
-        binding.imageSectionIcon.setImageResource(homeImages[i])
-    }
-
-    fun displayCategoryTitle(category: Int) {
-        when (category) {
-            Categories.HOME -> {
-                binding.logoImageview.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.yomi_logo_home))
-                binding.textTitle.text = getString(R.string.home_title)
-                binding.navView.setCheckedItem(R.id.home)
-                binding.imageSectionIcon.setImageResource(R.drawable.pic_24)
-                handler.postDelayed(runnable, 7000)
-            }
-            Categories.CATEGORY_HIRAGANA -> {
-                handler.removeCallbacks(runnable)
-                binding.logoImageview.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_hiragana_big))
-                binding.textTitle.setText(R.string.drawer_hiragana)
-                binding.navView.setCheckedItem(R.id.hiragana_item)
-                binding.imageSectionIcon.setImageResource(R.drawable.pic_miyajima)
-            }
-            Categories.CATEGORY_KATAKANA -> {
-                handler.removeCallbacks(runnable)
-                binding.textTitle.setText(R.string.drawer_katakana)
-                binding.logoImageview.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_katakana_big))
-                binding.navView.setCheckedItem(R.id.katakana_item)
-                binding.imageSectionIcon.setImageResource(R.drawable.pic_le_charme)
-            }
-            Categories.CATEGORY_KANJI -> {
-                handler.removeCallbacks(runnable)
-                binding.logoImageview.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_kanji_big))
-                binding.textTitle.setText(R.string.drawer_kanji_beginner)
-                binding.navView.setCheckedItem(R.id.kanji_item)
-                binding.imageSectionIcon.setImageResource(R.drawable.pic_toit)
-            }
-            Categories.CATEGORY_COUNTERS -> {
-                handler.removeCallbacks(runnable)
-                binding.logoImageview.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_counters_big))
-                binding.textTitle.setText(R.string.drawer_counters)
-                binding.navView.setCheckedItem(R.id.counters_item)
-                binding.imageSectionIcon.setImageResource(R.drawable.pic_fujiyoshida)
-            }
-            Categories.CATEGORY_JLPT_1 -> {
-                handler.removeCallbacks(runnable)
-                binding.logoImageview.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_jlpt1_big))
-                binding.textTitle.setText(R.string.drawer_jlpt1)
-                binding.navView.setCheckedItem(R.id.jlpt1_item)
-                binding.imageSectionIcon.setImageResource(R.drawable.pic_fujisan)
-            }
-            Categories.CATEGORY_JLPT_2 -> {
-                handler.removeCallbacks(runnable)
-                binding.logoImageview.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_jlpt2_big))
-                binding.textTitle.setText(R.string.drawer_jlpt2)
-                binding.navView.setCheckedItem(R.id.jlpt2_item)
-                binding.imageSectionIcon.setImageResource(R.drawable.pic_hokusai)
-            }
-            Categories.CATEGORY_JLPT_3 -> {
-                handler.removeCallbacks(runnable)
-                binding.logoImageview.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_jlpt3_big))
-                binding.textTitle.setText(R.string.drawer_jlpt3)
-                binding.navView.setCheckedItem(R.id.jlpt3_item)
-                binding.imageSectionIcon.setImageResource(R.drawable.pic_geisha)
-            }
-            Categories.CATEGORY_JLPT_4 -> {
-                handler.removeCallbacks(runnable)
-                binding.logoImageview.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_jlpt4_big))
-                binding.textTitle.setText(R.string.drawer_jlpt4)
-                binding.navView.setCheckedItem(R.id.jlpt4_item)
-                binding.imageSectionIcon.setImageResource(R.drawable.pic_monk)
-            }
-            Categories.CATEGORY_JLPT_5 -> {
-                handler.removeCallbacks(runnable)
-                binding.logoImageview.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_jlpt5_big))
-                binding.textTitle.setText(R.string.drawer_jlpt5)
-                binding.navView.setCheckedItem(R.id.jlpt5_item)
-                binding.imageSectionIcon.setImageResource(R.drawable.pic_dragon)
-            }
-            Categories.CATEGORY_SELECTIONS -> {
-                handler.removeCallbacks(runnable)
-                binding.logoImageview.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_selections_big))
-                binding.textTitle.setText(R.string.drawer_your_selections)
-                binding.navView.setCheckedItem(R.id.your_selections_item)
-                binding.imageSectionIcon.setImageResource(R.drawable.pic_hanami)
-            }
-        }
-
+        navigationView.menu.findItem(R.id.day_night_item)?.isChecked =
+            AppCompatDelegate.getDefaultNightMode() == AppCompatDelegate.MODE_NIGHT_YES
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        this.menu = menu
         menuInflater.inflate(R.menu.menu_home, menu)
         return true
     }
@@ -490,45 +238,22 @@ class QuizzesActivity : AppCompatActivity(), DIAware {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             home -> {
-                // Open the navigation drawer when the home icon is selected from the toolbar.
                 binding.drawerLayout.openDrawer(GravityCompat.START)
                 return true
             }
             R.id.search -> {
-                val intent = Intent(this, SearchResultActivity::class.java)
-                startActivity(intent)
+                startActivity(Intent(this, SearchResultActivity::class.java))
             }
         }
         return super.onOptionsItemSelected(item)
     }
 
-    fun gotoCategory(category: Int) {
-        binding.pagerQuizzes.currentItem = quizzesAdapter.positionFromCategory(category)
-    }
-
-    override fun onResume() {
-        super.onResume()
-        displayCategoryTitle(selectedCategory)
-        quizzesAdapter.notifyDataSetChanged()
-    }
-
-    private val getResult =
-            registerForActivityResult(
-                    ActivityResultContracts.StartActivityForResult()
-            ) { result ->
-                if (result.resultCode == Activity.RESULT_OK) {
-                    result.data?.also {
-                        selectedCategory = it.getIntExtra("gotoCategory", selectedCategory)
-                        displayCategoryTitle(selectedCategory)
-                        gotoCategory(selectedCategory)
-                    }
-                    tutos()
-                }
-            }
-
-    override fun onPause() {
-        super.onPause()
-        handler.removeCallbacks(runnable)
+    private val getResult = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            tutos()
+        }
     }
 
     private fun handleDatabaseError(prefs: android.content.SharedPreferences) {
@@ -565,7 +290,6 @@ class QuizzesActivity : AppCompatActivity(), DIAware {
             errorDialog.getButton(AlertDialog.BUTTON_NEGATIVE).setOnClickListener { recoveryDialog.show() }
         }
 
-        // Tente une restauration automatique si une migration était en cours
         var restoredSuccessfully = false
         if (prefs.getBoolean(Prefs.DB_RESTORE_ONGOING.pref, false)) {
             restoredSuccessfully = YomikataDatabase.restoreLocalBackup(this)
@@ -582,5 +306,9 @@ class QuizzesActivity : AppCompatActivity(), DIAware {
         } else {
             errorDialog.show()
         }
+    }
+
+    companion object {
+        private const val TAG_STUDY = "study"
     }
 }

@@ -305,7 +305,7 @@
 ---
 
 ### Session 2.2 — Écran Study
-**Statut** : `[ ]`
+**Statut** : `[x]`
 
 **Objectif** : remplacer le ViewPager2 multi-niveaux de `QuizzesActivity` par un seul écran Study avec level chips.
 

@@ -116,8 +116,8 @@
                         android:layout_marginLeft="-15dp"
                         android:layout_marginStart="-15dp"/>
 
-                    <androidx.viewpager2.widget.ViewPager2
-                        android:id="@+id/pager_quizzes"
+                    <androidx.fragment.app.FragmentContainerView
+                        android:id="@+id/study_fragment_container"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         app:layout_behavior="@string/appbar_scrolling_view_behavior"/>

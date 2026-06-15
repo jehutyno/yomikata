@@ -3,421 +3,213 @@ package com.jehutyno.yomikata.screens.quizzes
 import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
-import android.speech.tts.TextToSpeech
 import android.view.LayoutInflater
 import android.view.View
-import android.view.View.GONE
-import android.view.View.VISIBLE
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.asLiveData
+import androidx.lifecycle.distinctUntilChanged
 import androidx.lifecycle.lifecycleScope
-import androidx.recyclerview.widget.LinearLayoutManager
 import com.jehutyno.yomikata.R
-import com.jehutyno.yomikata.databinding.FragmentQuizzesBinding
 import com.jehutyno.yomikata.model.Quiz
+import com.jehutyno.yomikata.model.StatAction
+import com.jehutyno.yomikata.model.StatResult
+import com.jehutyno.yomikata.presenters.impl.WordCountPresenter
 import com.jehutyno.yomikata.repository.QuizRepository
+import com.jehutyno.yomikata.repository.StatsRepository
 import com.jehutyno.yomikata.screens.content.ContentActivity
 import com.jehutyno.yomikata.screens.quiz.QuizActivity
-import com.jehutyno.yomikata.util.quiz.Categories
+import com.jehutyno.yomikata.ui.study.StudyScreen
+import com.jehutyno.yomikata.ui.study.StudyUiState
+import com.jehutyno.yomikata.ui.study.categoryName
+import com.jehutyno.yomikata.ui.theme.YomikataTheme
 import com.jehutyno.yomikata.util.Extras
-import com.jehutyno.yomikata.util.quiz.Level
 import com.jehutyno.yomikata.util.Prefs
+import com.jehutyno.yomikata.util.quiz.Categories
 import com.jehutyno.yomikata.util.quiz.QuizStrategy
 import com.jehutyno.yomikata.util.quiz.QuizType
-import com.jehutyno.yomikata.util.SeekBarsManager
-import com.jehutyno.yomikata.util.SpeechAvailability
-import com.jehutyno.yomikata.util.animateSeekBar
-import com.jehutyno.yomikata.util.checkSpeechAvailability
-import com.jehutyno.yomikata.util.createNewSelectionDialog
-import com.jehutyno.yomikata.util.quiz.getCategoryLevel
-import com.jehutyno.yomikata.util.quiz.getLevelDownloadSize
-import com.jehutyno.yomikata.util.quiz.getLevelDownloadVersion
-import com.jehutyno.yomikata.util.onTTSinit
-import com.jehutyno.yomikata.util.speechNotSupportedAlert
-import com.jehutyno.yomikata.util.TutoId
-import com.jehutyno.yomikata.util.showTutoOnce
-import kotlinx.coroutines.Dispatchers.IO
+import com.jehutyno.yomikata.util.quiz.toQuizType
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import org.kodein.di.DI
+import org.kodein.di.DIAware
 import org.kodein.di.instance
-import org.kodein.di.newInstance
-import splitties.alertdialog.appcompat.alertDialog
-import splitties.alertdialog.appcompat.cancelButton
-import splitties.alertdialog.appcompat.message
-import splitties.alertdialog.appcompat.okButton
-import splitties.alertdialog.appcompat.titleResource
-import java.lang.Thread.sleep
+import java.util.Calendar
+import java.util.StringTokenizer
 
 
-/**
- * Created by valentin on 30/09/2016.
- */
-class QuizzesFragment(private val di: DI) : Fragment(), QuizzesContract.View, QuizzesAdapter.Callback, TextToSpeech.OnInitListener {
+class QuizzesFragment(private val diArg: DI) : Fragment(), DIAware {
 
-    // kodein
-    private val prefs: SharedPreferences by di.instance()
-    private val mpresenter: QuizzesContract.Presenter by di.newInstance {
-        QuizzesPresenter(instance(), instance(), instance(),
-            instance ( arg =
-                instance<QuizRepository>().getQuiz(selectedCategory).map {
-                    lst -> lst.map{ it.id }.toLongArray()
-                }
-            ), selectedCategory
-        )
-    }
+    override val di: DI = diArg
 
-    private lateinit var adapter: QuizzesAdapter
-    private var selectedCategory: Int = 0
-    private var tts: TextToSpeech? = null
-    private var ttsSupported: Int = TextToSpeech.LANG_NOT_SUPPORTED
+    private val prefs: SharedPreferences by instance()
+    private val quizRepository: QuizRepository by instance()
+    private val statsRepository: StatsRepository by instance()
 
-    // seekBars
-    private lateinit var seekBars : SeekBarsManager
+    private val _categoryFlow = MutableStateFlow(Categories.CATEGORY_HIRAGANA)
 
-    // View Binding
-    private var _binding: FragmentQuizzesBinding? = null
-    private val binding get() = _binding!!
+    // Compose state
+    private var uiState by mutableStateOf(StudyUiState())
 
+    // Individual count components — summed into uiState.goodCount / wrongCount
+    private var cntHigh = 0
+    private var cntMaster = 0
+    private var cntLow = 0
+    private var cntMedium = 0
 
-    override fun onInit(status: Int) {
-        ttsSupported = onTTSinit(context, status, tts)
-    }
+    // MARK: — Lifecycle
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        // make sure selectedCategory is set before mpresenter is used to properly initialize with kodein
-        selectedCategory = requireArguments().getInt(Extras.EXTRA_CATEGORY)
-        adapter = QuizzesAdapter(requireActivity(), selectedCategory, this, selectedCategory == Categories.CATEGORY_SELECTIONS)
+        val saved = prefs.getInt(Prefs.LAST_SELECTED_LEVEL.pref, Categories.CATEGORY_HIRAGANA)
+        _categoryFlow.value = saved
+        uiState = uiState.copy(selectedCategory = saved)
     }
 
-    override fun onStart() {
-        // use onStart so that viewPager2 can set everything up before the page becomes visible
-        super.onStart()
-        mpresenter.start()
-        subscribeDisplayQuizzes()
-        // setup seekBars observers
-        seekBars.setTextViews(binding.textLow, binding.textMedium, binding.textHigh, binding.textMaster)
-        seekBars.setPlay(binding.playLow, binding.playMedium, binding.playHigh, binding.playMaster)
-        mpresenter.let {
-            seekBars.setObservers(it.quizCount,
-                it.lowCount, it.mediumCount, it.highCount, it.masterCount, viewLifecycleOwner)
+    @OptIn(ExperimentalCoroutinesApi::class)
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?,
+    ): View {
+        // Dynamic quiz IDs flow drives WordCountPresenter
+        val quizIdsFlow = _categoryFlow.flatMapLatest { cat ->
+            quizRepository.getQuiz(cat).map { list -> list.map { it.id }.toLongArray() }
         }
-    }
+        val wordCount = WordCountPresenter(quizRepository, quizIdsFlow)
 
-    override fun onResume() {
-        super.onResume()
-        val position = (binding.recyclerview.layoutManager as LinearLayoutManager).findFirstVisibleItemPosition()
-        mpresenter.start()
-        seekBars.animateAll()    // call this after loadQuizzes, since seekBars variables are set there
-        binding.recyclerview.scrollToPosition(position)
-        tutos()
+        // Quiz list LiveData from the dynamic category
+        val quizListLiveData = _categoryFlow
+            .flatMapLatest { cat -> quizRepository.getQuiz(cat) }
+            .asLiveData()
+            .distinctUntilChanged()
 
-        // check if voices downloads have changed (e.g. voices files have been deleted in preferences)
-        updateVoicesDownloadVisibility()
-    }
-
-    override fun onPause() {
-        super.onPause()
-
-        // cancel animation in case it is currently running
-        // set all to zero to prepare for the next animation when the page resumes again
-        seekBars.resetAll()
-    }
-
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        _binding = FragmentQuizzesBinding.inflate(inflater, container, false)
-        return binding.root
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        tts?.shutdown()
-        tts = TextToSpeech(activity, this)
-        binding.recyclerview.let {
-            it.adapter = adapter
-            it.layoutManager = LinearLayoutManager(context)
+        quizListLiveData.observe(viewLifecycleOwner) { quizzes ->
+            uiState = uiState.copy(
+                quizzes = quizzes ?: emptyList(),
+                selectedCategory = _categoryFlow.value,
+            )
+        }
+        wordCount.quizCount.observe(viewLifecycleOwner) { c ->
+            uiState = uiState.copy(quizCount = c ?: 0)
+        }
+        wordCount.highCount.observe(viewLifecycleOwner) { c ->
+            cntHigh = c ?: 0; syncGoodWrong()
+        }
+        wordCount.masterCount.observe(viewLifecycleOwner) { c ->
+            cntMaster = c ?: 0; syncGoodWrong()
+        }
+        wordCount.lowCount.observe(viewLifecycleOwner) { c ->
+            cntLow = c ?: 0; syncGoodWrong()
+        }
+        wordCount.mediumCount.observe(viewLifecycleOwner) { c ->
+            cntMedium = c ?: 0; syncGoodWrong()
         }
 
-        mpresenter.initQuizTypes()
-        mpresenter.selectedTypes.observe(viewLifecycleOwner) { selectedTypes ->
-            // go through all existing types and change selection status
-            // according to the selectedTypes
-            QuizType.values().forEach { type ->
-                selectQuizType(type, type in selectedTypes)
-            }
-        }
-
-        binding.btnPronunciationQcmSwitch.setOnClickListener {
-            mpresenter.quizTypeSwitch(QuizType.TYPE_PRONUNCIATION_QCM)
-            showTutoOnce(prefs, TutoId.PRONUNCIATION_MCQ, requireActivity(), binding.btnPronunciationQcmSwitch,
-                getString(R.string.tutos_pronunciation_mcq), getString(R.string.tutos_pronunciation_mcq_message)) {}
-        }
-        binding.btnPronunciationSwitch.setOnClickListener {
-            mpresenter.quizTypeSwitch(QuizType.TYPE_PRONUNCIATION)
-            showTutoOnce(prefs, TutoId.PRONUNCIATION, requireActivity(), binding.btnPronunciationSwitch,
-                getString(R.string.tutos_pronunciation_quiz), getString(R.string.tutos_pronunciation_quiz_message)) {}
-        }
-        binding.btnAudioSwitch.setOnClickListener {
-            showTutoOnce(prefs, TutoId.AUDIO, requireActivity(), binding.btnAudioSwitch,
-                getString(R.string.tutos_audio_quiz), getString(R.string.tutos_audio_quiz_message)) {}
-            when (checkSpeechAvailability(requireActivity(), ttsSupported, getCategoryLevel(selectedCategory))) {
-                SpeechAvailability.NOT_AVAILABLE -> speechNotSupportedAlert(requireActivity(), getCategoryLevel(selectedCategory)) {
-                    (activity as QuizzesActivity).quizzesAdapter.notifyDataSetChanged()
+        return ComposeView(requireContext()).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                YomikataTheme {
+                    StudyScreen(
+                        state = uiState,
+                        onCategorySelected = { cat -> selectCategory(cat) },
+                        onQuizChecked = { quizId, checked ->
+                            lifecycleScope.launch { quizRepository.updateQuizSelected(quizId, checked) }
+                        },
+                        onQuizClick = { quiz -> openContent(quiz) },
+                        onLaunchQuiz = { launchQuiz() },
+                    )
                 }
-                else -> mpresenter.quizTypeSwitch(QuizType.TYPE_AUDIO)
-            }
-        }
-        binding.btnEnJapSwitch.setOnClickListener {
-            mpresenter.quizTypeSwitch(QuizType.TYPE_EN_JAP)
-            showTutoOnce(prefs, TutoId.EN_JP, requireActivity(), binding.btnEnJapSwitch,
-                getString(R.string.tutos_en_jp), getString(R.string.tutos_en_jp_message)) {}
-        }
-        binding.btnJapEnSwitch.setOnClickListener {
-            mpresenter.quizTypeSwitch(QuizType.TYPE_JAP_EN)
-            showTutoOnce(prefs, TutoId.JP_EN, requireActivity(), binding.btnJapEnSwitch,
-                getString(R.string.tutos_jp_en), getString(R.string.tutos_jp_en_message)) {}
-        }
-        binding.btnAutoSwitch.setOnClickListener {
-            mpresenter.quizTypeSwitch(QuizType.TYPE_AUTO)
-            showTutoOnce(prefs, TutoId.AUTO, requireActivity(), binding.btnAutoSwitch,
-                getString(R.string.tutos_auto_quiz), getString(R.string.tutos_auto_quiz_message)) {}
-        }
-
-        binding.playLow.setOnClickListener {
-            openContent(selectedCategory, Level.LOW)
-        }
-        binding.playMedium.setOnClickListener {
-            openContent(selectedCategory, Level.MEDIUM)
-        }
-        binding.playHigh.setOnClickListener {
-            openContent(selectedCategory, Level.HIGH)
-        }
-        binding.playMaster.setOnClickListener {
-            openContent(selectedCategory, Level.MASTER)
-        }
-
-        updateVoicesDownloadVisibility()
-
-        binding.download.setOnClickListener {
-            requireContext().alertDialog {
-                if (getLevelDownloadVersion(getCategoryLevel(selectedCategory)) > 0 && previousVoicesDownloaded(getLevelDownloadVersion(getCategoryLevel(selectedCategory)))) {
-                    titleResource = R.string.update_voices_alert
-                    message = getString(R.string.update_voices_alert_message, getLevelDownloadSize(getCategoryLevel(selectedCategory)))
-                } else {
-                    titleResource = R.string.download_voices_alert
-                    message = getString(R.string.download_voices_alert_message, getLevelDownloadSize(getCategoryLevel(selectedCategory)))
-                }
-                okButton {
-                    (activity as QuizzesActivity).voicesDownload(getCategoryLevel(selectedCategory)) {
-                        binding.download.visibility = GONE
-                    }
-                }
-                cancelButton { }
-            }.show()
-        }
-
-        // initialize seekBarsManager
-        seekBars = SeekBarsManager(binding.seekLow, binding.seekMedium, binding.seekHigh, binding.seekMaster)
-    }
-
-    private fun updateVoicesDownloadVisibility() {
-        val pref = prefs
-        if (selectedCategory == -1 || selectedCategory == 8
-                || pref.getBoolean(Prefs.VOICE_DOWNLOADED_LEVEL_V.pref +
-                        "${getLevelDownloadVersion(getCategoryLevel(selectedCategory))}_${getCategoryLevel(selectedCategory)}", false)) {
-            binding.download.visibility = GONE
-        } else {
-            binding.download.visibility = VISIBLE
-            if (getLevelDownloadVersion(getCategoryLevel(selectedCategory)) > 0 && previousVoicesDownloaded(getLevelDownloadVersion(getCategoryLevel(selectedCategory)))) {
-                binding.download.text = getString(R.string.update_voices, getLevelDownloadSize(getCategoryLevel(selectedCategory)))
-            } else {
-                binding.download.text = getString(R.string.download_voices, getLevelDownloadSize(getCategoryLevel(selectedCategory)))
             }
         }
     }
 
-    private fun previousVoicesDownloaded(downloadVersion: Int): Boolean {
-        val pref = prefs
-        return (0 until downloadVersion).any {
-            pref.getBoolean("${Prefs.VOICE_DOWNLOADED_LEVEL_V.pref}${it}_${getCategoryLevel(selectedCategory)}", false)
-        }
+    // MARK: — Public API (called from Activity Drawer navigation)
+
+    fun setCategory(category: Int) = selectCategory(category)
+
+    // MARK: — Private helpers
+
+    private fun syncGoodWrong() {
+        uiState = uiState.copy(
+            goodCount = cntHigh + cntMaster,
+            wrongCount = cntLow + cntMedium,
+        )
     }
 
-    /**
-     * Select quiz type
-     *
-     * Set the selection status of a QuizType button to the given value.
-     *
-     * @param quizType QuizType to change selection status
-     * @param isSelected True if it should be selected, False if it should not be selected
-     */
-    override fun selectQuizType(quizType: QuizType, isSelected: Boolean) {
-        when (quizType) {
-            QuizType.TYPE_AUTO ->
-                binding.btnAutoSwitch.isSelected = isSelected
-            QuizType.TYPE_PRONUNCIATION ->
-                binding.btnPronunciationSwitch.isSelected = isSelected
-            QuizType.TYPE_PRONUNCIATION_QCM ->
-                binding.btnPronunciationQcmSwitch.isSelected = isSelected
-            QuizType.TYPE_AUDIO ->
-                binding.btnAudioSwitch.isSelected = isSelected
-            QuizType.TYPE_EN_JAP ->
-                binding.btnEnJapSwitch.isSelected = isSelected
-            QuizType.TYPE_JAP_EN ->
-                binding.btnJapEnSwitch.isSelected = isSelected
-        }
+    private fun selectCategory(category: Int) {
+        _categoryFlow.value = category
+        prefs.edit().putInt(Prefs.LAST_SELECTED_LEVEL.pref, category).apply()
+        uiState = uiState.copy(selectedCategory = category)
     }
 
-    override fun launchQuiz(strategy: QuizStrategy, level: Level?, selectedTypes: ArrayList<QuizType>, title: String) {
-        val ids = mutableListOf<Long>()
-        adapter.items.forEach {
-            if (it.isSelected)
-                ids.add(it.id)
-        }
-
-        // If nothing selected or if inside of a specific level, use all quizzes
-        if (ids.size == 0 || level != null) {   // TODO
-            ids.clear()
-            adapter.items.forEach {
-                ids.add(it.id)
-            }
-        }
-
-        // No quiz to launch — check is done asynchronously; launch quiz only after count is confirmed > 0
-        lifecycleScope.launch {
-            if (ids.size == 0 || mpresenter.countQuiz(ids.toLongArray()) <= 0) {
-                val toast = Toast.makeText(context, R.string.error_no_quiz_no_word, Toast.LENGTH_SHORT)
-                toast.show()
-                return@launch
-            }
-
-            val intent = Intent(activity, QuizActivity::class.java).apply {
-                putExtra(Extras.EXTRA_QUIZ_IDS, ids.toLongArray())
-                putExtra(Extras.EXTRA_QUIZ_TITLE, title)
-                putExtra(Extras.EXTRA_QUIZ_STRATEGY, strategy)
-                putExtra(Extras.EXTRA_LEVEL, level)
-                putExtra(Extras.EXTRA_QUIZ_TYPES, selectedTypes)
-            }
-            startActivity(intent)
-        }
-    }
-
-    fun launchQuizClick(strategy: QuizStrategy, level: Level?, title: String) {
-        lifecycleScope.launch {
-            mpresenter.onLaunchQuizClick(selectedCategory)
-        }
-        launchQuiz(strategy, level, mpresenter.getSelectedTypes(), title)
-    }
-
-    private fun subscribeDisplayQuizzes() {
-        mpresenter.quizList.observe(viewLifecycleOwner) {
-            displayQuizzes(it)
-        }
-    }
-
-    override fun displayQuizzes(quizzes: List<Quiz>) {
-        adapter.replaceData(quizzes, selectedCategory == Categories.CATEGORY_SELECTIONS)
-    }
-
-    private fun openContent(position: Int, level: Level?) {
+    private fun openContent(quiz: Quiz) {
         val intent = Intent(context, ContentActivity::class.java).apply {
-            putExtra(Extras.EXTRA_CATEGORY, selectedCategory)
-            putExtra(Extras.EXTRA_QUIZ_POSITION, position)
-            putExtra(Extras.EXTRA_QUIZ_TYPES, mpresenter.getSelectedTypes())
-            putExtra(Extras.EXTRA_LEVEL, level)
+            putExtra(Extras.EXTRA_CATEGORY, uiState.selectedCategory)
+            putExtra(Extras.EXTRA_QUIZ_POSITION, quiz.id.toInt())
+            putExtra(Extras.EXTRA_QUIZ_TYPES, getSelectedTypes())
+            putExtra(Extras.EXTRA_LEVEL, null as java.io.Serializable?)
         }
         startActivity(intent)
     }
 
-    override fun displayNoData() {
-        adapter.noData(selectedCategory == Categories.CATEGORY_SELECTIONS)
-        animateSeekBar(binding.seekLow, 0, 0, 0)
-        binding.textLow.text = 0.toString()
-        animateSeekBar(binding.seekMedium, 0, 0, 0)
-        binding.textMedium.text = 0.toString()
-        animateSeekBar(binding.seekHigh, 0, 0, 0)
-        binding.textHigh.text = 0.toString()
-        animateSeekBar(binding.seekMaster, 0, 0, 0)
-        binding.textMaster.text = 0.toString()
-    }
+    private fun launchQuiz() {
+        val selectedIds = uiState.quizzes.filter { it.isSelected }.map { it.id }
+        val ids = if (selectedIds.isEmpty()) uiState.quizzes.map { it.id } else selectedIds
 
-    override fun onItemClick(position: Int) {
-        openContent(position, null)
-    }
-
-    override fun onItemChecked(position: Int, checked: Boolean) {
-        lifecycleScope.launch {
-            mpresenter.updateQuizCheck(adapter.items[position].id, checked)
-        }
-    }
-
-    override fun onItemLongClick(position: Int) {
-        if (selectedCategory != Categories.CATEGORY_SELECTIONS) {
-            // TODO propose to add all words to selections
+        if (ids.isEmpty()) {
+            Toast.makeText(context, R.string.error_no_quiz_no_word, Toast.LENGTH_SHORT).show()
             return
         }
-        requireActivity().createNewSelectionDialog(
-            adapter.items[position].getName(),
 
-            { selectionName ->
-                if (adapter.items[position].getName() == selectionName)
-                    // name didn't change -> do nothing
-                    return@createNewSelectionDialog
-
-                lifecycleScope.launch {
-                    mpresenter.updateQuizName(adapter.items[position].id, selectionName)
-                    adapter.items[position].nameFr = selectionName
-                    adapter.items[position].nameEn = selectionName
-                    adapter.notifyItemChanged(position)
-                }
-            },
-
-            {
-                lifecycleScope.launch {
-                    mpresenter.deleteQuiz(adapter.items[position].id)
-                    adapter.deleteItem(position)
-                }
+        lifecycleScope.launch {
+            val count = quizRepository.countWordsForQuizzes(ids.toLongArray()).first()
+            if (count <= 0) {
+                Toast.makeText(context, R.string.error_no_quiz_no_word, Toast.LENGTH_SHORT).show()
+                return@launch
             }
-        )
-    }
 
-    override fun addSelection() {
-        requireActivity().createNewSelectionDialog("", { selectionName ->
-                lifecycleScope.launch {
-                    mpresenter.createQuiz(selectionName)
-                }
-            }, null)
-    }
-
-    override fun onDestroy() {
-        tts?.stop()
-        tts?.shutdown()
-        super.onDestroy()
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
-    }
-
-    private fun tutos() = lifecycleScope.launch {
-        withContext(IO) { sleep(500) }
-        val act = activity ?: return@launch
-        showTutoOnce(prefs, TutoId.QUIZ_TYPE, act, binding.btnPronunciationQcmSwitch,
-            getString(R.string.tuto_quiz_type), getString(R.string.tuto_quiz_type_message)) {
-            val act2 = activity ?: return@showTutoOnce
-            showTutoOnce(prefs, TutoId.PROGRESS, act2, binding.textLow,
-                getString(R.string.tuto_progress), getString(R.string.tuto_progress_message)) {
-                val act3 = activity ?: return@showTutoOnce
-                showTutoOnce(prefs, TutoId.PART_SELECTION, act3,
-                    binding.recyclerview.findViewHolderForAdapterPosition(0)
-                        ?.itemView?.findViewById(R.id.quiz_check),
-                    getString(R.string.tuto_part_selection), getString(R.string.tuto_part_selection_message)) {}
+            val category = _categoryFlow.value
+            statsRepository.addStatEntry(
+                StatAction.LAUNCH_QUIZ_FROM_CATEGORY,
+                category.toLong(),
+                Calendar.getInstance().timeInMillis,
+                StatResult.OTHER,
+            )
+            val cat1 = prefs.getInt(Prefs.LATEST_CATEGORY_1.pref, -1)
+            if (category != cat1) {
+                prefs.edit()
+                    .putInt(Prefs.LATEST_CATEGORY_2.pref, cat1)
+                    .putInt(Prefs.LATEST_CATEGORY_1.pref, category)
+                    .apply()
             }
+
+            startActivity(Intent(activity, QuizActivity::class.java).apply {
+                putExtra(Extras.EXTRA_QUIZ_IDS, ids.toLongArray())
+                putExtra(Extras.EXTRA_QUIZ_TITLE, categoryName(category))
+                putExtra(Extras.EXTRA_QUIZ_STRATEGY, QuizStrategy.STRAIGHT)
+                putExtra(Extras.EXTRA_LEVEL, null as java.io.Serializable?)
+                putExtra(Extras.EXTRA_QUIZ_TYPES, getSelectedTypes())
+            })
         }
+    }
+
+    private fun getSelectedTypes(): ArrayList<QuizType> {
+        val savedString = prefs.getString(Prefs.SELECTED_QUIZ_TYPES.pref, "") ?: ""
+        if (savedString.isEmpty()) return arrayListOf(QuizType.TYPE_AUTO)
+        val st = StringTokenizer(savedString, ",")
+        val result = ArrayList<QuizType>()
+        repeat(st.countTokens()) { result.add(Integer.parseInt(st.nextToken()).toQuizType()) }
+        return result.ifEmpty { arrayListOf(QuizType.TYPE_AUTO) }
     }
 }

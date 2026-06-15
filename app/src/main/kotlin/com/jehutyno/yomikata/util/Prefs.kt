@@ -34,5 +34,7 @@ enum class Prefs(val pref: String) {
     QUIZ_SPEED("speed"),
     PLAY_START("play_start"),
     PLAY_END("play_end"),
-    FONT_SIZE("font_size")
+    FONT_SIZE("font_size"),
+
+    LAST_SELECTED_LEVEL("last_selected_level")
 }

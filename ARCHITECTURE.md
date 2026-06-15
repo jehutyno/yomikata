@@ -54,7 +54,7 @@ Les presenters reçoivent un `CoroutineScope` (le `lifecycleScope` du fragment h
 
 | Package | Activité principale | Rôle |
 |---|---|---|
-| `quizzes` | `QuizzesActivity` | **Activité de démarrage** — chargement DB, navigation principale (ViewPager2 : Home + liste des catégories), gestion erreur DB |
+| `quizzes` | `QuizzesActivity` | **Activité de démarrage** — chargement DB, navigation principale (Drawer + `StudyFragment` Compose), gestion erreur DB |
 | `home` | `HomeFragment` | Dashboard — stats globales, accès rapide, fil d'actualité Firebase, lien GitHub Sponsors |
 | `content` | `ContentActivity` | Liste des mots d'une catégorie, graphique de progression |
 | `content/word` | `WordDetailFragment` | Détail d'un mot plein écran (Compose — Sessions 1.4) |
@@ -296,7 +296,8 @@ Les `Activity` et `Fragment` étendent `DIAware` et récupèrent leurs dépendan
 |---|---|---|
 | `app_language` | String (ISO 639-1) | Langue de traduction choisie |
 | `pref_day_night_mode` | Int | Thème jour/nuit (AppCompatDelegate) |
-| `prefs_selected_category` | Int | Dernière catégorie sélectionnée |
+| `prefs_selected_category` | Int | Dernière catégorie sélectionnée (legacy — remplacé par `last_selected_level`) |
+| `last_selected_level` | Int | Niveau sélectionné dans l'écran Study (chips) |
 | `selected_quiz_types` | String (CSV) | Types de quiz actifs |
 | `was_selected_quiz_types` | String (CSV) | Sauvegarde avant passage en mode AUTO |
 | `length` | String | Longueur de session (nombre de mots) |
@@ -385,7 +386,7 @@ Le projet migre progressivement de XML/MVP vers Jetpack Compose (dark-only, Mate
 |---|---|---|
 | Phase 0 — Design system | 0.1 tokens, 0.2 composants atomiques, 0.3 BottomBar | ✅ Terminé |
 | Phase 1 — Écrans fort gain | 1.1 QuizComponents, 1.2 QuizFragment, 1.3 composants mot, 1.4 WordDetail | ✅ Terminé |
-| Phase 2 — Changements fonctionnels | 2.1 WordList ✅, 2.2 Study, 2.3 BottomNav | 🔄 En cours |
+| Phase 2 — Changements fonctionnels | 2.1 WordList ✅, 2.2 Study ✅, 2.3 BottomNav | 🔄 En cours |
 
 ### Architecture Word Detail (Session 1.4)
 
@@ -409,6 +410,43 @@ WordPresenter → WordContract.View.displayWords(words)
 **Fichiers clés :**
 - `ui/word/WordDetailScreen.kt` — `WordDetailUiState`, `WordDetailScreen`, `ExampleCard`, `PosChip`, `WordDetailFuriganaView`
 - `screens/content/word/WordDetailFragment.kt` — shell MVP + state Compose + TTS/VoicesManager + actions (sélections, level, copie, report)
+
+### Architecture Study Screen (Session 2.2)
+
+`QuizzesFragment` est entièrement réécrit — plus de layout XML ni de `QuizzesPresenter`. Il est devenu l'hôte Compose de l'écran Study unifié.
+
+**Ce qui a changé :**
+- `ViewPager2` multi-pages (une page par catégorie) → `FragmentContainerView` hébergeant un seul `QuizzesFragment`
+- `QuizzesPagerAdapter` → inutilisé (conservé pour rollback)
+- Le Drawer de navigation appelle `studyFragment.setCategory(category)` au lieu de `pager.setCurrentItem()`
+
+**Flux de données :**
+```
+_categoryFlow (MutableStateFlow<Int>)
+    → flatMapLatest { quizRepository.getQuiz(it) }.asLiveData()
+    → uiState.quizzes
+
+_categoryFlow
+    → quizIdsFlow (flatMapLatest { getQuiz(cat).map { ids } })
+    → WordCountPresenter(quizRepository, quizIdsFlow)
+    → LiveData<Int> (quizCount / high / master / low / medium)
+    → uiState.goodCount + uiState.wrongCount
+
+uiState (StudyUiState, mutableStateOf)
+    → StudyScreen(state = uiState)    (Compose stateless)
+```
+
+**Level chips :** définis dans `StudyLevels` (liste de `LevelDefinition` dans `StudyScreen.kt`) — 9 entrées (Hiragana → JLPT N1). La sélection est persistée via `Prefs.LAST_SELECTED_LEVEL`.
+
+**FABBar :** `LaunchAll` ("Lancer tous les quiz") si aucun quiz coché, `LaunchSelection(N)` sinon. État ajouté à `FABBarState` dans `FABBar.kt`.
+
+**Fichiers clés :**
+- `ui/study/StudyScreen.kt` — `StudyUiState`, `StudyLevels`, `LevelChip`, `StudyProgressBars`, `StudyQuizItem`, `StudyScreen`
+- `screens/quizzes/QuizzesFragment.kt` — shell dynamique + `MutableStateFlow<Int>` + `WordCountPresenter` réactif + `setCategory()` public
+- `screens/quizzes/QuizzesActivity.kt` — `FragmentContainerView` + `navigateToCategory()` publique
+- `res/layout/activity_quizzes.xml` — `ViewPager2` remplacé par `FragmentContainerView` (id: `study_fragment_container`)
+
+---
 
 ### Architecture Word List (Session 2.1)
 
@@ -565,7 +603,7 @@ Depuis la migration (juin 2026), toutes les versions et dépendances sont centra
 | KenBurnsView | Animations fond (diaporama photos dans QuizzesActivity) |
 | androidx.core:core-splashscreen | Contrôle du splash screen système (Android 12+) |
 | HiraganaEditText | Saisie IME hiragana |
-| Compose BOM 2025.05 + Material 3 | UI Compose (migration en cours — Phase 2 : WordList ✅, Study + BottomNav à venir) |
+| Compose BOM 2025.05 + Material 3 | UI Compose (migration en cours — Phase 2 : WordList ✅, Study ✅, BottomNav à venir) |
 | Firebase BOM 33.x | RTDB, FCM, Storage |
 | MockK 1.13.x | Mocking pour les tests unitaires |
 | androidx.arch.core:core-testing | `InstantTaskExecutorRule` pour les tests LiveData |
@@ -610,6 +648,7 @@ com.jehutyno.yomikata/
 │   ├── theme/                  ← Color.kt, Shape.kt, Type.kt, Theme.kt (design tokens + YomikataTheme)
 │   ├── components/             ← SectionHeader, MasteryDots, FABBar (+ FABBarState), LevelChip (+ StudyLevel, LevelChipRow), YomikataBottomBar
 │   ├── quiz/                   ← QuizComponents (AnswerButton + AnswerButtonState, ProgressSegmentBar + SegmentState), QuizScreen (QuizUiState + composables), QuizUiState
+│   ├── study/                  ← StudyScreen (StudyUiState, StudyLevels, LevelChip, StudyProgressBars, StudyQuizItem)
 │   └── word/                   ← WordListRow, KanjiComponentCard, WordActionBar
 └── view/                        ← vues custom Android
     ├── furigana/               ← FuriganaView, QuadraticOptimizer
@@ -641,7 +680,6 @@ Les tutoriels contextuels (overlay qui met en valeur un élément d'interface au
 | Écran | Tutoriels |
 |---|---|
 | `QuizzesActivity` | Bienvenue (anchor) → bouton navigation catégories |
-| `QuizzesFragment` | Type de quiz → barre de progression → checkbox sélection partielle (séquence chainée) |
-| `QuizzesFragment` (onClick) | Un tutoriel par bouton de type de quiz (6 boutons, affiché une seule fois chacun) |
+| `QuizzesFragment` | ~~Type de quiz → barre de progression → checkbox sélection partielle~~ — supprimés (Session 2.2 : migration Compose) |
 
 L'état est stocké dans les `SharedPreferences` de l'app (même instance Kodein que le reste). Les clés sont des constantes stables indépendantes de la locale (contrairement à l'ancienne lib Spotlight qui utilisait le texte localisé du titre comme clé, créant un bug potentiel au changement de langue).

@@ -164,7 +164,7 @@ class HomeFragment(di: DI) : Fragment(), HomeContract.View {
             binding.lastCategory1.visibility = VISIBLE
             binding.lastCategory1.setImageResource(getCategoryResId(cat1))
             binding.lastCategory1.setOnClickListener {
-                (activity as QuizzesActivity).gotoCategory(cat1)
+                (activity as QuizzesActivity).navigateToCategory(cat1)
             }
         } else {
             binding.lastCategory1.visibility = GONE
@@ -174,7 +174,7 @@ class HomeFragment(di: DI) : Fragment(), HomeContract.View {
             binding.lastCategory2.visibility = VISIBLE
             binding.lastCategory2.setImageResource(getCategoryResId(cat2))
             binding.lastCategory2.setOnClickListener {
-                (activity as QuizzesActivity).gotoCategory(cat2)
+                (activity as QuizzesActivity).navigateToCategory(cat2)
             }
         } else {
             binding.lastCategory2.visibility = GONE
