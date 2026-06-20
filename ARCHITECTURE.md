@@ -54,10 +54,10 @@ Les presenters reçoivent un `CoroutineScope` (le `lifecycleScope` du fragment h
 
 | Package | Activité principale | Rôle |
 |---|---|---|
-| `quizzes` | `QuizzesActivity` | **Activité de démarrage** — chargement DB, navigation principale (BottomNav Compose — 4 onglets), gestion erreur DB |
-| `selections` | `SelectionsFragment` | Sélections personnelles (placeholder — Session 3.x) |
+| `quizzes` | `QuizzesActivity` | **Activité de démarrage** — chargement DB, navigation principale (BottomNav Compose — 4 onglets), gestion erreur DB. Layout : `FrameLayout` plein écran + `ComposeView` bottom nav. Pas de Toolbar ni AppBar. |
+| `selections` | `SelectionsFragment` | Sélections personnelles (placeholder) — hero `ic_selections_big` + "Bientôt disponible" |
 | `settings` | `SettingsFragment` | Paramètres via BottomNav : toggle Night Mode, liens sociaux, version + `PrefsFragment` embarqué |
-| `home` | `HomeFragment` | Dashboard Compose — hero, grille StatCards 2×2 (stats aujourd'hui), section Continue, news Firebase, FABBar |
+| `home` | `HomeFragment` | Dashboard Compose — hero `yomi_logo_home.png`, grille StatCards 2×2 (stats aujourd'hui), section Continue, news Firebase, FABBar |
 | `content` | `ContentActivity` | Liste des mots d'une catégorie, graphique de progression |
 | `content/word` | `WordDetailFragment` | Détail d'un mot plein écran (Compose — Sessions 1.4) |
 | `quiz` | `QuizActivity` / `QuizFragment` | Session de quiz complète |

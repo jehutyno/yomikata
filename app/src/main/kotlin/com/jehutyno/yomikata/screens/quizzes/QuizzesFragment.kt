@@ -154,9 +154,10 @@ class QuizzesFragment(private val diArg: DI) : Fragment(), DIAware {
     }
 
     private fun openContent(quiz: Quiz) {
+        val position = uiState.quizzes.indexOfFirst { it.id == quiz.id }.takeIf { it >= 0 } ?: return
         val intent = Intent(context, ContentActivity::class.java).apply {
             putExtra(Extras.EXTRA_CATEGORY, uiState.selectedCategory)
-            putExtra(Extras.EXTRA_QUIZ_POSITION, quiz.id.toInt())
+            putExtra(Extras.EXTRA_QUIZ_POSITION, position)
             putExtra(Extras.EXTRA_QUIZ_TYPES, getSelectedTypes())
             putExtra(Extras.EXTRA_LEVEL, null as java.io.Serializable?)
         }

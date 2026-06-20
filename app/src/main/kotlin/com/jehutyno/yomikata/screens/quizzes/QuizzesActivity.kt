@@ -6,9 +6,6 @@ import android.content.pm.ActivityInfo
 import android.os.Build
 import android.os.Bundle
 import android.view.KeyEvent
-import android.view.Menu
-import android.view.MenuItem
-import android.view.View
 import android.window.OnBackInvokedDispatcher
 import androidx.activity.addCallback
 import androidx.activity.result.ActivityResultLauncher
@@ -16,7 +13,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
-import androidx.appcompat.widget.Toolbar
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -28,7 +24,6 @@ import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.databinding.ActivityQuizzesBinding
 import com.jehutyno.yomikata.repository.database.YomikataDatabase
 import com.jehutyno.yomikata.screens.home.HomeFragment
-import com.jehutyno.yomikata.screens.search.SearchResultActivity
 import com.jehutyno.yomikata.screens.selections.SelectionsFragment
 import com.jehutyno.yomikata.screens.settings.SettingsFragment
 import com.jehutyno.yomikata.ui.components.BottomNavDestination
@@ -60,7 +55,6 @@ class QuizzesActivity : AppCompatActivity(), DIAware {
     private lateinit var backupLauncher: ActivityResultLauncher<Intent>
     private lateinit var restoreLauncher: ActivityResultLauncher<Intent>
 
-    private lateinit var toolbar: Toolbar
     private lateinit var binding: ActivityQuizzesBinding
 
     private var currentDestination by mutableStateOf(BottomNavDestination.STUDY)
@@ -99,16 +93,6 @@ class QuizzesActivity : AppCompatActivity(), DIAware {
         if (resources.getBoolean(R.bool.portrait_only)) {
             requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         }
-
-        toolbar = binding.toolbar
-        setSupportActionBar(toolbar)
-        supportActionBar?.apply {
-            setDisplayHomeAsUpEnabled(false)
-            title = ""
-        }
-
-        // Hide legacy floating action buttons — Study screen has its own FABBar
-        binding.multipleActions.visibility = View.GONE
 
         // Initialize BottomNav
         binding.bottomNavCompose.apply {
@@ -181,29 +165,9 @@ class QuizzesActivity : AppCompatActivity(), DIAware {
     fun tutos() {
         val prefs = PreferenceManager.getDefaultSharedPreferences(this)
         showTutoAlways(this, binding.anchor, getString(R.string.tuto_yomikataz), getString(R.string.tuto_welcome)) {
-            showTutoOnce(prefs, TutoId.CATEGORIES, this, getNavButtonView(toolbar),
+            showTutoOnce(prefs, TutoId.CATEGORIES, this, null,
                 getString(R.string.tuto_categories), getString(R.string.tuto_categories_message)) {}
         }
-    }
-
-    private fun getNavButtonView(toolbar: Toolbar): View? {
-        return (0 until toolbar.childCount)
-            .firstOrNull { toolbar.getChildAt(it) is androidx.appcompat.widget.AppCompatImageButton }
-            ?.let { toolbar.getChildAt(it) }
-    }
-
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        menuInflater.inflate(R.menu.menu_home, menu)
-        return true
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        when (item.itemId) {
-            R.id.search -> {
-                startActivity(Intent(this, SearchResultActivity::class.java))
-            }
-        }
-        return super.onOptionsItemSelected(item)
     }
 
     private fun handleDatabaseError(prefs: android.content.SharedPreferences) {

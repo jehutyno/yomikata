@@ -1,5 +1,7 @@
 package com.jehutyno.yomikata.ui.study
 
+import androidx.annotation.DrawableRes
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -30,15 +32,21 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.model.Quiz
 import com.jehutyno.yomikata.ui.components.FABBar
 import com.jehutyno.yomikata.ui.components.FABBarState
 import com.jehutyno.yomikata.ui.theme.AccentOrange
+import com.jehutyno.yomikata.ui.theme.BackgroundHero
 import com.jehutyno.yomikata.ui.theme.BackgroundPrimary
 import com.jehutyno.yomikata.ui.theme.BorderDefault
 import com.jehutyno.yomikata.ui.theme.BorderSubtle
@@ -50,7 +58,7 @@ import com.jehutyno.yomikata.ui.theme.SurfacePrimary
 import com.jehutyno.yomikata.ui.theme.TextDim
 import com.jehutyno.yomikata.ui.theme.TextGhost
 import com.jehutyno.yomikata.ui.theme.TextMuted
-import com.jehutyno.yomikata.ui.theme.TextPrimary
+import com.jehutyno.yomikata.ui.theme.TypeHeroTitle
 import com.jehutyno.yomikata.ui.theme.Wrong
 import com.jehutyno.yomikata.ui.theme.YomikataTheme
 import com.jehutyno.yomikata.util.quiz.Categories
@@ -84,7 +92,58 @@ data class StudyUiState(
     val wrongCount: Int = 0,
 )
 
+@DrawableRes
+private fun categoryHeroDrawable(category: Int): Int = when (category) {
+    Categories.CATEGORY_HIRAGANA -> R.drawable.ic_hiragana_big
+    Categories.CATEGORY_KATAKANA -> R.drawable.ic_katakana_big
+    Categories.CATEGORY_KANJI    -> R.drawable.ic_kanji_big
+    Categories.CATEGORY_COUNTERS -> R.drawable.ic_counters_big
+    Categories.CATEGORY_JLPT_5   -> R.drawable.ic_jlpt5_big
+    Categories.CATEGORY_JLPT_4   -> R.drawable.ic_jlpt4_big
+    Categories.CATEGORY_JLPT_3   -> R.drawable.ic_jlpt3_big
+    Categories.CATEGORY_JLPT_2   -> R.drawable.ic_jlpt2_big
+    else                         -> R.drawable.ic_jlpt1_big
+}
+
 // MARK: — Composables
+
+@Composable
+private fun StudyHero(selectedCategory: Int, modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(160.dp)
+            .background(BackgroundHero),
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(Color(0xA6000A14), Color(0xB3000A14)),
+                    )
+                ),
+        )
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier.fillMaxSize(),
+        ) {
+            Image(
+                painter = painterResource(categoryHeroDrawable(selectedCategory)),
+                contentDescription = null,
+                contentScale = ContentScale.Fit,
+                modifier = Modifier.size(80.dp),
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = categoryName(selectedCategory),
+                style = TypeHeroTitle,
+                color = AccentOrange,
+            )
+        }
+    }
+}
 
 @Composable
 private fun LevelChip(
@@ -254,27 +313,8 @@ fun StudyScreen(
             .fillMaxSize()
             .background(BackgroundPrimary),
     ) {
-        // Header
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 14.dp, vertical = 14.dp),
-        ) {
-            Text(
-                text = "学ぶ",
-                fontSize = 16.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = TextPrimary,
-            )
-            Text(
-                text = categoryName(state.selectedCategory),
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Medium,
-                color = AccentOrange,
-            )
-        }
-
-        HorizontalDivider(color = BorderSubtle, thickness = 1.dp)
+        // Hero
+        StudyHero(selectedCategory = state.selectedCategory)
 
         // Level chips
         Row(
