@@ -259,6 +259,26 @@ Bottom Navigation Bar (permanente, 4 onglets)
 - Icône : 18dp, `color_text_ghost` (inactif) / `color_accent` (audio, actif par défaut)
 - Label : 8sp, `color_text_dim`
 
+### Dialog (AlertDialog / YomikataDialog)
+
+Deux niveaux d'harmonisation coexistent :
+
+- **Niveau 1 — thème global** (`YomikataAlertDialog` dans `styles.xml`, branché via `alertDialogTheme`) : restyle automatiquement toutes les AlertDialog Splitties/AppCompat sans toucher au code. Fond `color_surface`, bordure `color_border`, coins `radius_xl` (`drawable/bg_dialog.xml`), titre `color_text_primary`, message `color_text_secondary`, bouton principal `color_accent`, autres `color_text_muted`.
+- **Niveau 2 — composant Compose** (`ui/components/YomikataDialog.kt`) : look pixel-perfect pour les dialogs migrés.
+
+Spécifications du composant :
+- Surface : `SurfacePrimary`, border 1dp `BorderDefault`, radius `radius_xl`, largeur max 360dp, padding 20dp (12dp en bas)
+- Titre : `type_screen_title` / `color_text_primary` + icône optionnelle `DialogIcon` (succès = `color_correct`, avertissement = `color_wrong`)
+- Message : 14sp / `color_text_secondary`
+- Boutons (`DialogButtonStyle`), radius `radius_md` :
+  - **Primary** : pill orange plein (`color_accent` / `color_accent_on`) — une seule action principale par dialog
+  - **Muted** : texte `color_text_muted` (annulation / action secondaire)
+  - **Destructive** : contour rouge `color_wrong` (action irréversible : reset, suppression)
+- Disposition : ≤ 2 boutons → ligne alignée à droite (principal à droite, mockup screenshot) ; ≥ 3 → principal pleine largeur en haut + autres en ligne dessous
+- Appel impératif (Activity/Fragment) : `Context.yomikataAlert(title, message, icon, buttons, cancelable, onCancel, onBackKey, content)` (`ui/components/YomikataDialogHost.kt`) — héberge le composant dans un `ComposeView`
+
+> Règle : préférer `yomikataAlert` / `YomikataDialog` pour tout nouveau dialog. Le thème global reste le filet de sécurité des dialogs non migrés.
+
 ---
 
 ## 6. Écrans — résumé des layouts

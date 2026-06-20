@@ -464,6 +464,21 @@ uiState (StudyUiState, mutableStateOf)
 
 ---
 
+### Dialogs (Session dialogs)
+
+Harmonisation des boîtes de dialogue au Design System v2, en deux niveaux :
+
+**Niveau 1 — thème global (restyle sans toucher au code).** `YomikataAlertDialog` (`res/values/styles.xml`) + `res/drawable/bg_dialog.xml` (surface `color_surface`, bordure `color_border`, coins `radius_xl`), branché sur `AppTheme` via `alertDialogTheme`/`android:alertDialogTheme`. AppCompat/Splitties lit cet attribut → **les 22 dialogs sont restylés** (titre/message/items aux tokens texte, bouton principal orange, autres `color_text_muted`).
+
+**Niveau 2 — composant Compose.**
+- `ui/components/YomikataDialog.kt` — `YomikataDialog` (wrapper `androidx.compose.ui.window.Dialog`) + `YomikataDialogContent` (la carte, réutilisée par le bridge) + `DialogButton`/`DialogButtonStyle` (`Primary` pill orange / `Muted` / `Destructive` contour rouge) + `DialogIcon` (`Success`/`Warning`). Disposition : ≤ 2 boutons en ligne droite, ≥ 3 en colonne (principal pleine largeur + autres en ligne).
+- `ui/components/YomikataDialogHost.kt` — `Context.yomikataAlert(...)` : bridge impératif hébergeant `YomikataDialogContent` dans un `ComposeView` posé dans un `Dialog` transparent ; owners `ViewTree` (lifecycle/viewModelStore/savedState) câblés depuis la `ComponentActivity` hôte ; chaque bouton dismiss puis exécute son action.
+
+**Migrés vers le composant (9) :** `DialogFlowController` (fin de session/erreurs/quiz, logique auto-skip préservée), `QuizFragment`/`QuizActivity`/`QuizzesActivity` (Quitter), `PrefsFragment` (reset BDD + suppression voix, boutons destructifs rouges).
+**Restés sur le thème Niveau 1 :** création de sélection (EditText), progress dialogs (`ProgressBar`), liste `setItems`, dialogs d'erreur/récupération BDD, redémarrage.
+
+---
+
 ### Architecture BottomNav (Session 2.3)
 
 `QuizzesActivity` est le host unique de la navigation. La `YomikataBottomBar` (Compose) est intégrée dans un `ComposeView` en bas de `activity_quizzes.xml`.
@@ -709,7 +724,7 @@ Depuis la migration (juin 2026), toutes les versions et dépendances sont centra
 | Kotlin Coroutines + Flow | Asynchronisme, streams réactifs |
 | ExoPlayer (Media3) | Lecture audio |
 | Calligraphy + ViewPump | Police personnalisée (Roboto) |
-| Splitties | DSL dialogs AlertDialog |
+| Splitties | DSL dialogs AlertDialog (legacy — restylé par le thème global ; nouveaux dialogs via `YomikataDialog`/`yomikataAlert`) |
 | KenBurnsView | Animations fond (diaporama photos dans QuizzesActivity) |
 | androidx.core:core-splashscreen | Contrôle du splash screen système (Android 12+) |
 | HiraganaEditText | Saisie IME hiragana |
@@ -757,7 +772,7 @@ com.jehutyno.yomikata/
 │   └── quiz/                   ← Categories, QuizStrategy, QuizType, LevelSystem
 ├── ui/
 │   ├── theme/                  ← Color.kt, Shape.kt, Type.kt, Theme.kt (design tokens + YomikataTheme)
-│   ├── components/             ← SectionHeader, MasteryDots, FABBar (+ FABBarState), LevelChip (+ StudyLevel, LevelChipRow), YomikataBottomBar
+│   ├── components/             ← SectionHeader, MasteryDots, FABBar (+ FABBarState), LevelChip (+ StudyLevel, LevelChipRow), YomikataBottomBar, KenBurnsImage, YomikataDialog (+ DialogButton/DialogIcon), YomikataDialogHost (yomikataAlert)
 │   ├── quiz/                   ← QuizComponents (AnswerButton + AnswerButtonState, ProgressSegmentBar + SegmentState), QuizScreen (QuizUiState + composables), QuizUiState
 │   ├── home/                   ← HomeScreen (HomeUiState, HomeHero, StatsGrid, ContinueCard, NewsCard, SupportCard), StatCard
 │   ├── settings/               ← SettingsScreen (Night Mode toggle, liens sociaux, version)
