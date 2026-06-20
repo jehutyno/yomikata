@@ -16,6 +16,14 @@
     <string name="practice_random">Praticar tudo aleatoriamente</string>
     <string name="practice_normal">Praticar tudo</string>
     <string name="practice_progressive">Praticar progressivamente</string>
+    <string name="quiz_types_header">クイズ · Tipos</string>
+    <string name="launch_mode_header">モード · Modo</string>
+    <string name="quiz_type_auto">Auto</string>
+    <string name="quiz_type_pronunciation">Pronúncia</string>
+    <string name="quiz_type_pronunciation_qcm">Pronúncia MC</string>
+    <string name="quiz_type_audio">Áudio MC</string>
+    <string name="quiz_type_en_jap">PT → JP</string>
+    <string name="quiz_type_jap_en">JP → PT</string>
     <string name="quit_quiz">Deseja encerrar esta sessão de prática?</string>
     <string name="search_title">Resultados da busca</string>
     <string name="mail_chooser">Contato por e-mail</string>

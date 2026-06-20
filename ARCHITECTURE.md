@@ -302,6 +302,7 @@ Les `Activity` et `Fragment` étendent `DIAware` et récupèrent leurs dépendan
 | `last_selected_level` | Int | Niveau sélectionné dans l'écran Study (chips) |
 | `selected_quiz_types` | String (CSV) | Types de quiz actifs |
 | `was_selected_quiz_types` | String (CSV) | Sauvegarde avant passage en mode AUTO |
+| `last_launch_mode` | String (`QuizStrategy.name`) | Dernier mode de lancement utilisé depuis Study (mis en évidence dans le sheet) |
 | `length` | String | Longueur de session (nombre de mots) |
 | `speed` | String | Vitesse de progression (facteur de points) |
 | `play_start` / `play_end` | Boolean | Audio au début/fin d'un mot |
@@ -441,12 +442,19 @@ uiState (StudyUiState, mutableStateOf)
 
 **Level chips :** définis dans `StudyLevels` (liste de `LevelDefinition` dans `StudyScreen.kt`) — 9 entrées (Hiragana → JLPT N1). La sélection est persistée via `Prefs.LAST_SELECTED_LEVEL`.
 
-**FABBar :** `LaunchAll` ("Lancer tous les quiz") si aucun quiz coché, `LaunchSelection(N)` sinon. État ajouté à `FABBarState` dans `FABBar.kt`.
+**FABBar :** `LaunchAll` ("Lancer tous les quiz") si aucun quiz coché, `LaunchSelection(N)` sinon. État ajouté à `FABBarState` dans `FABBar.kt`. Le tap **ouvre le sheet d'options de lancement** (ne lance plus directement).
+
+**LaunchOptionsSheet (Session 3.9) :** `ModalBottomSheet` (`containerColor = SurfacePrimary`) ouvert depuis le `FABBar`, qui réintègre deux fonctionnalités perdues lors de la migration Compose :
+- **Types de quiz** (`QuizType`) : `FlowRow` de `QuizTypeChip` (icône `ic_*_check`/`ic_*_uncheck` + label localisé). `TYPE_AUTO` mutuellement exclusif. Logique d'exclusion + persistance extraite dans `util/quiz/QuizTypePrefs.kt` (`loadSelectedTypes`, `toggle`) — réutilisée par `QuizzesPresenter` (délégation) et `QuizzesFragment`. Persisté à chaque toggle dans `selected_quiz_types` (+ `was_selected_quiz_types`).
+- **Mode de lancement** (`QuizStrategy`) : 3 `LaunchModeRow` (Progressif/Tout/Aléatoire, strings `practice_*`). **Taper un mode lance immédiatement** le quiz avec les types sélectionnés. Le dernier mode (`last_launch_mode`) est pré-mis en évidence (bordure `AccentOrange`).
+
+⚠️ Les drawables `ic_*_selector.xml` sont des state-lists inopérantes en Compose (`painterResource` n'en rend que l'état par défaut) → utiliser directement les paires `ic_*_check` / `ic_*_uncheck`.
 
 **StudyHero (Session 3.8) :** photo de fond animée Ken Burns (`KenBurnsImage` partagé), distincte par niveau via `categoryHeroPhoto(category)` (mapping `pic_*`), avec `Crossfade` sur `selectedCategory` au changement de chip. Scrim froid `Brush.verticalGradient` (`0x000A14`) + icône `ic_*_big` (`categoryHeroDrawable`) + nom du niveau au premier plan.
 
 **Fichiers clés :**
-- `ui/study/StudyScreen.kt` — `StudyUiState`, `StudyLevels`, `LevelChip`, `StudyProgressBars`, `StudyQuizItem`, `StudyHero`, `categoryHeroPhoto`, `StudyScreen`
+- `ui/study/StudyScreen.kt` — `StudyUiState`, `StudyLevels`, `LevelChip`, `StudyProgressBars`, `StudyQuizItem`, `StudyHero`, `categoryHeroPhoto`, `StudyScreen`, `LaunchOptionsSheet`, `QuizTypeChip`, `LaunchModeRow`
+- `util/quiz/QuizTypePrefs.kt` — logique de sélection des types (exclusion AUTO + persistance CSV), partagée par `QuizzesPresenter` et `QuizzesFragment` ; testée par `QuizTypePrefsTest`
 - `ui/components/KenBurnsImage.kt` — image plein cadre avec zoom lent en boucle, partagée par Home et Study
 - `screens/quizzes/QuizzesFragment.kt` — shell dynamique + `MutableStateFlow<Int>` + `WordCountPresenter` réactif + `setCategory()` public
 - `screens/quizzes/QuizzesActivity.kt` — `YomikataBottomBar` Compose câblée + `navigateTo(BottomNavDestination)` + `navigateToCategory()` publique

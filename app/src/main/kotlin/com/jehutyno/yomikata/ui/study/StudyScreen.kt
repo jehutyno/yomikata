@@ -1,6 +1,7 @@
 package com.jehutyno.yomikata.ui.study
 
 import androidx.annotation.DrawableRes
+import androidx.annotation.StringRes
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
@@ -11,6 +12,8 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -27,10 +30,17 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -39,6 +49,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -49,6 +60,7 @@ import com.jehutyno.yomikata.model.Quiz
 import com.jehutyno.yomikata.ui.components.FABBar
 import com.jehutyno.yomikata.ui.components.FABBarState
 import com.jehutyno.yomikata.ui.components.KenBurnsImage
+import com.jehutyno.yomikata.ui.components.SectionHeader
 import com.jehutyno.yomikata.ui.theme.AccentOrange
 import com.jehutyno.yomikata.ui.theme.BackgroundHero
 import com.jehutyno.yomikata.ui.theme.BackgroundPrimary
@@ -62,10 +74,13 @@ import com.jehutyno.yomikata.ui.theme.SurfacePrimary
 import com.jehutyno.yomikata.ui.theme.TextDim
 import com.jehutyno.yomikata.ui.theme.TextGhost
 import com.jehutyno.yomikata.ui.theme.TextMuted
+import com.jehutyno.yomikata.ui.theme.TextPrimary
 import com.jehutyno.yomikata.ui.theme.TypeHeroTitle
 import com.jehutyno.yomikata.ui.theme.Wrong
 import com.jehutyno.yomikata.ui.theme.YomikataTheme
 import com.jehutyno.yomikata.util.quiz.Categories
+import com.jehutyno.yomikata.util.quiz.QuizStrategy
+import com.jehutyno.yomikata.util.quiz.QuizType
 
 data class LevelDefinition(
     val category: Int,
@@ -94,6 +109,25 @@ data class StudyUiState(
     val quizCount: Int = 0,
     val goodCount: Int = 0,
     val wrongCount: Int = 0,
+    val selectedTypes: List<QuizType> = listOf(QuizType.TYPE_AUTO),
+    val lastMode: QuizStrategy? = null,
+)
+
+/** Quiz-type chip definition: type + label + check/uncheck icons. */
+private data class QuizTypeOption(
+    val type: QuizType,
+    @StringRes val labelRes: Int,
+    @DrawableRes val iconChecked: Int,
+    @DrawableRes val iconUnchecked: Int,
+)
+
+private val QuizTypeOptions = listOf(
+    QuizTypeOption(QuizType.TYPE_AUTO, R.string.quiz_type_auto, R.drawable.ic_auto_check, R.drawable.ic_auto_uncheck),
+    QuizTypeOption(QuizType.TYPE_PRONUNCIATION, R.string.quiz_type_pronunciation, R.drawable.ic_pronunciation_check, R.drawable.ic_pronunciation_uncheck),
+    QuizTypeOption(QuizType.TYPE_PRONUNCIATION_QCM, R.string.quiz_type_pronunciation_qcm, R.drawable.ic_pronunciation_qcm_check, R.drawable.ic_pronunciation_qcm_uncheck),
+    QuizTypeOption(QuizType.TYPE_AUDIO, R.string.quiz_type_audio, R.drawable.ic_sound_qcm_check, R.drawable.ic_sound_qcm_uncheck),
+    QuizTypeOption(QuizType.TYPE_EN_JAP, R.string.quiz_type_en_jap, R.drawable.ic_en_jap_check, R.drawable.ic_en_jap_uncheck),
+    QuizTypeOption(QuizType.TYPE_JAP_EN, R.string.quiz_type_jap_en, R.drawable.ic_jap_en_check, R.drawable.ic_jap_en_uncheck),
 )
 
 @DrawableRes
@@ -327,12 +361,14 @@ fun StudyScreen(
     onCategorySelected: (Int) -> Unit,
     onQuizChecked: (quizId: Long, checked: Boolean) -> Unit,
     onQuizClick: (Quiz) -> Unit,
-    onLaunchQuiz: () -> Unit,
+    onLaunchQuiz: (QuizStrategy) -> Unit,
+    onQuizTypeToggle: (QuizType) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val selectedCount = state.quizzes.count { it.isSelected }
     val fabState = if (selectedCount > 0) FABBarState.LaunchSelection(selectedCount)
                    else FABBarState.LaunchAll
+    var showLaunchSheet by remember { mutableStateOf(false) }
 
     Column(
         modifier = modifier
@@ -396,8 +432,158 @@ fun StudyScreen(
         // FABBar
         FABBar(
             state = fabState,
-            onClick = onLaunchQuiz,
+            onClick = { showLaunchSheet = true },
             modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+        )
+    }
+
+    if (showLaunchSheet) {
+        LaunchOptionsSheet(
+            selectedTypes = state.selectedTypes,
+            lastMode = state.lastMode,
+            onQuizTypeToggle = onQuizTypeToggle,
+            onModeSelected = { strategy ->
+                showLaunchSheet = false
+                onLaunchQuiz(strategy)
+            },
+            onDismiss = { showLaunchSheet = false },
+        )
+    }
+}
+
+// MARK: — Launch options sheet
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@Composable
+private fun LaunchOptionsSheet(
+    selectedTypes: List<QuizType>,
+    lastMode: QuizStrategy?,
+    onQuizTypeToggle: (QuizType) -> Unit,
+    onModeSelected: (QuizStrategy) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = rememberModalBottomSheetState(),
+        containerColor = SurfacePrimary,
+    ) {
+        Column(
+            modifier = Modifier
+                .padding(horizontal = 20.dp)
+                .padding(bottom = 24.dp),
+        ) {
+            SectionHeader(text = stringResource(R.string.quiz_types_header))
+            Spacer(modifier = Modifier.height(12.dp))
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                QuizTypeOptions.forEach { option ->
+                    QuizTypeChip(
+                        labelRes = option.labelRes,
+                        iconChecked = option.iconChecked,
+                        iconUnchecked = option.iconUnchecked,
+                        isSelected = selectedTypes.contains(option.type),
+                        onClick = { onQuizTypeToggle(option.type) },
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            SectionHeader(text = stringResource(R.string.launch_mode_header))
+            Spacer(modifier = Modifier.height(4.dp))
+            LaunchModeRow(
+                iconRes = R.drawable.ic_progress,
+                labelRes = R.string.practice_progressive,
+                isHighlighted = lastMode == QuizStrategy.PROGRESSIVE,
+                onClick = { onModeSelected(QuizStrategy.PROGRESSIVE) },
+            )
+            LaunchModeRow(
+                iconRes = R.drawable.ic_straight,
+                labelRes = R.string.practice_normal,
+                isHighlighted = lastMode == QuizStrategy.STRAIGHT,
+                onClick = { onModeSelected(QuizStrategy.STRAIGHT) },
+            )
+            LaunchModeRow(
+                iconRes = R.drawable.ic_shuffle_white_24dp,
+                labelRes = R.string.practice_random,
+                isHighlighted = lastMode == QuizStrategy.SHUFFLE,
+                onClick = { onModeSelected(QuizStrategy.SHUFFLE) },
+            )
+        }
+    }
+}
+
+@Composable
+private fun QuizTypeChip(
+    @StringRes labelRes: Int,
+    @DrawableRes iconChecked: Int,
+    @DrawableRes iconUnchecked: Int,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+) {
+    val bg = if (isSelected) SurfaceAccent else SurfacePrimary
+    val border = if (isSelected) AccentOrange else BorderDefault
+    val textColor = if (isSelected) AccentOrange else TextMuted
+
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        modifier = Modifier
+            .clip(RoundedCornerShape(RadiusPill))
+            .background(bg)
+            .border(1.dp, border, RoundedCornerShape(RadiusPill))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 12.dp, vertical = 7.dp),
+    ) {
+        Image(
+            painter = painterResource(if (isSelected) iconChecked else iconUnchecked),
+            contentDescription = null,
+            modifier = Modifier.size(18.dp),
+        )
+        Text(
+            text = stringResource(labelRes),
+            fontSize = 13.sp,
+            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+            color = textColor,
+        )
+    }
+}
+
+@Composable
+private fun LaunchModeRow(
+    @DrawableRes iconRes: Int,
+    @StringRes labelRes: Int,
+    isHighlighted: Boolean,
+    onClick: () -> Unit,
+) {
+    val border = if (isHighlighted) AccentOrange else Color.Transparent
+    val bg = if (isHighlighted) SurfaceAccent else Color.Transparent
+
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp)
+            .clip(RoundedCornerShape(RadiusMd))
+            .background(bg)
+            .border(1.dp, border, RoundedCornerShape(RadiusMd))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 12.dp, vertical = 14.dp),
+    ) {
+        Icon(
+            painter = painterResource(iconRes),
+            contentDescription = null,
+            tint = AccentOrange,
+            modifier = Modifier.size(20.dp),
+        )
+        Spacer(modifier = Modifier.width(12.dp))
+        Text(
+            text = stringResource(labelRes),
+            fontSize = 15.sp,
+            color = TextPrimary,
         )
     }
 }
@@ -426,6 +612,7 @@ private fun StudyScreenPreview() {
             onQuizChecked = { _, _ -> },
             onQuizClick = {},
             onLaunchQuiz = {},
+            onQuizTypeToggle = {},
         )
     }
 }
@@ -446,6 +633,7 @@ private fun StudyScreenN4Preview() {
             onQuizChecked = { _, _ -> },
             onQuizClick = {},
             onLaunchQuiz = {},
+            onQuizTypeToggle = {},
         )
     }
 }

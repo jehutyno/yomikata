@@ -15,11 +15,10 @@ import com.jehutyno.yomikata.repository.StatsRepository
 import com.jehutyno.yomikata.util.quiz.Categories
 import com.jehutyno.yomikata.util.Prefs
 import com.jehutyno.yomikata.util.quiz.QuizType
-import com.jehutyno.yomikata.util.quiz.toQuizType
+import com.jehutyno.yomikata.util.quiz.QuizTypePrefs
 import kotlinx.coroutines.flow.first
 import mu.KLogging
 import java.util.Calendar
-import java.util.StringTokenizer
 
 
 /**
@@ -70,82 +69,12 @@ class QuizzesPresenter(
     }
 
     override fun initQuizTypes() {
-        val types = getQuizTypeArrayFromPrefs(Prefs.SELECTED_QUIZ_TYPES.pref, QuizType.TYPE_AUTO)
-        _selectedTypes.value = types
-    }
-
-    @Synchronized
-    private fun switchOthers(type: QuizType) {
-        val newSelectedTypes = ArrayList(requireNotNull(selectedTypes.value) { "selectedTypes not initialized" }) // makes copy
-        requireNotNull(selectedTypes.value) { "selectedTypes not initialized" }.also { types ->
-            if (!types.contains(type)) {
-                if (types.contains(QuizType.TYPE_AUTO)) {
-                    // auto cannot be selected simultaneously with other types -> unselect it
-                    newSelectedTypes.remove(QuizType.TYPE_AUTO)
-                }
-                newSelectedTypes.add(type)
-            } else {
-                newSelectedTypes.remove(type)
-                if (newSelectedTypes.size == 0) {
-                    // if no types are selected -> automatically select the auto type
-                    saveQuizTypeArrayInPrefs(Prefs.WAS_SELECTED_QUIZ_TYPES.pref, types)
-                    newSelectedTypes.add(QuizType.TYPE_AUTO)
-                }
-            }
-        }
-        _selectedTypes.value = newSelectedTypes
-    }
-
-    @Synchronized
-    private fun switchAuto() {
-        val newSelectedTypes =
-            requireNotNull(selectedTypes.value) { "selectedTypes not initialized" }.let { types ->
-                if (types.contains(QuizType.TYPE_AUTO)) {
-                    // if auto is unselected -> get saved selection from preferences
-                    getQuizTypeArrayFromPrefs(Prefs.WAS_SELECTED_QUIZ_TYPES.pref, QuizType.TYPE_PRONUNCIATION)
-                } else {
-                    // if auto is selected -> save the current preferences to be restored later
-                    saveQuizTypeArrayInPrefs(Prefs.WAS_SELECTED_QUIZ_TYPES.pref, types)
-                    arrayListOf(QuizType.TYPE_AUTO)
-                }
-            }
-        _selectedTypes.value = newSelectedTypes
+        _selectedTypes.value = QuizTypePrefs.loadSelectedTypes(prefs)
     }
 
     override fun quizTypeSwitch(quizType: QuizType) {
-        if (quizType == QuizType.TYPE_AUTO) {
-            switchAuto()
-        } else {
-            switchOthers(quizType)
-        }
-        // save new selection in preferences
-        saveQuizTypeArrayInPrefs(Prefs.SELECTED_QUIZ_TYPES.pref, requireNotNull(selectedTypes.value) { "selectedTypes not initialized" })
-    }
-
-    private fun getQuizTypeArrayFromPrefs(key: String, default: QuizType): ArrayList<QuizType> {
-        val pref = prefs
-        val savedString = pref.getString(key, "")
-        val savedList = ArrayList<Int>(5)
-        if (savedString == "") {
-            savedList.add(default.type)
-        } else {
-            val st = StringTokenizer(savedString, ",")
-            for (i in 0 until st.countTokens()) {
-                savedList.add(Integer.parseInt(st.nextToken()))
-            }
-        }
-
-        return savedList.map { it.toQuizType() } as ArrayList<QuizType>
-    }
-
-    private fun saveQuizTypeArrayInPrefs(key: String, types: ArrayList<QuizType>) {
-        val list = types.map { it.type }
-        val str = StringBuilder()
-        list.forEach {
-            str.append(it).append(",")
-        }
-        val pref = prefs
-        pref.edit().putString(key, str.toString()).apply()
+        val current = requireNotNull(selectedTypes.value) { "selectedTypes not initialized" }
+        _selectedTypes.value = QuizTypePrefs.toggle(prefs, current, quizType)
     }
 
     /**

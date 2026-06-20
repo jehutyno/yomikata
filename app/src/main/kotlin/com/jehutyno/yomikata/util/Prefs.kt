@@ -36,5 +36,7 @@ enum class Prefs(val pref: String) {
     PLAY_END("play_end"),
     FONT_SIZE("font_size"),
 
-    LAST_SELECTED_LEVEL("last_selected_level")
+    LAST_SELECTED_LEVEL("last_selected_level"),
+
+    LAST_LAUNCH_MODE("last_launch_mode")
 }

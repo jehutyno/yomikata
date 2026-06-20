@@ -34,7 +34,7 @@ import com.jehutyno.yomikata.util.Prefs
 import com.jehutyno.yomikata.util.quiz.Categories
 import com.jehutyno.yomikata.util.quiz.QuizStrategy
 import com.jehutyno.yomikata.util.quiz.QuizType
-import com.jehutyno.yomikata.util.quiz.toQuizType
+import com.jehutyno.yomikata.util.quiz.QuizTypePrefs
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
@@ -45,7 +45,6 @@ import org.kodein.di.DI
 import org.kodein.di.DIAware
 import org.kodein.di.instance
 import java.util.Calendar
-import java.util.StringTokenizer
 
 
 class QuizzesFragment(private val diArg: DI) : Fragment(), DIAware {
@@ -73,7 +72,11 @@ class QuizzesFragment(private val diArg: DI) : Fragment(), DIAware {
         super.onCreate(savedInstanceState)
         val saved = prefs.getInt(Prefs.LAST_SELECTED_LEVEL.pref, Categories.CATEGORY_HIRAGANA)
         _categoryFlow.value = saved
-        uiState = uiState.copy(selectedCategory = saved)
+        uiState = uiState.copy(
+            selectedCategory = saved,
+            selectedTypes = QuizTypePrefs.loadSelectedTypes(prefs),
+            lastMode = loadLastMode(),
+        )
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -127,7 +130,8 @@ class QuizzesFragment(private val diArg: DI) : Fragment(), DIAware {
                             lifecycleScope.launch { quizRepository.updateQuizSelected(quizId, checked) }
                         },
                         onQuizClick = { quiz -> openContent(quiz) },
-                        onLaunchQuiz = { launchQuiz() },
+                        onLaunchQuiz = { strategy -> launchQuiz(strategy) },
+                        onQuizTypeToggle = { type -> toggleQuizType(type) },
                     )
                 }
             }
@@ -158,13 +162,23 @@ class QuizzesFragment(private val diArg: DI) : Fragment(), DIAware {
         val intent = Intent(context, ContentActivity::class.java).apply {
             putExtra(Extras.EXTRA_CATEGORY, uiState.selectedCategory)
             putExtra(Extras.EXTRA_QUIZ_POSITION, position)
-            putExtra(Extras.EXTRA_QUIZ_TYPES, getSelectedTypes())
+            putExtra(Extras.EXTRA_QUIZ_TYPES, ArrayList(uiState.selectedTypes))
             putExtra(Extras.EXTRA_LEVEL, null as java.io.Serializable?)
         }
         startActivity(intent)
     }
 
-    private fun launchQuiz() {
+    private fun toggleQuizType(type: QuizType) {
+        val next = QuizTypePrefs.toggle(prefs, ArrayList(uiState.selectedTypes), type)
+        uiState = uiState.copy(selectedTypes = next)
+    }
+
+    private fun loadLastMode(): QuizStrategy? {
+        val name = prefs.getString(Prefs.LAST_LAUNCH_MODE.pref, null) ?: return null
+        return runCatching { QuizStrategy.valueOf(name) }.getOrNull()
+    }
+
+    private fun launchQuiz(strategy: QuizStrategy) {
         val selectedIds = uiState.quizzes.filter { it.isSelected }.map { it.id }
         val ids = if (selectedIds.isEmpty()) uiState.quizzes.map { it.id } else selectedIds
 
@@ -194,23 +208,16 @@ class QuizzesFragment(private val diArg: DI) : Fragment(), DIAware {
                     .putInt(Prefs.LATEST_CATEGORY_1.pref, category)
                     .apply()
             }
+            prefs.edit().putString(Prefs.LAST_LAUNCH_MODE.pref, strategy.name).apply()
+            uiState = uiState.copy(lastMode = strategy)
 
             startActivity(Intent(activity, QuizActivity::class.java).apply {
                 putExtra(Extras.EXTRA_QUIZ_IDS, ids.toLongArray())
                 putExtra(Extras.EXTRA_QUIZ_TITLE, categoryName(category))
-                putExtra(Extras.EXTRA_QUIZ_STRATEGY, QuizStrategy.STRAIGHT)
+                putExtra(Extras.EXTRA_QUIZ_STRATEGY, strategy)
                 putExtra(Extras.EXTRA_LEVEL, null as java.io.Serializable?)
-                putExtra(Extras.EXTRA_QUIZ_TYPES, getSelectedTypes())
+                putExtra(Extras.EXTRA_QUIZ_TYPES, ArrayList(uiState.selectedTypes))
             })
         }
-    }
-
-    private fun getSelectedTypes(): ArrayList<QuizType> {
-        val savedString = prefs.getString(Prefs.SELECTED_QUIZ_TYPES.pref, "") ?: ""
-        if (savedString.isEmpty()) return arrayListOf(QuizType.TYPE_AUTO)
-        val st = StringTokenizer(savedString, ",")
-        val result = ArrayList<QuizType>()
-        repeat(st.countTokens()) { result.add(Integer.parseInt(st.nextToken()).toQuizType()) }
-        return result.ifEmpty { arrayListOf(QuizType.TYPE_AUTO) }
     }
 }

@@ -16,6 +16,14 @@
     <string name="practice_random">Réviser tout aléatoire</string>
     <string name="practice_normal">Réviser tout</string>
     <string name="practice_progressive">Révision progressive</string>
+    <string name="quiz_types_header">クイズ · Types</string>
+    <string name="launch_mode_header">モード · Mode</string>
+    <string name="quiz_type_auto">Auto</string>
+    <string name="quiz_type_pronunciation">Prononciation</string>
+    <string name="quiz_type_pronunciation_qcm">Prononciation QCM</string>
+    <string name="quiz_type_audio">Audio QCM</string>
+    <string name="quiz_type_en_jap">FR → JP</string>
+    <string name="quiz_type_jap_en">JP → FR</string>
     <string name="quit_quiz">Voulez-vous quitter cette session ?</string>
     <string name="search_title">Resultats de la recherche</string>
     <string name="mail_chooser">Me contacter par email</string>
