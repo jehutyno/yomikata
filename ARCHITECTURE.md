@@ -57,7 +57,7 @@ Les presenters reçoivent un `CoroutineScope` (le `lifecycleScope` du fragment h
 | `quizzes` | `QuizzesActivity` | **Activité de démarrage** — chargement DB, navigation principale (BottomNav Compose — 4 onglets), gestion erreur DB. Layout : `FrameLayout` plein écran + `ComposeView` bottom nav. Pas de Toolbar ni AppBar. |
 | `selections` | `SelectionsFragment` | Sélections personnelles (placeholder) — hero `ic_selections_big` + "Bientôt disponible" |
 | `settings` | `SettingsFragment` | Paramètres via BottomNav : toggle Night Mode, liens sociaux, version + `PrefsFragment` embarqué |
-| `home` | `HomeFragment` | Dashboard Compose — hero `yomi_logo_home.png`, grille StatCards 2×2 (stats aujourd'hui), section Continue, news Firebase, FABBar |
+| `home` | `HomeFragment` | Onglet de démarrage. Dashboard Compose — hero Ken Burns (photos `pic_*` + `yomi_logo_home.png`), grille StatCards 2×2 (stats aujourd'hui), section Continue (bouton intégré), news Firebase, card Support (bouton GitHub Sponsors) |
 | `content` | `ContentActivity` | Liste des mots d'une catégorie. Layout : `FrameLayout` plein écran + `FloatingActionsMenu` (lancer quiz). Pas de Toolbar — `WordListScreen` Compose gère sa propre `TopAppBar`. Supporte mode ViewPager2 (swipe entre sélections) et mode level (filtre par niveau). |
 | `content/word` | `WordDetailFragment` | Détail d'un mot plein écran (Compose — Sessions 1.4) |
 | `quiz` | `QuizActivity` / `QuizFragment` | Session de quiz complète |
@@ -463,11 +463,11 @@ uiState (StudyUiState, mutableStateOf)
 | `SELECTIONS` | `SelectionsFragment` | Placeholder (Session 3.x) |
 | `SETTINGS` | `SettingsFragment` | Night Mode + liens sociaux + version + `PrefsFragment` enfant ✅ (Session 3.1) |
 
-**Navigation :** `navigateTo(BottomNavDestination)` — `replace()` sans back stack. Les fragments sont retrouvés par tag (`BottomNavDestination.name`) pour éviter de recréer inutilement.
+**Navigation :** `navigateTo(BottomNavDestination)` — `replace()` sans back stack. Les fragments sont retrouvés par tag (`BottomNavDestination.name`) pour éviter de recréer inutilement. Onglet de démarrage : `HOME` (Session 3.7).
 
-**Back press :** si onglet actif ≠ STUDY → revenir à STUDY. Si STUDY → dialog de quitter l'app.
+**Back press :** si onglet actif ≠ HOME → revenir à HOME. Si HOME → dialog de quitter l'app.
 
-**DrawerLayout :** supprimé en Session 3.3. `activity_quizzes.xml` utilise désormais un `LinearLayout` vertical comme root.
+**DrawerLayout :** supprimé en Session 3.3. `activity_quizzes.xml` utilise désormais un `LinearLayout` vertical comme root, fond `@color/color_bg` (Session 3.7).
 
 ---
 
@@ -519,21 +519,18 @@ uiState (HomeUiState, mutableStateOf)
     → HomeScreen(state = uiState)    (Compose stateless)
 ```
 
-**FABBar :**
-- `lastSessionLevel == null` → `FABBarState.Start` ("Commencer")
-- `lastSessionLevel != null` → `FABBarState.Continue(levelName)` ("Continuer — [niveau]")
-- Click → `QuizzesActivity.navigateToCategory(lastCategory)` (onglet Study + chip du niveau)
+**Actions (Session 3.7) :** plus de `FABBar` en bas de Home. L'action « Continuer » est un `DiscreetActionButton` (OutlinedButton pill `RadiusXl`, bordure `BorderAccent`, texte `AccentOrange`) **à l'intérieur** de la `ContinueCard` → `onContinueClick` → `QuizzesActivity.navigateToCategory(lastCategory)`. Le même bouton « ♥ Soutenir sur GitHub » est placé dans la `SupportCard` → `onSupportClick` → `openGithubSponsors()` (https://github.com/sponsors/jehutyno). Signature : `HomeScreen(state, onContinueClick, onSupportClick)`.
 
 **Section "続ける · Continue" :** masquée si `lastSessionLevel == null` (aucune session enregistrée — `LAST_SELECTED_LEVEL` absent des prefs).
 
 **Stat cards (grille 2×2) :** affichent les stats du jour (`todayStatList`). `wrongAnswers` en couleur `Wrong` (rouge), `correctAnswers` en `Correct` (vert).
 
-**Hero :** fond `BackgroundHeroWarm` + scrim `Brush.verticalGradient` (alpha 0xA6 → 0xB3, `0x0A0500`) + logo circle "読" (Box 64dp, `CircleShape`, bordure AccentOrange) + titre `TypeHeroTitle` + tagline AccentWarm.
+**Hero (Session 3.7) :** fond `BackgroundHeroWarm` + photos `pic_*` cyclées en arrière-plan avec effet Ken Burns (zoom lent 1→1.18 via `graphicsLayer` + `Crossfade` toutes les 7 s, liste `HERO_IMAGES`) + scrim chaud `Brush.verticalGradient` + logo `yomi_logo_home.png` (96dp) + titre `TypeHeroTitle` + tagline AccentWarm. Le root `HomeScreen` a un fond `BackgroundPrimary`.
 
 **Supprimé :** boutons sociaux (Discord, Facebook, Play Store, Share → Settings), section "Latest categories" (LATEST_CATEGORY_1/2), stats semaine/mois/total (allégement UI), `ExpandableTextView` tiers (remplacé par `NewsCard` Compose).
 
 **Fichiers clés :**
-- `ui/home/HomeScreen.kt` — `HomeUiState`, `HomeScreen`, `HomeHero`, `StatsGrid`, `ContinueCard`, `NewsCard`, `SupportCard`
+- `ui/home/HomeScreen.kt` — `HomeUiState`, `HomeScreen`, `HomeHero` (Ken Burns), `KenBurnsImage`, `StatsGrid`, `DiscreetActionButton`, `ContinueCard`, `NewsCard`, `SupportCard`
 - `ui/home/StatCard.kt` — `StatCard` (fond `SurfacePrimary`, border `BorderDefault`, valeur colorée + label uppercase)
 - `screens/home/HomeFragment.kt` — shell MVP + state Compose + Firebase listener + refreshLastSession
 - `screens/home/HomePresenter.kt` — inchangé (expose 4 LiveData via `StatsRepository`)

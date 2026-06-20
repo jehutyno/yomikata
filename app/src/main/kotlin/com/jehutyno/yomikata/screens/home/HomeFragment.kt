@@ -24,6 +24,7 @@ import com.jehutyno.yomikata.ui.home.HomeUiState
 import com.jehutyno.yomikata.ui.study.categoryName
 import com.jehutyno.yomikata.ui.theme.YomikataTheme
 import com.jehutyno.yomikata.util.Prefs
+import com.jehutyno.yomikata.util.openGithubSponsors
 import com.jehutyno.yomikata.util.quiz.Categories
 import com.jehutyno.yomikata.util.language.AppLanguage
 import com.jehutyno.yomikata.util.language.LanguageManager
@@ -69,7 +70,8 @@ class HomeFragment(di: DI) : Fragment(), HomeContract.View {
                 YomikataTheme {
                     HomeScreen(
                         state = uiState,
-                        onFabClick = { handleFabClick() },
+                        onContinueClick = { handleFabClick() },
+                        onSupportClick = { openGithubSponsors(requireActivity()) },
                     )
                 }
             }

@@ -57,7 +57,7 @@ class QuizzesActivity : AppCompatActivity(), DIAware {
 
     private lateinit var binding: ActivityQuizzesBinding
 
-    private var currentDestination by mutableStateOf(BottomNavDestination.STUDY)
+    private var currentDestination by mutableStateOf(BottomNavDestination.HOME)
 
     @SuppressLint("MissingSuperCall")
     override fun onSaveInstanceState(outState: Bundle) {
@@ -109,14 +109,14 @@ class QuizzesActivity : AppCompatActivity(), DIAware {
 
         // Show the initial fragment
         if (savedInstanceState == null) {
-            navigateTo(BottomNavDestination.STUDY)
+            navigateTo(BottomNavDestination.HOME)
         }
 
         binding.anchor.postDelayed({ tutos() }, 500)
 
         fun collapseOrQuit() {
-            if (currentDestination != BottomNavDestination.STUDY) {
-                navigateTo(BottomNavDestination.STUDY)
+            if (currentDestination != BottomNavDestination.HOME) {
+                navigateTo(BottomNavDestination.HOME)
                 return
             }
             alertDialog {
