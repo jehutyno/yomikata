@@ -1,11 +1,6 @@
 package com.jehutyno.yomikata.ui.home
 
 import androidx.compose.animation.Crossfade
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -38,7 +33,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -46,6 +40,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.jehutyno.yomikata.R
+import com.jehutyno.yomikata.ui.components.KenBurnsImage
 import com.jehutyno.yomikata.ui.components.SectionHeader
 import com.jehutyno.yomikata.ui.theme.AccentOrange
 import com.jehutyno.yomikata.ui.theme.AccentWarm
@@ -206,31 +201,6 @@ private fun HomeHero(modifier: Modifier = Modifier) {
             )
         }
     }
-}
-
-@Composable
-private fun KenBurnsImage(resId: Int) {
-    val transition = rememberInfiniteTransition(label = "ken-burns")
-    val scale by transition.animateFloat(
-        initialValue = 1f,
-        targetValue = 1.18f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 14000, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse,
-        ),
-        label = "ken-burns-scale",
-    )
-    Image(
-        painter = painterResource(resId),
-        contentDescription = null,
-        contentScale = ContentScale.Crop,
-        modifier = Modifier
-            .fillMaxSize()
-            .graphicsLayer {
-                scaleX = scale
-                scaleY = scale
-            },
-    )
 }
 
 @Composable

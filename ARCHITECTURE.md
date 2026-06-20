@@ -443,8 +443,11 @@ uiState (StudyUiState, mutableStateOf)
 
 **FABBar :** `LaunchAll` ("Lancer tous les quiz") si aucun quiz coché, `LaunchSelection(N)` sinon. État ajouté à `FABBarState` dans `FABBar.kt`.
 
+**StudyHero (Session 3.8) :** photo de fond animée Ken Burns (`KenBurnsImage` partagé), distincte par niveau via `categoryHeroPhoto(category)` (mapping `pic_*`), avec `Crossfade` sur `selectedCategory` au changement de chip. Scrim froid `Brush.verticalGradient` (`0x000A14`) + icône `ic_*_big` (`categoryHeroDrawable`) + nom du niveau au premier plan.
+
 **Fichiers clés :**
-- `ui/study/StudyScreen.kt` — `StudyUiState`, `StudyLevels`, `LevelChip`, `StudyProgressBars`, `StudyQuizItem`, `StudyScreen`
+- `ui/study/StudyScreen.kt` — `StudyUiState`, `StudyLevels`, `LevelChip`, `StudyProgressBars`, `StudyQuizItem`, `StudyHero`, `categoryHeroPhoto`, `StudyScreen`
+- `ui/components/KenBurnsImage.kt` — image plein cadre avec zoom lent en boucle, partagée par Home et Study
 - `screens/quizzes/QuizzesFragment.kt` — shell dynamique + `MutableStateFlow<Int>` + `WordCountPresenter` réactif + `setCategory()` public
 - `screens/quizzes/QuizzesActivity.kt` — `YomikataBottomBar` Compose câblée + `navigateTo(BottomNavDestination)` + `navigateToCategory()` publique
 - `res/layout/activity_quizzes.xml` — LinearLayout vertical : CoordinatorLayout (`weight=1`) + `ComposeView` BottomNav en bas

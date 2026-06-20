@@ -1,6 +1,8 @@
 package com.jehutyno.yomikata.ui.study
 
 import androidx.annotation.DrawableRes
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -32,6 +34,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -45,6 +48,7 @@ import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.model.Quiz
 import com.jehutyno.yomikata.ui.components.FABBar
 import com.jehutyno.yomikata.ui.components.FABBarState
+import com.jehutyno.yomikata.ui.components.KenBurnsImage
 import com.jehutyno.yomikata.ui.theme.AccentOrange
 import com.jehutyno.yomikata.ui.theme.BackgroundHero
 import com.jehutyno.yomikata.ui.theme.BackgroundPrimary
@@ -105,6 +109,20 @@ private fun categoryHeroDrawable(category: Int): Int = when (category) {
     else                         -> R.drawable.ic_jlpt1_big
 }
 
+/** Photo de fond du hero, distincte par niveau (effet Ken Burns). */
+@DrawableRes
+private fun categoryHeroPhoto(category: Int): Int = when (category) {
+    Categories.CATEGORY_HIRAGANA -> R.drawable.pic_hanami
+    Categories.CATEGORY_KATAKANA -> R.drawable.pic_miyajima
+    Categories.CATEGORY_KANJI    -> R.drawable.pic_hokusai
+    Categories.CATEGORY_COUNTERS -> R.drawable.pic_toit
+    Categories.CATEGORY_JLPT_5   -> R.drawable.pic_fujisan
+    Categories.CATEGORY_JLPT_4   -> R.drawable.pic_geisha
+    Categories.CATEGORY_JLPT_3   -> R.drawable.pic_dragon
+    Categories.CATEGORY_JLPT_2   -> R.drawable.pic_monk
+    else                         -> R.drawable.pic_fujiyoshida
+}
+
 // MARK: — Composables
 
 @Composable
@@ -113,14 +131,22 @@ private fun StudyHero(selectedCategory: Int, modifier: Modifier = Modifier) {
         modifier = modifier
             .fillMaxWidth()
             .height(160.dp)
-            .background(BackgroundHero),
+            .background(BackgroundHero)
+            .clipToBounds(),
     ) {
+        Crossfade(
+            targetState = selectedCategory,
+            animationSpec = tween(durationMillis = 1000),
+            label = "study-hero-crossfade",
+        ) { category ->
+            KenBurnsImage(resId = categoryHeroPhoto(category))
+        }
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(
                     Brush.verticalGradient(
-                        colors = listOf(Color(0xA6000A14), Color(0xB3000A14)),
+                        colors = listOf(Color(0xA6000A14), Color(0xCC000A14)),
                     )
                 ),
         )
