@@ -12,18 +12,17 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -31,7 +30,6 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
@@ -51,6 +49,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -65,7 +64,6 @@ import com.jehutyno.yomikata.ui.theme.AccentOrange
 import com.jehutyno.yomikata.ui.theme.BackgroundHero
 import com.jehutyno.yomikata.ui.theme.BackgroundPrimary
 import com.jehutyno.yomikata.ui.theme.BorderDefault
-import com.jehutyno.yomikata.ui.theme.BorderSubtle
 import com.jehutyno.yomikata.ui.theme.Correct
 import com.jehutyno.yomikata.ui.theme.RadiusMd
 import com.jehutyno.yomikata.ui.theme.RadiusPill
@@ -308,12 +306,18 @@ private fun StudyQuizItem(
     val localizedName = quiz.getName().split("%")[0]
     val japanesePart = quiz.nameEn.split("%").getOrElse(1) { "" }
 
+    val cardBg = if (quiz.isSelected) SurfaceAccent else SurfacePrimary
+    val cardBorder = if (quiz.isSelected) AccentOrange else BorderDefault
+
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = modifier
             .fillMaxWidth()
+            .clip(RoundedCornerShape(RadiusMd))
+            .background(cardBg)
+            .border(1.dp, cardBorder, RoundedCornerShape(RadiusMd))
             .clickable(onClick = onClick)
-            .padding(horizontal = 12.dp, vertical = 10.dp),
+            .padding(horizontal = 12.dp, vertical = 12.dp),
     ) {
         Checkbox(
             checked = quiz.isSelected,
@@ -403,37 +407,42 @@ fun StudyScreen(
             modifier = Modifier.padding(horizontal = 14.dp),
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(6.dp))
 
-        // Quiz list
-        LazyColumn(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
-                .background(SurfacePrimary, RoundedCornerShape(topStart = RadiusMd, topEnd = RadiusMd))
-                .border(1.dp, BorderDefault, RoundedCornerShape(topStart = RadiusMd, topEnd = RadiusMd)),
-        ) {
-            itemsIndexed(state.quizzes) { index, quiz ->
-                StudyQuizItem(
-                    quiz = quiz,
-                    onChecked = { checked -> onQuizChecked(quiz.id, checked) },
-                    onClick = { onQuizClick(quiz) },
-                )
-                if (index < state.quizzes.lastIndex) {
-                    HorizontalDivider(
-                        color = BorderSubtle,
-                        thickness = 1.dp,
-                        modifier = Modifier.padding(horizontal = 12.dp),
+        // Quiz list — each item is a separated card; a bottom fade softens the cut to the FAB.
+        Box(modifier = Modifier.weight(1f)) {
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                contentPadding = PaddingValues(start = 14.dp, end = 14.dp, top = 4.dp, bottom = 28.dp),
+                modifier = Modifier.fillMaxSize(),
+            ) {
+                items(state.quizzes, key = { it.id }) { quiz ->
+                    StudyQuizItem(
+                        quiz = quiz,
+                        onChecked = { checked -> onQuizChecked(quiz.id, checked) },
+                        onClick = { onQuizClick(quiz) },
                     )
                 }
             }
+            // Bottom fade-out gradient
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .height(28.dp)
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(Color.Transparent, BackgroundPrimary),
+                        )
+                    ),
+            )
         }
 
         // FABBar
         FABBar(
             state = fabState,
             onClick = { showLaunchSheet = true },
-            modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+            modifier = Modifier.padding(start = 14.dp, end = 14.dp, bottom = 8.dp),
         )
     }
 
@@ -453,7 +462,7 @@ fun StudyScreen(
 
 // MARK: — Launch options sheet
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun LaunchOptionsSheet(
     selectedTypes: List<QuizType>,
@@ -473,20 +482,43 @@ private fun LaunchOptionsSheet(
                 .padding(bottom = 24.dp),
         ) {
             SectionHeader(text = stringResource(R.string.quiz_types_header))
-            Spacer(modifier = Modifier.height(12.dp))
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // AUTO stands apart, full width on top: selecting it clears every manual type.
+            val autoOption = QuizTypeOptions.first { it.type == QuizType.TYPE_AUTO }
+            QuizTypeChip(
+                labelRes = autoOption.labelRes,
+                iconChecked = autoOption.iconChecked,
+                iconUnchecked = autoOption.iconUnchecked,
+                isSelected = selectedTypes.contains(autoOption.type),
+                onClick = { onQuizTypeToggle(autoOption.type) },
                 modifier = Modifier.fillMaxWidth(),
-            ) {
-                QuizTypeOptions.forEach { option ->
-                    QuizTypeChip(
-                        labelRes = option.labelRes,
-                        iconChecked = option.iconChecked,
-                        iconUnchecked = option.iconUnchecked,
-                        isSelected = selectedTypes.contains(option.type),
-                        onClick = { onQuizTypeToggle(option.type) },
-                    )
+            )
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            // Manual types in a uniform 2-column grid (equal-width chips).
+            val manualOptions = QuizTypeOptions.filter { it.type != QuizType.TYPE_AUTO }
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                manualOptions.chunked(2).forEach { rowOptions ->
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        rowOptions.forEach { option ->
+                            QuizTypeChip(
+                                labelRes = option.labelRes,
+                                iconChecked = option.iconChecked,
+                                iconUnchecked = option.iconUnchecked,
+                                isSelected = selectedTypes.contains(option.type),
+                                onClick = { onQuizTypeToggle(option.type) },
+                                modifier = Modifier.weight(1f),
+                            )
+                        }
+                        if (rowOptions.size == 1) {
+                            Spacer(modifier = Modifier.weight(1f))
+                        }
+                    }
                 }
             }
 
@@ -523,6 +555,7 @@ private fun QuizTypeChip(
     @DrawableRes iconUnchecked: Int,
     isSelected: Boolean,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val bg = if (isSelected) SurfaceAccent else SurfacePrimary
     val border = if (isSelected) AccentOrange else BorderDefault
@@ -530,24 +563,28 @@ private fun QuizTypeChip(
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
-        modifier = Modifier
+        horizontalArrangement = Arrangement.Center,
+        modifier = modifier
+            .height(38.dp)
             .clip(RoundedCornerShape(RadiusPill))
             .background(bg)
             .border(1.dp, border, RoundedCornerShape(RadiusPill))
             .clickable(onClick = onClick)
-            .padding(horizontal = 12.dp, vertical = 7.dp),
+            .padding(horizontal = 10.dp),
     ) {
         Image(
             painter = painterResource(if (isSelected) iconChecked else iconUnchecked),
             contentDescription = null,
-            modifier = Modifier.size(18.dp),
+            modifier = Modifier.size(16.dp),
         )
+        Spacer(modifier = Modifier.width(6.dp))
         Text(
             text = stringResource(labelRes),
-            fontSize = 13.sp,
+            fontSize = 12.sp,
             fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
             color = textColor,
+            maxLines = 2,
+            textAlign = TextAlign.Center,
         )
     }
 }
