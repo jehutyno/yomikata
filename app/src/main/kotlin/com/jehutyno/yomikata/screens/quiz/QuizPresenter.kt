@@ -606,7 +606,7 @@ class QuizPresenter(
 
     private fun addCurrentWordToAnswers(answer: String, result: Boolean) {
         val word = sessionState.getCurrentWord()
-        val color = if (result) "#77d228" else "#d22828"
+        val color = if (result) "#4ADE80" else "#F87171"   // Correct / Wrong (design tokens)
         if (answers.size > 0 && answers[0].wordId == word.id) {
             answers[0].answer += "<br><font color='$color'>$answer</font>"
         } else {

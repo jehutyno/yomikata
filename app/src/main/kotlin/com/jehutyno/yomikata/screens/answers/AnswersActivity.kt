@@ -2,9 +2,9 @@ package com.jehutyno.yomikata.screens.answers
 
 import android.content.pm.ActivityInfo
 import android.os.Bundle
-import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.view.WindowCompat
 import androidx.preference.PreferenceManager
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.databinding.ActivityAnswersBinding
@@ -13,8 +13,6 @@ import com.jehutyno.yomikata.util.addOrReplaceFragment
 import mu.KLogging
 import org.kodein.di.DIAware
 import org.kodein.di.android.closestDI
-import org.kodein.di.direct
-import org.kodein.di.instance
 import org.kodein.di.DI
 
 
@@ -35,19 +33,12 @@ class AnswersActivity : AppCompatActivity(), DIAware {
         super.onCreate(savedInstanceState)
         val pref = PreferenceManager.getDefaultSharedPreferences(this)
         AppCompatDelegate.setDefaultNightMode(pref.getInt(Prefs.DAY_NIGHT_MODE.pref, AppCompatDelegate.MODE_NIGHT_YES))
+        WindowCompat.setDecorFitsSystemWindows(window, false)
         binding = ActivityAnswersBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
         if(resources.getBoolean(R.bool.portrait_only)){
             requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-        }
-
-        setSupportActionBar(binding.toolbar)
-        title = getString(R.string.answer_title)
-
-        supportActionBar?.apply {
-            setHomeAsUpIndicator(R.drawable.ic_arrow_back_orange_24dp)
-            setDisplayHomeAsUpEnabled(true)
         }
 
         answersFragment = if (savedInstanceState != null) {
@@ -64,17 +55,6 @@ class AnswersActivity : AppCompatActivity(), DIAware {
 
         //Save the fragment's instance
         supportFragmentManager.putFragment(outState, "answersFragment", answersFragment)
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        when (item.itemId) {
-            android.R.id.home -> {
-                // Open the navigation drawer when the home icon is selected from the toolbar.
-                finish()
-                return true
-            }
-        }
-        return super.onOptionsItemSelected(item)
     }
 
 }

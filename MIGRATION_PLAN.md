@@ -472,3 +472,22 @@
 > Espace pour noter les décisions prises et les écarts par rapport au plan.
 
 <!-- Ajouter les notes ici au fil des sessions -->
+
+### Session 3.6 — Écran Answer review migré en Compose
+**Statut** : `[x]`
+
+Dernier écran XML/RecyclerView migré. `AnswersFragment` héberge désormais un `ComposeView`
+unique affichant `ui/answers/AnswerReviewScreen.kt`.
+- **Cartes teintées par résultat** (vert/`BackgroundCorrect`+`BorderCorrect` si correct,
+  rouge/`BackgroundWrong`+`BorderWrong` si faux) — reprend les états « reveal » du Quiz. Kanji
+  et mot cible de la phrase colorés `Correct`/`Wrong` (plus de `getWordColor` → fin du rouge de
+  maîtrise sur les mots justes, conforme `DESIGN.md` §7).
+- **En-tête de synthèse** : `結果 · Results` + barre proportionnelle verte/rouge + « N ✓ / M ✗ ».
+- **Picker de sélection** : l'ancien `PopupMenu` (ancré sur la row) remplacé par un
+  `ModalBottomSheet` Compose piloté par `AnswerReviewUiState.selectionSheet`.
+- `AnswersActivity` : suppression Toolbar XML + `setSupportActionBar`/`onOptionsItemSelected`,
+  edge-to-edge `WindowCompat.setDecorFitsSystemWindows`. `activity_answers.xml` → `FrameLayout`.
+- `QuizPresenter.addCurrentWordToAnswers` : couleurs HTML de la réponse harmonisées
+  `#77d228`/`#d22828` → `#4ADE80`/`#F87171` (tokens Correct/Wrong).
+- Supprimés : `AnswersAdapter.kt`, `res/layout/vh_answer.xml`.
+- Build `assembleDebug` + `test` verts.

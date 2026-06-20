@@ -6,14 +6,20 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.appcompat.widget.PopupMenu
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
-import androidx.recyclerview.widget.LinearLayoutManager
-import com.jehutyno.yomikata.R
-import com.jehutyno.yomikata.databinding.FragmentContentBinding
 import com.jehutyno.yomikata.audio.VoicesManager
 import com.jehutyno.yomikata.model.Answer
+import com.jehutyno.yomikata.ui.answers.AnswerReviewScreen
+import com.jehutyno.yomikata.ui.answers.AnswerReviewUiState
+import com.jehutyno.yomikata.ui.answers.SelectionEntry
+import com.jehutyno.yomikata.ui.answers.SelectionSheetState
+import com.jehutyno.yomikata.ui.theme.YomikataTheme
 import com.jehutyno.yomikata.util.*
 import com.jehutyno.yomikata.util.backup.LocalPersistence
 import kotlinx.coroutines.launch
@@ -24,7 +30,7 @@ import java.util.*
 /**
  * Created by valentin on 25/10/2016.
  */
-class AnswersFragment(private val di: DI) : Fragment(), AnswersContract.View, AnswersAdapter.Callback, TextToSpeech.OnInitListener {
+class AnswersFragment(private val di: DI) : Fragment(), AnswersContract.View, TextToSpeech.OnInitListener {
 
     // kodein
     private val subDI by DI.lazy {
@@ -38,16 +44,11 @@ class AnswersFragment(private val di: DI) : Fragment(), AnswersContract.View, An
     private val voicesManager: VoicesManager by subDI.instance()
     private val presenter: AnswersContract.Presenter by subDI.instance()
 
-    private lateinit var layoutManager: LinearLayoutManager
-    private lateinit var adapter: AnswersAdapter
-
     private var tts: TextToSpeech? = null
     private var ttsSupported: Int = TextToSpeech.LANG_NOT_SUPPORTED
 
-    // View Binding
-    private var _binding: FragmentContentBinding? = null
-    private val binding get() = _binding!!
-
+    // Compose state
+    private var uiState by mutableStateOf(AnswerReviewUiState())
 
     override fun onInit(status: Int) {
         ttsSupported = onTTSinit(activity, status, tts)
@@ -65,25 +66,43 @@ class AnswersFragment(private val di: DI) : Fragment(), AnswersContract.View, An
         if (answers.size != answersList.size) {
             Log.e("Failed cast", "Some items in the read list of answers were not of the type Answer")
         }
-        adapter = AnswersAdapter(requireActivity(), this)
-        layoutManager = LinearLayoutManager(activity)
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        _binding = FragmentContentBinding.inflate(inflater, container, false)
-        return binding.root
+        return ComposeView(requireContext()).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                YomikataTheme {
+                    AnswerReviewScreen(
+                        state = uiState,
+                        title = getString(com.jehutyno.yomikata.R.string.answer_title),
+                        onBack = { requireActivity().finish() },
+                        onSelectionClick = { index -> openSelectionSheet(index) },
+                        onReportClick = { index ->
+                            val item = uiState.items.getOrNull(index) ?: return@AnswerReviewScreen
+                            reportError(requireActivity(), item.second, item.third)
+                        },
+                        onWordTtsClick = { index ->
+                            val item = uiState.items.getOrNull(index) ?: return@AnswerReviewScreen
+                            voicesManager.speakWord(item.second, ttsSupported, tts)
+                        },
+                        onSentenceTtsClick = { index ->
+                            val item = uiState.items.getOrNull(index) ?: return@AnswerReviewScreen
+                            voicesManager.speakSentence(item.third, ttsSupported, tts)
+                        },
+                        onSelectionToggle = { quizId, checked -> toggleSelection(quizId, checked) },
+                        onCreateSelection = { createSelectionForCurrentWord() },
+                        onDismissSelectionSheet = { uiState = uiState.copy(selectionSheet = null) },
+                    )
+                }
+            }
+        }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        binding.recyclerviewContent.let {
-            it.adapter = adapter
-            it.layoutManager = layoutManager
-        }
-
         lifecycleScope.launch {
-            adapter.replaceData(presenter.getAnswersWordsSentences(answers))
+            uiState = uiState.copy(items = presenter.getAnswersWordsSentences(answers))
         }
     }
 
@@ -96,56 +115,49 @@ class AnswersFragment(private val di: DI) : Fragment(), AnswersContract.View, An
 
     }
 
-    override fun onSelectionClick(position: Int, view: View) {
+    /** Loads the selections + their checked state for the word at [index] and opens the sheet. */
+    private fun openSelectionSheet(index: Int) {
+        val word = uiState.items.getOrNull(index)?.second ?: return
         lifecycleScope.launch {
-            val selections = presenter.getSelections()
-            val popup = PopupMenu(requireActivity(), view)
-            popup.menuInflater.inflate(R.menu.popup_selections, popup.menu)
-            for ((i, selection) in selections.withIndex()) {
-                popup.menu.add(1, i, i, selection.getName()).isChecked = presenter.isWordInQuiz(adapter.items[position].second.id, selection.id)
-                popup.menu.setGroupCheckable(1, true, false)
-            }
-            popup.setOnMenuItemClickListener {
-                when (it.itemId) {
-                    R.id.add_selection -> addSelection(adapter.items[position].second.id)
-                    else -> {
-                        lifecycleScope.launch {
-                            if (!it.isChecked)
-                                presenter.addWordToSelection(adapter.items[position].second.id, selections[it.itemId].id)
-                            else {
-                                presenter.deleteWordFromSelection(adapter.items[position].second.id, selections[it.itemId].id)
-                            }
-                        }
-                        it.isChecked = !it.isChecked
-                    }
-                }
-                true
-            }
-            popup.show()
+            uiState = uiState.copy(
+                selectionSheet = SelectionSheetState(index, buildSelectionEntries(word.id)),
+            )
         }
     }
 
-    private fun addSelection(wordId: Long) {
+    private suspend fun buildSelectionEntries(wordId: Long): List<SelectionEntry> {
+        return presenter.getSelections().map { selection ->
+            SelectionEntry(selection, presenter.isWordInQuiz(wordId, selection.id))
+        }
+    }
+
+    private fun toggleSelection(quizId: Long, checked: Boolean) {
+        val sheet = uiState.selectionSheet ?: return
+        val word = uiState.items.getOrNull(sheet.wordIndex)?.second ?: return
+        lifecycleScope.launch {
+            if (checked)
+                presenter.addWordToSelection(word.id, quizId)
+            else
+                presenter.deleteWordFromSelection(word.id, quizId)
+            // Refresh sheet so the checkmarks update
+            uiState = uiState.copy(
+                selectionSheet = sheet.copy(entries = buildSelectionEntries(word.id)),
+            )
+        }
+    }
+
+    private fun createSelectionForCurrentWord() {
+        val sheet = uiState.selectionSheet ?: return
+        val word = uiState.items.getOrNull(sheet.wordIndex)?.second ?: return
         requireActivity().createNewSelectionDialog("", { selectionName ->
             lifecycleScope.launch {
                 val selectionId = presenter.createSelection(selectionName)
-                presenter.addWordToSelection(wordId, selectionId)
+                presenter.addWordToSelection(word.id, selectionId)
+                uiState = uiState.copy(
+                    selectionSheet = sheet.copy(entries = buildSelectionEntries(word.id)),
+                )
             }
         }, null)
-    }
-
-    override fun onReportClick(position: Int) {
-        reportError(requireActivity(), adapter.items[position].second, adapter.items[position].third)
-    }
-
-    override fun onTTSClick(position: Int) {
-        val word = adapter.items[position].second
-        voicesManager.speakWord(word, ttsSupported, tts)
-    }
-
-    override fun onSentenceTTSClick(position: Int) {
-        val sentence = adapter.items[position].third
-        voicesManager.speakSentence(sentence, ttsSupported, tts)
     }
 
     override fun onDestroy() {
@@ -153,11 +165,6 @@ class AnswersFragment(private val di: DI) : Fragment(), AnswersContract.View, An
         tts?.shutdown()
         voicesManager.releasePlayer()
         super.onDestroy()
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
     }
 
 }

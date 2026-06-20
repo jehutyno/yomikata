@@ -61,7 +61,7 @@ Les presenters reçoivent un `CoroutineScope` (le `lifecycleScope` du fragment h
 | `content` | `ContentActivity` | Liste des mots d'une catégorie. Layout : `FrameLayout` plein écran + `FloatingActionsMenu` (lancer quiz). Pas de Toolbar — `WordListScreen` Compose gère sa propre `TopAppBar`. Supporte mode ViewPager2 (swipe entre sélections) et mode level (filtre par niveau). |
 | `content/word` | `WordDetailFragment` | Détail d'un mot plein écran (Compose — Sessions 1.4) |
 | `quiz` | `QuizActivity` / `QuizFragment` | Session de quiz complète |
-| `answers` | `AnswersActivity` | Récapitulatif des réponses après une session |
+| `answers` | `AnswersActivity` / `AnswersFragment` | Récapitulatif des réponses après une session (Compose — `AnswerReviewScreen`). Cartes teintées vert/rouge par résultat, en-tête de synthèse, picker de sélection en `ModalBottomSheet`. Layout `FrameLayout`, edge-to-edge. |
 | `search` | `SearchResultActivity` | Recherche de mots dans toute la base |
 | `prefs` | `PrefsActivity` + `PrefsFragment` | Paramètres (thème, vitesse TTS, voix, langue de traduction). `PrefsFragment` standalone réutilisé dans `SettingsFragment`. |
 
@@ -744,6 +744,7 @@ com.jehutyno.yomikata/
 │   ├── home/                   ← HomeScreen (HomeUiState, HomeHero, StatsGrid, ContinueCard, NewsCard, SupportCard), StatCard
 │   ├── settings/               ← SettingsScreen (Night Mode toggle, liens sociaux, version)
 │   ├── study/                  ← StudyScreen (StudyUiState, StudyLevels, LevelChip, StudyProgressBars, StudyQuizItem)
+│   ├── answers/                ← AnswerReviewScreen (AnswerReviewUiState, AnswerReviewCard, ResultSummary, SelectionSheet)
 │   └── word/                   ← WordListRow, KanjiComponentCard, WordActionBar
 └── view/                        ← vues custom Android
     ├── furigana/               ← FuriganaView, QuadraticOptimizer
