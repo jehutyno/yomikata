@@ -58,7 +58,7 @@ Les presenters reçoivent un `CoroutineScope` (le `lifecycleScope` du fragment h
 | `selections` | `SelectionsFragment` | Sélections personnelles (placeholder) — hero `ic_selections_big` + "Bientôt disponible" |
 | `settings` | `SettingsFragment` | Paramètres via BottomNav : toggle Night Mode, liens sociaux, version + `PrefsFragment` embarqué |
 | `home` | `HomeFragment` | Dashboard Compose — hero `yomi_logo_home.png`, grille StatCards 2×2 (stats aujourd'hui), section Continue, news Firebase, FABBar |
-| `content` | `ContentActivity` | Liste des mots d'une catégorie, graphique de progression |
+| `content` | `ContentActivity` | Liste des mots d'une catégorie. Layout : `FrameLayout` plein écran + `FloatingActionsMenu` (lancer quiz). Pas de Toolbar — `WordListScreen` Compose gère sa propre `TopAppBar`. Supporte mode ViewPager2 (swipe entre sélections) et mode level (filtre par niveau). |
 | `content/word` | `WordDetailFragment` | Détail d'un mot plein écran (Compose — Sessions 1.4) |
 | `quiz` | `QuizActivity` / `QuizFragment` | Session de quiz complète |
 | `answers` | `AnswersActivity` | Récapitulatif des réponses après une session |
