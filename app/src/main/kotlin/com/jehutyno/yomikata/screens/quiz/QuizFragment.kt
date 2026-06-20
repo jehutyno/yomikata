@@ -7,13 +7,9 @@ import android.os.Bundle
 import android.os.Parcelable
 import android.speech.tts.TextToSpeech
 import android.view.LayoutInflater
-import android.view.Menu
-import android.view.MenuInflater
-import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
-import android.widget.ImageView
 import android.widget.Toast
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -112,8 +108,6 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, TextToSp
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        @Suppress("DEPRECATION")
-        setHasOptionsMenu(true)
     }
 
     override fun onResume() {
@@ -132,12 +126,18 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, TextToSp
         container: ViewGroup?,
         savedInstanceState: Bundle?,
     ): View {
+        val quizTitle = requireActivity().intent.getStringExtra(Extras.EXTRA_QUIZ_TITLE) ?: ""
+        uiState = uiState.copy(title = quizTitle)
+
         val composeView = ComposeView(requireContext()).apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             setContent {
                 YomikataTheme {
                     QuizScreen(
                         uiState = uiState,
+                        onClose = { showQuitDialog() },
+                        onTtsSettings = { showTtsSettingsToast() },
+                        onDisplayAnswers = { presenter.onDisplayAnswersClick() },
                         onOptionClick = { index ->
                             if (!holdOn) {
                                 holdOn = true
@@ -248,39 +248,11 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, TextToSp
         requireActivity().hideSoftKeyboard()
     }
 
-    @Suppress("DEPRECATION")
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        inflater.inflate(R.menu.menu_quiz, menu)
-        super.onCreateOptionsMenu(menu, inflater)
-
-        menu.findItem(R.id.errors)?.let { item ->
-            val icon = ImageView(context).apply {
-                setImageResource(R.drawable.ic_tooltip_edit)
-                val pad = (12 * resources.displayMetrics.density).toInt()
-                setPadding(pad, pad, pad, pad)
-                setOnClickListener { presenter.onDisplayAnswersClick() }
-            }
-            item.actionView = icon
-        }
-
-        menu.findItem(R.id.tts_settings)?.let { item ->
-            val icon = ImageView(context).apply {
-                setImageResource(R.drawable.ic_tts_settings)
-                val pad = (12 * resources.displayMetrics.density).toInt()
-                setPadding(pad, pad, pad, pad)
-                setOnClickListener { showTtsSettingsToast() }
-            }
-            item.actionView = icon
-        }
-    }
-
-    @Suppress("DEPRECATION")
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        when (item.itemId) {
-            R.id.errors -> presenter.onDisplayAnswersClick()
-            R.id.tts_settings -> showTtsSettingsToast()
-        }
-        return super.onOptionsItemSelected(item)
+    private fun showQuitDialog() {
+        requireContext().alertDialog(getString(R.string.quit_quiz)) {
+            okButton { requireActivity().finish() }
+            cancelButton()
+        }.show()
     }
 
     private fun showTtsSettingsToast() {

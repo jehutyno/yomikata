@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
@@ -75,6 +76,7 @@ import com.jehutyno.yomikata.ui.theme.Correct
 import com.jehutyno.yomikata.ui.theme.SurfacePrimary
 import com.jehutyno.yomikata.ui.theme.TextDim
 import com.jehutyno.yomikata.ui.theme.TextGhost
+import com.jehutyno.yomikata.ui.theme.TextMuted
 import com.jehutyno.yomikata.ui.theme.TextPrimary
 import com.jehutyno.yomikata.ui.theme.TextSecondary
 import com.jehutyno.yomikata.ui.theme.Wrong
@@ -91,6 +93,7 @@ import com.jehutyno.yomikata.view.furigana.FuriganaView
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
 data class QuizUiState(
+    val title: String = "",
     val words: List<Pair<Word, QuizType>> = emptyList(),
     val currentIndex: Int = 0,
     val sentence: Sentence = Sentence(),
@@ -132,6 +135,9 @@ val QuizUiState.counterText: String
 @Composable
 fun QuizScreen(
     uiState: QuizUiState,
+    onClose: () -> Unit,
+    onTtsSettings: () -> Unit,
+    onDisplayAnswers: () -> Unit,
     onOptionClick: (Int) -> Unit,
     onNextWord: () -> Unit,
     onFuriToggle: (Boolean) -> Unit,
@@ -176,6 +182,47 @@ fun QuizScreen(
             .fillMaxSize()
             .background(BackgroundPrimary),
     ) {
+        // TopAppBar
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .statusBarsPadding()
+                .padding(horizontal = 4.dp, vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            IconButton(onClick = onClose) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_clear_orange_24dp),
+                    contentDescription = null,
+                    tint = AccentOrange,
+                    modifier = Modifier.size(22.dp),
+                )
+            }
+            Text(
+                text = uiState.title,
+                color = TextPrimary,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.W600,
+                modifier = Modifier.weight(1f).padding(horizontal = 4.dp),
+            )
+            IconButton(onClick = onTtsSettings) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_tts_settings),
+                    contentDescription = null,
+                    tint = TextMuted,
+                    modifier = Modifier.size(22.dp),
+                )
+            }
+            IconButton(onClick = onDisplayAnswers) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_tooltip_edit),
+                    contentDescription = null,
+                    tint = TextMuted,
+                    modifier = Modifier.size(22.dp),
+                )
+            }
+        }
+
         // Counter + progress bar
         Row(
             modifier = Modifier
@@ -788,6 +835,9 @@ private fun PreviewQuizBeforeAnswer() {
                 sentence = previewSentence,
                 wordHighlightColor = AccentOrange.toArgb(),
             ),
+            onClose = {},
+            onTtsSettings = {},
+            onDisplayAnswers = {},
             onOptionClick = {},
             onNextWord = {},
             onFuriToggle = {},
@@ -832,6 +882,9 @@ private fun PreviewQuizCorrect() {
                 sentence = previewSentence,
                 wordHighlightColor = Correct.toArgb(),
             ),
+            onClose = {},
+            onTtsSettings = {},
+            onDisplayAnswers = {},
             onOptionClick = {},
             onNextWord = {},
             onFuriToggle = {},
@@ -876,6 +929,9 @@ private fun PreviewQuizWrong() {
                 sentence = previewSentence,
                 wordHighlightColor = AccentOrange.toArgb(),
             ),
+            onClose = {},
+            onTtsSettings = {},
+            onDisplayAnswers = {},
             onOptionClick = {},
             onNextWord = {},
             onFuriToggle = {},

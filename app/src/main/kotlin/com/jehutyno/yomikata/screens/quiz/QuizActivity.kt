@@ -5,11 +5,11 @@ import android.content.pm.ActivityInfo
 import android.os.Build
 import android.os.Bundle
 import android.view.KeyEvent
-import android.view.MenuItem
 import android.window.OnBackInvokedDispatcher
 import androidx.activity.addCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.view.WindowCompat
 import androidx.lifecycle.lifecycleScope
 import android.content.SharedPreferences
 import androidx.preference.PreferenceManager
@@ -36,7 +36,6 @@ import org.kodein.di.instance
 import splitties.alertdialog.appcompat.alertDialog
 import splitties.alertdialog.appcompat.cancelButton
 import splitties.alertdialog.appcompat.okButton
-import splitties.alertdialog.appcompat.titleResource
 import java.util.Random
 
 
@@ -74,17 +73,11 @@ class QuizActivity : AppCompatActivity(), DIAware {
         super.onCreate(savedInstanceState)
         val pref = PreferenceManager.getDefaultSharedPreferences(this)
         AppCompatDelegate.setDefaultNightMode(pref.getInt(Prefs.DAY_NIGHT_MODE.pref, AppCompatDelegate.MODE_NIGHT_YES))
+        WindowCompat.setDecorFitsSystemWindows(window, false)
         binding = ActivityQuizBinding.inflate(layoutInflater)
         setContentView(binding.root)
         if(resources.getBoolean(R.bool.portrait_only)){
             requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-        }
-
-        setSupportActionBar(binding.toolbar)
-        supportActionBar?.apply {
-            setHomeAsUpIndicator(R.drawable.ic_clear_orange_24dp)
-            setDisplayHomeAsUpEnabled(true)
-            title = intent.getStringExtra(Extras.EXTRA_QUIZ_TITLE)
         }
 
         if (savedInstanceState != null) {
@@ -151,20 +144,6 @@ class QuizActivity : AppCompatActivity(), DIAware {
         outState.putSerializable("quiz_strategy", quizStrategy)
         outState.putSerializable("level", level)
         outState.putParcelableArrayList("quiz_types", quizTypes)
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        when (item.itemId) {
-            android.R.id.home -> {
-                alertDialog {
-                    titleResource = R.string.quit_quiz
-                    okButton { finish() }
-                    cancelButton()
-                }.show()
-                return true
-            }
-        }
-        return super.onOptionsItemSelected(item)
     }
 
 }

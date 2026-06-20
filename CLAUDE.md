@@ -223,6 +223,7 @@ Le hash est dans `app/schemas/.../VERSION.json` champ `identityHash`. Sans ça, 
 - ✅ **Refactoring packages** : réorganisation complète des packages (dao→repository/database/dao, managers→audio, furigana→view/furigana, presenters/source→presenters/impl, util sous-packages language/quiz/backup/japanese, screens/prefs)
 - ✅ **Session 3.4** : Suppression topbar KenBurns + intégration héros par page — `HomeHero` → `yomi_logo_home.png` ; `StudyHero` dynamique par catégorie (`ic_*_big`) ; `SelectionsFragment` → héro `ic_selections_big` ; `QuizzesActivity` layout simplifié (pas de Toolbar/AppBarLayout). Fix bug `openContent` (passait `quiz.id` au lieu de l'index dans la liste).
 - ✅ **Session 3.4b** : Suppression double topbar dans `ContentActivity` — `activity_content.xml` réduit à `FrameLayout` + `FloatingActionsMenu` ; `ContentActivity` : plus de `setSupportActionBar` ; `ContentFragment` : suppression workaround `hide()`/`show()` de l'ActionBar. La `WordListScreen` Compose gère sa propre `TopAppBar`.
+- ✅ **Session 3.5** : Topbar Quiz migrée en Compose — `activity_quiz.xml` réduit à `FrameLayout` ; `QuizActivity` : `WindowCompat.setDecorFitsSystemWindows(false)` pour edge-to-edge ; `QuizScreen` : `TopAppBar` Compose avec `statusBarsPadding()`, bouton ✕ (`AccentOrange`), titre (`TextPrimary`), icônes TTS/Answers (`TextMuted`) ; `QuizFragment` : suppression `setHasOptionsMenu`/`onCreateOptionsMenu`/`onOptionsItemSelected`, ajout `showQuitDialog()`.
 - **Phase 5** : Tests intégrité BDD (`DatabaseIntegrityTest`)
 
 ### Couverture traductions (état actuel)
