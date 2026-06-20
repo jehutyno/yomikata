@@ -5,7 +5,6 @@ import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.os.Build
 import android.os.Bundle
-import android.view.MenuItem
 import android.view.View.GONE
 import android.view.View.VISIBLE
 import android.window.OnBackInvokedDispatcher
@@ -98,13 +97,6 @@ class ContentActivity : AppCompatActivity(), DIAware {
 
         val quizPosition = intent.getIntExtra(EXTRA_QUIZ_POSITION, -1)
         selectedTypes = intent.getParcelableArrayListExtraHelper(EXTRA_QUIZ_TYPES, QuizType::class.java) ?: arrayListOf()
-
-        setSupportActionBar(binding.toolbar)
-
-        supportActionBar?.apply {
-            setHomeAsUpIndicator(R.drawable.ic_arrow_back_orange_24dp)
-            setDisplayHomeAsUpEnabled(true)
-        }
 
         lifecycleScope.launch {
             getQuizzes()
@@ -249,17 +241,6 @@ class ContentActivity : AppCompatActivity(), DIAware {
         contentLevelFragment?.let {
             supportFragmentManager.putFragment(outState, "contentLevelFragment", it)
         }
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        when (item.itemId) {
-            android.R.id.home -> {
-                // Open the navigation drawer when the home icon is selected from the toolbar.
-                finish()
-                return true
-            }
-        }
-        return super.onOptionsItemSelected(item)
     }
 
 }

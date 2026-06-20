@@ -5,7 +5,6 @@ import android.speech.tts.TextToSpeech
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -101,7 +100,6 @@ class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, Te
 
     override fun onStart() {
         super.onStart()
-        (activity as? AppCompatActivity)?.supportActionBar?.hide()
         mpresenter.start()
 
         mpresenter.words.observe(viewLifecycleOwner) { words ->
@@ -154,11 +152,6 @@ class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, Te
             .add(android.R.id.content, fragment, "word_detail")
             .addToBackStack("word_detail")
             .commit()
-    }
-
-    override fun onStop() {
-        super.onStop()
-        (activity as? AppCompatActivity)?.supportActionBar?.show()
     }
 
     // ContentContract.View — data arrives via LiveData observation above
