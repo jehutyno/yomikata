@@ -5,7 +5,6 @@ import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.os.Build
 import android.os.Bundle
-import android.view.KeyEvent
 import android.window.OnBackInvokedDispatcher
 import androidx.activity.addCallback
 import androidx.activity.result.ActivityResultLauncher
@@ -27,7 +26,10 @@ import com.jehutyno.yomikata.screens.home.HomeFragment
 import com.jehutyno.yomikata.screens.selections.SelectionsFragment
 import com.jehutyno.yomikata.screens.settings.SettingsFragment
 import com.jehutyno.yomikata.ui.components.BottomNavDestination
+import com.jehutyno.yomikata.ui.components.DialogButton
+import com.jehutyno.yomikata.ui.components.DialogButtonStyle
 import com.jehutyno.yomikata.ui.components.YomikataBottomBar
+import com.jehutyno.yomikata.ui.components.yomikataAlert
 import com.jehutyno.yomikata.ui.theme.YomikataTheme
 import com.jehutyno.yomikata.util.*
 import com.jehutyno.yomikata.util.backup.RestartDialogMessage
@@ -119,15 +121,14 @@ class QuizzesActivity : AppCompatActivity(), DIAware {
                 navigateTo(BottomNavDestination.HOME)
                 return
             }
-            alertDialog {
-                titleResource = R.string.app_quit
-                okButton { finishAffinity() }
-                cancelButton()
-                setOnKeyListener { _, keyCode, _ ->
-                    if (keyCode == KeyEvent.KEYCODE_BACK) finishAffinity()
-                    true
-                }
-            }.show()
+            yomikataAlert(
+                message = getString(R.string.app_quit),
+                onBackKey = { finishAffinity() },
+                buttons = listOf(
+                    DialogButton(getString(android.R.string.cancel), DialogButtonStyle.Muted) {},
+                    DialogButton(getString(android.R.string.ok), DialogButtonStyle.Primary) { finishAffinity() },
+                ),
+            ).show()
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {

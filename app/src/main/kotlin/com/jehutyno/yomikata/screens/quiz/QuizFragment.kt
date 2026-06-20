@@ -36,6 +36,9 @@ import com.jehutyno.yomikata.ui.quiz.QuizUiState
 import com.jehutyno.yomikata.ui.quiz.currentWord
 import com.jehutyno.yomikata.ui.quiz.currentQuizType
 import com.jehutyno.yomikata.ui.quiz.SegmentState
+import com.jehutyno.yomikata.ui.components.DialogButton
+import com.jehutyno.yomikata.ui.components.DialogButtonStyle
+import com.jehutyno.yomikata.ui.components.yomikataAlert
 import com.jehutyno.yomikata.ui.theme.AccentOrange
 import com.jehutyno.yomikata.ui.theme.Correct
 import com.jehutyno.yomikata.ui.theme.YomikataTheme
@@ -249,10 +252,13 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, TextToSp
     }
 
     private fun showQuitDialog() {
-        requireContext().alertDialog(getString(R.string.quit_quiz)) {
-            okButton { requireActivity().finish() }
-            cancelButton()
-        }.show()
+        requireContext().yomikataAlert(
+            message = getString(R.string.quit_quiz),
+            buttons = listOf(
+                DialogButton(getString(android.R.string.cancel), DialogButtonStyle.Muted) {},
+                DialogButton(getString(android.R.string.ok), DialogButtonStyle.Primary) { requireActivity().finish() },
+            ),
+        ).show()
     }
 
     private fun showTtsSettingsToast() {
@@ -278,11 +284,13 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, TextToSp
     }
 
     override fun noWords() {
-        requireContext().alertDialog {
-            messageResource = R.string.quiz_empty
-            okButton { requireActivity().finish() }
-            setOnCancelListener { requireActivity().finish() }
-        }.show()
+        requireContext().yomikataAlert(
+            message = getString(R.string.quiz_empty),
+            onCancel = { requireActivity().finish() },
+            buttons = listOf(
+                DialogButton(getString(android.R.string.ok), DialogButtonStyle.Primary) { requireActivity().finish() },
+            ),
+        ).show()
     }
 
 

@@ -1,5 +1,6 @@
 package com.jehutyno.yomikata.screens.prefs
 
+import android.app.Dialog
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -7,7 +8,6 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.os.LocaleListCompat
 import androidx.preference.ListPreference
@@ -30,10 +30,10 @@ import com.jehutyno.yomikata.util.backup.getRestoreLauncher
 import com.jehutyno.yomikata.util.backup.restoreProgress
 import com.jehutyno.yomikata.util.TutoId
 import com.jehutyno.yomikata.util.resetAllTutos
-import splitties.alertdialog.appcompat.alertDialog
-import splitties.alertdialog.appcompat.cancelButton
-import splitties.alertdialog.appcompat.messageResource
-import splitties.alertdialog.appcompat.okButton
+import com.jehutyno.yomikata.ui.components.DialogButton
+import com.jehutyno.yomikata.ui.components.DialogButtonStyle
+import com.jehutyno.yomikata.ui.components.DialogIcon
+import com.jehutyno.yomikata.ui.components.yomikataAlert
 
 class PrefsFragment : PreferenceFragmentCompat() {
 
@@ -71,35 +71,41 @@ class PrefsFragment : PreferenceFragmentCompat() {
         }
     }
 
-    private fun getResetAlert(): AlertDialog {
-        return requireContext().alertDialog {
-            messageResource = R.string.prefs_reinit_sure
-            okButton {
-                YomikataDatabase.resetDatabase(requireContext())
-                YomikataDatabase.forceLoadDatabase(requireContext())
-                requireActivity().getRestartDialog(RestartDialogMessage.RESET) {
-                    YomikataDatabase.restoreLocalBackup(requireContext())
-                }.show()
-            }
-            cancelButton()
-        }
+    private fun getResetAlert(): Dialog {
+        return requireContext().yomikataAlert(
+            message = getString(R.string.prefs_reinit_sure),
+            icon = DialogIcon.Warning,
+            buttons = listOf(
+                DialogButton(getString(android.R.string.cancel), DialogButtonStyle.Muted) {},
+                DialogButton(getString(android.R.string.ok), DialogButtonStyle.Destructive) {
+                    YomikataDatabase.resetDatabase(requireContext())
+                    YomikataDatabase.forceLoadDatabase(requireContext())
+                    requireActivity().getRestartDialog(RestartDialogMessage.RESET) {
+                        YomikataDatabase.restoreLocalBackup(requireContext())
+                    }.show()
+                },
+            ),
+        )
     }
 
-    private fun getDeleteVoicesAlert(): AlertDialog {
-        return requireContext().alertDialog {
-            messageResource = R.string.prefs_delete_voices_sure
-            okButton {
-                FileUtils.deleteFolder(activity, "Voices")
-                val pref = PreferenceManager.getDefaultSharedPreferences(context)
-                for (i in 0 until 7) {
-                    pref.edit().putBoolean(
-                        "${Prefs.VOICE_DOWNLOADED_LEVEL_V.pref}${getLevelDownloadVersion(i)}_$i", false
-                    ).apply()
-                }
-                Toast.makeText(context, R.string.voices_reinit_done, Toast.LENGTH_LONG).show()
-            }
-            cancelButton()
-        }
+    private fun getDeleteVoicesAlert(): Dialog {
+        return requireContext().yomikataAlert(
+            message = getString(R.string.prefs_delete_voices_sure),
+            icon = DialogIcon.Warning,
+            buttons = listOf(
+                DialogButton(getString(android.R.string.cancel), DialogButtonStyle.Muted) {},
+                DialogButton(getString(android.R.string.ok), DialogButtonStyle.Destructive) {
+                    FileUtils.deleteFolder(activity, "Voices")
+                    val pref = PreferenceManager.getDefaultSharedPreferences(requireContext())
+                    for (i in 0 until 7) {
+                        pref.edit().putBoolean(
+                            "${Prefs.VOICE_DOWNLOADED_LEVEL_V.pref}${getLevelDownloadVersion(i)}_$i", false
+                        ).apply()
+                    }
+                    Toast.makeText(requireContext(), R.string.voices_reinit_done, Toast.LENGTH_LONG).show()
+                },
+            ),
+        )
     }
 
     override fun onPreferenceTreeClick(preference: Preference): Boolean {

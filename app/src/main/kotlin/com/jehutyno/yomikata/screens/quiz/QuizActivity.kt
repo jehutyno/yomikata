@@ -4,7 +4,6 @@ import android.content.Context
 import android.content.pm.ActivityInfo
 import android.os.Build
 import android.os.Bundle
-import android.view.KeyEvent
 import android.window.OnBackInvokedDispatcher
 import androidx.activity.addCallback
 import androidx.appcompat.app.AppCompatActivity
@@ -33,9 +32,9 @@ import org.kodein.di.android.closestDI
 import org.kodein.di.bind
 import org.kodein.di.factory
 import org.kodein.di.instance
-import splitties.alertdialog.appcompat.alertDialog
-import splitties.alertdialog.appcompat.cancelButton
-import splitties.alertdialog.appcompat.okButton
+import com.jehutyno.yomikata.ui.components.DialogButton
+import com.jehutyno.yomikata.ui.components.DialogButtonStyle
+import com.jehutyno.yomikata.ui.components.yomikataAlert
 import java.util.Random
 
 
@@ -109,15 +108,14 @@ class QuizActivity : AppCompatActivity(), DIAware {
         addOrReplaceFragment(R.id.container_content, quizFragment)
 
         fun askToQuitSession() {
-            alertDialog(getString(R.string.quit_quiz)) {
-                okButton { finish() }
-                cancelButton()
-                setOnKeyListener { _, keyCode, _ ->
-                    if (keyCode == KeyEvent.KEYCODE_BACK)
-                        finish()
-                    true
-                }
-            }.show()
+            yomikataAlert(
+                message = getString(R.string.quit_quiz),
+                onBackKey = { finish() },
+                buttons = listOf(
+                    DialogButton(getString(android.R.string.cancel), DialogButtonStyle.Muted) {},
+                    DialogButton(getString(android.R.string.ok), DialogButtonStyle.Primary) { finish() },
+                ),
+            ).show()
         }
 
         // set back button: ask if user wants to quit out of session
