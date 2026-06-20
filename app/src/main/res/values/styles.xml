@@ -7,6 +7,35 @@
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
         <item name="windowActionModeOverlay">true</item>
+        <!-- Restyle global de toutes les AlertDialog (DSL Splitties appcompat) -->
+        <item name="alertDialogTheme">@style/YomikataAlertDialog</item>
+        <item name="android:alertDialogTheme">@style/YomikataAlertDialog</item>
+    </style>
+
+    <!-- AlertDialog harmonisée au Design System v2 (Session dialogs) -->
+    <style name="YomikataAlertDialog" parent="ThemeOverlay.AppCompat.Dialog.Alert">
+        <!-- Surface bleu nuit + coins radius_xl + bordure standard -->
+        <item name="android:windowBackground">@drawable/bg_dialog</item>
+        <!-- Titre (DialogTitle utilise textColorPrimary) -->
+        <item name="android:textColorPrimary">@color/color_text_primary</item>
+        <!-- Message + textes secondaires -->
+        <item name="android:textColorSecondary">@color/color_text_secondary</item>
+        <!-- Items des dialogs à liste (setItems) -->
+        <item name="android:textColorAlertDialogListItem">@color/color_text_primary</item>
+        <!-- Couleur d'accent (curseur EditText, surbrillances) -->
+        <item name="colorAccent">@color/color_accent</item>
+        <!-- Styles de boutons : action principale orange, autres en sourdine -->
+        <item name="buttonBarPositiveButtonStyle">@style/YomikataAlertDialog.Button.Positive</item>
+        <item name="buttonBarNegativeButtonStyle">@style/YomikataAlertDialog.Button.Muted</item>
+        <item name="buttonBarNeutralButtonStyle">@style/YomikataAlertDialog.Button.Muted</item>
+    </style>
+
+    <style name="YomikataAlertDialog.Button.Positive" parent="Widget.AppCompat.Button.ButtonBar.AlertDialog">
+        <item name="android:textColor">@color/color_accent</item>
+    </style>
+
+    <style name="YomikataAlertDialog.Button.Muted" parent="Widget.AppCompat.Button.ButtonBar.AlertDialog">
+        <item name="android:textColor">@color/color_text_muted</item>
     </style>
 
     <!-- Thème du splash screen système (Android 12+) -->
