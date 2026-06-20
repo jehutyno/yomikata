@@ -25,9 +25,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -68,6 +73,7 @@ import com.jehutyno.yomikata.ui.theme.BackgroundWrong
 import com.jehutyno.yomikata.ui.theme.BorderCorrect
 import com.jehutyno.yomikata.ui.theme.BorderDefault
 import com.jehutyno.yomikata.ui.theme.BorderHeroCorrect
+import com.jehutyno.yomikata.ui.theme.RadiusMd
 import com.jehutyno.yomikata.ui.theme.RadiusXl
 import com.jehutyno.yomikata.ui.theme.BorderHeroWrong
 import com.jehutyno.yomikata.ui.theme.BorderSubtle
@@ -180,7 +186,12 @@ fun QuizScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(BackgroundPrimary),
+            .background(BackgroundPrimary)
+            // Consomme l'inset du bas = max(barre de navigation, clavier).
+            // À l'ouverture du clavier, la Column se réduit pour rester au-dessus de
+            // l'IME (au lieu de faire défiler tout l'écran) → la card s'adapte à la
+            // hauteur restante et le champ d'édition reste visible.
+            .windowInsetsPadding(WindowInsets.navigationBars.union(WindowInsets.ime)),
     ) {
         // TopAppBar
         Row(
@@ -228,26 +239,27 @@ fun QuizScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 12.dp, vertical = 6.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
             if (uiState.segments.isNotEmpty()) {
+                // La barre affiche déjà le compteur "x / total" sous elle —
+                // pas de compteur dupliqué à droite.
                 ProgressSegmentBar(
                     total = uiState.segments.size,
                     correctCount = uiState.segments.count { it == SegmentState.Correct },
                     wrongCount = uiState.segments.count { it == SegmentState.Wrong },
                     current = uiState.currentIndex,
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.fillMaxWidth(),
                 )
             } else {
+                // Mode infini : pas de segments, on affiche juste le compteur.
                 Spacer(modifier = Modifier.weight(1f))
+                Text(
+                    text = uiState.counterText,
+                    color = TextDim,
+                    fontSize = 13.sp,
+                )
             }
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = uiState.counterText,
-                color = TextDim,
-                fontSize = 12.sp,
-            )
         }
 
         // Question zone — card avec bords arrondis et marges
@@ -280,6 +292,12 @@ fun QuizScreen(
                 modifier = Modifier.fillMaxSize(),
             )
         }
+
+        // Espace souple au-dessus de la zone de réponse. En QCM, un espace identique
+        // est ajouté en dessous (voir plus bas) pour centrer verticalement le bloc de
+        // réponses entre la card et le bouton, sans réduire la taille de la card.
+        val isQcm = uiState.answerMode == AnswerMode.QCM
+        Spacer(modifier = Modifier.weight(if (isQcm) 0.2f else 0.4f))
 
         // Instruction label for QCM
         if (!uiState.hintText.isNullOrEmpty() && uiState.answerMode == AnswerMode.QCM) {
@@ -319,11 +337,17 @@ fun QuizScreen(
             AnswerMode.None -> Spacer(modifier = Modifier.height(8.dp))
         }
 
+        // En QCM, espace souple sous les réponses (symétrique de celui du dessus)
+        // pour centrer le bloc de réponses entre la card et le bouton.
+        if (isQcm) {
+            Spacer(modifier = Modifier.weight(0.2f))
+        }
+
         // FABBar
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 14.dp, vertical = 8.dp),
+                .padding(start = 14.dp, end = 14.dp, top = 8.dp, bottom = 12.dp),
         ) {
             if (uiState.isRevealed) {
                 FABBar(state = FABBarState.Next, onClick = onNextWord)
@@ -715,45 +739,59 @@ private fun EditAnswerMode(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        AndroidView(
-            factory = { ctx ->
-                HiraganaEditText(ctx).apply {
-                    hint = ctx.getString(R.string.quiz_input_hint)
-                    inputType = InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS or
-                            InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
-                    setTextColor(textColorInt)
-                    setHintTextColor(ContextCompat.getColor(ctx, R.color.gray))
-                    textSize = 18f
-                    setPadding(10, 10, 10, 10)
-                    addTextChangedListener(object : TextWatcher {
-                        override fun afterTextChanged(s: Editable?) {}
-                        override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
-                            onBeforeTextChange()
+        // Champ d'édition mis en avant : liseré accent + surface, hauteur confortable.
+        // Le soulignement orange natif de l'EditText est retiré (background = null).
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .height(56.dp)
+                .clip(RoundedCornerShape(RadiusMd))
+                .background(SurfacePrimary)
+                .border(1.5.dp, AccentOrange, RoundedCornerShape(RadiusMd))
+                .padding(horizontal = 14.dp),
+            contentAlignment = Alignment.CenterStart,
+        ) {
+            AndroidView(
+                factory = { ctx ->
+                    HiraganaEditText(ctx).apply {
+                        hint = ctx.getString(R.string.quiz_input_hint)
+                        inputType = InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS or
+                                InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
+                        setTextColor(textColorInt)
+                        setHintTextColor(ContextCompat.getColor(ctx, R.color.gray))
+                        textSize = 18f
+                        background = null
+                        setPadding(0, 0, 0, 0)
+                        addTextChangedListener(object : TextWatcher {
+                            override fun afterTextChanged(s: Editable?) {}
+                            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+                                onBeforeTextChange()
+                            }
+                            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                                onTextChange(s?.toString() ?: "")
+                            }
+                        })
+                        setOnEditorActionListener { _, actionId, event ->
+                            if (actionId == EditorInfo.IME_ACTION_DONE ||
+                                event?.keyCode == KeyEvent.KEYCODE_ENTER
+                            ) {
+                                onSubmit(this.text.toString())
+                                true
+                            } else false
                         }
-                        override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                            onTextChange(s?.toString() ?: "")
-                        }
-                    })
-                    setOnEditorActionListener { _, actionId, event ->
-                        if (actionId == EditorInfo.IME_ACTION_DONE ||
-                            event?.keyCode == KeyEvent.KEYCODE_ENTER
-                        ) {
-                            onSubmit(this.text.toString())
-                            true
-                        } else false
                     }
-                }
-            },
-            update = { view ->
-                view.isEnableConversion = isEnableConversion
-                view.setTextColor(textColorInt)
-                if (view.text.toString() != text) {
-                    view.setText(text)
-                    if (text.isNotEmpty()) view.setSelection(text.length)
-                }
-            },
-            modifier = Modifier.weight(1f),
-        )
+                },
+                update = { view ->
+                    view.isEnableConversion = isEnableConversion
+                    view.setTextColor(textColorInt)
+                    if (view.text.toString() != text) {
+                        view.setText(text)
+                        if (text.isNotEmpty()) view.setSelection(text.length)
+                    }
+                },
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
 
         IconButton(onClick = onAction) {
             Icon(

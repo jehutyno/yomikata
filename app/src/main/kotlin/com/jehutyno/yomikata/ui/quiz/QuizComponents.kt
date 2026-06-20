@@ -226,14 +226,14 @@ fun ProgressSegmentBar(
             }
         }
 
-        Spacer(modifier = Modifier.height(4.dp))
+        Spacer(modifier = Modifier.height(5.dp))
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(text = "$correctCount ✓", fontSize = 8.sp, color = SegmentCorrectColor)
-            Text(text = "${current + 1} / $total", fontSize = 8.sp, color = TextDim)
-            Text(text = "$wrongCount ✗", fontSize = 8.sp, color = SegmentWrongColor)
+            Text(text = "$correctCount ✓", fontSize = 12.sp, fontWeight = FontWeight.W600, color = SegmentCorrectColor)
+            Text(text = "${current + 1} / $total", fontSize = 12.sp, color = TextDim)
+            Text(text = "$wrongCount ✗", fontSize = 12.sp, fontWeight = FontWeight.W600, color = SegmentWrongColor)
         }
     }
 }

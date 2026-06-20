@@ -606,10 +606,18 @@ Card hero (fond animé + bordure animée selon résultat)
         └── Column(CenterHorizontally)
             ├── Phrase d'exemple (18sp, wrapContentWidth → centrée)
             └── Traduction phrase (alpha=0f si masquée — réserve l'espace sans décaler)
+Spacer(weight) souple                ← réduit la card / centre les réponses
 Instruction (label uppercase, AccentOrange 75%, 11sp, letterSpacing 1.2sp)
-Grille 2×2 AnswerButtons
-FABBar
+Grille 2×2 AnswerButtons (mode QCM)
+Spacer(weight) souple (QCM seul)     ← symétrique → bloc QCM centré
+FABBar (bottom = 12dp + inset bas)
 ```
+
+**Layout du bas (Session 3.10) :** la card est en `weight(1f)` mais un `Spacer(weight)` souple est inséré entre la card et la zone de réponse pour qu'elle ne dévore pas tout l'espace. En **mode QCM**, deux `Spacer(weight 0.2f)` symétriques (au-dessus + en dessous des réponses) centrent verticalement le bloc « instruction + grille » entre la card et le bouton sans réduire la card. En mode édition/audio, un seul `Spacer(0.4f)` au-dessus.
+
+**Clavier edge-to-edge (Session 3.10) :** `QuizActivity` est en `android:windowSoftInputMode="adjustResize"` (manifest) et la root `Column` consomme `WindowInsets.navigationBars.union(WindowInsets.ime)` via `windowInsetsPadding`. À l'ouverture du clavier, la `Column` se réduit (pas de pan masquant la top bar) et la card s'adapte à la hauteur restante. Le champ d'édition (`EditAnswerMode`) est entouré d'un liseré `AccentOrange` (1.5dp, `RadiusMd`) sur `SurfacePrimary`, hauteur 56dp ; le soulignement natif de l'`EditText` est retiré (`background = null` sur `HiraganaEditText`).
+
+**Barre de progression (Session 3.10) :** le compteur `x / total` n'est affiché qu'une fois (sous `ProgressSegmentBar`) ; le doublon de droite n'apparaît qu'en mode infini (sans segments). Compteurs ✓/✗ en 12sp / `W600`.
 
 **Animations de feedback (dérivées dans le composable, sans état ViewModel) :**
 - `isCorrect` / `isWrong` déduits de `isRevealed` + `wordHighlightColor`
