@@ -8,6 +8,7 @@
 <resources>
     <string name="api_license_key" translatable="false">MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAx6V9v+GgzlL/lVrxGouhD41qClKjjc5DZGYtG+s993SzJqmPD7CgO0HfRYXUdCSy9XDOzgO8FfbZ12cylYlgcR03Uh41snoxViu/ViuzXuoR1IMMpvyUVPL1Rd1gdX37vYX0To7r+5Qy+yNj8nYN4b8YFJlkhXPRX8GNzA8oBW6hvV5aGnNmaWCyRlYQ1WZ2zrdDAh8/o3NPvhTFvRc1jsbR8tkeAwHr51TCQZ2hG3FEvkDlJkIL6w9aMOKZgalRoyJ/4s0YUWlGhgrhoZRWPAvDt6HWk8G/UUCzZ/FGtif0vLDR0mXseFo9ilFhZlqqC3Mtzv+62m0/dTQ6mHX7LQIDAQAB</string>
     <string name="url_download" translatable="false">http://sd-97857.dedibox.fr/owncloud/index.php/s/</string>
+    <string name="url_voices_base" translatable="false">https://github.com/jehutyno/yomikata/releases/download/voices/</string>
     <string name="app_name" translatable="false">Yomikata Z</string>
     <string name="db_path" translatable="false">/data/data/com.jehutyno.yomikata/databases/</string>
     <string name="db_name_yomi" translatable="false">Japanese.db</string>
@@ -244,6 +245,10 @@
     <string name="delete_voices_files">Delete voices files</string>
     <string name="dont_ask_voices">Don\'t ask again</string>
     <string name="voices_reinit_done">Voice files have been deleted</string>
+    <string name="voices_card_title">音声 · Voices</string>
+    <string name="voices_card_subtitle">Real voices instead of speech synthesis</string>
+    <string name="voices_downloaded">Voices downloaded</string>
+    <string name="voices_downloading">Downloading…</string>
     <string name="do_not_close_app">Do not close the app</string>
     <string name="migration_error">Migration error</string>
     <string name="discord_link" translatable="false">https://discord.gg/zgkbMn6mYC</string>

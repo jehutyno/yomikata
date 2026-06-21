@@ -31,10 +31,14 @@ import com.jehutyno.yomikata.ui.study.categoryName
 import com.jehutyno.yomikata.ui.theme.YomikataTheme
 import com.jehutyno.yomikata.util.Extras
 import com.jehutyno.yomikata.util.Prefs
+import com.jehutyno.yomikata.util.anyVoicesDownloaded
+import com.jehutyno.yomikata.util.downloadVoices
 import com.jehutyno.yomikata.util.quiz.Categories
 import com.jehutyno.yomikata.util.quiz.QuizStrategy
 import com.jehutyno.yomikata.util.quiz.QuizType
 import com.jehutyno.yomikata.util.quiz.QuizTypePrefs
+import com.jehutyno.yomikata.util.quiz.getCategoryLevel
+import com.jehutyno.yomikata.util.quiz.getLevelDownloadSize
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
@@ -77,6 +81,7 @@ class QuizzesFragment(private val diArg: DI) : Fragment(), DIAware {
             selectedTypes = QuizTypePrefs.loadSelectedTypes(prefs),
             lastMode = loadLastMode(),
         )
+        refreshVoiceState(saved)
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -132,6 +137,7 @@ class QuizzesFragment(private val diArg: DI) : Fragment(), DIAware {
                         onQuizClick = { quiz -> openContent(quiz) },
                         onLaunchQuiz = { strategy -> launchQuiz(strategy) },
                         onQuizTypeToggle = { type -> toggleQuizType(type) },
+                        onDownloadVoices = { startVoiceDownload() },
                     )
                 }
             }
@@ -155,6 +161,32 @@ class QuizzesFragment(private val diArg: DI) : Fragment(), DIAware {
         _categoryFlow.value = category
         prefs.edit().putInt(Prefs.LAST_SELECTED_LEVEL.pref, category).apply()
         uiState = uiState.copy(selectedCategory = category)
+        refreshVoiceState(category)
+    }
+
+    /** Met à jour l'état de la card voix pour la catégorie donnée (pack présent ? taille ?). */
+    private fun refreshVoiceState(category: Int) {
+        val level = getCategoryLevel(category)
+        uiState = uiState.copy(
+            voicesDownloaded = anyVoicesDownloaded(requireContext(), level),
+            voiceSizeMb = getLevelDownloadSize(level),
+        )
+    }
+
+    private fun startVoiceDownload() {
+        val level = getCategoryLevel(_categoryFlow.value)
+        uiState = uiState.copy(voiceDownloadProgress = 0f)
+        downloadVoices(requireActivity(), level,
+            onProgress = { uiState = uiState.copy(voiceDownloadProgress = it) },
+            onComplete = { ok ->
+                uiState = uiState.copy(voiceDownloadProgress = null)
+                refreshVoiceState(_categoryFlow.value)
+                Toast.makeText(
+                    context,
+                    if (ok) R.string.download_success else R.string.download_failed,
+                    Toast.LENGTH_SHORT,
+                ).show()
+            })
     }
 
     private fun openContent(quiz: Quiz) {

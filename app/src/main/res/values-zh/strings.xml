@@ -211,6 +211,10 @@
     <string name="delete_voices_files">删除语音文件</string>
     <string name="dont_ask_voices">不再询问</string>
     <string name="voices_reinit_done">语音文件已删除</string>
+    <string name="voices_card_title">音声 · 语音</string>
+    <string name="voices_card_subtitle">用真人语音代替语音合成</string>
+    <string name="voices_downloaded">语音已下载</string>
+    <string name="voices_downloading">正在下载…</string>
     <string name="restoring_progress">正在恢复备份</string>
     <string name="do_not_close_app">请勿关闭应用</string>
     <string name="backup_progress">正在创建备份</string>

@@ -211,6 +211,10 @@
     <string name="delete_voices_files">Excluir arquivos de voz</string>
     <string name="dont_ask_voices">Não perguntar novamente</string>
     <string name="voices_reinit_done">Arquivos de voz excluídos</string>
+    <string name="voices_card_title">音声 · Vozes</string>
+    <string name="voices_card_subtitle">Vozes reais em vez de síntese de voz</string>
+    <string name="voices_downloaded">Vozes baixadas</string>
+    <string name="voices_downloading">Baixando…</string>
     <string name="restoring_progress">Restaurando backup</string>
     <string name="do_not_close_app">Não feche o aplicativo</string>
     <string name="backup_progress">Criando backup</string>

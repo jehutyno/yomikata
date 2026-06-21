@@ -211,6 +211,10 @@
     <string name="delete_voices_files">Eliminar archivos de voz</string>
     <string name="dont_ask_voices">No preguntar más</string>
     <string name="voices_reinit_done">Archivos de voz eliminados</string>
+    <string name="voices_card_title">音声 · Voces</string>
+    <string name="voices_card_subtitle">Voces reales en lugar de síntesis de voz</string>
+    <string name="voices_downloaded">Voces descargadas</string>
+    <string name="voices_downloading">Descargando…</string>
     <string name="restoring_progress">Restaurando copia de seguridad</string>
     <string name="do_not_close_app">No cierres la app</string>
     <string name="backup_progress">Creando copia de seguridad</string>

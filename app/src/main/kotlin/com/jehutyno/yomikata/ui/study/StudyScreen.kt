@@ -104,6 +104,9 @@ data class StudyUiState(
     val wrongCount: Int = 0,
     val selectedTypes: List<QuizType> = listOf(QuizType.TYPE_AUTO),
     val lastMode: QuizStrategy? = null,
+    val voicesDownloaded: Boolean = false,
+    val voiceSizeMb: Int = 0,
+    val voiceDownloadProgress: Float? = null,   // null = pas de téléchargement en cours
 )
 
 @DrawableRes
@@ -300,6 +303,7 @@ fun StudyScreen(
     onQuizClick: (Quiz) -> Unit,
     onLaunchQuiz: (QuizStrategy) -> Unit,
     onQuizTypeToggle: (QuizType) -> Unit,
+    onDownloadVoices: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val selectedCount = state.quizzes.count { it.isSelected }
@@ -340,6 +344,20 @@ fun StudyScreen(
         )
 
         Spacer(modifier = Modifier.height(6.dp))
+
+        // Voice pack — masquée une fois le pack du niveau téléchargé (sauf DL en cours)
+        val showVoiceCard = !state.voicesDownloaded || state.voiceDownloadProgress != null
+        if (showVoiceCard) {
+            VoiceDownloadCard(
+                downloaded = state.voicesDownloaded,
+                sizeMb = state.voiceSizeMb,
+                progress = state.voiceDownloadProgress,
+                onDownloadClick = onDownloadVoices,
+                modifier = Modifier.padding(horizontal = 14.dp),
+            )
+
+            Spacer(modifier = Modifier.height(6.dp))
+        }
 
         // Quiz list — each item is a separated card; a bottom fade softens the cut to the FAB.
         Box(modifier = Modifier.weight(1f)) {
@@ -415,12 +433,14 @@ private fun StudyScreenPreview() {
                 quizCount = 46,
                 goodCount = 28,
                 wrongCount = 12,
+                voiceSizeMb = 5,
             ),
             onCategorySelected = {},
             onQuizChecked = { _, _ -> },
             onQuizClick = {},
             onLaunchQuiz = {},
             onQuizTypeToggle = {},
+            onDownloadVoices = {},
         )
     }
 }
@@ -436,12 +456,15 @@ private fun StudyScreenN4Preview() {
                 quizCount = 0,
                 goodCount = 0,
                 wrongCount = 0,
+                voicesDownloaded = true,
+                voiceSizeMb = 7,
             ),
             onCategorySelected = {},
             onQuizChecked = { _, _ -> },
             onQuizClick = {},
             onLaunchQuiz = {},
             onQuizTypeToggle = {},
+            onDownloadVoices = {},
         )
     }
 }

@@ -211,6 +211,10 @@
     <string name="delete_voices_files">Stimmdateien löschen</string>
     <string name="dont_ask_voices">Nicht mehr fragen</string>
     <string name="voices_reinit_done">Stimmdateien wurden gelöscht</string>
+    <string name="voices_card_title">音声 · Stimmen</string>
+    <string name="voices_card_subtitle">Echte Stimmen statt Sprachsynthese</string>
+    <string name="voices_downloaded">Stimmen heruntergeladen</string>
+    <string name="voices_downloading">Wird heruntergeladen…</string>
     <string name="restoring_progress">Sicherung wiederherstellen</string>
     <string name="do_not_close_app">App nicht schließen</string>
     <string name="backup_progress">Sicherung erstellen</string>

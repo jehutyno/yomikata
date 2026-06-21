@@ -17,7 +17,6 @@ import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.preference.PreferenceManager
-import com.google.firebase.storage.FirebaseStorage
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.util.quiz.getLevelDownloadSize
 import com.jehutyno.yomikata.util.quiz.getLevelDownloadVersion
@@ -26,6 +25,9 @@ import com.jehutyno.yomikata.model.Sentence
 import com.jehutyno.yomikata.model.Word
 import splitties.alertdialog.appcompat.*
 import java.io.File
+import java.io.FileOutputStream
+import java.net.HttpURLConnection
+import java.net.URL
 import java.util.*
 
 
@@ -294,13 +296,85 @@ fun speechNotSupportedAlert(activity: Activity, level: Int, finishedListener: ()
     }
 }
 
-fun launchVoicesDownload(activity: Activity, level: Int, finishedListener: () -> Unit) {
-    val storage = FirebaseStorage.getInstance()
-    val reference = storage.reference.child("Voices_level_$level.zip")
-    val fileName = "voices_download_$level"
-    val localFile = File.createTempFile(fileName, ".zip")
-    val unzipPath = FileUtils.getDataDir(activity, "Voices").absolutePath
+/**
+ * Cœur du téléchargement d'un pack de voix (HTTPS, ex. GitHub Releases), piloté par callbacks.
+ * Ne montre aucune UI — l'appelant gère la progression et le résultat (card Compose ou dialog).
+ *
+ * Le pack est `Voices_level_{level}.zip`, téléchargé depuis [R.string.url_voices_base] (HTTPS
+ * obligatoire : pas de cleartext autorisé). Le téléchargement s'exécute sur un thread de fond ;
+ * les callbacks sont systématiquement repostés sur le thread principal.
+ *
+ * @param onProgress fraction téléchargée, 0f..1f (0f si la taille totale est inconnue)
+ * @param onComplete true si succès (unzip + flag prefs posés), false sinon
+ */
+fun downloadVoices(
+    activity: Activity,
+    level: Int,
+    onProgress: (Float) -> Unit,
+    onComplete: (success: Boolean) -> Unit,
+) {
+    val urlString = activity.getString(R.string.url_voices_base) + "Voices_level_$level.zip"
 
+    Thread {
+        var success = false
+        var tmpFile: File? = null
+        var connection: HttpURLConnection? = null
+        try {
+            connection = (URL(urlString).openConnection() as HttpURLConnection).apply {
+                connectTimeout = 30_000
+                readTimeout = 30_000
+                instanceFollowRedirects = true   // GitHub Releases redirige (HTTPS→HTTPS)
+            }
+            connection.connect()
+
+            if (connection.responseCode in 200..299) {
+                val total = connection.contentLength.toLong()   // -1 si inconnu
+                val tmp = File.createTempFile("voices_download_$level", ".zip")
+                tmpFile = tmp
+                connection.inputStream.use { input ->
+                    FileOutputStream(tmp).use { output ->
+                        val buffer = ByteArray(8192)
+                        var downloaded = 0L
+                        var read: Int
+                        while (input.read(buffer).also { read = it } != -1) {
+                            output.write(buffer, 0, read)
+                            downloaded += read
+                            if (total > 0) {
+                                val p = (downloaded.toFloat() / total.toFloat()).coerceIn(0f, 1f)
+                                activity.runOnUiThread { onProgress(p) }
+                            }
+                        }
+                    }
+                }
+
+                val unzipPath = FileUtils.getDataDir(activity, "Voices").absolutePath
+                FileDownloadService.unzip(tmp.absolutePath, unzipPath)
+
+                PreferenceManager.getDefaultSharedPreferences(activity).edit()
+                    .putBoolean(Prefs.VOICE_DOWNLOADED_LEVEL_V.pref +
+                            "${getLevelDownloadVersion(level)}_$level", true).apply()
+                success = true
+            } else {
+                Log.e("VoicesDownload", "HTTP ${connection.responseCode} for $urlString")
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            success = false
+        } finally {
+            tmpFile?.delete()
+            connection?.disconnect()
+        }
+
+        val result = success
+        activity.runOnUiThread { onComplete(result) }
+    }.start()
+}
+
+/**
+ * Variante avec dialog Splitties (barre de progression + dialog succès/échec).
+ * Utilisée par le chemin fallback [speechNotSupportedAlert] / [createDlButton].
+ */
+fun launchVoicesDownload(activity: Activity, level: Int, finishedListener: () -> Unit) {
     val progressBar = ProgressBar(activity, null, android.R.attr.progressBarStyleHorizontal)
     progressBar.setPadding(40, progressBar.paddingTop, 40, progressBar.paddingBottom)
     progressBar.max = 100
@@ -313,38 +387,26 @@ fun launchVoicesDownload(activity: Activity, level: Int, finishedListener: () ->
     }
     progressAlertDialog.show()
 
-    reference.getFile(localFile).addOnSuccessListener {
-        FileDownloadService.unzip(localFile.absolutePath, unzipPath)
-        val file = File(localFile.absolutePath)
-        file.delete()
-
-        val pref = PreferenceManager.getDefaultSharedPreferences(activity)
-        pref.edit().putBoolean(Prefs.VOICE_DOWNLOADED_LEVEL_V.pref +
-                "${getLevelDownloadVersion(level)}_$level", true).apply()
-        progressAlertDialog.dismiss()
-
-        activity.alertDialog {
-            titleResource = R.string.download_success
-            messageResource = R.string.download_success_message
-
-            okButton { finishedListener() }
-            setOnCancelListener { finishedListener() }
-        }.show()
-
-    }.addOnFailureListener {
-        progressAlertDialog.dismiss()
-
-        activity.alertDialog {
-            titleResource = R.string.download_failed
-            messageResource = R.string.download_failed_message
-            okButton()
-        }.show()
-
-    }.addOnProgressListener {
-        val progress: Double = 100.0 * it.bytesTransferred / it.totalByteCount
-        progressBar.progress = progress.toInt()
-    }
-
+    downloadVoices(activity, level,
+        onProgress = { progressBar.progress = (it * 100).toInt() },
+        onComplete = { success ->
+            progressAlertDialog.dismiss()
+            if (success) {
+                activity.alertDialog {
+                    titleResource = R.string.download_success
+                    messageResource = R.string.download_success_message
+                    okButton { finishedListener() }
+                    setOnCancelListener { finishedListener() }
+                }.show()
+            } else {
+                activity.alertDialog {
+                    titleResource = R.string.download_failed
+                    messageResource = R.string.download_failed_message
+                    okButton()
+                }.show()
+            }
+        }
+    )
 }
 
 
