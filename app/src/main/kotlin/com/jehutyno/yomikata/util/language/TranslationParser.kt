@@ -47,28 +47,36 @@ fun String.removePartsOfSpeechInfo(): String {
 }
 
 
+/** Unicode ranges that cover Japanese text: hiragana, katakana, kanji (Han ideographs),
+ *  CJK symbols/punctuation, katakana phonetic extensions, and the halfwidth/fullwidth
+ *  forms. Used to strip Japanese while preserving accented latin characters
+ *  (e-acute, a-grave, n-tilde, c-cedilla...) needed by FR/DE/ES/PT translations. */
+private const val japaneseChars =
+    """\p{IsHiragana}\p{IsKatakana}\p{IsHan}""" +
+    """\p{InCJKSymbolsAndPunctuation}\p{InKatakanaPhoneticExtensions}""" +
+    """\p{InHalfwidthAndFullwidthForms}"""
+
 /**
  * Remove any japanese
  *
- * Removes hiragana, katakana, and kanji from a string by removing any non-latin
- * characters. Also removes any other characters within the same parentheses () as the
- * removed japanese text. e.g. `(hello 先輩)` will be remove completely since the hello
- * is also in the brackets.
+ * Removes hiragana, katakana, and kanji from a string. Also removes any other characters
+ * within the same parentheses () as the removed japanese text. e.g. `(hello 先輩)` will be
+ * removed completely since the hello is also in the brackets.
  * Also removes any trailing whitespaces.
  *
- * WARNING: This will also remove other special characters that are not part of the standard
- * latin character set.
+ * Accented latin characters (é, è, à, ä, ö, ñ, ã, ç…) are preserved, so this is safe to
+ * use on non-English translations.
  *
- * @return New string with any non-latin characters removed
+ * @return New string with any japanese characters removed
  */
 fun String.removeAnyJapanese(): String {
-    /** Finds any text inside of parentheses () that also contains non-latin characters, and
+    /** Finds any text inside of parentheses () that also contains japanese characters, and
      * any trailing whitespaces */
-    val regex = Regex("""\([^()]*\P{InBasicLatin}[^()]*\)\s*""")
+    val regex = Regex("""\([^()]*[$japaneseChars][^()]*\)\s*""")
     val newString = regex.replace(this, "")
 
     // also remove any stray japanese that is not in brackets
-    return Regex("""\P{InBasicLatin}""").replace(newString, "")
+    return Regex("""[$japaneseChars]""").replace(newString, "")
 }
 
 /** Regex for indexes which mark different translations / meaning for words that have many */

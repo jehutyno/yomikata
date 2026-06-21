@@ -68,6 +68,14 @@ class TranslationParserKtTest {
         assert (
             "(testing 1234) finish".removeAnyJapanese() == "(testing 1234) finish"
         )
+        // accented latin characters (FR/DE/ES/PT) must be preserved
+        assert ( "café crème".removeAnyJapanese() == "café crème" )
+        assert ( "à côté de l'élève".removeAnyJapanese() == "à côté de l'élève" )
+        assert ( "Frühstück; mañana; ção".removeAnyJapanese() == "Frühstück; mañana; ção" )
+        // accented text mixed with japanese -> only japanese removed
+        assert ( "寿司 célèbre".removeAnyJapanese() == " célèbre" )
+        // accents inside parentheses -> parentheses kept (no japanese inside)
+        assert ( "(à révéler) suite".removeAnyJapanese() == "(à révéler) suite" )
     }
 
     @Test
