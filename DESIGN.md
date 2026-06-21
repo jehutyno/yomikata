@@ -13,8 +13,8 @@
 | Token                    | Valeur      | Usage                                               |
 |--------------------------|-------------|-----------------------------------------------------|
 | `color_bg`               | `#0a0e17`   | Fond principal — noir bleuté profond                |
-| `color_bg_hero`          | `#0d1520`   | Zone question quiz, header word detail              |
-| `color_bg_hero_warm`     | `#130a02`   | Hero home avec photo de fond (warm overlay)         |
+| `color_bg_hero`          | `#0d1520`   | Zone question quiz, header word detail, hero Home/Study/Sélections (fond + scrim froid `#0A6000A14→#CC000A14`) |
+| `color_bg_hero_warm`     | `#130a02`   | (héritage — plus utilisé en fond de hero ; `color_accent_warm` reste pour la tagline) |
 | `color_bg_nav`           | `#0d1218`   | Bottom navigation bar, footer zones                 |
 | `color_bg_correct`       | `#0b1a10`   | Fond card état bonne réponse                        |
 | `color_bg_wrong`         | `#200d0d`   | Fond card état mauvaise réponse                     |

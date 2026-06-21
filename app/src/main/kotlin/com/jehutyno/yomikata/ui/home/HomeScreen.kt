@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -45,7 +46,7 @@ import com.jehutyno.yomikata.ui.components.KenBurnsImage
 import com.jehutyno.yomikata.ui.components.SectionHeader
 import com.jehutyno.yomikata.ui.theme.AccentOrange
 import com.jehutyno.yomikata.ui.theme.AccentWarm
-import com.jehutyno.yomikata.ui.theme.BackgroundHeroWarm
+import com.jehutyno.yomikata.ui.theme.BackgroundHero
 import com.jehutyno.yomikata.ui.theme.BackgroundPrimary
 import com.jehutyno.yomikata.ui.theme.BorderAccent
 import com.jehutyno.yomikata.ui.theme.BorderDefault
@@ -150,8 +151,8 @@ private fun HomeHero(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(240.dp)
-            .background(BackgroundHeroWarm)
+            .height(180.dp)
+            .background(BackgroundHero)
             .clipToBounds(),
     ) {
         Crossfade(
@@ -162,16 +163,13 @@ private fun HomeHero(modifier: Modifier = Modifier) {
             KenBurnsImage(resId = HERO_IMAGES[i])
         }
 
-        // Scrim chaud pour lisibilité du logo/titre
+        // Scrim pour lisibilité du logo/titre (identique au hero Study)
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(
                     Brush.verticalGradient(
-                        colors = listOf(
-                            Color(0x99130A02),
-                            Color(0xCC0A0500),
-                        ),
+                        colors = listOf(Color(0xA6000A14), Color(0xCC000A14)),
                     )
                 ),
         )
@@ -179,13 +177,15 @@ private fun HomeHero(modifier: Modifier = Modifier) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .statusBarsPadding(),
         ) {
             Image(
                 painter = painterResource(R.drawable.yomi_logo_home),
                 contentDescription = null,
                 contentScale = ContentScale.Fit,
-                modifier = Modifier.size(96.dp),
+                modifier = Modifier.size(80.dp),
             )
             Spacer(modifier = Modifier.height(12.dp))
             Text(

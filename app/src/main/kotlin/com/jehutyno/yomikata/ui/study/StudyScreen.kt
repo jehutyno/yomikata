@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.PaddingValues
@@ -143,7 +144,7 @@ private fun StudyHero(selectedCategory: Int, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(160.dp)
+            .height(180.dp)
             .background(BackgroundHero)
             .clipToBounds(),
     ) {
@@ -166,7 +167,9 @@ private fun StudyHero(selectedCategory: Int, modifier: Modifier = Modifier) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .statusBarsPadding(),
         ) {
             Image(
                 painter = painterResource(categoryHeroDrawable(selectedCategory)),
