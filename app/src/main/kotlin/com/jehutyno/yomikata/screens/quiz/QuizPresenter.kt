@@ -691,7 +691,7 @@ class QuizPresenter(
         sessionState.errorMode = true
         sessionState.reset()
         errors.shuffle()
-        quizView.displayWords(errors)
+        quizView.displayWords(errors, QuizContract.WordDisplayMode.ErrorSession)
         setUpNextQuiz()
     }
 
@@ -703,7 +703,7 @@ class QuizPresenter(
     override suspend fun onContinueQuizAfterErrorSession() {
         sessionState.errorMode = false
         sessionState.errors.clear()
-        quizView.displayWords(quizWords)
+        quizView.displayWords(quizWords, QuizContract.WordDisplayMode.ResumeNormal)
         setUpNextQuiz()
     }
 

@@ -275,12 +275,31 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, TextToSp
 
     // ─── QuizContract.View ────────────────────────────────────────────────────
 
-    override fun displayWords(quizWordsPair: List<Pair<Word, QuizType>>) {
+    /** Snapshot of the main-quiz progress bar segments, kept aside while an error session
+     *  temporarily replaces the displayed word list. */
+    private var normalModeSegments: List<SegmentState> = emptyList()
+
+    override fun displayWords(
+        quizWordsPair: List<Pair<Word, QuizType>>,
+        mode: QuizContract.WordDisplayMode,
+    ) {
         holdOn = false
-        uiState = uiState.copy(
-            words = quizWordsPair,
-            segments = List(quizWordsPair.size) { SegmentState.Pending },
-        )
+        val newSegments = when (mode) {
+            QuizContract.WordDisplayMode.ResumeNormal ->
+                // restore the progress accumulated before the error session
+                normalModeSegments.takeIf { it.size == quizWordsPair.size }
+                    ?: List(quizWordsPair.size) { SegmentState.Pending }
+            QuizContract.WordDisplayMode.ErrorSession -> {
+                // keep the main progress aside, start fresh for the error sublist
+                normalModeSegments = uiState.segments
+                List(quizWordsPair.size) { SegmentState.Pending }
+            }
+            QuizContract.WordDisplayMode.Fresh -> {
+                normalModeSegments = emptyList()
+                List(quizWordsPair.size) { SegmentState.Pending }
+            }
+        }
+        uiState = uiState.copy(words = quizWordsPair, segments = newSegments)
     }
 
     override fun noWords() {

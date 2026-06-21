@@ -16,8 +16,23 @@ import com.jehutyno.yomikata.util.quiz.QuizType
  */
 interface QuizContract {
 
+    /** Tells [View.displayWords] how to treat the top progress bar segments when the
+     *  displayed word list changes. */
+    enum class WordDisplayMode {
+        /** Brand new word list — reset all progress to pending. */
+        Fresh,
+        /** Switching to the error-review sublist — snapshot the main progress so it can be
+         *  restored, then start fresh for the errors. */
+        ErrorSession,
+        /** Returning to the main quiz after an error session — restore the saved progress. */
+        ResumeNormal,
+    }
+
     interface View {
-        fun displayWords(quizWordsPair: List<Pair<Word, QuizType>>)
+        fun displayWords(
+            quizWordsPair: List<Pair<Word, QuizType>>,
+            mode: WordDisplayMode = WordDisplayMode.Fresh,
+        )
         fun noWords()
         fun setHiraganaConversion(enabled: Boolean)
         fun displayQCMMode(hintText: String? = null)
