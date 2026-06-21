@@ -7,16 +7,13 @@ import android.os.Bundle
 import android.window.OnBackInvokedDispatcher
 import androidx.activity.addCallback
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.lifecycleScope
 import android.content.SharedPreferences
-import androidx.preference.PreferenceManager
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.databinding.ActivityQuizBinding
 import com.jehutyno.yomikata.util.Extras
 import com.jehutyno.yomikata.util.quiz.Level
-import com.jehutyno.yomikata.util.Prefs
 import com.jehutyno.yomikata.util.quiz.QuizStrategy
 import com.jehutyno.yomikata.util.quiz.QuizType
 import com.jehutyno.yomikata.util.addOrReplaceFragment
@@ -70,8 +67,6 @@ class QuizActivity : AppCompatActivity(), DIAware {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val pref = PreferenceManager.getDefaultSharedPreferences(this)
-        AppCompatDelegate.setDefaultNightMode(pref.getInt(Prefs.DAY_NIGHT_MODE.pref, AppCompatDelegate.MODE_NIGHT_YES))
         WindowCompat.setDecorFitsSystemWindows(window, false)
         binding = ActivityQuizBinding.inflate(layoutInflater)
         setContentView(binding.root)

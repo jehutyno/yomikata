@@ -10,7 +10,6 @@ import android.view.View.VISIBLE
 import android.window.OnBackInvokedDispatcher
 import androidx.activity.addCallback
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.app.AppCompatDelegate
 import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
 import androidx.viewpager2.widget.ViewPager2
@@ -79,8 +78,6 @@ class ContentActivity : AppCompatActivity(), DIAware {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val pref = PreferenceManager.getDefaultSharedPreferences(this)
-        AppCompatDelegate.setDefaultNightMode(pref.getInt(Prefs.DAY_NIGHT_MODE.pref, AppCompatDelegate.MODE_NIGHT_YES))
 
         binding = ActivityContentBinding.inflate(layoutInflater)
         val view = binding.root

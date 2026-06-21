@@ -6,12 +6,6 @@
         android:id="@+id/grp1"
         android:checkableBehavior="none">
         <item
-            android:id="@+id/day_night_item"
-            android:checkable="false"
-            android:icon="@drawable/ic_night"
-            android:title="@string/menu_night_mode"
-            app:actionLayout="@layout/menu_switch"/>
-        <item
             android:id="@+id/settings"
             android:checkable="false"
             android:icon="@drawable/ic_settings"

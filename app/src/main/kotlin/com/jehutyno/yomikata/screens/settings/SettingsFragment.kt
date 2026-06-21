@@ -8,18 +8,12 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.LinearLayout
-import androidx.appcompat.app.AppCompatDelegate
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.fragment.app.Fragment
-import androidx.preference.PreferenceManager
 import com.jehutyno.yomikata.screens.prefs.PrefsFragment
 import com.jehutyno.yomikata.ui.settings.SettingsScreen
 import com.jehutyno.yomikata.ui.theme.YomikataTheme
-import com.jehutyno.yomikata.util.Prefs
 import com.jehutyno.yomikata.util.contactDiscord
 import com.jehutyno.yomikata.util.contactFacebook
 import com.jehutyno.yomikata.util.contactPlayStore
@@ -28,9 +22,6 @@ import com.jehutyno.yomikata.util.shareApp
 class SettingsFragment : Fragment() {
 
     private var prefsContainerId = View.NO_ID
-    private var nightMode by mutableStateOf(
-        AppCompatDelegate.getDefaultNightMode() == AppCompatDelegate.MODE_NIGHT_YES
-    )
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -44,9 +35,7 @@ class SettingsFragment : Fragment() {
             setContent {
                 YomikataTheme {
                     SettingsScreen(
-                        nightMode = nightMode,
                         versionName = versionName,
-                        onNightModeToggle = { enabled -> toggleNightMode(enabled) },
                         onDiscord = { contactDiscord(requireContext()) },
                         onFacebook = { contactFacebook(requireContext()) },
                         onPlayStore = { contactPlayStore(requireContext()) },
@@ -90,15 +79,6 @@ class SettingsFragment : Fragment() {
                 .add(prefsContainerId, prefsFragment)
                 .commit()
         }
-    }
-
-    private fun toggleNightMode(enabled: Boolean) {
-        nightMode = enabled
-        val mode = if (enabled) AppCompatDelegate.MODE_NIGHT_YES else AppCompatDelegate.MODE_NIGHT_NO
-        AppCompatDelegate.setDefaultNightMode(mode)
-        PreferenceManager.getDefaultSharedPreferences(requireContext())
-            .edit().putInt(Prefs.DAY_NIGHT_MODE.pref, mode).apply()
-        activity?.recreate()
     }
 
     private fun resolveVersionName(): String {

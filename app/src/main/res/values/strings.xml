@@ -95,7 +95,6 @@
     <string name="tuto_errors">Errors</string>
     <string name="tuto_answers_message">Check the answers you gave during the session</string>
     <string name="error_no_quiz_no_word">At least one quiz with one updateWord must exist</string>
-    <string name="menu_night_mode">Night mode</string>
     <string name="alert_quiz_finished">You have seen all the words. What do you want to do ?</string>
     <string name="alert_session_finished">You finished a session of %1$d words. What do you want to do ?</string>
     <string name="alert_restart">restart</string>

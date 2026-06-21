@@ -10,7 +10,6 @@ enum class Prefs(val pref: String) {
     FURI_DISPLAYED("prefs_furi_displayed"),
     SELECTED_QUIZ_TYPES("selected_quiz_types"),
     WAS_SELECTED_QUIZ_TYPES("was_selected_quiz_types"),
-    DAY_NIGHT_MODE("pref_day_night_mode"),
     TTS_RATE("tts_rate"),
     LATEST_CATEGORY_1("latest_category_1"),
     LATEST_CATEGORY_2("latest_category_2"),

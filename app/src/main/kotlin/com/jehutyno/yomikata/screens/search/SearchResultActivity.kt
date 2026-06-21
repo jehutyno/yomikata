@@ -4,11 +4,8 @@ import android.content.pm.ActivityInfo
 import android.os.Bundle
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.app.AppCompatDelegate
-import androidx.preference.PreferenceManager
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.databinding.ActivitySearchBinding
-import com.jehutyno.yomikata.util.Prefs
 import com.jehutyno.yomikata.util.addOrReplaceFragment
 import org.kodein.di.DIAware
 import org.kodein.di.android.closestDI
@@ -27,8 +24,6 @@ class SearchResultActivity : AppCompatActivity(), DIAware {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val pref = PreferenceManager.getDefaultSharedPreferences(this)
-        AppCompatDelegate.setDefaultNightMode(pref.getInt(Prefs.DAY_NIGHT_MODE.pref, AppCompatDelegate.MODE_NIGHT_YES))
         binding = ActivitySearchBinding.inflate(layoutInflater)
         setContentView(binding.root)
 

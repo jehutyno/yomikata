@@ -10,10 +10,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -31,14 +30,11 @@ import com.jehutyno.yomikata.ui.theme.BorderDefault
 import com.jehutyno.yomikata.ui.theme.SurfacePrimary
 import com.jehutyno.yomikata.ui.theme.TextDim
 import com.jehutyno.yomikata.ui.theme.TextMuted
-import com.jehutyno.yomikata.ui.theme.TextPrimary
 import com.jehutyno.yomikata.ui.theme.YomikataTheme
 
 @Composable
 fun SettingsScreen(
-    nightMode: Boolean,
     versionName: String,
-    onNightModeToggle: (Boolean) -> Unit,
     onDiscord: () -> Unit,
     onFacebook: () -> Unit,
     onPlayStore: () -> Unit,
@@ -48,47 +44,9 @@ fun SettingsScreen(
         Modifier
             .fillMaxWidth()
             .background(BackgroundPrimary)
+            .statusBarsPadding()
             .padding(horizontal = 16.dp, vertical = 12.dp)
     ) {
-        // Section header
-        Text(
-            text = "設定 · SETTINGS",
-            color = TextDim,
-            fontSize = 10.sp,
-            fontWeight = FontWeight.SemiBold,
-            letterSpacing = 1.5.sp,
-            modifier = Modifier.padding(bottom = 12.dp)
-        )
-
-        // Night Mode row
-        Row(
-            Modifier
-                .fillMaxWidth()
-                .background(SurfacePrimary, shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp))
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Column {
-                Text(text = "夜間モード", color = TextMuted, fontSize = 11.sp)
-                Text(text = "Night Mode", color = TextPrimary, fontSize = 14.sp)
-            }
-            Switch(
-                checked = nightMode,
-                onCheckedChange = onNightModeToggle,
-                colors = SwitchDefaults.colors(
-                    checkedThumbColor = AccentOrange,
-                    checkedTrackColor = AccentOrange.copy(alpha = 0.3f),
-                    uncheckedThumbColor = TextMuted,
-                    uncheckedTrackColor = BorderDefault,
-                )
-            )
-        }
-
-        Spacer(Modifier.height(16.dp))
-        HorizontalDivider(color = BorderDefault, thickness = 1.dp)
-        Spacer(Modifier.height(16.dp))
-
         // Social links section header
         Text(
             text = "コミュニティ · COMMUNITY",
@@ -151,9 +109,7 @@ private fun SocialButton(iconRes: Int, label: String, onClick: () -> Unit) {
 private fun SettingsScreenPreviewDark() {
     YomikataTheme {
         SettingsScreen(
-            nightMode = true,
             versionName = "3.0.0",
-            onNightModeToggle = {},
             onDiscord = {},
             onFacebook = {},
             onPlayStore = {},

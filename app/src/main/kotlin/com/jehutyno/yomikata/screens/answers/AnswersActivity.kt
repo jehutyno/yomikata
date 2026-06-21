@@ -3,12 +3,9 @@ package com.jehutyno.yomikata.screens.answers
 import android.content.pm.ActivityInfo
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.view.WindowCompat
-import androidx.preference.PreferenceManager
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.databinding.ActivityAnswersBinding
-import com.jehutyno.yomikata.util.Prefs
 import com.jehutyno.yomikata.util.addOrReplaceFragment
 import mu.KLogging
 import org.kodein.di.DIAware
@@ -31,8 +28,6 @@ class AnswersActivity : AppCompatActivity(), DIAware {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val pref = PreferenceManager.getDefaultSharedPreferences(this)
-        AppCompatDelegate.setDefaultNightMode(pref.getInt(Prefs.DAY_NIGHT_MODE.pref, AppCompatDelegate.MODE_NIGHT_YES))
         WindowCompat.setDecorFitsSystemWindows(window, false)
         binding = ActivityAnswersBinding.inflate(layoutInflater)
         setContentView(binding.root)

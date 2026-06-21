@@ -70,7 +70,6 @@
     <string name="tuto_errors">错误</string>
     <string name="tuto_answers_message">查看本次会话的答案</string>
     <string name="error_no_quiz_no_word">至少需要一个测验包含一个单词</string>
-    <string name="menu_night_mode">夜间模式</string>
     <string name="alert_quiz_finished">您已看完所有单词。接下来？</string>
     <string name="alert_session_finished">您完成了包含 %1$d 个单词的会话。接下来？</string>
     <string name="alert_restart">重新开始</string>

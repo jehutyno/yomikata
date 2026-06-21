@@ -70,7 +70,6 @@
     <string name="tuto_errors">Fehler</string>
     <string name="tuto_answers_message">Die Antworten aus der Sitzung überprüfen</string>
     <string name="error_no_quiz_no_word">Mindestens ein Quiz mit einem Wort muss vorhanden sein</string>
-    <string name="menu_night_mode">Nachtmodus</string>
     <string name="alert_quiz_finished">Sie haben alle Wörter gesehen. Was möchten Sie tun?</string>
     <string name="alert_session_finished">Sie haben eine Sitzung mit %1$d Wörtern abgeschlossen. Was möchten Sie tun?</string>
     <string name="alert_restart">neu starten</string>

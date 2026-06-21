@@ -11,7 +11,6 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -71,7 +70,6 @@ class QuizzesActivity : AppCompatActivity(), DIAware {
         super.onCreate(savedInstanceState)
 
         val pref = PreferenceManager.getDefaultSharedPreferences(this)
-        AppCompatDelegate.setDefaultNightMode(pref.getInt(Prefs.DAY_NIGHT_MODE.pref, AppCompatDelegate.MODE_NIGHT_YES))
 
         backupLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult())
             { result -> getBackupLauncher(result) }

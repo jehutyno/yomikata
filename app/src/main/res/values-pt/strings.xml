@@ -70,7 +70,6 @@
     <string name="tuto_errors">Erros</string>
     <string name="tuto_answers_message">Revisar as respostas da sessão</string>
     <string name="error_no_quiz_no_word">Deve haver pelo menos um questionário com uma palavra</string>
-    <string name="menu_night_mode">Modo noturno</string>
     <string name="alert_quiz_finished">Você viu todas as palavras. O que deseja fazer?</string>
     <string name="alert_session_finished">Você completou uma sessão com %1$d palavras. O que deseja fazer?</string>
     <string name="alert_restart">reiniciar</string>

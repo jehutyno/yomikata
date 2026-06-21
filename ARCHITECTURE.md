@@ -297,7 +297,6 @@ Les `Activity` et `Fragment` étendent `DIAware` et récupèrent leurs dépendan
 | Clé | Type | Rôle |
 |---|---|---|
 | `app_language` | String (ISO 639-1) | Langue de traduction choisie |
-| `pref_day_night_mode` | Int | Thème jour/nuit (AppCompatDelegate) |
 | `prefs_selected_category` | Int | Dernière catégorie sélectionnée (legacy — remplacé par `last_selected_level`) |
 | `last_selected_level` | Int | Niveau sélectionné dans l'écran Study (chips) |
 | `selected_quiz_types` | String (CSV) | Types de quiz actifs |
@@ -516,7 +515,7 @@ SettingsFragment (LinearLayout vertical)
 
 **`PrefsFragment`** (standalone) possède ses propres `ActivityResultLauncher` pour backup/restore (enregistrés dans `onCreate` du fragment). Les appels `getBackupLauncher`/`getRestoreLauncher` délèguent à `requireActivity() as ComponentActivity`. Le callback `onResetTuto` permet à l'hôte (ici `SettingsFragment`) de naviguer vers l'onglet HOME après un reset des tutoriels.
 
-**Night Mode :** le toggle appelle `AppCompatDelegate.setDefaultNightMode()`, persiste dans `SharedPreferences` (clé `Prefs.DAY_NIGHT_MODE`), et appelle `activity?.recreate()` — même comportement que l'ancien switch du Drawer.
+**Thème dark-only :** l'application n'expose plus de bascule jour/nuit. Le design system étant conçu exclusivement pour le thème sombre, `YomikataZKApplication.onCreate` force `AppCompatDelegate.setDefaultNightMode(MODE_NIGHT_YES)` une fois pour toutes ; aucune préférence n'est lue. Le toggle « Night Mode » de l'écran Settings, la clé `Prefs.DAY_NIGHT_MODE`, l'item de menu drawer associé et les ressources `ic_night`/`menu_switch` ont été supprimés.
 
 **`PrefsActivity`** reste fonctionnelle (accès legacy possible). Elle instancie désormais `PrefsFragment` directement au lieu d'avoir un `PrefsFragment` inner class.
 

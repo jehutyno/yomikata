@@ -70,7 +70,6 @@
     <string name="tuto_errors">Erreurs</string>
     <string name="tuto_answers_message">Consultez les réponses que vous avez donné pendant la session</string>
     <string name="error_no_quiz_no_word">Au moins un quiz avec au moins un mot doit exister</string>
-    <string name="menu_night_mode">Mode nuit</string>
     <string name="alert_quiz_finished">Vous avez vu tous les mots. Que voulez-vous faire ?</string>
     <string name="alert_session_finished">Vous avez terminé une session de %1d mots. Que voulez-vous faire ?</string>
     <string name="alert_restart">relancer</string>
