@@ -1,7 +1,14 @@
 package com.jehutyno.yomikata.ui.wordlist
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -11,6 +18,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -21,17 +29,16 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
-import androidx.compose.material3.TabRowDefaults
-import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -39,10 +46,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.model.Word
+import com.jehutyno.yomikata.ui.components.MasteryBar
 import com.jehutyno.yomikata.ui.theme.AccentOrange
 import com.jehutyno.yomikata.ui.theme.BackgroundPrimary
 import com.jehutyno.yomikata.ui.theme.BorderDefault
+import com.jehutyno.yomikata.ui.theme.RadiusPill
 import com.jehutyno.yomikata.ui.theme.RadiusSm
+import com.jehutyno.yomikata.ui.theme.SurfaceAccent
 import com.jehutyno.yomikata.ui.theme.SurfacePrimary
 import com.jehutyno.yomikata.ui.theme.TextDim
 import com.jehutyno.yomikata.ui.theme.TextGhost
@@ -78,8 +88,6 @@ fun WordListScreen(
     onAudioClick: (Word) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val tabs = listOf("Tous", "À revoir", "Maîtrisés")
-
     val filteredWords = remember(state.words, state.selectedTab, state.searchQuery) {
         val byTab: List<Word> = when (state.selectedTab) {
             1 -> state.words.filter { it.level == Level.LOW || it.level == Level.MEDIUM }
@@ -99,11 +107,7 @@ fun WordListScreen(
 
     val reviewCount = state.lowCount + state.mediumCount
     val masteredCount = state.highCount + state.masterCount
-    val subtitle = when (state.selectedTab) {
-        1 -> "${state.quizCount} mots · $reviewCount à revoir"
-        2 -> "${state.quizCount} mots · $masteredCount maîtrisés"
-        else -> "${state.quizCount} mots"
-    }
+    val subtitle = "${state.quizCount} ${stringResource(R.string.word_count_label)}"
 
     Scaffold(
         modifier = modifier,
@@ -159,31 +163,39 @@ fun WordListScreen(
                 .fillMaxSize()
                 .padding(innerPadding),
         ) {
-            // Tab row
-            TabRow(
-                selectedTabIndex = state.selectedTab,
-                containerColor = BackgroundPrimary,
-                contentColor = AccentOrange,
-                indicator = { tabPositions ->
-                    TabRowDefaults.SecondaryIndicator(
-                        modifier = Modifier.tabIndicatorOffset(tabPositions[state.selectedTab]),
-                        color = AccentOrange,
-                    )
-                },
+            // Mastery bar (compact — counts live in the filter pills below)
+            MasteryBar(
+                total = state.quizCount,
+                mastered = masteredCount,
+                showLegend = false,
+                modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+            )
+
+            // Filter pills (replace the old Material tabs)
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                modifier = Modifier
+                    .horizontalScroll(rememberScrollState())
+                    .padding(horizontal = 14.dp),
             ) {
-                tabs.forEachIndexed { index, label ->
-                    Tab(
-                        selected = state.selectedTab == index,
-                        onClick = { onTabSelected(index) },
-                        text = {
-                            Text(
-                                text = label,
-                                color = if (state.selectedTab == index) AccentOrange else TextMuted,
-                                fontSize = 13.sp,
-                            )
-                        },
-                    )
-                }
+                MasteryFilterChip(
+                    label = stringResource(R.string.mastery_all),
+                    count = state.quizCount,
+                    isSelected = state.selectedTab == 0,
+                    onClick = { onTabSelected(0) },
+                )
+                MasteryFilterChip(
+                    label = stringResource(R.string.mastery_to_review),
+                    count = reviewCount,
+                    isSelected = state.selectedTab == 1,
+                    onClick = { onTabSelected(1) },
+                )
+                MasteryFilterChip(
+                    label = stringResource(R.string.mastered),
+                    count = masteredCount,
+                    isSelected = state.selectedTab == 2,
+                    onClick = { onTabSelected(2) },
+                )
             }
 
             // Search field
@@ -259,6 +271,37 @@ fun WordListScreen(
                 }
             }
         }
+    }
+}
+
+/** Pill filter chip with an embedded count — replaces the Material tabs. */
+@Composable
+private fun MasteryFilterChip(
+    label: String,
+    count: Int,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val bg = if (isSelected) SurfaceAccent else SurfacePrimary
+    val border = if (isSelected) AccentOrange else BorderDefault
+    val textColor = if (isSelected) AccentOrange else TextMuted
+
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = modifier
+            .clip(RoundedCornerShape(RadiusPill))
+            .background(bg)
+            .border(1.dp, border, RoundedCornerShape(RadiusPill))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 14.dp, vertical = 7.dp),
+    ) {
+        Text(
+            text = "$label · $count",
+            fontSize = 13.sp,
+            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+            color = textColor,
+        )
     }
 }
 

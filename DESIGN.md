@@ -217,6 +217,14 @@ Bottom Navigation Bar (permanente, 4 onglets)
 - Vert = correct, Rouge = wrong, Orange = current, Gris = à venir
 - Légende : `2 ✓` (vert) et `1 ✗` (rouge) sous la barre
 
+### MasteryBar (Study + liste de mots)
+Barre de maîtrise segmentée unique, partagée par l'écran Study et la liste de mots — exprime *une seule* distribution : combien de mots maîtrisés vs à revoir.
+- En-tête : `[pourcentage]` (22sp, weight 500, `color_text_primary`) + `% maîtrisé` (`color_text_muted`) à gauche ; total `N mots` (`color_text_muted`) à droite
+- Barre : pleine largeur, hauteur 9dp, `radius_pill`, piste `color_border` ; deux segments proportionnels — **maîtrisés** `color_correct` (vert), **à revoir** échelle de maîtrise `#d28e28` (ambre, **jamais** le rouge `wrong`)
+- Légende optionnelle (`showLegend`) : `● N maîtrisés` (vert) / `● N à revoir` (ambre), dots 7dp
+- 2 catégories : maîtrisés = HIGH+MASTER, à revoir = LOW+MEDIUM (les mots jamais étudiés sont comptés dans « à revoir »)
+- Usage : Study → variante avec légende, dans une card surface ; liste de mots → variante compacte (sans légende), les compteurs étant portés par les filtres-pilules
+
 ### AnswerButton (quiz — 3 états)
 - Hauteur : 58dp
 - Radius : `radius_lg` (16dp, soit 14dp dans le code)
@@ -297,15 +305,15 @@ Spécifications du composant :
 1. Status bar
 2. Header ("学ぶ" + nom niveau actif)
 3. Level chips (scroll horizontal)
-4. Progress bars compactes (3 lignes : good / wrong / total)
+4. MasteryBar (carte surface : section header + barre segmentée + légende)
 5. Liste des quiz (items avec checkbox + titre orange + preview kana + chevron)
 6. FABBar ("Lancer tous les quiz" ou "Lancer la sélection [N]")
 7. Bottom nav (Study actif)
 
 ### Liste des mots
 1. AppBar (← + titre catégorie + compteur + toggle liste/grille)
-2. Progress bars (good / wrong / total)
-3. Tabs (Tous / À revoir / Maîtrisés)
+2. MasteryBar compacte (barre segmentée, sans légende)
+3. Filtres-pilules chiffrés (Tous · N / À revoir · N / Maîtrisés · N)
 4. Barre de recherche
 5. Liste WordListRow
 6. FABBar

@@ -24,6 +24,13 @@
     <string name="quiz_type_audio">Áudio MC</string>
     <string name="quiz_type_en_jap">PT → JP</string>
     <string name="quiz_type_jap_en">JP → PT</string>
+    <!-- Mastery progression (Study + word list) -->
+    <string name="progress_header">習得 · Progresso</string>
+    <string name="mastery_all">Todos</string>
+    <string name="mastery_to_review">Para revisar</string>
+    <string name="mastered">Dominados</string>
+    <string name="mastery_percent_label">dominado</string>
+    <string name="word_count_label">palavras</string>
     <string name="quit_quiz">Deseja encerrar esta sessão de prática?</string>
     <string name="search_title">Resultados da busca</string>
     <string name="mail_chooser">Contato por e-mail</string>

@@ -59,12 +59,12 @@ import com.jehutyno.yomikata.model.Quiz
 import com.jehutyno.yomikata.ui.components.FABBar
 import com.jehutyno.yomikata.ui.components.FABBarState
 import com.jehutyno.yomikata.ui.components.KenBurnsImage
+import com.jehutyno.yomikata.ui.components.MasteryBar
 import com.jehutyno.yomikata.ui.components.SectionHeader
 import com.jehutyno.yomikata.ui.theme.AccentOrange
 import com.jehutyno.yomikata.ui.theme.BackgroundHero
 import com.jehutyno.yomikata.ui.theme.BackgroundPrimary
 import com.jehutyno.yomikata.ui.theme.BorderDefault
-import com.jehutyno.yomikata.ui.theme.Correct
 import com.jehutyno.yomikata.ui.theme.RadiusMd
 import com.jehutyno.yomikata.ui.theme.RadiusPill
 import com.jehutyno.yomikata.ui.theme.SurfaceAccent
@@ -74,7 +74,6 @@ import com.jehutyno.yomikata.ui.theme.TextGhost
 import com.jehutyno.yomikata.ui.theme.TextMuted
 import com.jehutyno.yomikata.ui.theme.TextPrimary
 import com.jehutyno.yomikata.ui.theme.TypeHeroTitle
-import com.jehutyno.yomikata.ui.theme.Wrong
 import com.jehutyno.yomikata.ui.theme.YomikataTheme
 import com.jehutyno.yomikata.util.quiz.Categories
 import com.jehutyno.yomikata.util.quiz.QuizStrategy
@@ -233,66 +232,21 @@ private fun LevelChip(
 }
 
 @Composable
-private fun StudyProgressBars(
+private fun StudyProgress(
     quizCount: Int,
     goodCount: Int,
-    wrongCount: Int,
     modifier: Modifier = Modifier,
 ) {
-    val total = quizCount.coerceAtLeast(1).toFloat()
     Column(
-        verticalArrangement = Arrangement.spacedBy(6.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
         modifier = modifier
             .fillMaxWidth()
             .background(SurfacePrimary, RoundedCornerShape(RadiusMd))
             .border(1.dp, BorderDefault, RoundedCornerShape(RadiusMd))
             .padding(horizontal = 14.dp, vertical = 12.dp),
     ) {
-        ProgressRow(label = "Maîtrisés", count = goodCount, total = quizCount, barColor = Correct)
-        ProgressRow(label = "À revoir", count = wrongCount, total = quizCount, barColor = Wrong)
-        ProgressRow(label = "Total", count = quizCount, total = quizCount, barColor = TextMuted)
-    }
-}
-
-@Composable
-private fun ProgressRow(
-    label: String,
-    count: Int,
-    total: Int,
-    barColor: androidx.compose.ui.graphics.Color,
-) {
-    val fraction = if (total > 0) count.toFloat() / total else 0f
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        modifier = Modifier.fillMaxWidth(),
-    ) {
-        Text(
-            text = label,
-            fontSize = 10.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = TextDim,
-            modifier = Modifier.width(72.dp),
-        )
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .height(3.dp)
-                .clip(RoundedCornerShape(2.dp))
-                .background(BorderDefault),
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize(fraction.coerceIn(0f, 1f))
-                    .background(barColor),
-            )
-        }
-        Text(
-            text = count.toString(),
-            fontSize = 10.sp,
-            color = TextMuted,
-            modifier = Modifier.width(28.dp),
-        )
+        SectionHeader(text = stringResource(R.string.progress_header))
+        MasteryBar(total = quizCount, mastered = goodCount, showLegend = true)
     }
 }
 
@@ -399,11 +353,10 @@ fun StudyScreen(
             Spacer(modifier = Modifier.width(4.dp))
         }
 
-        // Progress bars
-        StudyProgressBars(
+        // Progress — single mastery bar
+        StudyProgress(
             quizCount = state.quizCount,
             goodCount = state.goodCount,
-            wrongCount = state.wrongCount,
             modifier = Modifier.padding(horizontal = 14.dp),
         )
 

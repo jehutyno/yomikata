@@ -47,6 +47,13 @@
     <string name="quiz_type_audio">Audio MCQ</string>
     <string name="quiz_type_en_jap">EN → JP</string>
     <string name="quiz_type_jap_en">JP → EN</string>
+    <!-- Mastery progression (Study + word list) -->
+    <string name="progress_header">習得 · Progress</string>
+    <string name="mastery_all">All</string>
+    <string name="mastery_to_review">To review</string>
+    <string name="mastered">Mastered</string>
+    <string name="mastery_percent_label">mastered</string>
+    <string name="word_count_label">words</string>
     <string name="quit_quiz">Do you want to quit this quiz session ?</string>
     <string name="search_title">Search Results</string>
     <string name="email_contact" translatable="false">yomikata.contact@gmail.com</string>

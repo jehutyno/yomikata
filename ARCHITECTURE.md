@@ -454,7 +454,7 @@ uiState (StudyUiState, mutableStateOf)
 **StudyHero (Session 3.8) :** photo de fond animée Ken Burns (`KenBurnsImage` partagé), distincte par niveau via `categoryHeroPhoto(category)` (mapping `pic_*`), avec `Crossfade` sur `selectedCategory` au changement de chip. Scrim froid `Brush.verticalGradient` (`0x000A14`) + icône `ic_*_big` (`categoryHeroDrawable`) + nom du niveau au premier plan.
 
 **Fichiers clés :**
-- `ui/study/StudyScreen.kt` — `StudyUiState`, `StudyLevels`, `LevelChip`, `StudyProgressBars`, `StudyQuizItem`, `StudyHero`, `categoryHeroPhoto`, `StudyScreen`, `LaunchOptionsSheet`, `QuizTypeChip`, `LaunchModeRow`
+- `ui/study/StudyScreen.kt` — `StudyUiState`, `StudyLevels`, `LevelChip`, `StudyProgress` (carte surface + `SectionHeader` + `MasteryBar`), `StudyQuizItem`, `StudyHero`, `categoryHeroPhoto`, `StudyScreen`, `LaunchOptionsSheet`, `QuizTypeChip`, `LaunchModeRow`
 - `util/quiz/QuizTypePrefs.kt` — logique de sélection des types (exclusion AUTO + persistance CSV), partagée par `QuizzesPresenter` et `QuizzesFragment` ; testée par `QuizTypePrefsTest`
 - `ui/components/KenBurnsImage.kt` — image plein cadre avec zoom lent en boucle, partagée par Home et Study
 - `screens/quizzes/QuizzesFragment.kt` — shell dynamique + `MutableStateFlow<Int>` + `WordCountPresenter` réactif + `setCategory()` public
@@ -575,19 +575,19 @@ ContentPresenter → LiveData<List<Word>> + LiveData<Int> (quizCount/low/medium/
     → WordListScreen(state = uiState)    (Compose stateless)
 ```
 
-**Filtrage par onglet (in-memory) :**
-- Tous → tous les mots
-- À revoir → `level == LOW || level == MEDIUM`
-- Maîtrisés → `level == HIGH || level == MASTER`
+**Filtrage par pilule (in-memory) :** les anciens onglets Material (`TabRow`) ont été remplacés par 3 **filtres-pilules chiffrés** `MasteryFilterChip` (mêmes indices `selectedTab` 0/1/2 → aucune modif présenteur). Une `MasteryBar` compacte (cf. composant partagé) coiffe les pilules.
+- Tous · N → tous les mots
+- À revoir · N → `level == LOW || level == MEDIUM`
+- Maîtrisés · N → `level == HIGH || level == MASTER`
 
 Le Presenter reçoit toujours `level = null` pour charger l'intégralité des mots de la catégorie. Si un `EXTRA_LEVEL` est passé dans les extras (accès depuis les stats de ContentActivity), il initialise l'onglet actif par défaut (LOW/MEDIUM → onglet 1, HIGH/MASTER → onglet 2).
 
 **Toolbar :** `ContentActivity` possède son propre `Toolbar`. `ContentFragment.onStart()` le masque via `supportActionBar?.hide()` et `onStop()` le restaure — seul le `TopAppBar` Compose reste visible.
 
-**Titre :** les noms de quiz ont le format "JP%EN" (ex. "あ行%a-row"). La portion avant `%` est affichée en titre ; le sous-titre est contextuel par onglet ("80 mots", "80 mots · 70 à revoir", "80 mots · 10 maîtrisés").
+**Titre :** les noms de quiz ont le format "JP%EN" (ex. "あ行%a-row"). La portion avant `%` est affichée en titre ; le sous-titre affiche le total ("80 mots") — les compteurs par catégorie sont désormais portés par les pilules.
 
 **Fichiers clés :**
-- `ui/wordlist/WordListScreen.kt` — `WordListUiState`, `WordListScreen`, filtrage + recherche in-memory, toggle liste/grille
+- `ui/wordlist/WordListScreen.kt` — `WordListUiState`, `WordListScreen`, `MasteryFilterChip`, filtrage + recherche in-memory, toggle liste/grille
 - `screens/content/ContentFragment.kt` — shell MVP + state Compose + TTS/VoicesManager + navigation vers `WordDetailFragment`
 
 ---
@@ -771,11 +771,11 @@ com.jehutyno.yomikata/
 │   └── quiz/                   ← Categories, QuizStrategy, QuizType, LevelSystem
 ├── ui/
 │   ├── theme/                  ← Color.kt, Shape.kt, Type.kt, Theme.kt (design tokens + YomikataTheme)
-│   ├── components/             ← SectionHeader, MasteryDots, FABBar (+ FABBarState), LevelChip (+ StudyLevel, LevelChipRow), YomikataBottomBar, KenBurnsImage, YomikataDialog (+ DialogButton/DialogIcon), YomikataDialogHost (yomikataAlert)
+│   ├── components/             ← SectionHeader, MasteryDots, MasteryBar, FABBar (+ FABBarState), LevelChip (+ StudyLevel, LevelChipRow), YomikataBottomBar, KenBurnsImage, YomikataDialog (+ DialogButton/DialogIcon), YomikataDialogHost (yomikataAlert)
 │   ├── quiz/                   ← QuizComponents (AnswerButton + AnswerButtonState, ProgressSegmentBar + SegmentState), QuizScreen (QuizUiState + composables), QuizUiState
 │   ├── home/                   ← HomeScreen (HomeUiState, HomeHero, StatsGrid, ContinueCard, NewsCard, SupportCard), StatCard
 │   ├── settings/               ← SettingsScreen (Night Mode toggle, liens sociaux, version)
-│   ├── study/                  ← StudyScreen (StudyUiState, StudyLevels, LevelChip, StudyProgressBars, StudyQuizItem)
+│   ├── study/                  ← StudyScreen (StudyUiState, StudyLevels, LevelChip, StudyProgress, StudyQuizItem)
 │   ├── answers/                ← AnswerReviewScreen (AnswerReviewUiState, AnswerReviewCard, ResultSummary, SelectionSheet)
 │   └── word/                   ← WordListRow, KanjiComponentCard, WordActionBar
 └── view/                        ← vues custom Android
