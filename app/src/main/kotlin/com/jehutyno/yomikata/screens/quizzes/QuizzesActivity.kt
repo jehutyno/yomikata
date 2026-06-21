@@ -107,8 +107,13 @@ class QuizzesActivity : AppCompatActivity(), DIAware {
             }
         }
 
-        // Show the initial fragment
-        if (savedInstanceState == null) {
+        // Show the initial fragment.
+        // We can't rely on savedInstanceState == null: onSaveInstanceState skips super (no
+        // fragment state is ever persisted), yet the system still passes a non-null bundle on a
+        // config-change recreation (e.g. language change via setApplicationLocales). In that case
+        // the FragmentManager restores nothing, so we must (re)add the fragment ourselves whenever
+        // the container is empty — otherwise the recreated activity shows a blank Home page.
+        if (supportFragmentManager.findFragmentById(R.id.study_fragment_container) == null) {
             navigateTo(BottomNavDestination.HOME)
         }
 

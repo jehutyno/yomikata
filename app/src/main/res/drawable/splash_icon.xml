@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Icône du splash screen (Android 12+).
+  Le logo `yomi_logo` est sur fond transparent : posé directement sur le fond sombre
+  du splash (`color_bg`), il évite le disque blanc de l'icône de lanceur héritée.
+  L'inset garde le logo dans le cercle de masquage central (~2/3 du canevas).
+-->
+<inset xmlns:android="http://schemas.android.com/apk/res/android"
+    android:drawable="@drawable/yomi_logo"
+    android:inset="18%" />
