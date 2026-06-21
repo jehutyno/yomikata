@@ -55,7 +55,7 @@ Les presenters reçoivent un `CoroutineScope` (le `lifecycleScope` du fragment h
 | Package | Activité principale | Rôle |
 |---|---|---|
 | `quizzes` | `QuizzesActivity` | **Activité de démarrage** — chargement DB, navigation principale (BottomNav Compose — 4 onglets), gestion erreur DB. Layout : `FrameLayout` plein écran + `ComposeView` bottom nav. Pas de Toolbar ni AppBar. |
-| `selections` | `SelectionsFragment` | Sélections personnelles (placeholder) — hero `ic_selections_big` + "Bientôt disponible" |
+| `selections` | `SelectionsFragment` | Sélections personnelles (listes de mots utilisateur). UI calquée sur Study (`ui/selections/SelectionsScreen.kt`) : hero Ken Burns (`pic_le_charme`) + `ic_selections_big`, `MasteryBar` agrégée, liste de cartes à cocher (compteur de mots + édition), carte « créer », `FABBar` + `LaunchOptionsSheet`. State-holder `SelectionsFragment(di)` : `getQuiz(CATEGORY_SELECTIONS)`, create/rename/delete, `openContent`/`launchQuiz` comme Study (catégorie 8) |
 | `settings` | `SettingsFragment` | Paramètres via BottomNav : toggle Night Mode, liens sociaux, version + `PrefsFragment` embarqué |
 | `home` | `HomeFragment` | Onglet de démarrage. Dashboard Compose — hero Ken Burns (photos `pic_*` + `yomi_logo_home.png`), grille StatCards 2×2 (stats aujourd'hui), section Continue (bouton intégré), news Firebase, card Support (bouton GitHub Sponsors) |
 | `content` | `ContentActivity` | Liste des mots d'une catégorie. Layout : `FrameLayout` plein écran + `FloatingActionsMenu` (lancer quiz). Pas de Toolbar — `WordListScreen` Compose gère sa propre `TopAppBar`. Supporte mode ViewPager2 (swipe entre sélections) et mode level (filtre par niveau). |
@@ -454,7 +454,9 @@ uiState (StudyUiState, mutableStateOf)
 **StudyHero (Session 3.8) :** photo de fond animée Ken Burns (`KenBurnsImage` partagé), distincte par niveau via `categoryHeroPhoto(category)` (mapping `pic_*`), avec `Crossfade` sur `selectedCategory` au changement de chip. Scrim froid `Brush.verticalGradient` (`0x000A14`) + icône `ic_*_big` (`categoryHeroDrawable`) + nom du niveau au premier plan.
 
 **Fichiers clés :**
-- `ui/study/StudyScreen.kt` — `StudyUiState`, `StudyLevels`, `LevelChip`, `StudyProgress` (carte surface + `SectionHeader` + `MasteryBar`), `StudyQuizItem`, `StudyHero`, `categoryHeroPhoto`, `StudyScreen`, `LaunchOptionsSheet`, `QuizTypeChip`, `LaunchModeRow`
+- `ui/study/StudyScreen.kt` — `StudyUiState`, `StudyLevels`, `LevelChip`, `StudyProgress` (carte surface + `SectionHeader` + `MasteryBar`), `StudyQuizItem`, `StudyHero`, `categoryHeroPhoto`, `StudyScreen`
+- `ui/study/LaunchOptionsSheet.kt` — `LaunchOptionsSheet` + `QuizTypeChip` + `LaunchModeRow`, **partagé** par Study et Sélections (Session sélections)
+- `ui/selections/SelectionsScreen.kt` — `SelectionsUiState`, `SelectionsScreen` (hero Ken Burns `pic_le_charme`, `MasteryBar`, `SelectionItem` à cocher, `CreateSelectionCard`, état vide, `FABBar` + `LaunchOptionsSheet`)
 - `util/quiz/QuizTypePrefs.kt` — logique de sélection des types (exclusion AUTO + persistance CSV), partagée par `QuizzesPresenter` et `QuizzesFragment` ; testée par `QuizTypePrefsTest`
 - `ui/components/KenBurnsImage.kt` — image plein cadre avec zoom lent en boucle, partagée par Home et Study
 - `screens/quizzes/QuizzesFragment.kt` — shell dynamique + `MutableStateFlow<Int>` + `WordCountPresenter` réactif + `setCategory()` public
@@ -487,7 +489,7 @@ Harmonisation des boîtes de dialogue au Design System v2, en deux niveaux :
 |---|---|---|
 | `HOME` | `HomeFragment` | Migré Compose (Session 3.2) |
 | `STUDY` | `QuizzesFragment` | Migré Compose (Session 2.2) |
-| `SELECTIONS` | `SelectionsFragment` | Placeholder (Session 3.x) |
+| `SELECTIONS` | `SelectionsFragment(di)` | Listes de mots utilisateur — UI Study-like, créer/consulter/lancer/renommer/supprimer (Session sélections) |
 | `SETTINGS` | `SettingsFragment` | Night Mode + liens sociaux + version + `PrefsFragment` enfant ✅ (Session 3.1) |
 
 **Navigation :** `navigateTo(BottomNavDestination)` — `replace()` sans back stack. Les fragments sont retrouvés par tag (`BottomNavDestination.name`) pour éviter de recréer inutilement. Onglet de démarrage : `HOME` (Session 3.7).
@@ -586,8 +588,11 @@ Le Presenter reçoit toujours `level = null` pour charger l'intégralité des mo
 
 **Titre :** les noms de quiz ont le format "JP%EN" (ex. "あ行%a-row"). La portion avant `%` est affichée en titre ; le sous-titre affiche le total ("80 mots") — les compteurs par catégorie sont désormais portés par les pilules.
 
+**Étoile favori → sélections (Session sélections) :** l'étoile de chaque ligne est **orange** (`AccentOrange`) si le mot appartient à au moins une sélection, grise sinon. Pilotée par `WordListUiState.selectedWordIds`, alimentée réactivement par `ContentPresenter.wordsInSelections` (LiveData) ← `WordRepository.getWordIdsInSelections(): Flow<List<Long>>` (requête `WordDao.getWordIdsInQuizzesOfCategory`, lecture seule, pas de migration). Le tap ouvre le sélecteur partagé `Fragment.showWordSelectionDialog(...)` (dialog `setMultiChoiceItems` : cases à cocher par liste, toggle = add/remove immédiat). Même sélecteur + indicateur dans le quiz (`QuizUiState.isCurrentWordInSelection`) et le détail mot (`WordDetailUiState.isFavorite`).
+
 **Fichiers clés :**
 - `ui/wordlist/WordListScreen.kt` — `WordListUiState`, `WordListScreen`, `MasteryFilterChip`, filtrage + recherche in-memory, toggle liste/grille
+- `util/SelectionCreation.kt` — `createNewSelectionDialog` + `showWordSelectionDialog` (sélecteur multi-choix partagé Quiz/Content/Détail)
 - `screens/content/ContentFragment.kt` — shell MVP + state Compose + TTS/VoicesManager + navigation vers `WordDetailFragment`
 
 ---
@@ -775,7 +780,9 @@ com.jehutyno.yomikata/
 │   ├── quiz/                   ← QuizComponents (AnswerButton + AnswerButtonState, ProgressSegmentBar + SegmentState), QuizScreen (QuizUiState + composables), QuizUiState
 │   ├── home/                   ← HomeScreen (HomeUiState, HomeHero, StatsGrid, ContinueCard, NewsCard, SupportCard), StatCard
 │   ├── settings/               ← SettingsScreen (Night Mode toggle, liens sociaux, version)
-│   ├── study/                  ← StudyScreen (StudyUiState, StudyLevels, LevelChip, StudyProgress, StudyQuizItem)
+│   ├── study/                  ← StudyScreen (StudyUiState, StudyLevels, LevelChip, StudyProgress, StudyQuizItem), LaunchOptionsSheet (partagé : QuizTypeChip, LaunchModeRow)
+│   ├── selections/             ← SelectionsScreen (SelectionsUiState, SelectionItem, CreateSelectionCard, hero Ken Burns)
+│   ├── wordlist/               ← WordListScreen (WordListUiState, MasteryFilterChip) — étoile favori reliée aux sélections
 │   ├── answers/                ← AnswerReviewScreen (AnswerReviewUiState, AnswerReviewCard, ResultSummary, SelectionSheet)
 │   └── word/                   ← WordListRow, KanjiComponentCard, WordActionBar
 └── view/                        ← vues custom Android
