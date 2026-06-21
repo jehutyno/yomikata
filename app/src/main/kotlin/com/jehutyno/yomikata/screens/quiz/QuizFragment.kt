@@ -48,7 +48,7 @@ import com.jehutyno.yomikata.util.SPEECH_NOT_INITALIZED
 import com.jehutyno.yomikata.util.SpeechAvailability
 import com.jehutyno.yomikata.util.backup.LocalPersistence
 import com.jehutyno.yomikata.util.checkSpeechAvailability
-import com.jehutyno.yomikata.util.createNewSelectionDialog
+import com.jehutyno.yomikata.util.showWordSelectionDialog
 import com.jehutyno.yomikata.util.hideSoftKeyboard
 import com.jehutyno.yomikata.util.onTTSinit
 import com.jehutyno.yomikata.util.quiz.QuizType
@@ -301,6 +301,17 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, TextToSp
             newSegments[position] = SegmentState.Current
         }
         uiState = uiState.copy(currentIndex = position, segments = newSegments)
+        refreshSelectionState()
+    }
+
+    private fun refreshSelectionState() {
+        val word = uiState.currentWord ?: return
+        lifecycleScope.launch {
+            val selectionIds = presenter.getSelections().map { it.id }.toTypedArray()
+            val inSelection = selectionIds.isNotEmpty() &&
+                    presenter.isWordInQuizzes(word.id, selectionIds).any { it }
+            uiState = uiState.copy(isCurrentWordInSelection = inSelection)
+        }
     }
 
     override fun setSentence(sentence: Sentence) {
@@ -508,30 +519,6 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, TextToSp
 
     private fun showSelectionMenu() {
         val word = uiState.currentWord ?: return
-        lifecycleScope.launch {
-            val selections = presenter.getSelections()
-            val items = selections.map { it.getName() }.toTypedArray()
-            requireContext().alertDialog {
-                setTitle(R.string.add_to_selections)
-                setItems(items) { _, index ->
-                    lifecycleScope.launch {
-                        if (presenter.isWordInQuiz(word.id, selections[index].id))
-                            presenter.deleteWordFromSelection(word.id, selections[index].id)
-                        else
-                            presenter.addWordToSelection(word.id, selections[index].id)
-                    }
-                }
-                negativeButton(R.string.new_selection) { addSelection(word.id) }
-            }.show()
-        }
-    }
-
-    private fun addSelection(wordId: Long) {
-        requireActivity().createNewSelectionDialog("", { selectionName ->
-            lifecycleScope.launch {
-                val selectionId = presenter.createSelection(selectionName)
-                presenter.addWordToSelection(wordId, selectionId)
-            }
-        }, null)
+        showWordSelectionDialog(word.id, presenter, presenter) { refreshSelectionState() }
     }
 }

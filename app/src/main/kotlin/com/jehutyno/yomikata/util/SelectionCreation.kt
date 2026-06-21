@@ -4,9 +4,15 @@ import android.content.Context
 import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.FrameLayout
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import com.jehutyno.yomikata.R
+import com.jehutyno.yomikata.presenters.SelectionsInterface
+import com.jehutyno.yomikata.presenters.WordInQuizInterface
+import kotlinx.coroutines.launch
 import splitties.alertdialog.appcompat.alertDialog
 import splitties.alertdialog.appcompat.cancelButton
+import splitties.alertdialog.appcompat.negativeButton
 import splitties.alertdialog.appcompat.neutralButton
 import splitties.alertdialog.appcompat.okButton
 import splitties.alertdialog.appcompat.positiveButton
@@ -90,4 +96,65 @@ fun Context.createNewSelectionDialog(
 
     // make sure to validate initial text, this is not done by the validator which only checks changes
     validator.validate(defaultText)
+}
+
+
+/**
+ * Show word selection dialog
+ *
+ * Shows a multi-choice dialog listing every existing user selection with a checkbox reflecting
+ * whether [wordId] currently belongs to it. Toggling a checkbox adds/removes the word from that
+ * selection immediately. A "new selection" button creates a new list and adds the word to it.
+ * If no selection exists yet, jumps straight to the creation dialog.
+ *
+ * Shared by the quiz, word list and word detail screens.
+ *
+ * @param wordId The word being added to / removed from selections.
+ * @param selectionsInterface Source of selections + add/remove/create operations.
+ * @param wordInQuizInterface Used to read current membership of the word.
+ * @param onChanged Called after any add/remove/create so the host can refresh its star state.
+ */
+fun Fragment.showWordSelectionDialog(
+    wordId: Long,
+    selectionsInterface: SelectionsInterface,
+    wordInQuizInterface: WordInQuizInterface,
+    onChanged: () -> Unit = {},
+) {
+    fun createAndAdd() {
+        requireActivity().createNewSelectionDialog("", { name ->
+            lifecycleScope.launch {
+                val id = selectionsInterface.createSelection(name)
+                selectionsInterface.addWordToSelection(wordId, id)
+                onChanged()
+            }
+        }, null)
+    }
+
+    lifecycleScope.launch {
+        val selections = selectionsInterface.getSelections()
+        if (selections.isEmpty()) {
+            createAndAdd()
+            return@launch
+        }
+
+        val names = selections.map { it.getName().split("%")[0] }.toTypedArray()
+        val checked = BooleanArray(selections.size) { i ->
+            wordInQuizInterface.isWordInQuiz(wordId, selections[i].id)
+        }
+
+        requireContext().alertDialog {
+            setTitle(R.string.add_to_selections)
+            setMultiChoiceItems(names, checked) { _, which, isChecked ->
+                lifecycleScope.launch {
+                    if (isChecked)
+                        selectionsInterface.addWordToSelection(wordId, selections[which].id)
+                    else
+                        selectionsInterface.deleteWordFromSelection(wordId, selections[which].id)
+                    onChanged()
+                }
+            }
+            negativeButton(R.string.new_selection) { createAndAdd() }
+            positiveButton(android.R.string.ok) {}
+        }.show()
+    }
 }

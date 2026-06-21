@@ -9,7 +9,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.appcompat.widget.PopupMenu
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -32,8 +31,8 @@ import com.jehutyno.yomikata.util.quiz.QuizType
 import com.jehutyno.yomikata.util.quiz.getLevelFromPoints
 import com.jehutyno.yomikata.util.quiz.levelDown
 import com.jehutyno.yomikata.util.quiz.levelUp
-import com.jehutyno.yomikata.util.createNewSelectionDialog
 import com.jehutyno.yomikata.util.reportError
+import com.jehutyno.yomikata.util.showWordSelectionDialog
 import kotlinx.coroutines.launch
 import org.kodein.di.DI
 import org.kodein.di.bind
@@ -115,7 +114,7 @@ class WordDetailFragment(private val di: DI) : Fragment(), WordContract.View, Te
                     onNext = { navigateTo(composeState.currentIndex + 1) },
                     onWordTtsClick = { speakCurrentWord() },
                     onSentenceTtsClick = { speakCurrentSentence() },
-                    onFavoriteClick = { showSelectionPopup(requireView()) },
+                    onFavoriteClick = { showSelectionPicker() },
                     onCopyClick = { copyCurrentWord() },
                     onReportClick = { reportCurrentWord() },
                     onLevelUp = { doLevelUp() },
@@ -158,6 +157,7 @@ class WordDetailFragment(private val di: DI) : Fragment(), WordContract.View, Te
     override fun displayWords(words: List<Triple<Word, List<KanjiSoloRadical?>, Sentence>>) {
         val idx = wordPosition.coerceIn(0, (words.size - 1).coerceAtLeast(0))
         composeState = WordDetailUiState(words = words, currentIndex = idx)
+        refreshFavorite()
     }
 
     // ── Navigation ────────────────────────────────────────────────────────────
@@ -166,6 +166,7 @@ class WordDetailFragment(private val di: DI) : Fragment(), WordContract.View, Te
         val clamped = index.coerceIn(0, composeState.words.size - 1)
         wordPosition = clamped
         composeState = composeState.copy(currentIndex = clamped)
+        refreshFavorite()
     }
 
     // ── Actions ───────────────────────────────────────────────────────────────
@@ -194,41 +195,19 @@ class WordDetailFragment(private val di: DI) : Fragment(), WordContract.View, Te
         reportError(requireActivity(), word, sentence)
     }
 
-    private fun showSelectionPopup(anchor: View) {
-        lifecycleScope.launch {
-            val word = currentWord() ?: return@launch
-            val selections = presenter.getSelections()
-            val popup = PopupMenu(requireActivity(), anchor)
-            popup.menuInflater.inflate(R.menu.popup_selections, popup.menu)
-            for ((i, selection) in selections.withIndex()) {
-                popup.menu.add(1, i, i, selection.getName())
-                    .isChecked = presenter.isWordInQuiz(word.id, selection.id)
-                popup.menu.setGroupCheckable(1, true, false)
-            }
-            popup.setOnMenuItemClickListener { item ->
-                when (item.itemId) {
-                    R.id.add_selection -> addSelection(word.id)
-                    else -> lifecycleScope.launch {
-                        if (!item.isChecked)
-                            presenter.addWordToSelection(word.id, selections[item.itemId].id)
-                        else
-                            presenter.deleteWordFromSelection(word.id, selections[item.itemId].id)
-                        item.isChecked = !item.isChecked
-                    }
-                }
-                true
-            }
-            popup.show()
-        }
+    private fun showSelectionPicker() {
+        val word = currentWord() ?: return
+        showWordSelectionDialog(word.id, presenter, presenter) { refreshFavorite() }
     }
 
-    private fun addSelection(wordId: Long) {
-        requireActivity().createNewSelectionDialog("", { selectionName ->
-            lifecycleScope.launch {
-                val selectionId = presenter.createSelection(selectionName)
-                presenter.addWordToSelection(wordId, selectionId)
-            }
-        }, null)
+    private fun refreshFavorite() {
+        val word = currentWord() ?: return
+        lifecycleScope.launch {
+            val selectionIds = presenter.getSelections().map { it.id }.toTypedArray()
+            val fav = selectionIds.isNotEmpty() &&
+                    presenter.isWordInQuizzes(word.id, selectionIds).any { it }
+            composeState = composeState.copy(isFavorite = fav)
+        }
     }
 
     private fun doLevelUp() {

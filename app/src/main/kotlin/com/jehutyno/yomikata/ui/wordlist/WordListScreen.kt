@@ -73,6 +73,8 @@ data class WordListUiState(
     val selectedTab: Int = 0,
     val searchQuery: String = "",
     val isGrid: Boolean = false,
+    /** Ids of words present in at least one user selection (drives the orange star). */
+    val selectedWordIds: Set<Long> = emptySet(),
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -243,7 +245,7 @@ fun WordListScreen(
                             translation = word.getTrad(),
                             score = word.points,
                             posTokens = word.getPosTokens(),
-                            isFavorite = false,
+                            isFavorite = word.id in state.selectedWordIds,
                             onFavoriteClick = { onFavoriteClick(word) },
                             onAudioClick = { onAudioClick(word) },
                             onClick = { onWordClick(word) },
@@ -262,7 +264,7 @@ fun WordListScreen(
                             translation = word.getTrad(),
                             score = word.points,
                             posTokens = word.getPosTokens(),
-                            isFavorite = false,
+                            isFavorite = word.id in state.selectedWordIds,
                             onFavoriteClick = { onFavoriteClick(word) },
                             onAudioClick = { onAudioClick(word) },
                             onClick = { onWordClick(word) },

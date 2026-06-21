@@ -7,6 +7,7 @@ import com.jehutyno.yomikata.repository.WordRepository
 import com.jehutyno.yomikata.repository.database.RoomQuizWord
 import com.jehutyno.yomikata.repository.database.RoomWords
 import com.jehutyno.yomikata.util.japanese.HiraganaUtils
+import com.jehutyno.yomikata.util.quiz.Categories
 import com.jehutyno.yomikata.util.quiz.Level
 import com.jehutyno.yomikata.util.quiz.QuizType
 import kotlinx.coroutines.flow.Flow
@@ -135,6 +136,10 @@ class WordSource(private val wordDao: WordDao) : WordRepository {
             isInQuizArrayList.add(isWordInQuiz(wordId, quizId))
 
         return isInQuizArrayList
+    }
+
+    override fun getWordIdsInSelections(): Flow<List<Long>> {
+        return wordDao.getWordIdsInQuizzesOfCategory(Categories.CATEGORY_SELECTIONS)
     }
 
     override suspend fun getWordById(wordId: Long): Word {

@@ -81,6 +81,11 @@ interface WordDao {
            ")")
     suspend fun isWordInQuiz(wordId: Long, quizId: Long): Boolean
 
+    @Query("SELECT DISTINCT quiz_word.word_id FROM quiz_word " +
+           "JOIN quiz ON quiz._id = quiz_word.quiz_id " +
+           "WHERE quiz.category = :category")
+    fun getWordIdsInQuizzesOfCategory(category: Int): Flow<List<Long>>
+
     @Query("SELECT * FROM words WHERE _id = :wordId LIMIT 1")
     suspend fun getWordById(wordId: Long): RoomWords?
 

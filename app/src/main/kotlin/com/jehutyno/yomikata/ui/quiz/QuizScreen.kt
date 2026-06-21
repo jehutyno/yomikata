@@ -119,6 +119,8 @@ data class QuizUiState(
     // Orange for unanswered, green after correct, stays orange after wrong (AccentOrange if 0)
     val wordHighlightColor: Int = 0,
     val infiniteCount: Int? = null,
+    /** True when the current word belongs to at least one user selection (orange star). */
+    val isCurrentWordInSelection: Boolean = false,
 )
 
 data class QcmOption(
@@ -282,6 +284,7 @@ fun QuizScreen(
                 isRevealed = uiState.isRevealed,
                 isCorrect = isCorrect,
                 isWrong = isWrong,
+                isInSelection = uiState.isCurrentWordInSelection,
                 onItemClick = onItemClick,
                 onSelectionClick = onSelectionClick,
                 onReportClick = onReportClick,
@@ -371,6 +374,7 @@ private fun QuestionZone(
     isRevealed: Boolean,
     isCorrect: Boolean,
     isWrong: Boolean,
+    isInSelection: Boolean,
     onItemClick: () -> Unit,
     onSelectionClick: () -> Unit,
     onReportClick: () -> Unit,
@@ -581,7 +585,7 @@ private fun QuestionZone(
                 Icon(
                     painter = painterResource(R.drawable.ic_star_black_24dp),
                     contentDescription = null,
-                    tint = TextGhost,
+                    tint = if (isInSelection) AccentOrange else TextGhost,
                     modifier = Modifier.size(20.dp),
                 )
             }

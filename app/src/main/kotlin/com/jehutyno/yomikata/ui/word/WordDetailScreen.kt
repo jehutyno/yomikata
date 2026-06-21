@@ -72,6 +72,8 @@ data class WordDetailUiState(
     val currentIndex: Int = 0,
     val isAudioPlaying: Boolean = false,
     val updateCounter: Int = 0,
+    /** True when the current word belongs to at least one user selection (orange star). */
+    val isFavorite: Boolean = false,
 )
 
 // ─── Screen ───────────────────────────────────────────────────────────────────
@@ -231,7 +233,7 @@ fun WordDetailScreen(
 
                         // Action bar
                         WordActionBar(
-                            isFavorite = false,
+                            isFavorite = state.isFavorite,
                             isAudioPlaying = state.isAudioPlaying,
                             onFavoriteClick = onFavoriteClick,
                             onAudioClick = onWordTtsClick,

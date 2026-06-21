@@ -17,6 +17,8 @@ interface WordRepository {
     suspend fun deleteWord(wordId: Long)
     suspend fun isWordInQuiz(wordId:Long, quizId:Long) : Boolean
     suspend fun isWordInQuizzes(wordId: Long, quizIds: Array<Long>) : ArrayList<Boolean>
+    /** Reactive set of word ids present in at least one user selection (category 8). */
+    fun getWordIdsInSelections() : Flow<List<Long>>
     suspend fun updateWordLevel(wordId: Long, level: Level)
     suspend fun getRandomWords(wordId: Long, answer: String, wordSize: Int, limit: Int, quizType: QuizType): ArrayList<Word>
     suspend fun updateWordPoints(wordId: Long, points: Int)

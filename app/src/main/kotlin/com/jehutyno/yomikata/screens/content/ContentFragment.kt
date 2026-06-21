@@ -22,6 +22,7 @@ import com.jehutyno.yomikata.util.onTTSinit
 import com.jehutyno.yomikata.util.Extras
 import com.jehutyno.yomikata.util.quiz.Level
 import com.jehutyno.yomikata.util.getSerializableHelper
+import com.jehutyno.yomikata.util.showWordSelectionDialog
 import org.kodein.di.DI
 import org.kodein.di.bind
 import org.kodein.di.instance
@@ -90,7 +91,7 @@ class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, Te
                         onSearchQueryChanged = { uiState = uiState.copy(searchQuery = it) },
                         onToggleGrid = { uiState = uiState.copy(isGrid = !uiState.isGrid) },
                         onWordClick = { word -> navigateToWordDetail(word) },
-                        onFavoriteClick = { /* TODO: selections */ },
+                        onFavoriteClick = { word -> showSelectionPicker(word) },
                         onAudioClick = { word -> voices.speakWord(word, ttsSupported, tts) },
                     )
                 }
@@ -104,6 +105,9 @@ class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, Te
 
         mpresenter.words.observe(viewLifecycleOwner) { words ->
             uiState = uiState.copy(words = words ?: emptyList())
+        }
+        mpresenter.wordsInSelections.observe(viewLifecycleOwner) { ids ->
+            uiState = uiState.copy(selectedWordIds = (ids ?: emptyList()).toSet())
         }
         mpresenter.quizCount.observe(viewLifecycleOwner) { count ->
             uiState = uiState.copy(quizCount = count ?: 0)
@@ -131,6 +135,11 @@ class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, Te
         tts?.stop()
         tts?.shutdown()
         voices.releasePlayer()
+    }
+
+    private fun showSelectionPicker(word: Word) {
+        // Star color updates reactively via the wordsInSelections Flow → no onChanged needed.
+        showWordSelectionDialog(word.id, mpresenter, mpresenter)
     }
 
     private fun navigateToWordDetail(word: Word) {

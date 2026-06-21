@@ -31,6 +31,9 @@ class ContentPresenter(
     override val words: LiveData<List<Word>> =
         wordRepository.getWordsByLevel(quizIds, level).asLiveData().distinctUntilChanged()
 
+    override val wordsInSelections: LiveData<List<Long>> =
+        wordRepository.getWordIdsInSelections().asLiveData().distinctUntilChanged()
+
     override fun start() {
         logger.info("Content presenter start")
     }

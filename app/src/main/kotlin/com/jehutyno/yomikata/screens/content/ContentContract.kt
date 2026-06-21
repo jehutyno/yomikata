@@ -20,6 +20,8 @@ interface ContentContract {
 
     interface Presenter: BasePresenter, SelectionsInterface, WordCountInterface, WordInQuizInterface {
         val words: LiveData<List<Word>>
+        /** Word ids present in at least one user selection (reactive). */
+        val wordsInSelections: LiveData<List<Long>>
     }
 
 }
