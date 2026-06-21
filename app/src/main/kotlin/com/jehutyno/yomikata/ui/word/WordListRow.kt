@@ -30,12 +30,7 @@ import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.ui.theme.AccentOrange
 import com.jehutyno.yomikata.ui.theme.BorderDefault
 import com.jehutyno.yomikata.ui.theme.BorderSubtle
-import com.jehutyno.yomikata.ui.theme.PosAdjective
-import com.jehutyno.yomikata.ui.theme.PosAdverb
 import com.jehutyno.yomikata.ui.theme.PosChipText
-import com.jehutyno.yomikata.ui.theme.PosNoun
-import com.jehutyno.yomikata.ui.theme.PosOther
-import com.jehutyno.yomikata.ui.theme.PosVerb
 import com.jehutyno.yomikata.ui.theme.TextDim
 import com.jehutyno.yomikata.ui.theme.TextGhost
 import com.jehutyno.yomikata.ui.theme.TextMuted
@@ -53,22 +48,6 @@ private val masteryColors = listOf(
 
 private fun masteryDotColor(score: Int): Color =
     if (score > 0) masteryColors[(score - 1).coerceIn(0, 15)] else BorderDefault
-
-private fun posColor(posToken: String): Color = when (posToken.lowercase()) {
-    "n", "pn", "num" -> PosNoun
-    "v1", "v5", "vk", "vs", "vt", "vi" -> PosVerb
-    "adj-i", "adj-na", "adj-no" -> PosAdjective
-    "adv", "adv-to" -> PosAdverb
-    else -> PosOther
-}
-
-private fun posLabel(posToken: String): String = when (posToken.lowercase()) {
-    "n", "pn", "num" -> "N"
-    "v1", "v5", "vk", "vs", "vt", "vi" -> "V"
-    "adj-i", "adj-na", "adj-no" -> "Adj"
-    "adv", "adv-to" -> "Adv"
-    else -> posToken.uppercase().take(3)
-}
 
 /**
  * One row in the word list. Kanji is always TextPrimary — never red (DESIGN.md rule §7).
@@ -144,12 +123,12 @@ fun WordListRow(
                     contentAlignment = Alignment.Center,
                     modifier = Modifier
                         .clip(RoundedCornerShape(50))
-                        .background(posColor(token))
+                        .background(posChipColor(token))
                         .padding(horizontal = 5.dp, vertical = 2.dp),
                 ) {
                     Text(
-                        text = posLabel(token),
-                        fontSize = 8.sp,
+                        text = posChipLabel(token),
+                        fontSize = 9.sp,
                         color = PosChipText,
                     )
                 }

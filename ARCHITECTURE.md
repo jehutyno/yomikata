@@ -240,7 +240,7 @@ Les schémas Room sont exportés à partir de la version 14 dans `app/schemas/`.
 
 La colonne `pos` dans `words` stocke les Part-of-Speech extraits du champ `english` (format JMdict : `(n)`, `(v1,vt)`, etc.), sous forme de tokens séparés par virgule (`n`, `v1,vt`, etc.). L'extraction se fait par regex lors de `MIGRATION_16_21` ; les mots manquants (JLPT4/5 sans préfixe JMdict) sont complétés via `populatePosIfNeeded` dans `onOpen` depuis l'asset.
 
-Les POS sont affichés sous forme de chips colorés dans la fiche détail d'un mot (`WordDetailScreen.kt`), avec labels courts et couleur par catégorie (bleu=nom, orange=verbe, vert=adjectif, violet=adverbe, gris=autre).
+Les POS sont affichés sous forme de chips colorés dans la fiche détail d'un mot (`WordDetailScreen.kt`, jusqu'à 3 tokens) et dans la liste de mots (`WordListRow.kt`, 1er token). Le mapping token → (nom complet localisé + couleur) est centralisé dans `ui/word/PosChipStyle.kt` (`posChipColor` / `posChipLabelRes` / `posChipLabel`), partagé par les deux écrans. **Granularité détaillée** : noms complets traduits (6 langues) distinguant les variantes de verbes (Intransitif/Transitif/Ichidan/Godan/Suru/Zuru/Auxiliaire) et d'adjectifs (Adj. -i/-na/-no/-taru), via les ressources `R.string.pos_*`. Couleur par grande famille (bleu=nom, orange=verbe, vert=adjectif, violet=adverbe, gris=autre). Mapping aligné sur l'ancien `WordPagerAdapter` (XML).
 
 ### Contenu de la base (v21)
 

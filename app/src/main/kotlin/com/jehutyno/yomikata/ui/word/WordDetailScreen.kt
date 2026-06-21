@@ -49,11 +49,6 @@ import com.jehutyno.yomikata.ui.theme.AccentOrange
 import com.jehutyno.yomikata.ui.theme.BackgroundHero
 import com.jehutyno.yomikata.ui.theme.BackgroundPrimary
 import com.jehutyno.yomikata.ui.theme.BorderDefault
-import com.jehutyno.yomikata.ui.theme.PosAdjective
-import com.jehutyno.yomikata.ui.theme.PosAdverb
-import com.jehutyno.yomikata.ui.theme.PosNoun
-import com.jehutyno.yomikata.ui.theme.PosOther
-import com.jehutyno.yomikata.ui.theme.PosVerb
 import com.jehutyno.yomikata.ui.theme.RadiusMd
 import com.jehutyno.yomikata.ui.theme.SurfacePrimary
 import com.jehutyno.yomikata.ui.theme.TextDim
@@ -369,28 +364,6 @@ private fun ExampleCard(
 }
 
 // ─── POS chip ─────────────────────────────────────────────────────────────────
-
-private fun posChipColor(token: String): Color = when {
-    token == "n" || token == "pn" || token == "num" || token == "n-t" -> PosNoun
-    token.startsWith("v") || token.startsWith("aux") -> PosVerb
-    token.startsWith("adj") -> PosAdjective
-    token == "adv" || token == "adv-to" || token == "n-adv" -> PosAdverb
-    else -> PosOther
-}
-
-private fun posChipLabel(token: String): String = when {
-    token == "n" || token == "n-t" || token == "pn" || token == "num" -> "N"
-    token == "vi" -> "Vi"
-    token == "vt" -> "Vt"
-    token == "v1" -> "V1"
-    token.startsWith("v5") -> "V5"
-    token == "vs" -> "Vs"
-    token == "adj-i" -> "Adj-i"
-    token == "adj-na" -> "Adj-na"
-    token == "adv" || token == "adv-to" || token == "n-adv" -> "Adv"
-    token == "exp" -> "Exp"
-    else -> token.uppercase().take(4)
-}
 
 @Composable
 private fun PosChip(token: String) {

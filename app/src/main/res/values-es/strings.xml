@@ -260,7 +260,15 @@
     <string name="pos_verb">Verbo</string>
     <string name="pos_intransitive">Intransitivo</string>
     <string name="pos_transitive">Transitivo</string>
+    <string name="pos_verb_ichidan">Ichidan</string>
+    <string name="pos_verb_godan">Godan</string>
+    <string name="pos_verb_suru">Suru</string>
+    <string name="pos_verb_zuru">Zuru</string>
     <string name="pos_adjective">Adjetivo</string>
+    <string name="pos_adj_i">Adj. -i</string>
+    <string name="pos_adj_na">Adj. -na</string>
+    <string name="pos_adj_no">Adj. -no</string>
+    <string name="pos_adj_t">Adj. -taru</string>
     <string name="pos_adverb">Adverbio</string>
     <string name="pos_prefix">Prefijo</string>
     <string name="pos_suffix">Sufijo</string>
