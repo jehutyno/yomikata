@@ -144,7 +144,7 @@ class QuizzesActivity : AppCompatActivity(), DIAware {
         val fragment = fm.findFragmentByTag(tag) ?: when (destination) {
             BottomNavDestination.HOME -> HomeFragment(di)
             BottomNavDestination.STUDY -> QuizzesFragment(di)
-            BottomNavDestination.SELECTIONS -> SelectionsFragment()
+            BottomNavDestination.SELECTIONS -> SelectionsFragment(di)
             BottomNavDestination.SETTINGS -> SettingsFragment()
         }
         fm.beginTransaction()
