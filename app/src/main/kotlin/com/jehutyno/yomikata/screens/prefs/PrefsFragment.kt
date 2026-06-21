@@ -4,7 +4,9 @@ import android.app.Dialog
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.view.View
 import android.widget.Toast
+import androidx.core.view.updatePadding
 import androidx.activity.ComponentActivity
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
@@ -53,6 +55,17 @@ class PrefsFragment : PreferenceFragmentCompat() {
                     .edit().putBoolean(Prefs.DB_RESTORE_ONGOING.pref, true).apply()
                 (requireActivity() as ComponentActivity).getRestoreLauncher(result)
             }
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        // Dégagement pour la barre de navigation flottante : la liste défile sous la pill.
+        val bottomPad = (com.jehutyno.yomikata.ui.components.FloatingNavBarHeight.value
+                * resources.displayMetrics.density).toInt()
+        listView?.apply {
+            clipToPadding = false
+            updatePadding(bottom = bottomPad)
+        }
     }
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {

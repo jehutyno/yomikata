@@ -159,7 +159,7 @@ Toujours bilingue : `構成 · Composition`, `今日 · Today`, `例文 · Examp
 ### Architecture v2
 
 ```
-Bottom Navigation Bar (permanente, 4 onglets)
+Barre de navigation flottante (permanente, 4 onglets)
 │
 ├── 🏠 Home       → Dashboard stats + News + Support + FAB "Continuer"
 ├── 📚 Study      → Level chips + Liste des quiz → Quiz
@@ -167,14 +167,19 @@ Bottom Navigation Bar (permanente, 4 onglets)
 └── ⚙  Settings  → Night mode, réglages, liens sociaux, version
 ```
 
-### Bottom Navigation Bar
+### Barre de navigation flottante (`YomikataFloatingNavBar`)
 
-- Fond : `color_bg_nav`
-- Bordure top : `color_border`
-- Icône active : `color_accent`, label `color_accent`
-- Icône inactive : `color_text_ghost`, label `color_text_dim`
-- Taille icône : 16–18dp, label : 9–10sp
-- Padding bottom : 10dp (safe area)
+Pill flottante Material 3 façon Telegram, le contenu passe dessous et s'estompe derrière.
+
+- Forme : pill `radius_pill` large (pleine largeur avec ~12dp de marge latérale), détachée des bords, ombre 10dp
+- Fond pill : `color_surface`, bordure `color_border` 1dp
+- 4 items répartis en `weight(1f)` — **libellés conservés** sous l'icône
+- Icône active : `color_accent`, label `color_accent`, sur highlight pill `color_surface_accent` + bordure `color_border_accent`
+- Icône inactive : `color_text_muted`, label `color_text_dim`
+- Transition d'onglet **animée** : `animateColorAsState` (fond/icône/label) + `animateDpAsState` (padding de l'item actif)
+- Taille icône : 22dp, label : 10sp
+- Fondu arrière : `Brush.verticalGradient` transparent → `color_bg`
+- Les écrans hébergés réservent `floatingNavBarBottomPadding()` en bas pour ne rien masquer
 
 ### Level chips (écran Study)
 
@@ -194,7 +199,7 @@ Bottom Navigation Bar (permanente, 4 onglets)
 - Texte/icône : `color_accent_on`
 - Radius : `radius_xl` (22dp)
 - Padding : 9–10dp vertical, 14dp horizontal
-- Position : juste au-dessus du bottom nav, padding `0 10–14dp 8dp`
+- Position : au-dessus de la barre flottante, padding bas `floatingNavBarBottomPadding()` (dégage la pill)
 - États : "Commencer" (aucune session), "Continuer — [niveau]" (session active), "Lancer la sélection" (quiz sélectionnés), "Suivant →" (post-réponse, fond `color_correct`)
 
 ### StatCard (grille 2×2 home)

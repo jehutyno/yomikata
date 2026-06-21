@@ -54,6 +54,7 @@ import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.model.Quiz
 import com.jehutyno.yomikata.ui.components.FABBar
 import com.jehutyno.yomikata.ui.components.FABBarState
+import com.jehutyno.yomikata.ui.components.floatingNavBarBottomPadding
 import com.jehutyno.yomikata.ui.components.KenBurnsImage
 import com.jehutyno.yomikata.ui.components.MasteryBar
 import com.jehutyno.yomikata.ui.components.SectionHeader
@@ -369,11 +370,15 @@ fun StudyScreen(
             )
         }
 
-        // FABBar
+        // FABBar — décalé au-dessus de la barre de navigation flottante
         FABBar(
             state = fabState,
             onClick = { showLaunchSheet = true },
-            modifier = Modifier.padding(start = 14.dp, end = 14.dp, bottom = 8.dp),
+            modifier = Modifier.padding(
+                start = 14.dp,
+                end = 14.dp,
+                bottom = floatingNavBarBottomPadding(),
+            ),
         )
     }
 

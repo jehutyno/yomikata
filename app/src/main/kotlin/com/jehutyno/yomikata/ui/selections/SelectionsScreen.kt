@@ -46,6 +46,7 @@ import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.model.Quiz
 import com.jehutyno.yomikata.ui.components.FABBar
 import com.jehutyno.yomikata.ui.components.FABBarState
+import com.jehutyno.yomikata.ui.components.floatingNavBarBottomPadding
 import com.jehutyno.yomikata.ui.components.KenBurnsImage
 import com.jehutyno.yomikata.ui.components.MasteryBar
 import com.jehutyno.yomikata.ui.components.SectionHeader
@@ -272,7 +273,10 @@ fun SelectionsScreen(
         Box(modifier = Modifier.weight(1f)) {
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
-                contentPadding = PaddingValues(start = 14.dp, end = 14.dp, top = 4.dp, bottom = 28.dp),
+                contentPadding = PaddingValues(
+                    start = 14.dp, end = 14.dp, top = 4.dp,
+                    bottom = if (state.selections.isEmpty()) floatingNavBarBottomPadding() else 28.dp,
+                ),
                 modifier = Modifier.fillMaxSize(),
             ) {
                 item(key = "create") {
@@ -319,7 +323,10 @@ fun SelectionsScreen(
             FABBar(
                 state = fabState,
                 onClick = { showLaunchSheet = true },
-                modifier = Modifier.padding(start = 14.dp, end = 14.dp, bottom = 8.dp),
+                modifier = Modifier.padding(
+                    start = 14.dp, end = 14.dp,
+                    bottom = floatingNavBarBottomPadding(),
+                ),
             )
         }
     }

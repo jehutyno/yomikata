@@ -27,7 +27,7 @@ import com.jehutyno.yomikata.screens.settings.SettingsFragment
 import com.jehutyno.yomikata.ui.components.BottomNavDestination
 import com.jehutyno.yomikata.ui.components.DialogButton
 import com.jehutyno.yomikata.ui.components.DialogButtonStyle
-import com.jehutyno.yomikata.ui.components.YomikataBottomBar
+import com.jehutyno.yomikata.ui.components.YomikataFloatingNavBar
 import com.jehutyno.yomikata.ui.components.yomikataAlert
 import com.jehutyno.yomikata.ui.theme.YomikataTheme
 import com.jehutyno.yomikata.util.*
@@ -99,7 +99,7 @@ class QuizzesActivity : AppCompatActivity(), DIAware {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             setContent {
                 YomikataTheme {
-                    YomikataBottomBar(
+                    YomikataFloatingNavBar(
                         selected = currentDestination,
                         onDestinationSelected = { navigateTo(it) }
                     )

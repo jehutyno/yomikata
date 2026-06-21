@@ -40,6 +40,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.jehutyno.yomikata.R
+import com.jehutyno.yomikata.ui.components.floatingNavBarBottomPadding
 import com.jehutyno.yomikata.ui.components.KenBurnsImage
 import com.jehutyno.yomikata.ui.components.SectionHeader
 import com.jehutyno.yomikata.ui.theme.AccentOrange
@@ -122,7 +123,8 @@ fun HomeScreen(
             onSupportClick = onSupportClick,
             modifier = Modifier.padding(horizontal = 14.dp),
         )
-        Spacer(modifier = Modifier.height(18.dp))
+        // Dégagement pour la barre de navigation flottante
+        Spacer(modifier = Modifier.height(floatingNavBarBottomPadding()))
     }
 }
 

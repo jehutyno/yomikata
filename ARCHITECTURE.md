@@ -54,7 +54,7 @@ Les presenters reçoivent un `CoroutineScope` (le `lifecycleScope` du fragment h
 
 | Package | Activité principale | Rôle |
 |---|---|---|
-| `quizzes` | `QuizzesActivity` | **Activité de démarrage** — chargement DB, navigation principale (BottomNav Compose — 4 onglets), gestion erreur DB. Layout : `FrameLayout` plein écran + `ComposeView` bottom nav. Pas de Toolbar ni AppBar. |
+| `quizzes` | `QuizzesActivity` | **Activité de démarrage** — chargement DB, navigation principale (barre flottante Compose — 4 onglets), gestion erreur DB. Layout : `FrameLayout` plein écran, le fragment passe **sous** le `ComposeView` de nav (overlay `layout_gravity=bottom`). Pas de Toolbar ni AppBar. |
 | `selections` | `SelectionsFragment` | Sélections personnelles (listes de mots utilisateur). UI calquée sur Study (`ui/selections/SelectionsScreen.kt`) : hero Ken Burns (`pic_le_charme`) + `ic_selections_big`, `MasteryBar` agrégée, liste de cartes à cocher (compteur de mots + édition), carte « créer », `FABBar` + `LaunchOptionsSheet`. State-holder `SelectionsFragment(di)` : `getQuiz(CATEGORY_SELECTIONS)`, create/rename/delete, `openContent`/`launchQuiz` comme Study (catégorie 8) |
 | `settings` | `SettingsFragment` | Paramètres via BottomNav : toggle Night Mode, liens sociaux, version + `PrefsFragment` embarqué |
 | `home` | `HomeFragment` | Onglet de démarrage. Dashboard Compose — hero Ken Burns (photos `pic_*` + `yomi_logo_home.png`), grille StatCards 2×2 (stats aujourd'hui), section Continue (bouton intégré), news Firebase, card Support (bouton GitHub Sponsors) |
@@ -460,8 +460,9 @@ uiState (StudyUiState, mutableStateOf)
 - `util/quiz/QuizTypePrefs.kt` — logique de sélection des types (exclusion AUTO + persistance CSV), partagée par `QuizzesPresenter` et `QuizzesFragment` ; testée par `QuizTypePrefsTest`
 - `ui/components/KenBurnsImage.kt` — image plein cadre avec zoom lent en boucle, partagée par Home et Study
 - `screens/quizzes/QuizzesFragment.kt` — shell dynamique + `MutableStateFlow<Int>` + `WordCountPresenter` réactif + `setCategory()` public
-- `screens/quizzes/QuizzesActivity.kt` — `YomikataBottomBar` Compose câblée + `navigateTo(BottomNavDestination)` + `navigateToCategory()` publique
-- `res/layout/activity_quizzes.xml` — LinearLayout vertical : CoordinatorLayout (`weight=1`) + `ComposeView` BottomNav en bas
+- `screens/quizzes/QuizzesActivity.kt` — `YomikataFloatingNavBar` Compose câblée + `navigateTo(BottomNavDestination)` + `navigateToCategory()` publique
+- `res/layout/activity_quizzes.xml` — `FrameLayout` plein écran : `FragmentContainerView` (`match_parent`) + `ComposeView` de nav en overlay (`layout_gravity=bottom`)
+- `ui/components/YomikataFloatingNavBar.kt` — barre flottante Material 3 (pill large, fondu arrière) + helper `FloatingNavBarHeight`/`floatingNavBarBottomPadding()`
 
 ---
 
@@ -480,9 +481,9 @@ Harmonisation des boîtes de dialogue au Design System v2, en deux niveaux :
 
 ---
 
-### Architecture BottomNav (Session 2.3)
+### Architecture BottomNav (Session 2.3, barre flottante Session nav-flottante)
 
-`QuizzesActivity` est le host unique de la navigation. La `YomikataBottomBar` (Compose) est intégrée dans un `ComposeView` en bas de `activity_quizzes.xml`.
+`QuizzesActivity` est le host unique de la navigation. La `YomikataFloatingNavBar` (Compose) est intégrée dans un `ComposeView` posé en overlay (`layout_gravity=bottom`) de `activity_quizzes.xml` ; le contenu des fragments passe **sous** elle.
 
 **4 destinations :**
 | Destination | Fragment | Statut |
@@ -496,7 +497,9 @@ Harmonisation des boîtes de dialogue au Design System v2, en deux niveaux :
 
 **Back press :** si onglet actif ≠ HOME → revenir à HOME. Si HOME → dialog de quitter l'app.
 
-**DrawerLayout :** supprimé en Session 3.3. `activity_quizzes.xml` utilise désormais un `LinearLayout` vertical comme root, fond `@color/color_bg` (Session 3.7).
+**DrawerLayout :** supprimé en Session 3.3. `activity_quizzes.xml` est un `FrameLayout` plein écran (fond `@color/color_bg`) où le `FragmentContainerView` remplit tout l'écran et le `ComposeView` de nav flotte en overlay au-dessus (Session nav-flottante ; auparavant `LinearLayout` vertical empilé).
+
+**Barre flottante (Session nav-flottante) :** `YomikataFloatingNavBar` remplace l'ancienne `YomikataBottomBar` (`NavigationBar` Material 3, conservée pour référence). Pill large détachée (`SurfacePrimary` + bordure `BorderDefault`, `RadiusPill`, ombre), 4 items répartis en `weight(1f)` avec **libellés conservés**. Item actif : highlight pill orange translucide (`SurfaceAccent` + `BorderAccent`) animé (`animateColorAsState` fond/contenu + `animateDpAsState` padding). Le contenu s'estompe derrière elle via un `Brush.verticalGradient` (transparent → `BackgroundPrimary`) façon Telegram. Les écrans hébergés (`StudyScreen`, `SelectionsScreen`, `HomeScreen`, liste de prefs de `PrefsFragment`) ajoutent `floatingNavBarBottomPadding()` (= `FloatingNavBarHeight` + inset `navigationBars`) en bas pour ne pas être masqués. `QuizzesActivity` n'étant pas edge-to-edge, l'inset système vaut 0 et la pill flotte au-dessus de la barre OS.
 
 ---
 
