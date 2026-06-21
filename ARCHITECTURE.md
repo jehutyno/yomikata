@@ -641,6 +641,8 @@ FABBar (bottom = 12dp + inset bas)
 
 **Barre de progression (Session 3.10) :** le compteur `x / total` n'est affiché qu'une fois (sous `ProgressSegmentBar`) ; le doublon de droite n'apparaît qu'en mode infini (sans segments). Compteurs ✓/✗ en 12sp / `W600`.
 
+**Persistance de la progression à travers les sessions d'erreurs (fix) :** `QuizContract.View.displayWords` prend un `WordDisplayMode` (`Fresh` / `ErrorSession` / `ResumeNormal`). Au lancement d'une revue d'erreurs (`onLaunchErrorSession` → `ErrorSession`), `QuizFragment` snapshot les segments du quiz principal dans `normalModeSegments` et repart de segments neufs pour la sous-liste d'erreurs ; à la reprise (`onContinueQuizAfterErrorSession` → `ResumeNormal`), les segments sauvegardés sont restaurés (si la taille correspond). `Fresh` (défaut, nouveau quiz / restauration après mort du process) réinitialise tout. Sans ça, `displayWords(quizWords)` réinitialisait les segments à `Pending` → la barre repartait à 0 ✓ 0 ✗ alors que la position (`currentItem`) était conservée.
+
 **Animations de feedback (dérivées dans le composable, sans état ViewModel) :**
 - `isCorrect` / `isWrong` déduits de `isRevealed` + `wordHighlightColor`
 - Fond card : `BackgroundHero` → `BackgroundCorrect` / `BackgroundHeroWrong` (animateColorAsState)
