@@ -339,15 +339,15 @@ class RoomMigrationTest {
         migrationHelper.createDatabase(TEST_DB_NAME, 19).apply {
             execSQL("""
                 INSERT INTO words
-                VALUES (1,'重力','(n) gravity;weight','gravité','じゅうりょく',0,0,0,0,0,-1,0,4,0,NULL,'Schwerkraft','gravedad','gravidade','重力')
+                VALUES (1,'重力','(n) gravity;weight','(n) gravité;pesanteur','じゅうりょく',0,0,0,0,0,-1,0,4,0,NULL,'Schwerkraft','gravedad','gravidade','重力')
             """.trimIndent())
             execSQL("""
                 INSERT INTO words
-                VALUES (2,'炒る','(v5r,vt) to parch;to fry;to roast','frire','いる',0,0,0,0,0,-1,0,4,0,NULL,'rösten','tostar','torrar','烘')
+                VALUES (2,'炒る','(v5r,vt) to parch;to fry;to roast','(adj-na)(n) frire','いる',0,0,0,0,0,-1,0,4,0,NULL,'rösten','tostar','torrar','烘')
             """.trimIndent())
             execSQL("""
                 INSERT INTO words
-                VALUES (3,'目','eye','oeil','め',0,0,0,0,0,-1,0,2,0,NULL,'Auge','ojo','olho','眼')
+                VALUES (3,'目','eye','oeil (organe)','め',0,0,0,0,0,-1,0,2,0,NULL,'Auge','ojo','olho','眼')
             """.trimIndent())
             close()
         }
@@ -356,12 +356,14 @@ class RoomMigrationTest {
             TEST_DB_NAME, 20, true, YomikataDatabase.MIGRATION_19_20
         )
 
-        // pos column must exist and be populated; english must be stripped of POS tokens
-        db.query("SELECT _id, english, pos FROM words ORDER BY _id").use {
+        // pos column must exist and be populated; english must be stripped of POS tokens;
+        // french must have its leading POS groups stripped while keeping mid-string content parens
+        db.query("SELECT _id, english, pos, french FROM words ORDER BY _id").use {
             assertTrue(it.moveToNext())
             assertEquals(1L, it.getLong(0))
-            assertEquals("gravity;weight", it.getString(1))   // POS stripped
+            assertEquals("gravity;weight", it.getString(1))   // english POS stripped
             assertEquals("n", it.getString(2))                 // POS extracted
+            assertEquals("gravité;pesanteur", it.getString(3)) // french leading "(n)" stripped
 
             assertTrue(it.moveToNext())
             assertEquals(2L, it.getLong(0))
@@ -369,11 +371,13 @@ class RoomMigrationTest {
             val pos2 = it.getString(2)
             assertTrue("pos should contain v5r", pos2.contains("v5r"))
             assertTrue("pos should contain vt", pos2.contains("vt"))
+            assertEquals("frire", it.getString(3))             // french "(adj-na)(n)" stripped
 
             assertTrue(it.moveToNext())
             assertEquals(3L, it.getLong(0))
             assertEquals("eye", it.getString(1))              // no POS to strip
             assertEquals("", it.getString(2))                 // no POS tokens
+            assertEquals("oeil (organe)", it.getString(3))    // content paren preserved
         }
     }
 
@@ -417,20 +421,25 @@ class RoomMigrationTest {
     fun migrate16To21() {
         // Simulates the production upgrade path: prod APK code 65 has DB v16.
         migrationHelper.createDatabase(TEST_DB_NAME, 16).apply {
-            // Insert a word with POS prefix in english (should be extracted into pos)
+            // Insert a word with POS prefix in english AND french (both should be stripped)
             execSQL("""
                 INSERT INTO words VALUES
-                (1,'走る','(v5r,vi) to run','courir','はしる',0,0,0,0,0,-1,0,2,0,NULL)
+                (1,'走る','(v5r,vi) to run','(v5r,vi) courir','はしる',0,0,0,0,0,-1,0,2,0,NULL)
             """.trimIndent())
             // Insert the phantom word that must be deleted
             execSQL("""
                 INSERT INTO words VALUES
                 (3537,'','','','',0,0,0,0,0,-1,0,0,0,NULL)
             """.trimIndent())
-            // Insert a word without POS prefix
+            // Insert a word without POS prefix (french content paren must be preserved)
             execSQL("""
                 INSERT INTO words VALUES
-                (2,'目','eye','oeil','め',0,0,0,0,0,-1,0,2,0,NULL)
+                (2,'目','eye','oeil (organe)','め',0,0,0,0,0,-1,0,2,0,NULL)
+            """.trimIndent())
+            // Insert the malformed-prefix word (missing ')') fixed explicitly by the migration
+            execSQL("""
+                INSERT INTO words VALUES
+                (6526,'優勢','dominance','(adj-na,nà prédominance; ascendant; supériorité','ゆうせい',0,0,0,0,0,-1,0,4,0,NULL)
             """.trimIndent())
             close()
         }
@@ -444,17 +453,24 @@ class RoomMigrationTest {
             assertTrue(it.moveToFirst())
             assertEquals(0, it.getInt(0))
         }
-        // POS must be extracted and english cleaned
-        db.query("SELECT english, pos FROM words WHERE _id = 1").use {
+        // POS must be extracted and english cleaned; french POS prefix stripped too
+        db.query("SELECT english, pos, french FROM words WHERE _id = 1").use {
             assertTrue(it.moveToFirst())
             assertEquals("to run", it.getString(0))
             assertEquals("v5r,vi", it.getString(1))
+            assertEquals("courir", it.getString(2))           // french "(v5r,vi)" stripped
         }
-        // Word without POS: english unchanged, pos empty
-        db.query("SELECT english, pos FROM words WHERE _id = 2").use {
+        // Word without POS: english unchanged, pos empty, french content paren preserved
+        db.query("SELECT english, pos, french FROM words WHERE _id = 2").use {
             assertTrue(it.moveToFirst())
             assertEquals("eye", it.getString(0))
             assertEquals("", it.getString(1))
+            assertEquals("oeil (organe)", it.getString(2))    // mid-string paren kept
+        }
+        // Malformed french POS prefix (missing ')') must be fixed explicitly
+        db.query("SELECT french FROM words WHERE _id = 6526").use {
+            assertTrue(it.moveToFirst())
+            assertEquals("à prédominance; ascendant; supériorité", it.getString(0))
         }
         // Multilingual columns must exist (spot-check on words table)
         db.query("SELECT german, spanish, portuguese, chinese FROM words WHERE _id = 2").use {

@@ -364,6 +364,48 @@ abstract class YomikataDatabase : RoomDatabase() {
                 rows.forEach { (id, pos, english) ->
                     database.execSQL(update, arrayOf<Any>(pos, english, id))
                 }
+
+                // Strip leading POS tokens from french translations (POS now lives in `pos`).
+                // Only LEADING groups made entirely of whitelisted POS tokens are removed, so
+                // content like "(compteur de jours)" / "(ma) femme" / mid-string "(crayon)" stays.
+                val frPosTokens = listOf(
+                    "adj-na", "adj-no", "adj-pn", "adj-i", "adj-t", "adj-o", "adj",
+                    "n-adv", "n-suf", "n-pref", "n-t", "n",
+                    "adv-to", "adv-no", "adv", "aux-adj", "aux-v",
+                    "vs-s", "v1-su", "v5aru", "v5u", "v5t", "v5r", "v5k", "v5g", "v5s",
+                    "v5m", "v5b", "v5z", "v5", "v1", "vs", "vt", "vi", "vz", "v",
+                    "pn", "pref", "suf", "ctr", "exp", "conj", "int", "num",
+                    "uk", "hum", "hon", "pol", "vulg", "sl", "col", "gram", "arch", "abbr",
+                    "su", "s"   // stray tokens, only inside two malformed groups: (su,ctr), (vs,s,vi)
+                )
+                val frToken = frPosTokens.joinToString("|")
+                val regexFrPos = Regex(
+                    """^(?:\s*\(\s*(?:$frToken)(?:\s*,\s*(?:$frToken))*\s*\))+\s*""",
+                    RegexOption.IGNORE_CASE
+                )
+                val frRows = mutableListOf<Pair<Long, String>>()
+                database.query("SELECT _id, french FROM words").use { cursor ->
+                    val idIdx = cursor.getColumnIndexOrThrow("_id")
+                    val frIdx = cursor.getColumnIndexOrThrow("french")
+                    while (cursor.moveToNext()) {
+                        val id = cursor.getLong(idIdx)
+                        val french = cursor.getString(frIdx)
+                        val cleaned = regexFrPos.replace(french, "").trim()
+                        if (cleaned != french) frRows.add(id to cleaned)
+                    }
+                }
+                frRows.forEach { (id, fr) ->
+                    database.execSQL("UPDATE words SET french = ? WHERE _id = ?", arrayOf<Any>(fr, id))
+                }
+                // Two source rows have a malformed POS prefix with a missing ')': fix explicitly.
+                database.execSQL(
+                    "UPDATE words SET french = ? WHERE _id = 6526 AND french = ?",
+                    arrayOf<Any>("à prédominance; ascendant; supériorité", "(adj-na,nà prédominance; ascendant; supériorité")
+                )
+                database.execSQL(
+                    "UPDATE words SET french = ? WHERE _id = 6798 AND french = ?",
+                    arrayOf<Any>("bondé; plein à craquer", "(adj-na,n,adj-no bondé; plein à craquer")
+                )
             }
         }
 
@@ -575,6 +617,50 @@ abstract class YomikataDatabase : RoomDatabase() {
                 rows.forEach { (id, pos, english) ->
                     database.execSQL("UPDATE words SET pos = ?, english = ? WHERE _id = ?", arrayOf<Any>(pos, english, id))
                 }
+
+                // --- Strip leading POS tokens from french translations (POS now lives in `pos`) ---
+                // French uses the same JMdict POS notation as english, e.g. "(adj-na)(n) déplorable".
+                // Only LEADING groups composed entirely of whitelisted POS tokens are removed, so
+                // legitimate content keeps its parentheses: leading "(compteur de jours)" / "(ma) femme"
+                // and mid-string "(crayon)" / "(à quelqu'un)" are untouched.
+                val frPosTokens = listOf(
+                    "adj-na", "adj-no", "adj-pn", "adj-i", "adj-t", "adj-o", "adj",
+                    "n-adv", "n-suf", "n-pref", "n-t", "n",
+                    "adv-to", "adv-no", "adv", "aux-adj", "aux-v",
+                    "vs-s", "v1-su", "v5aru", "v5u", "v5t", "v5r", "v5k", "v5g", "v5s",
+                    "v5m", "v5b", "v5z", "v5", "v1", "vs", "vt", "vi", "vz", "v",
+                    "pn", "pref", "suf", "ctr", "exp", "conj", "int", "num",
+                    "uk", "hum", "hon", "pol", "vulg", "sl", "col", "gram", "arch", "abbr",
+                    "su", "s"   // stray tokens, only inside two malformed groups: (su,ctr), (vs,s,vi)
+                )
+                val frToken = frPosTokens.joinToString("|")
+                val regexFrPos = Regex(
+                    """^(?:\s*\(\s*(?:$frToken)(?:\s*,\s*(?:$frToken))*\s*\))+\s*""",
+                    RegexOption.IGNORE_CASE
+                )
+                val frRows = mutableListOf<Pair<Long, String>>()
+                database.query("SELECT _id, french FROM words").use { cursor ->
+                    val idIdx = cursor.getColumnIndexOrThrow("_id")
+                    val frIdx = cursor.getColumnIndexOrThrow("french")
+                    while (cursor.moveToNext()) {
+                        val id = cursor.getLong(idIdx)
+                        val french = cursor.getString(frIdx)
+                        val cleaned = regexFrPos.replace(french, "").trim()
+                        if (cleaned != french) frRows.add(id to cleaned)
+                    }
+                }
+                frRows.forEach { (id, fr) ->
+                    database.execSQL("UPDATE words SET french = ? WHERE _id = ?", arrayOf<Any>(fr, id))
+                }
+                // Two source rows have a malformed POS prefix with a missing ')': fix explicitly.
+                database.execSQL(
+                    "UPDATE words SET french = ? WHERE _id = 6526 AND french = ?",
+                    arrayOf<Any>("à prédominance; ascendant; supériorité", "(adj-na,nà prédominance; ascendant; supériorité")
+                )
+                database.execSQL(
+                    "UPDATE words SET french = ? WHERE _id = 6798 AND french = ?",
+                    arrayOf<Any>("bondé; plein à craquer", "(adj-na,n,adj-no bondé; plein à craquer")
+                )
 
                 // --- 20→21: Room 2.7+ internal invalidation tracking table ---
                 database.execSQL(

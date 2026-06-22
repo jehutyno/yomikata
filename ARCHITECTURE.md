@@ -232,13 +232,15 @@ Un second asset `yomikataz_translations.db` contient les données de référence
 | 13→14 | Refactoring Room : DROP/CREATE de toutes les tables pour uniformiser les types. |
 | 14→15 | Nouveau système de points (0–850 cumulatifs, ancienne remise à zéro supprimée). |
 | 15→16 | Nettoyage des traductions EN : suppression du suffixe `;(P)` issu de JMdict. |
-| **16→21** | **Migration consolidée** (prod APK code 65 = DB v16) : nettoyage données (fantôme id=3537, espaces doubles), ADD COLUMN DE/ES/PT/ZH sur 5 tables, ADD COLUMN `pos` + extraction POS du champ `english`, CREATE `room_table_modification_log`. Traductions peuplées via `onOpen`. |
+| **16→21** | **Migration consolidée** (prod APK code 65 = DB v16) : nettoyage données (fantôme id=3537, espaces doubles), ADD COLUMN DE/ES/PT/ZH sur 5 tables, ADD COLUMN `pos` + extraction POS du champ `english`, **strip des POS en tête du champ `french`** (la même notation JMdict que `english`, ex. `(adj-na)(n)`), CREATE `room_table_modification_log`. Traductions peuplées via `onOpen`. |
 
 Les schémas Room sont exportés à partir de la version 14 dans `app/schemas/`.
 
 ### Colonne `pos` (v20)
 
 La colonne `pos` dans `words` stocke les Part-of-Speech extraits du champ `english` (format JMdict : `(n)`, `(v1,vt)`, etc.), sous forme de tokens séparés par virgule (`n`, `v1,vt`, etc.). L'extraction se fait par regex lors de `MIGRATION_16_21` ; les mots manquants (JLPT4/5 sans préfixe JMdict) sont complétés via `populatePosIfNeeded` dans `onOpen` depuis l'asset.
+
+Le champ `french` portait lui aussi ces préfixes POS en tête (ex. `(adj-na)(n) déplorable`). Comme le POS est désormais déporté dans la colonne `pos`, la même migration (`MIGRATION_16_21`, et son maillon granulaire `MIGRATION_19_20`) **retire les groupes POS en tête du `french`** : seuls les groupes composés **uniquement** de tokens POS whitelistés et **en position initiale** sont supprimés, ce qui préserve le contenu légitime entre parenthèses — en tête (`(compteur de jours)`, `(ma) femme`) comme en milieu de chaîne (`(crayon)`, `(à quelqu'un)`). Deux entrées sources au préfixe POS malformé (`)` manquant, ids 6526/6798) sont corrigées explicitement. L'asset `yomikataz.db` a reçu le même nettoyage (cf. règle « appliquer la migration à l'asset »).
 
 Les POS sont affichés sous forme de chips colorés dans la fiche détail d'un mot (`WordDetailScreen.kt`, jusqu'à 3 tokens) et dans la liste de mots (`WordListRow.kt`, 1er token). Le mapping token → (nom complet localisé + couleur) est centralisé dans `ui/word/PosChipStyle.kt` (`posChipColor` / `posChipLabelRes` / `posChipLabel`), partagé par les deux écrans. **Granularité détaillée** : noms complets traduits (6 langues) distinguant les variantes de verbes (Intransitif/Transitif/Ichidan/Godan/Suru/Zuru/Auxiliaire) et d'adjectifs (Adj. -i/-na/-no/-taru), via les ressources `R.string.pos_*`. Couleur par grande famille (bleu=nom, orange=verbe, vert=adjectif, violet=adverbe, gris=autre). Mapping aligné sur l'ancien `WordPagerAdapter` (XML).
 
