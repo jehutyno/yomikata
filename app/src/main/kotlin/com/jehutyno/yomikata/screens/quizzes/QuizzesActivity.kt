@@ -171,10 +171,13 @@ class QuizzesActivity : AppCompatActivity(), DIAware {
         val prefs = PreferenceManager.getDefaultSharedPreferences(this)
         showTutoAlways(this, binding.anchor, getString(R.string.tuto_yomikataz), getString(R.string.tuto_welcome)) {
             showTutoOnce(prefs, TutoId.CATEGORIES, this, null,
-                getString(R.string.tuto_categories), getString(R.string.tuto_categories_message)) {
-                maybeShowAnalyticsConsent(prefs)
-            }
+                getString(R.string.tuto_categories), getString(R.string.tuto_categories_message)) {}
         }
+        // Consentement analytics : INDÉPENDANT des overlays de tuto. L'ancre `binding.anchor`
+        // fait 0x0 → attachOverlay sort en early-return (rect vide) et le onDismiss de l'accueil
+        // ne se déclenche jamais, donc on ne peut pas s'y chaîner. On affiche le dialogue
+        // directement ; il est idempotent (guardé par consentAsked) → inoffensif aux relances.
+        maybeShowAnalyticsConsent(prefs)
     }
 
     /** Dialogue de consentement analytics (RGPD, opt-in) montré une seule fois après l'accueil. */
