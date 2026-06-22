@@ -37,5 +37,11 @@ enum class Prefs(val pref: String) {
 
     LAST_SELECTED_LEVEL("last_selected_level"),
 
-    LAST_LAUNCH_MODE("last_launch_mode")
+    LAST_LAUNCH_MODE("last_launch_mode"),
+
+    // Consentement analytics (RGPD, opt-in strict) :
+    //  - ANALYTICS_CONSENT       : true => collecte autorisée (Analytics + Crashlytics)
+    //  - ANALYTICS_CONSENT_ASKED : true => le dialogue de consentement a déjà été montré
+    ANALYTICS_CONSENT("analytics_consent"),
+    ANALYTICS_CONSENT_ASKED("analytics_consent_asked")
 }

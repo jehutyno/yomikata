@@ -12,6 +12,7 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.os.LocaleListCompat
+import androidx.preference.CheckBoxPreference
 import androidx.preference.ListPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
@@ -23,6 +24,7 @@ import com.jehutyno.yomikata.util.FileUtils
 
 import com.jehutyno.yomikata.util.language.LanguageManager
 import com.jehutyno.yomikata.util.Prefs
+import com.jehutyno.yomikata.util.analytics.Analytics
 import com.jehutyno.yomikata.util.backup.RestartDialogMessage
 import com.jehutyno.yomikata.util.backup.backupProgress
 import com.jehutyno.yomikata.util.backup.getBackupLauncher
@@ -82,6 +84,16 @@ class PrefsFragment : PreferenceFragmentCompat() {
                 true
             }
         }
+
+        val prefs = PreferenceManager.getDefaultSharedPreferences(requireContext())
+        findPreference<CheckBoxPreference>(Prefs.ANALYTICS_CONSENT.pref)?.apply {
+            isChecked = Analytics.hasConsent(prefs)
+            setOnPreferenceChangeListener { _, newValue ->
+                // Route via Analytics pour appliquer les drapeaux Firebase + marquer "asked"
+                Analytics.setConsent(prefs, newValue as Boolean)
+                true
+            }
+        }
     }
 
     private fun getResetAlert(): Dialog {
@@ -124,7 +136,7 @@ class PrefsFragment : PreferenceFragmentCompat() {
     override fun onPreferenceTreeClick(preference: Preference): Boolean {
         when (preference.key) {
             "font_size", "input_change", "speed", "length",
-            "tap_to_reveal", "play_start", "play_end" -> return true
+            "tap_to_reveal", "play_start", "play_end", "analytics_consent" -> return true
 
             "reset_tuto" -> {
                 resetAllTutos(PreferenceManager.getDefaultSharedPreferences(requireActivity()))
@@ -152,7 +164,7 @@ class PrefsFragment : PreferenceFragmentCompat() {
             Prefs.APP_LANGUAGE.pref -> return true
 
             "privacy" -> {
-                val url = "https://cdn.rawgit.com/jehutyno/privacy-policies/56b6fcf3/PrivacyPolicyYomikataZ.html"
+                val url = getString(R.string.url_privacy_policy)
                 startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
                 return true
             }

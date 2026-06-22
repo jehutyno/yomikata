@@ -10,3 +10,8 @@
 keystore.properties
 .claude/
 .kotlin/
+
+# Firebase : google-services.json est volontairement commité (config client, pas un secret).
+# Ne JAMAIS commiter en revanche les clés de service account ni les fichiers locaux :
+*-firebase-adminsdk-*.json
+**/google-services*.json.local

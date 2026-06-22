@@ -31,6 +31,7 @@ import com.jehutyno.yomikata.ui.components.YomikataFloatingNavBar
 import com.jehutyno.yomikata.ui.components.yomikataAlert
 import com.jehutyno.yomikata.ui.theme.YomikataTheme
 import com.jehutyno.yomikata.util.*
+import com.jehutyno.yomikata.util.analytics.Analytics
 import com.jehutyno.yomikata.util.backup.RestartDialogMessage
 import com.jehutyno.yomikata.util.backup.backupProgress
 import com.jehutyno.yomikata.util.backup.getBackupLauncher
@@ -170,8 +171,27 @@ class QuizzesActivity : AppCompatActivity(), DIAware {
         val prefs = PreferenceManager.getDefaultSharedPreferences(this)
         showTutoAlways(this, binding.anchor, getString(R.string.tuto_yomikataz), getString(R.string.tuto_welcome)) {
             showTutoOnce(prefs, TutoId.CATEGORIES, this, null,
-                getString(R.string.tuto_categories), getString(R.string.tuto_categories_message)) {}
+                getString(R.string.tuto_categories), getString(R.string.tuto_categories_message)) {
+                maybeShowAnalyticsConsent(prefs)
+            }
         }
+    }
+
+    /** Dialogue de consentement analytics (RGPD, opt-in) montré une seule fois après l'accueil. */
+    private fun maybeShowAnalyticsConsent(prefs: android.content.SharedPreferences) {
+        if (Analytics.consentAsked(prefs)) return
+        yomikataAlert(
+            title = getString(R.string.analytics_consent_title),
+            message = getString(R.string.analytics_consent_message),
+            buttons = listOf(
+                DialogButton(getString(R.string.analytics_consent_decline), DialogButtonStyle.Muted) {
+                    Analytics.setConsent(prefs, false)
+                },
+                DialogButton(getString(R.string.analytics_consent_accept), DialogButtonStyle.Primary) {
+                    Analytics.setConsent(prefs, true)
+                },
+            ),
+        ).show()
     }
 
     private fun handleDatabaseError(prefs: android.content.SharedPreferences) {

@@ -88,6 +88,12 @@
 
     <string name="prefs_others">Autres</string>
     <string name="prefs_privacy_policy">Règles de confidentialité</string>
+    <string name="prefs_analytics_title">Statistiques d\'utilisation</string>
+    <string name="prefs_analytics_summary">Aider à améliorer l\'app en partageant des données d\'usage anonymes</string>
+    <string name="analytics_consent_title">Aider à améliorer Yomikata</string>
+    <string name="analytics_consent_message">Pouvons-nous collecter des statistiques d\'utilisation anonymes (types de quiz et niveaux utilisés, lancements de l\'app) afin d\'améliorer l\'application ? Aucune donnée personnelle n\'est collectée. Vous pouvez changer d\'avis à tout moment dans les Réglages. Voir les règles de confidentialité pour le détail.</string>
+    <string name="analytics_consent_accept">Autoriser</string>
+    <string name="analytics_consent_decline">Non merci</string>
     <string name="prefs_backup_restore">Sauvegarde et restauration</string>
     <string name="prefs_backup_progress">Sauvegarder progression</string>
     <string name="prefs_restore_progress">Importer progression</string>

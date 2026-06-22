@@ -17,6 +17,7 @@ import com.jehutyno.yomikata.repository.WordRepository
 import com.jehutyno.yomikata.util.quiz.Level
 import com.jehutyno.yomikata.util.backup.LocalPersistence
 import com.jehutyno.yomikata.util.Prefs
+import com.jehutyno.yomikata.util.analytics.Analytics
 import com.jehutyno.yomikata.util.quiz.QuizStrategy
 import com.jehutyno.yomikata.util.quiz.QuizType
 import com.jehutyno.yomikata.util.quiz.addPoints
@@ -674,6 +675,7 @@ class QuizPresenter(
         if (sessionCount == 0) {
             // end of session
             sessionCount = sessionLength    // reset count
+            Analytics.logQuizCompleted(sessionLength, strategy, errors.size)
             quizView.showAlertSessionEnd(
                 sessionLength,
                 strategy == QuizStrategy.PROGRESSIVE,

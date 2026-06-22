@@ -30,6 +30,7 @@ import com.jehutyno.yomikata.ui.selections.SelectionsUiState
 import com.jehutyno.yomikata.ui.theme.YomikataTheme
 import com.jehutyno.yomikata.util.Extras
 import com.jehutyno.yomikata.util.Prefs
+import com.jehutyno.yomikata.util.analytics.Analytics
 import com.jehutyno.yomikata.util.createNewSelectionDialog
 import com.jehutyno.yomikata.util.quiz.Categories
 import com.jehutyno.yomikata.util.quiz.QuizStrategy
@@ -140,6 +141,7 @@ class SelectionsFragment(private val diArg: DI) : Fragment(), DIAware {
     private fun createSelection() {
         requireActivity().createNewSelectionDialog("", { name ->
             lifecycleScope.launch { quizRepository.saveQuiz(name, Categories.CATEGORY_SELECTIONS) }
+            Analytics.logSelectionCreated()
         }, null)
     }
 
@@ -148,7 +150,10 @@ class SelectionsFragment(private val diArg: DI) : Fragment(), DIAware {
         requireActivity().createNewSelectionDialog(
             currentName,
             { name -> lifecycleScope.launch { quizRepository.updateQuizName(quiz.id, name) } },
-            { lifecycleScope.launch { quizRepository.deleteQuiz(quiz.id) } },
+            {
+                lifecycleScope.launch { quizRepository.deleteQuiz(quiz.id) }
+                Analytics.logSelectionDeleted()
+            },
         )
     }
 
@@ -194,6 +199,13 @@ class SelectionsFragment(private val diArg: DI) : Fragment(), DIAware {
                 Categories.CATEGORY_SELECTIONS.toLong(),
                 Calendar.getInstance().timeInMillis,
                 StatResult.OTHER,
+            )
+            Analytics.logQuizLaunched(
+                source = Analytics.SOURCE_SELECTION,
+                category = Categories.CATEGORY_SELECTIONS,
+                level = null,
+                strategy = strategy,
+                types = uiState.selectedTypes,
             )
             prefs.edit().putString(Prefs.LAST_LAUNCH_MODE.pref, strategy.name).apply()
             uiState = uiState.copy(lastMode = strategy)

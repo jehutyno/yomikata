@@ -7,6 +7,7 @@ import com.jehutyno.yomikata.repository.database.dao.daoModule
 import com.jehutyno.yomikata.presenters.impl.presenterModule
 import com.jehutyno.yomikata.repository.database.databaseModule
 import com.jehutyno.yomikata.repository.local.repositoryModule
+import com.jehutyno.yomikata.util.analytics.Analytics
 import com.jehutyno.yomikata.util.language.LanguageManager
 import io.github.inflationx.calligraphy3.CalligraphyConfig
 import io.github.inflationx.calligraphy3.CalligraphyInterceptor
@@ -39,6 +40,8 @@ class YomikataZKApplication : Application(), DIAware {
         val prefs = PreferenceManager.getDefaultSharedPreferences(this)
         // Bootstrap language before any getTrad() call (models read LanguageManager.current)
         LanguageManager.initFromPrefs(prefs)
+        // Applique l'état de consentement analytics persisté (OFF tant que pas d'opt-in explicite)
+        Analytics.init(this, prefs)
         // App is dark-only: the whole design system is built exclusively for the dark theme.
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
 

@@ -97,6 +97,12 @@
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/prefs_others">
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:icon="@drawable/ic_info"
+            android:key="analytics_consent"
+            android:summary="@string/prefs_analytics_summary"
+            android:title="@string/prefs_analytics_title"/>
         <Preference
             android:icon="@drawable/ic_info"
             android:key="privacy"
