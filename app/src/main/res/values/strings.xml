@@ -9,6 +9,7 @@
     <string name="api_license_key" translatable="false">MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAx6V9v+GgzlL/lVrxGouhD41qClKjjc5DZGYtG+s993SzJqmPD7CgO0HfRYXUdCSy9XDOzgO8FfbZ12cylYlgcR03Uh41snoxViu/ViuzXuoR1IMMpvyUVPL1Rd1gdX37vYX0To7r+5Qy+yNj8nYN4b8YFJlkhXPRX8GNzA8oBW6hvV5aGnNmaWCyRlYQ1WZ2zrdDAh8/o3NPvhTFvRc1jsbR8tkeAwHr51TCQZ2hG3FEvkDlJkIL6w9aMOKZgalRoyJ/4s0YUWlGhgrhoZRWPAvDt6HWk8G/UUCzZ/FGtif0vLDR0mXseFo9ilFhZlqqC3Mtzv+62m0/dTQ6mHX7LQIDAQAB</string>
     <string name="url_download" translatable="false">http://sd-97857.dedibox.fr/owncloud/index.php/s/</string>
     <string name="url_voices_base" translatable="false">https://github.com/jehutyno/yomikata/releases/download/voices/</string>
+    <string name="url_privacy_policy" translatable="false">https://jehutyno.github.io/yomikata/PrivacyPolicyYomikataZ.html</string>
     <string name="app_name" translatable="false">Yomikata Z</string>
     <string name="db_path" translatable="false">/data/data/com.jehutyno.yomikata/databases/</string>
     <string name="db_name_yomi" translatable="false">Japanese.db</string>
@@ -114,6 +115,12 @@
 
     <string name="prefs_others">Others</string>
     <string name="prefs_privacy_policy">Privacy Policy</string>
+    <string name="prefs_analytics_title">Usage statistics</string>
+    <string name="prefs_analytics_summary">Help improve the app by sharing anonymous usage data</string>
+    <string name="analytics_consent_title">Help improve Yomikata</string>
+    <string name="analytics_consent_message">May we collect anonymous usage statistics (which quiz types and levels are used, app launches) to improve the app? No personal data is collected. You can change this anytime in Settings. See the privacy policy for details.</string>
+    <string name="analytics_consent_accept">Allow</string>
+    <string name="analytics_consent_decline">No thanks</string>
     <string name="prefs_backup_restore">Backup and Restore</string>
     <string name="prefs_backup_progress">Backup progress</string>
     <string name="prefs_restore_progress">Restore progress</string>

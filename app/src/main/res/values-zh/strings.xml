@@ -88,6 +88,12 @@
 
     <string name="prefs_others">其他</string>
     <string name="prefs_privacy_policy">隐私政策</string>
+    <string name="prefs_analytics_title">使用统计</string>
+    <string name="prefs_analytics_summary">通过分享匿名使用数据帮助改进应用</string>
+    <string name="analytics_consent_title">帮助改进 Yomikata</string>
+    <string name="analytics_consent_message">我们可以收集匿名使用统计数据（使用了哪些测验类型和级别、应用启动次数）以改进应用吗？不会收集任何个人数据。你可以随时在设置中更改。详情请见隐私政策。</string>
+    <string name="analytics_consent_accept">允许</string>
+    <string name="analytics_consent_decline">不用了</string>
     <string name="prefs_backup_restore">备份与恢复</string>
     <string name="prefs_backup_progress">备份进度</string>
     <string name="prefs_restore_progress">恢复进度</string>

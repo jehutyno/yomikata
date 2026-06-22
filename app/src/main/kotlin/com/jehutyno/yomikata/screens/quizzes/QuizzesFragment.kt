@@ -31,6 +31,7 @@ import com.jehutyno.yomikata.ui.study.categoryName
 import com.jehutyno.yomikata.ui.theme.YomikataTheme
 import com.jehutyno.yomikata.util.Extras
 import com.jehutyno.yomikata.util.Prefs
+import com.jehutyno.yomikata.util.analytics.Analytics
 import com.jehutyno.yomikata.util.anyVoicesDownloaded
 import com.jehutyno.yomikata.util.downloadVoices
 import com.jehutyno.yomikata.util.quiz.Categories
@@ -232,6 +233,13 @@ class QuizzesFragment(private val diArg: DI) : Fragment(), DIAware {
                 category.toLong(),
                 Calendar.getInstance().timeInMillis,
                 StatResult.OTHER,
+            )
+            Analytics.logQuizLaunched(
+                source = Analytics.SOURCE_STUDY,
+                category = category,
+                level = getCategoryLevel(category),
+                strategy = strategy,
+                types = uiState.selectedTypes,
             )
             val cat1 = prefs.getInt(Prefs.LATEST_CATEGORY_1.pref, -1)
             if (category != cat1) {

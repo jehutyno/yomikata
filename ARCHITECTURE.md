@@ -312,6 +312,8 @@ Les `Activity` et `Fragment` étendent `DIAware` et récupèrent leurs dépendan
 | `latest_category_1/2` | Int | Historique des catégories récentes |
 | `db_restore_ongoing` | Boolean | Flag de sécurité (restauration en cours) |
 | `voice_downloaded_level_V` | Boolean | Voix téléchargées par catégorie |
+| `analytics_consent` | Boolean | Consentement analytics (RGPD opt-in, défaut `false`) |
+| `analytics_consent_asked` | Boolean | Le dialogue de consentement a déjà été montré |
 
 ---
 
@@ -330,9 +332,27 @@ La logique de choix est dans `VoicesManager` ; la coordination avec l'UI est dan
 
 | Service | Usage |
 |---|---|
-| Realtime Database | Fil d'actualité affiché dans `HomeFragment` |
+| Realtime Database | Fil d'actualité affiché dans `HomeFragment` + config sponsor (`sponsor_available`/`sponsor_url`) |
 | Cloud Messaging | Notifications push |
-| Storage | Téléchargement des packs de voix par niveau |
+| Storage | (déclaré mais plus utilisé — packs de voix migrés sur GitHub Releases) |
+| Analytics | Suivi d'usage produit (opt-in RGPD) — voir ci-dessous |
+| Crashlytics | Reporting de crashs (opt-in RGPD, même consentement qu'Analytics) |
+
+### Analytics & Crashlytics (`util/analytics/Analytics.kt`)
+
+Suivi d'usage **distinct** des stats locales (`StatsRepository`). Helper `object Analytics` : point d'entrée unique, centralise les noms d'events/params, n'envoie aucune donnée personnelle (slugs de catégorie indépendants de la langue, enums, compteurs).
+
+**Consentement RGPD opt-in strict** : collecte **OFF par défaut** (3 `meta-data` du manifeste `firebase_analytics_collection_enabled`/`firebase_crashlytics_collection_enabled`/`google_analytics_default_allow_analytics_storage` = false). 2 clés `Prefs` (`ANALYTICS_CONSENT`/`ANALYTICS_CONSENT_ASKED`). Dialogue opt-in au 1er lancement (`QuizzesActivity.tutos()`), toggle `CheckBoxPreference analytics_consent` (Réglages). `Analytics.init` applique l'état au démarrage, `setConsent` réactive les deux drapeaux Firebase.
+
+| Event | Params | Posé dans |
+|---|---|---|
+| `quiz_launched` | source (study/selection), category-slug, level, strategy, quiz_types | `QuizzesFragment`/`SelectionsFragment.launchQuiz()` |
+| `selection_created` / `selection_deleted` | — | `SelectionsFragment` |
+| `quiz_completed` | session_length, strategy, error_count | `QuizPresenter` (fin de session) |
+
+Fréquence d'ouverture = auto (Firebase `first_open`/`session_start`/DAU).
+
+**google-services.json par build-type** : `app/src/debug/` (client `.debug`) et `app/src/release/` (client release), plus de fichier racine. La politique de confidentialité (`PrivacyPolicyYomikataZ.html`, racine du repo, servie via GitHub Pages) couvre Analytics/Crashlytics ; URL dans `strings.xml` (`url_privacy_policy`).
 
 ### Realtime Database — nœuds de news
 
@@ -720,7 +740,7 @@ Depuis la migration (juin 2026), toutes les versions et dépendances sont centra
 | `[versions]` | Toutes les versions (kotlin, agp, room, lifecycle, media3, firebase-bom, …) |
 | `[libraries]` | 40+ entrées groupées par domaine (AndroidX, Room, Firebase, UI libs, tests…) |
 | `[bundles]` | `media3` (exoplayer + ui + common), `firebase` (database + messaging + storage) |
-| `[plugins]` | android-application, kotlin-android, kotlin-compose, ksp, google-services, gradle-versions |
+| `[plugins]` | android-application, kotlin-android, kotlin-compose, ksp, google-services, firebase-crashlytics, gradle-versions |
 
 **Repos centralisés dans `settings.gradle`** via `dependencyResolutionManagement` (mode `FAIL_ON_PROJECT_REPOS`) — plus de bloc `repositories {}` dans les sous-modules.
 
@@ -740,7 +760,7 @@ Depuis la migration (juin 2026), toutes les versions et dépendances sont centra
 | androidx.core:core-splashscreen | Contrôle du splash screen système (Android 12+) |
 | HiraganaEditText | Saisie IME hiragana |
 | Compose BOM 2025.05 + Material 3 | UI Compose — migration complète (toutes les phases 0→3 terminées) |
-| Firebase BOM 33.x | RTDB, FCM, Storage |
+| Firebase BOM 34.0.0 | RTDB, FCM, Analytics, Crashlytics (Storage déclaré mais inutilisé) |
 | MockK 1.13.x | Mocking pour les tests unitaires |
 | androidx.arch.core:core-testing | `InstantTaskExecutorRule` pour les tests LiveData |
 
