@@ -24,7 +24,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.ui.theme.AccentOrange
-import com.jehutyno.yomikata.ui.theme.BackgroundNav
 import com.jehutyno.yomikata.ui.theme.BackgroundPrimary
 import com.jehutyno.yomikata.ui.theme.BorderDefault
 import com.jehutyno.yomikata.ui.theme.SurfacePrimary

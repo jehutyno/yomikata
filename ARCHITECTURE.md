@@ -62,7 +62,6 @@ Les presenters reçoivent un `CoroutineScope` (le `lifecycleScope` du fragment h
 | `content/word` | `WordDetailFragment` | Détail d'un mot plein écran (Compose — Sessions 1.4) |
 | `quiz` | `QuizActivity` / `QuizFragment` | Session de quiz complète |
 | `answers` | `AnswersActivity` / `AnswersFragment` | Récapitulatif des réponses après une session (Compose — `AnswerReviewScreen`). Cartes teintées vert/rouge par résultat, en-tête de synthèse, picker de sélection en `ModalBottomSheet`. Layout `FrameLayout`, edge-to-edge. |
-| `search` | `SearchResultActivity` | Recherche de mots dans toute la base |
 | `prefs` | `PrefsActivity` + `PrefsFragment` | Paramètres (thème, vitesse TTS, voix, langue de traduction). `PrefsFragment` standalone réutilisé dans `SettingsFragment`. |
 
 ---
@@ -286,7 +285,7 @@ presenterModule     ← SelectionsPresenter, WordInQuizPresenter, WordCountPrese
 **`SharedPreferences`** est lié comme singleton Kodein dans `applicationModule` et injecté dans :
 - `QuizPresenter` (paramètre constructeur)
 - `QuizzesPresenter` (paramètre constructeur, remplace l'ancien `Context`)
-- `QuizItemPagerAdapter`, `SettingsUIManager`, `DialogFlowController` (via `QuizFragment`)
+- `SettingsUIManager`, `DialogFlowController` (via `QuizFragment`)
 
 **`LanguageManager`** est lié comme singleton Kodein. Il est également initialisé statiquement via `LanguageManager.initFromPrefs()` dans `Application.onCreate()` pour que `getTrad()` soit correct dès le premier appel.
 
@@ -521,7 +520,7 @@ Harmonisation des boîtes de dialogue au Design System v2, en deux niveaux :
 
 **DrawerLayout :** supprimé en Session 3.3. `activity_quizzes.xml` est un `FrameLayout` plein écran (fond `@color/color_bg`) où le `FragmentContainerView` remplit tout l'écran et le `ComposeView` de nav flotte en overlay au-dessus (Session nav-flottante ; auparavant `LinearLayout` vertical empilé).
 
-**Barre flottante (Session nav-flottante) :** `YomikataFloatingNavBar` remplace l'ancienne `YomikataBottomBar` (`NavigationBar` Material 3, conservée pour référence). Pill large détachée (`SurfacePrimary` + bordure `BorderDefault`, `RadiusPill`, ombre), 4 items répartis en `weight(1f)` avec **libellés conservés**. Item actif : highlight pill orange translucide (`SurfaceAccent` + `BorderAccent`) animé (`animateColorAsState` fond/contenu + `animateDpAsState` padding). Le contenu s'estompe derrière elle via un `Brush.verticalGradient` (transparent → `BackgroundPrimary`) façon Telegram. Les écrans hébergés (`StudyScreen`, `SelectionsScreen`, `HomeScreen`, liste de prefs de `PrefsFragment`) ajoutent `floatingNavBarBottomPadding()` (= `FloatingNavBarHeight` + inset `navigationBars`) en bas pour ne pas être masqués. `QuizzesActivity` n'étant pas edge-to-edge, l'inset système vaut 0 et la pill flotte au-dessus de la barre OS.
+**Barre flottante (Session nav-flottante) :** `YomikataFloatingNavBar` remplace l'ancienne `YomikataBottomBar` (`NavigationBar` Material 3, supprimée lors du nettoyage de code mort ; l'enum `BottomNavDestination` qu'elle hébergeait a été déplacée dans `YomikataFloatingNavBar.kt`). Pill large détachée (`SurfacePrimary` + bordure `BorderDefault`, `RadiusPill`, ombre), 4 items répartis en `weight(1f)` avec **libellés conservés**. Item actif : highlight pill orange translucide (`SurfaceAccent` + `BorderAccent`) animé (`animateColorAsState` fond/contenu + `animateDpAsState` padding). Le contenu s'estompe derrière elle via un `Brush.verticalGradient` (transparent → `BackgroundPrimary`) façon Telegram. Les écrans hébergés (`StudyScreen`, `SelectionsScreen`, `HomeScreen`, liste de prefs de `PrefsFragment`) ajoutent `floatingNavBarBottomPadding()` (= `FloatingNavBarHeight` + inset `navigationBars`) en bas pour ne pas être masqués. `QuizzesActivity` n'étant pas edge-to-edge, l'inset système vaut 0 et la pill flotte au-dessus de la barre OS.
 
 ---
 
@@ -794,7 +793,6 @@ com.jehutyno.yomikata/
 │   ├── prefs/                  ← PrefsActivity, PrefsFragment (standalone, réutilisé dans SettingsFragment)
 │   ├── quiz/
 │   ├── quizzes/
-│   ├── search/
 │   └── settings/               ← SettingsFragment (ComposeView + PrefsFragment enfant)
 ├── util/                        ← utilitaires généraux (Prefs, Extras, TutoOverlay, etc.)
 │   ├── backup/                 ← BackupAndRestore, CopyUtils, LocalPersistence, InsecureSHA1PRNGKeyDerivator
@@ -803,7 +801,7 @@ com.jehutyno.yomikata/
 │   └── quiz/                   ← Categories, QuizStrategy, QuizType, LevelSystem
 ├── ui/
 │   ├── theme/                  ← Color.kt, Shape.kt, Type.kt, Theme.kt (design tokens + YomikataTheme)
-│   ├── components/             ← SectionHeader, MasteryDots, MasteryBar, FABBar (+ FABBarState), LevelChip (+ StudyLevel, LevelChipRow), YomikataBottomBar, KenBurnsImage, YomikataDialog (+ DialogButton/DialogIcon), YomikataDialogHost (yomikataAlert)
+│   ├── components/             ← SectionHeader, MasteryDots, MasteryBar, FABBar (+ FABBarState), LevelChip (+ StudyLevel, LevelChipRow), YomikataFloatingNavBar (+ BottomNavDestination), KenBurnsImage, YomikataDialog (+ DialogButton/DialogIcon), YomikataDialogHost (yomikataAlert)
 │   ├── quiz/                   ← QuizComponents (AnswerButton + AnswerButtonState, ProgressSegmentBar + SegmentState), QuizScreen (QuizUiState + composables), QuizUiState
 │   ├── home/                   ← HomeScreen (HomeUiState, HomeHero, StatsGrid, ContinueCard, NewsCard, SupportCard), StatCard
 │   ├── settings/               ← SettingsScreen (Night Mode toggle, liens sociaux, version)

@@ -82,7 +82,6 @@ androidx-media3-common    = { group = "androidx.media3", name = "media3-common",
 firebase-bom      = { group = "com.google.firebase", name = "firebase-bom",          version.ref = "firebase-bom" }
 firebase-database = { group = "com.google.firebase", name = "firebase-database" }
 firebase-messaging = { group = "com.google.firebase", name = "firebase-messaging" }
-firebase-storage  = { group = "com.google.firebase", name = "firebase-storage" }
 firebase-analytics = { group = "com.google.firebase", name = "firebase-analytics" }
 firebase-crashlytics = { group = "com.google.firebase", name = "firebase-crashlytics" }
 
@@ -117,7 +116,7 @@ mockk                 = { group = "io.mockk",                name = "mockk",    
 
 [bundles]
 media3   = ["androidx-media3-exoplayer", "androidx-media3-session", "androidx-media3-ui", "androidx-media3-common"]
-firebase = ["firebase-database", "firebase-messaging", "firebase-storage", "firebase-analytics", "firebase-crashlytics"]
+firebase = ["firebase-database", "firebase-messaging", "firebase-analytics", "firebase-crashlytics"]
 
 [plugins]
 android-application = { id = "com.android.application",       version.ref = "agp" }

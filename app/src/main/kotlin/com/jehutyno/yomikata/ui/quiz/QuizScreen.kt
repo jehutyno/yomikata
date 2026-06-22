@@ -31,10 +31,8 @@ import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.union
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -76,7 +74,6 @@ import com.jehutyno.yomikata.ui.theme.BorderHeroCorrect
 import com.jehutyno.yomikata.ui.theme.RadiusMd
 import com.jehutyno.yomikata.ui.theme.RadiusXl
 import com.jehutyno.yomikata.ui.theme.BorderHeroWrong
-import com.jehutyno.yomikata.ui.theme.BorderSubtle
 import com.jehutyno.yomikata.ui.theme.BorderWrong
 import com.jehutyno.yomikata.ui.theme.Correct
 import com.jehutyno.yomikata.ui.theme.SurfacePrimary

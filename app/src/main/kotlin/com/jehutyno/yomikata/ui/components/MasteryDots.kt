@@ -15,13 +15,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.jehutyno.yomikata.ui.theme.BorderDefault
-import com.jehutyno.yomikata.ui.theme.MasteryHigh1
-import com.jehutyno.yomikata.ui.theme.MasteryHigh4
-import com.jehutyno.yomikata.ui.theme.MasteryLow1
-import com.jehutyno.yomikata.ui.theme.MasteryLow4
-import com.jehutyno.yomikata.ui.theme.MasteryMaster4
-import com.jehutyno.yomikata.ui.theme.MasteryMedium1
-import com.jehutyno.yomikata.ui.theme.MasteryMedium4
 import com.jehutyno.yomikata.ui.theme.TextGhost
 import com.jehutyno.yomikata.ui.theme.TypeMicro
 import com.jehutyno.yomikata.ui.theme.YomikataTheme

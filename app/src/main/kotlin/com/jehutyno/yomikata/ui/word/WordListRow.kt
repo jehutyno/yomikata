@@ -2,7 +2,6 @@ package com.jehutyno.yomikata.ui.word
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -36,7 +35,6 @@ import com.jehutyno.yomikata.ui.theme.TextGhost
 import com.jehutyno.yomikata.ui.theme.TextMuted
 import com.jehutyno.yomikata.ui.theme.TextPrimary
 import com.jehutyno.yomikata.ui.theme.TypeCaption
-import com.jehutyno.yomikata.ui.theme.TypeMicro
 import com.jehutyno.yomikata.ui.theme.YomikataTheme
 
 private val masteryColors = listOf(

@@ -1,5 +1,6 @@
 package com.jehutyno.yomikata.ui.components
 
+import androidx.annotation.DrawableRes
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.BorderStroke
@@ -37,6 +38,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.ui.theme.AccentOrange
 import com.jehutyno.yomikata.ui.theme.BackgroundPrimary
 import com.jehutyno.yomikata.ui.theme.BorderAccent
@@ -46,6 +48,17 @@ import com.jehutyno.yomikata.ui.theme.SurfacePrimary
 import com.jehutyno.yomikata.ui.theme.TextDim
 import com.jehutyno.yomikata.ui.theme.TextMuted
 import com.jehutyno.yomikata.ui.theme.YomikataTheme
+
+/** Destinations de la barre de navigation principale (Home / Study / Sélections / Réglages). */
+enum class BottomNavDestination(
+    val labelRes: String,
+    @param:DrawableRes val iconRes: Int
+) {
+    HOME("Home", R.drawable.ic_home),
+    STUDY("Study", R.drawable.ic_list),
+    SELECTIONS("Selections", R.drawable.ic_star_black_24dp),
+    SETTINGS("Settings", R.drawable.ic_settings)
+}
 
 /**
  * Hauteur du contenu de la barre flottante (pill + zone de fondu), hors inset système.

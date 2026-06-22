@@ -32,7 +32,6 @@ import com.jehutyno.yomikata.util.quiz.getLevelDownloadVersion
 import com.jehutyno.yomikata.util.backup.getRestartDialog
 import com.jehutyno.yomikata.util.backup.getRestoreLauncher
 import com.jehutyno.yomikata.util.backup.restoreProgress
-import com.jehutyno.yomikata.util.TutoId
 import com.jehutyno.yomikata.util.resetAllTutos
 import com.jehutyno.yomikata.ui.components.DialogButton
 import com.jehutyno.yomikata.ui.components.DialogButtonStyle
