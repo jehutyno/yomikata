@@ -34,7 +34,6 @@ slf4j-android      = "1.7.21"
 kenburnsview       = "1.0.7"
 circleimageview    = "3.1.0"
 hiraganaedittext   = "1.0.7"
-fab                = "1.10.4"
 verticalseekbar    = "0.7.0"
 crescento          = "1.2.1"
 expandabletextview = "0.1.4"
@@ -99,7 +98,6 @@ slf4j-android  = { group = "org.slf4j",            name = "slf4j-android",   ver
 kenburnsview    = { group = "com.flaviofaria",             name = "kenburnsview",                   version.ref = "kenburnsview" }
 circleimageview = { group = "de.hdodenhof",                name = "circleimageview",                version.ref = "circleimageview" }
 hiraganaedittext = { group = "com.github.jehutyno",        name = "hiraganaedittext",               version.ref = "hiraganaedittext" }
-fab             = { group = "com.github.jehutyno",         name = "android-floating-action-button", version.ref = "fab" }
 verticalseekbar = { group = "com.h6ah4i.android.widget.verticalseekbar", name = "verticalseekbar", version.ref = "verticalseekbar" }
 crescento       = { group = "com.github.developer-shivam", name = "Crescento",                      version.ref = "crescento" }
 expandabletextview = { group = "com.ms-square",            name = "expandableTextView",              version.ref = "expandabletextview" }

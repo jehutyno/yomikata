@@ -105,7 +105,6 @@ dependencies {
     implementation libs.kenburnsview
     implementation libs.circleimageview
     implementation libs.hiraganaedittext
-    implementation libs.fab
     implementation libs.verticalseekbar
     implementation libs.crescento
     implementation libs.expandabletextview
