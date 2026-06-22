@@ -70,6 +70,8 @@ data class HomeUiState(
     val lastSessionLevel: String? = null,
     val newsText: String = "",
     val newsLoading: Boolean = true,
+    val sponsorAvailable: Boolean = false,
+    val sponsorUrl: String = "",
 )
 
 @Composable
@@ -119,11 +121,13 @@ fun HomeScreen(
             modifier = Modifier.padding(horizontal = 14.dp),
         )
 
-        Spacer(modifier = Modifier.height(18.dp))
-        SupportCard(
-            onSupportClick = onSupportClick,
-            modifier = Modifier.padding(horizontal = 14.dp),
-        )
+        if (state.sponsorAvailable) {
+            Spacer(modifier = Modifier.height(18.dp))
+            SupportCard(
+                onSupportClick = onSupportClick,
+                modifier = Modifier.padding(horizontal = 14.dp),
+            )
+        }
         // Dégagement pour la barre de navigation flottante
         Spacer(modifier = Modifier.height(floatingNavBarBottomPadding()))
     }
@@ -347,7 +351,7 @@ private fun SupportCard(
             )
             Spacer(modifier = Modifier.height(12.dp))
             DiscreetActionButton(
-                text = "♥ Soutenir sur GitHub",
+                text = "Soutenir",
                 onClick = onSupportClick,
             )
         }
@@ -367,6 +371,7 @@ private fun HomeScreenPreview() {
                 lastSessionLevel = "JLPT N4",
                 newsText = "Nouvelle mise à jour disponible avec des traductions en mandarin complètes.",
                 newsLoading = false,
+                sponsorAvailable = true,
             ),
             onContinueClick = {},
             onSupportClick = {},

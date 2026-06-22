@@ -24,7 +24,7 @@ import com.jehutyno.yomikata.ui.home.HomeUiState
 import com.jehutyno.yomikata.ui.study.categoryName
 import com.jehutyno.yomikata.ui.theme.YomikataTheme
 import com.jehutyno.yomikata.util.Prefs
-import com.jehutyno.yomikata.util.openGithubSponsors
+import com.jehutyno.yomikata.util.openSponsorUrl
 import com.jehutyno.yomikata.util.quiz.Categories
 import com.jehutyno.yomikata.util.language.AppLanguage
 import com.jehutyno.yomikata.util.language.LanguageManager
@@ -71,7 +71,7 @@ class HomeFragment(di: DI) : Fragment(), HomeContract.View {
                     HomeScreen(
                         state = uiState,
                         onContinueClick = { handleFabClick() },
-                        onSupportClick = { openGithubSponsors(requireActivity()) },
+                        onSupportClick = { openSponsorUrl(requireActivity(), uiState.sponsorUrl) },
                     )
                 }
             }
@@ -111,6 +111,26 @@ class HomeFragment(di: DI) : Fragment(), HomeContract.View {
                     newsLoading = false,
                 )
             }
+        })
+
+        // Config soutien (activation + URL) pilotée à distance via Firebase
+        database.getReference("sponsor_available").addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(dataSnapshot: DataSnapshot) {
+                if (_binding == null) return
+                val available = dataSnapshot.getValue(Boolean::class.java) ?: false
+                uiState = uiState.copy(sponsorAvailable = available)
+            }
+
+            override fun onCancelled(error: DatabaseError) {}
+        })
+
+        database.getReference("sponsor_url").addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(dataSnapshot: DataSnapshot) {
+                if (_binding == null) return
+                uiState = uiState.copy(sponsorUrl = dataSnapshot.getValue(String::class.java) ?: "")
+            }
+
+            override fun onCancelled(error: DatabaseError) {}
         })
     }
 

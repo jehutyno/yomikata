@@ -115,6 +115,12 @@ fun openGithubSponsors(context: Context) {
     context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/sponsors/jehutyno")).setFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
 }
 
+/** Ouvre une URL de soutien fournie par la config Firebase (service au choix). */
+fun openSponsorUrl(context: Context, url: String) {
+    if (url.isBlank()) return
+    context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)).setFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+}
+
 fun onTTSinit(context: Context?, status: Int, tts: TextToSpeech?): Int {
     var supported: Int = TextToSpeech.LANG_NOT_SUPPORTED
     try {
