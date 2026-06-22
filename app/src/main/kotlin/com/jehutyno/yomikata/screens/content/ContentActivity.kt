@@ -3,18 +3,29 @@ package com.jehutyno.yomikata.screens.content
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
-import android.os.Build
 import android.os.Bundle
 import android.view.View.GONE
-import android.view.View.VISIBLE
-import android.window.OnBackInvokedDispatcher
-import androidx.activity.addCallback
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
 import androidx.viewpager2.widget.ViewPager2
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.databinding.ActivityContentBinding
+import com.jehutyno.yomikata.ui.components.FABBar
+import com.jehutyno.yomikata.ui.components.FABBarState
+import com.jehutyno.yomikata.ui.study.LaunchOptionsSheet
+import com.jehutyno.yomikata.ui.theme.YomikataTheme
 import com.jehutyno.yomikata.model.Quiz
 import com.jehutyno.yomikata.model.StatAction
 import com.jehutyno.yomikata.model.StatResult
@@ -32,6 +43,7 @@ import com.jehutyno.yomikata.util.quiz.Level
 import com.jehutyno.yomikata.util.Prefs
 import com.jehutyno.yomikata.util.quiz.QuizStrategy
 import com.jehutyno.yomikata.util.quiz.QuizType
+import com.jehutyno.yomikata.util.quiz.QuizTypePrefs
 import com.jehutyno.yomikata.util.addOrReplaceFragment
 import com.jehutyno.yomikata.util.getParcelableArrayListExtraHelper
 import com.jehutyno.yomikata.util.getSerializableExtraHelper
@@ -53,8 +65,11 @@ class ContentActivity : AppCompatActivity(), DIAware {
     companion object : KLogging()
 
     private var quizIds = longArrayOf()
-    private lateinit var selectedTypes: ArrayList<QuizType>
     private lateinit var quizzes: List<Quiz>
+
+    // Launch-bar Compose state (harmonisé avec l'écran Study)
+    private var launchTypes by mutableStateOf<List<QuizType>>(emptyList())
+    private var lastMode by mutableStateOf<QuizStrategy?>(null)
 
     private var category: Int = -1
     private var level: Level? = null
@@ -93,51 +108,33 @@ class ContentActivity : AppCompatActivity(), DIAware {
         level = intent.getSerializableExtraHelper(EXTRA_LEVEL, Level::class.java)
 
         val quizPosition = intent.getIntExtra(EXTRA_QUIZ_POSITION, -1)
-        selectedTypes = intent.getParcelableArrayListExtraHelper(EXTRA_QUIZ_TYPES, QuizType::class.java) ?: arrayListOf()
+        launchTypes = intent.getParcelableArrayListExtraHelper(EXTRA_QUIZ_TYPES, QuizType::class.java) ?: arrayListOf()
+        lastMode = loadLastMode()
 
         lifecycleScope.launch {
             getQuizzes()
             launchFragment(savedInstanceState, quizPosition)
         }
 
-
-        binding.progressivePlay.visibility = if (level != null) GONE else VISIBLE
-
-        binding.progressivePlay.setOnClickListener {
-            launchQuiz(QuizStrategy.PROGRESSIVE)
-        }
-        binding.normalPlay.setOnClickListener {
-            launchQuiz(QuizStrategy.STRAIGHT)
-        }
-        binding.shufflePlay.setOnClickListener {
-            launchQuiz(QuizStrategy.SHUFFLE)
-        }
-
-        /**
-         * Collapse or quit
-         * If action button is expanded -> collapse it
-         * Otherwise -> finish this activity
-         */
-        fun collapseOrQuit() {
-            if (binding.multipleActions.isExpanded)
-                binding.multipleActions.collapse()
-            else
-                finish()
-        }
-
-        // set back button to close floating actions menu
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            onBackInvokedDispatcher.registerOnBackInvokedCallback(
-                    OnBackInvokedDispatcher.PRIORITY_DEFAULT
-            ) {
-                collapseOrQuit()
-            }
-        } else {
-            onBackPressedDispatcher.addCallback(this) {
-                collapseOrQuit()
+        // Launch bar Compose : bouton « Lancer le quiz » + bottom sheet d'options (comme Study)
+        binding.launchBar.apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                YomikataTheme {
+                    ContentLaunchBar(
+                        selectedTypes = launchTypes,
+                        lastMode = lastMode,
+                        // Progressif sans objet sur un sous-ensemble par niveau (revue rouge/orange/…)
+                        showProgressive = level == null,
+                        onQuizTypeToggle = { type ->
+                            val prefs = PreferenceManager.getDefaultSharedPreferences(this@ContentActivity)
+                            launchTypes = QuizTypePrefs.toggle(prefs, ArrayList(launchTypes), type)
+                        },
+                        onModeSelected = { strategy -> launchQuiz(strategy) },
+                    )
+                }
             }
         }
-
     }
 
     private suspend fun getQuizzes() {
@@ -221,15 +218,23 @@ class ContentActivity : AppCompatActivity(), DIAware {
             pref.edit().putInt(Prefs.LATEST_CATEGORY_2.pref, cat1).apply()
             pref.edit().putInt(Prefs.LATEST_CATEGORY_1.pref, category).apply()
         }
+        pref.edit().putString(Prefs.LAST_LAUNCH_MODE.pref, strategy.name).apply()
+        lastMode = strategy
 
         val intent = Intent(this, QuizActivity::class.java).apply {
             putExtra(EXTRA_QUIZ_IDS, quizIds)
             putExtra(EXTRA_QUIZ_TITLE, title)
             putExtra(EXTRA_QUIZ_STRATEGY, strategy)
             putExtra(EXTRA_LEVEL, level)
-            putExtra(EXTRA_QUIZ_TYPES, selectedTypes)
+            putExtra(EXTRA_QUIZ_TYPES, ArrayList(launchTypes))
         }
         startActivity(intent)
+    }
+
+    private fun loadLastMode(): QuizStrategy? {
+        val pref = PreferenceManager.getDefaultSharedPreferences(this)
+        val name = pref.getString(Prefs.LAST_LAUNCH_MODE.pref, null) ?: return null
+        return runCatching { QuizStrategy.valueOf(name) }.getOrNull()
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -240,4 +245,41 @@ class ContentActivity : AppCompatActivity(), DIAware {
         }
     }
 
+}
+
+/**
+ * Floating launch button anchored at the bottom of the Content screen, opening the shared
+ * [LaunchOptionsSheet] (quiz types + launch mode). Mirrors the launch UX of the Study screen.
+ */
+@Composable
+private fun ContentLaunchBar(
+    selectedTypes: List<QuizType>,
+    lastMode: QuizStrategy?,
+    showProgressive: Boolean,
+    onQuizTypeToggle: (QuizType) -> Unit,
+    onModeSelected: (QuizStrategy) -> Unit,
+) {
+    var showSheet by remember { mutableStateOf(false) }
+
+    FABBar(
+        state = FABBarState.Launch,
+        onClick = { showSheet = true },
+        modifier = Modifier
+            .navigationBarsPadding()
+            .padding(start = 14.dp, end = 14.dp, top = 8.dp, bottom = 16.dp),
+    )
+
+    if (showSheet) {
+        LaunchOptionsSheet(
+            selectedTypes = selectedTypes,
+            lastMode = lastMode,
+            showProgressive = showProgressive,
+            onQuizTypeToggle = onQuizTypeToggle,
+            onModeSelected = { strategy ->
+                showSheet = false
+                onModeSelected(strategy)
+            },
+            onDismiss = { showSheet = false },
+        )
+    }
 }

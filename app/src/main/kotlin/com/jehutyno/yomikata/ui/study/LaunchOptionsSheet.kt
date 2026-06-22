@@ -67,6 +67,9 @@ private val QuizTypeOptions = listOf(
  *
  * Lets the user pick quiz types (AUTO full-width on top, manual types in a 2-column grid) and a
  * launch mode (Progressive / Straight / Shuffle). Tapping a mode launches the quiz directly.
+ *
+ * [showProgressive] hides the Progressive mode when launching over a fixed level subset (where
+ * progressive unlocking is meaningless) — mirrors the legacy behaviour on the Content screen.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -76,6 +79,7 @@ fun LaunchOptionsSheet(
     onQuizTypeToggle: (QuizType) -> Unit,
     onModeSelected: (QuizStrategy) -> Unit,
     onDismiss: () -> Unit,
+    showProgressive: Boolean = true,
 ) {
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -132,12 +136,14 @@ fun LaunchOptionsSheet(
 
             SectionHeader(text = stringResource(R.string.launch_mode_header))
             Spacer(modifier = Modifier.height(4.dp))
-            LaunchModeRow(
-                iconRes = R.drawable.ic_progress,
-                labelRes = R.string.practice_progressive,
-                isHighlighted = lastMode == QuizStrategy.PROGRESSIVE,
-                onClick = { onModeSelected(QuizStrategy.PROGRESSIVE) },
-            )
+            if (showProgressive) {
+                LaunchModeRow(
+                    iconRes = R.drawable.ic_progress,
+                    labelRes = R.string.practice_progressive,
+                    isHighlighted = lastMode == QuizStrategy.PROGRESSIVE,
+                    onClick = { onModeSelected(QuizStrategy.PROGRESSIVE) },
+                )
+            }
             LaunchModeRow(
                 iconRes = R.drawable.ic_straight,
                 labelRes = R.string.practice_normal,

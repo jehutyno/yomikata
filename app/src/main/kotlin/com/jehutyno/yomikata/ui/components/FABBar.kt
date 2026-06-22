@@ -30,6 +30,7 @@ import com.jehutyno.yomikata.ui.theme.YomikataTheme
 sealed class FABBarState {
     object Start : FABBarState()
     data class Continue(val levelName: String) : FABBarState()
+    object Launch : FABBarState()
     object LaunchAll : FABBarState()
     data class LaunchSelection(val count: Int) : FABBarState()
     object Next : FABBarState()
@@ -44,6 +45,7 @@ fun FABBar(
     val (label, containerColor, contentColor) = when (state) {
         is FABBarState.Start -> Triple("Commencer", AccentOrange, AccentOnOrange)
         is FABBarState.Continue -> Triple("Continuer — ${state.levelName}", AccentOrange, AccentOnOrange)
+        is FABBarState.Launch -> Triple("Lancer le quiz", AccentOrange, AccentOnOrange)
         is FABBarState.LaunchAll -> Triple("Lancer tous les quiz", AccentOrange, AccentOnOrange)
         is FABBarState.LaunchSelection -> Triple("Lancer la sélection (${state.count})", AccentOrange, AccentOnOrange)
         is FABBarState.Next -> Triple("Suivant →", Correct, CorrectOn)
