@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.firebase.crashlytics)
     alias(libs.plugins.ksp)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.roborazzi)
 }
 
 android {
@@ -42,6 +43,13 @@ android {
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
+    }
+
+    testOptions {
+        // Required by Robolectric/Roborazzi to access merged Android resources from JVM tests
+        unitTests {
+            includeAndroidResources = true
+        }
     }
 
     sourceSets {
@@ -117,6 +125,14 @@ dependencies {
     testImplementation     libs.arch.core.testing
     testImplementation     libs.mockk
     testImplementation     libs.kotlinx.coroutines.test
+
+    // Screenshot tests (Roborazzi on Robolectric — JVM, no device)
+    testImplementation     libs.robolectric
+    testImplementation     libs.roborazzi
+    testImplementation     libs.roborazzi.compose
+    testImplementation     libs.roborazzi.junit.rule
+    testImplementation     platform(libs.compose.bom)
+    testImplementation     libs.compose.ui.test.junit4
     androidTestImplementation libs.androidx.test.junit
     androidTestImplementation libs.espresso.core
     androidTestImplementation libs.truth

@@ -172,6 +172,19 @@ Côté instrumentation : `DatabaseIntegrityTest` (10 tests) vérifie l'asset ré
 
 `DialogFlowController` (logique auto-skip fin de quiz) reste non couvert en JVM (couplé `Fragment`/dialog) → à traiter en tests Compose/E2E (couche 4).
 
+### Tests de screenshot (Roborazzi, couche 3)
+Tests de régression visuelle sur la JVM (Robolectric, **sans émulateur**). Baselines committées dans `app/src/test/screenshots/`.
+```powershell
+.\gradlew.bat recordRoborazziDebug   # (ré)enregistre les baselines (1ère fois / changement voulu)
+.\gradlew.bat verifyRoborazziDebug   # gate de régression : échoue à toute dérive pixel
+```
+**Pièges spécifiques à ce stack (AGP 9.2 / Kotlin 2.3 / compileSdk 37)** — voir `MasteryBarScreenshotTest` :
+- Robolectric plafonne à **SDK 36** → annoter `@Config(sdk = [36])` (compileSdk 37 non supporté au runtime).
+- Utiliser `application = android.app.Application::class` dans `@Config` → sinon `YomikataZKApplication.onCreate` lance Firebase/DI et crashe.
+- Utiliser l'API **content-lambda `captureRoboImage("src/test/screenshots/x.png") { ... }`**, PAS `createComposeRule()` (qui exige une Activity launcher que Robolectric ne résout pas avec l'`applicationId` `.debug`).
+- Qualifiers en ordre canonique Android (`night` AVANT la densité) : `"w411dp-h891dp-night-xxhdpi"`.
+- Changer la langue de l'UI par capture : `RuntimeEnvironment.setQualifiers("+de")` (les strings résolvent via `values-de`, indépendant de `LanguageManager`).
+
 ---
 
 ## Langue de l'application
