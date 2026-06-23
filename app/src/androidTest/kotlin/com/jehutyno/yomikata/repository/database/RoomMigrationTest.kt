@@ -312,6 +312,11 @@ class RoomMigrationTest {
             TEST_DB_NAME, 19, true, YomikataDatabase.createMigration18to19(context)
         )
 
+        // Migration 18→19 is intentionally a no-op (just a version bump): translations are populated
+        // by populateTranslationsIfNeeded in the onOpen callback, which runMigrationsAndValidate does
+        // not invoke. Call it explicitly here to exercise the real population path.
+        YomikataDatabase.populateTranslationsIfNeeded(context, db)
+
         // Verify that word translations were populated from the asset database
         db.query("SELECT german, spanish, portuguese, chinese FROM words WHERE _id = 1").use {
             assertTrue("word should be found", it.moveToFirst())
@@ -397,8 +402,11 @@ class RoomMigrationTest {
             close()
         }
 
+        // validateDroppedTables = false: MIGRATION_20_21 creates the Room 2.7 internal table
+        // room_table_modification_log, which the exported schema does not list, so strict
+        // dropped-table validation would flag it as "unexpected" (false positive).
         val db = migrationHelper.runMigrationsAndValidate(
-            TEST_DB_NAME, 21, true, YomikataDatabase.MIGRATION_20_21
+            TEST_DB_NAME, 21, false, YomikataDatabase.MIGRATION_20_21
         )
 
         // Existing pos must be preserved
@@ -441,11 +449,19 @@ class RoomMigrationTest {
                 INSERT INTO words VALUES
                 (6526,'優勢','dominance','(adj-na,nà prédominance; ascendant; supériorité','ゆうせい',0,0,0,0,0,-1,0,4,0,NULL)
             """.trimIndent())
+            // Word 4954 (先程) shipped with an empty english gloss — must be filled by the migration
+            execSQL("""
+                INSERT INTO words VALUES
+                (4954,'先程','','tout à l''heure','さきほど',0,0,0,0,0,-1,0,4,0,NULL)
+            """.trimIndent())
             close()
         }
 
+        // validateDroppedTables = false: MIGRATION_16_21 creates the Room 2.7 internal table
+        // room_table_modification_log (not listed in the exported schema), which strict
+        // dropped-table validation would otherwise flag as "unexpected".
         val db = migrationHelper.runMigrationsAndValidate(
-            TEST_DB_NAME, 21, true, YomikataDatabase.MIGRATION_16_21
+            TEST_DB_NAME, 21, false, YomikataDatabase.MIGRATION_16_21
         )
 
         // Phantom word must be gone
@@ -471,6 +487,11 @@ class RoomMigrationTest {
         db.query("SELECT french FROM words WHERE _id = 6526").use {
             assertTrue(it.moveToFirst())
             assertEquals("à prédominance; ascendant; supériorité", it.getString(0))
+        }
+        // Word 4954's empty english gloss must be filled by the migration
+        db.query("SELECT english FROM words WHERE _id = 4954").use {
+            assertTrue(it.moveToFirst())
+            assertEquals("a little while ago; just now", it.getString(0))
         }
         // Multilingual columns must exist (spot-check on words table)
         db.query("SELECT german, spanish, portuguese, chinese FROM words WHERE _id = 2").use {

@@ -575,6 +575,15 @@ abstract class YomikataDatabase : RoomDatabase() {
                     WHERE fr LIKE '%  %' OR fr != TRIM(fr)
                 """.trimIndent())
 
+                // Word 4954 (先程) shipped with an empty english gloss in the v16 source data.
+                // The asset and translations DB are fixed for fresh installs; this idempotent UPDATE
+                // also repairs upgrading users (chinese/portuguese are repaired by the onOpen
+                // translation populate, which only touches empty cells — english is not, hence this).
+                database.execSQL(
+                    "UPDATE words SET english = ? WHERE _id = 4954 AND english = ''",
+                    arrayOf<Any>("a little while ago; just now")
+                )
+
                 // --- 17→18: Add multilingual columns ---
                 for (col in listOf("german", "spanish", "portuguese", "chinese"))
                     database.execSQL("ALTER TABLE words ADD COLUMN $col TEXT NOT NULL DEFAULT ''")
