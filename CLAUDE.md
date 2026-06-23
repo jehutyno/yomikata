@@ -159,7 +159,18 @@ Doit être appelé AVANT tout accès au DI ou à `getTrad()`.
 - Pour mocker `Random` : utiliser `object : Random() { override fun nextInt(bound: Int) = 0 }` (pas `mockk<Random>()` — NPE JvmAutoHinter)
 
 ### Comptage actuel
-**127 tests unitaires JVM** — 126 verts, 1 rouge préexistant (`LanguageManagerTest > initFromPrefs saves detected locale to prefs on first launch` : le test vérifie que la locale détectée est persistée, mais le code ne le fait PAS exprès — voir CLAUDE.md "Ne pas persister la détection automatique").
+**147 tests unitaires JVM — 100% verts** (13 classes).
+
+Ajoutés lors du durcissement pré-prod (couche 1) :
+- `GetTradMultiLanguageTest` — fallback `getTrad()`/`getName()` DE/ES/PT/ZH sur les 5 modèles (Word/Sentence/KanjiSolo/Radical/Quiz)
+- `RandomAnswerGeneratorTest` — la bonne réponse QCM est toujours présente, à la position du RNG
+- `WordStatisticsRecorderTest` — mapping résultat → StatAction/StatResult + délégation aux repos
+- `CategoriesTest` — mappings catégorie → niveau/taille/version/url de pack de voix
+- `FuriganaParsingTest` — `sentenceFuri`/`sentenceNoFuri`/`sentenceNoAnswerFuri` (`util/ActionsUtils.kt`)
+
+Côté instrumentation : `DatabaseIntegrityTest` (10 tests) vérifie l'asset réel (versions, intégrité, couverture 6 langues, `0x3F`, `identity_hash`, POS) — voir § Tests d'intégrité.
+
+`DialogFlowController` (logique auto-skip fin de quiz) reste non couvert en JVM (couplé `Fragment`/dialog) → à traiter en tests Compose/E2E (couche 4).
 
 ---
 
