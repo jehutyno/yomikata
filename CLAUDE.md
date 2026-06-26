@@ -184,6 +184,9 @@ Tests de régression visuelle sur la JVM (Robolectric, **sans émulateur**). Bas
 - Utiliser l'API **content-lambda `captureRoboImage("src/test/screenshots/x.png") { ... }`**, PAS `createComposeRule()` (qui exige une Activity launcher que Robolectric ne résout pas avec l'`applicationId` `.debug`).
 - Qualifiers en ordre canonique Android (`night` AVANT la densité) : `"w411dp-h891dp-night-xxhdpi"`.
 - Changer la langue de l'UI par capture : `RuntimeEnvironment.setQualifiers("+de")` (les strings résolvent via `values-de`, indépendant de `LanguageManager`).
+- **Geler les animations infinies** : envelopper la capture dans `CompositionLocalProvider(LocalInspectionMode provides true)` ET faire que les composables à animation infinie (`KenBurnsImage`, cycle photo de `HomeHero`) sautent l'animation sous `LocalInspectionMode.current`. Sinon Roborazzi fait tourner l'horloge à l'infini → un seul écran (Study/Home) prenait **36 min**, ramené à **~30 s** pour 7 captures.
+- **Borner la taille** : envelopper le contenu dans `Box(Modifier.size(411.dp, 891.dp))` — les écrans `fillMaxSize` avec `LazyColumn`/`weight` mesurent une hauteur non bornée sinon → `OutOfMemoryError` à la conversion bitmap (cas Study). Heap de test relevé à 2 Go (`testOptions.unitTests.all { it.maxHeapSize }`).
+- Voir `MainScreensScreenshotTest` (Home/Study/Quiz × EN/DE) pour le patron d'écran complet avec fixtures `UiState`.
 
 ---
 

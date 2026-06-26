@@ -49,6 +49,10 @@ android {
         // Required by Robolectric/Roborazzi to access merged Android resources from JVM tests
         unitTests {
             includeAndroidResources = true
+            // Roborazzi renders full screens to bitmaps; give the test JVM enough heap
+            all {
+                it.maxHeapSize = "2048m"
+            }
         }
     }
 

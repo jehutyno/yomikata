@@ -35,6 +35,7 @@ import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -145,7 +146,11 @@ private val HERO_IMAGES = listOf(
 @Composable
 private fun HomeHero(modifier: Modifier = Modifier) {
     var index by remember { mutableIntStateOf(0) }
+    // Skip the endless photo-cycling loop under inspection/screenshot tests so the Compose clock
+    // can go idle (Roborazzi would otherwise spin advancing the 7s delays forever).
+    val inspecting = LocalInspectionMode.current
     LaunchedEffect(Unit) {
+        if (inspecting) return@LaunchedEffect
         while (true) {
             delay(7000)
             index = (index + 1) % HERO_IMAGES.size

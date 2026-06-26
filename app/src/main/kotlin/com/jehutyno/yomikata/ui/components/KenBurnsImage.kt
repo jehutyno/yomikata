@@ -14,6 +14,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.painterResource
 
 /**
@@ -29,16 +30,23 @@ fun KenBurnsImage(
     durationMillis: Int = 14000,
     maxScale: Float = 1.18f,
 ) {
-    val transition = rememberInfiniteTransition(label = "ken-burns")
-    val scale by transition.animateFloat(
-        initialValue = 1f,
-        targetValue = maxScale,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = durationMillis, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse,
-        ),
-        label = "ken-burns-scale",
-    )
+    // Under inspection (Compose @Preview) or screenshot tests, freeze the zoom at maxScale.
+    // The infinite animation never goes idle, which makes Roborazzi spin advancing the clock.
+    val scale = if (LocalInspectionMode.current) {
+        maxScale
+    } else {
+        val transition = rememberInfiniteTransition(label = "ken-burns")
+        val animatedScale by transition.animateFloat(
+            initialValue = 1f,
+            targetValue = maxScale,
+            animationSpec = infiniteRepeatable(
+                animation = tween(durationMillis = durationMillis, easing = LinearEasing),
+                repeatMode = RepeatMode.Reverse,
+            ),
+            label = "ken-burns-scale",
+        )
+        animatedScale
+    }
     Image(
         painter = painterResource(resId),
         contentDescription = null,
