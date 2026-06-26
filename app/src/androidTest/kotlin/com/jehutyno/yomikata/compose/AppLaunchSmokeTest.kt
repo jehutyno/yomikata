@@ -25,4 +25,14 @@ class AppLaunchSmokeTest {
             assertEquals(Lifecycle.State.RESUMED, scenario.state)
         }
     }
+
+    @Test
+    fun mainActivitySurvivesRecreation() {
+        // Recreation reproduces the config/locale-change path (AppCompatDelegate.setApplicationLocales)
+        // that once left Home blank / crashed. The activity must come back up cleanly.
+        ActivityScenario.launch(QuizzesActivity::class.java).use { scenario ->
+            scenario.recreate()
+            assertEquals(Lifecycle.State.RESUMED, scenario.state)
+        }
+    }
 }
