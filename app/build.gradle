@@ -142,4 +142,9 @@ dependencies {
     androidTestImplementation libs.truth
     androidTestImplementation libs.arch.core.testing
     androidTestImplementation libs.androidx.room.testing
+
+    // Compose UI tests (couche 4 — interactions, sur émulateur)
+    androidTestImplementation platform(libs.compose.bom)
+    androidTestImplementation libs.compose.ui.test.junit4
+    debugImplementation        libs.compose.ui.test.manifest
 }

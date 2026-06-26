@@ -122,6 +122,7 @@ roborazzi-compose     = { group = "io.github.takahirom.roborazzi", name = "robor
 roborazzi-junit-rule  = { group = "io.github.takahirom.roborazzi", name = "roborazzi-junit-rule", version.ref = "roborazzi" }
 robolectric           = { group = "org.robolectric",         name = "robolectric",    version.ref = "robolectric" }
 compose-ui-test-junit4 = { group = "androidx.compose.ui",    name = "ui-test-junit4" }
+compose-ui-test-manifest = { group = "androidx.compose.ui",  name = "ui-test-manifest" }
 
 [bundles]
 media3   = ["androidx-media3-exoplayer", "androidx-media3-session", "androidx-media3-ui", "androidx-media3-common"]
