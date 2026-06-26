@@ -1,6 +1,7 @@
 package com.jehutyno.yomikata.repository.database.dao
 
 import androidx.room.Room
+import androidx.sqlite.db.SimpleSQLiteQuery
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
@@ -160,7 +161,10 @@ class WordDaoTest {
 
     @Test
     fun getRandomWords() = runBlocking {
-
+        // @RawQuery smoke: the DAO executes the raw SQL the repository builds and returns rows.
+        sampleRoomWords.forEach { wordDao.addWord(it) }
+        val result = wordDao.getRandomWords(SimpleSQLiteQuery("SELECT * FROM words LIMIT 2"))
+        assert(result.isNotEmpty() && result.size <= 2)
     }
 
     @Test
@@ -224,34 +228,59 @@ class WordDaoTest {
 
     @Test
     fun updateWord() = runBlocking {
+        val id = wordDao.addWord(sampleRoomWords[0])
+        val modified = wordDao.getWordById(id)!!.copy(english = "updated", points = 999)
+        wordDao.updateWord(modified)
+        val reloaded = wordDao.getWordById(id)!!
+        assert(reloaded.english == "updated")
+        assert(reloaded.points == 999)
     }
 
     @Test
     fun updateWordPoints() = runBlocking {
+        val id = wordDao.addWord(sampleRoomWords[0])
+        wordDao.updateWordPoints(id, 500)
+        assert(wordDao.getWordById(id)!!.points == 500)
     }
 
     @Test
     fun updateWordLevel() = runBlocking {
+        val id = wordDao.addWord(sampleRoomWords[0])
+        wordDao.updateWordLevel(id, 3)
+        assert(wordDao.getWordById(id)!!.level == 3)
     }
 
     @Test
     fun updateWordRepetition() = runBlocking {
+        val id = wordDao.addWord(sampleRoomWords[0])
+        wordDao.updateWordRepetition(id, 7)
+        assert(wordDao.getWordById(id)!!.repetition == 7)
     }
 
     @Test
     fun updateWordSelected() = runBlocking {
-    }
-
-    @Test
-    fun getQuizWordFromId() = runBlocking {
+        val id = wordDao.addWord(sampleRoomWords[0])
+        wordDao.updateWordSelected(id, true)
+        assert(wordDao.getWordById(id)!!.isSelected == 1)   // stored as INTEGER 0/1
+        wordDao.updateWordSelected(id, false)
+        assert(wordDao.getWordById(id)!!.isSelected == 0)
     }
 
     @Test
     fun addQuizWord() = runBlocking {
+        val sample = sampleRoomQuizWords[0]
+        // FK constraints: the word and quiz must exist before linking them
+        wordDao.addWord(getRandomRoomWord(sample.word_id))
+        quizDao.addQuiz(getRandomRoomQuiz(sample.quiz_id))
+        wordDao.addQuizWord(sample)
+        assert(wordDao.isWordInQuiz(sample.word_id, sample.quiz_id))
     }
 
     @Test
     fun addWord() = runBlocking {
+        val id = wordDao.addWord(sampleRoomWords[0])
+        assert(id > 0)
+        assert(wordDao.getWordById(id) == sampleRoomWords[0].copy(_id = id))
     }
 
 }
