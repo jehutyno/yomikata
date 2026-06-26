@@ -372,30 +372,35 @@ Le fil d'actualité est un `String` stocké à la racine de la RTDB, avec un nœ
 
 ## Tests
 
-| Suite | Outil | Localisation |
-|---|---|---|
-| Tests unitaires JVM (purs) | JUnit 4 + MockK | `src/test/` |
-| Tests d'instrumentation Room | JUnit + Room Testing | `src/androidTest/` |
+> **Processus complet, comment ajouter un test par couche et checklist de pré-release : `TESTING.md`.**
+> Ci-dessous l'inventaire ; la stratégie en 5 couches est dans `TESTING.md`.
 
-### Tests unitaires (117 tests)
+| Couche | Suite | Outil | Localisation |
+|---|---|---|---|
+| 1 | Unitaires JVM (purs) | JUnit 4 + MockK | `src/test/` |
+| 2 | Room (DAOs, migrations, intégrité asset) | Room Testing + AndroidJUnit | `src/androidTest/` |
+| 3 | Régression visuelle (screenshots) | Roborazzi + Robolectric | `src/test/screenshot/` + baselines `src/test/screenshots/` |
 
-| Fichier | Tests | Couverture |
-|---|---|---|
-| `TranslationParserKtTest` | 3 | Parsing `readableTranslationFormat()` |
-| `AnswerValidatorTest` | 15 | Validation de toutes les combinaisons type/format |
-| `QuizSessionStateTest` | 16 | Machine d'état de session (modes normal/erreurs) |
-| `LevelSystemTest` | 24 | Frontières de niveaux, levelUp/Down, addPoints, getRepetition |
-| `QuizPresenterTest` | 25 | Flow complet d'une session (5 combinaisons longueur × type) |
-| `QuizzesPresenterTest` | 14 | Sélection de types de quiz, persistance prefs |
-| `LanguageManagerTest` | 20 | AppLanguage, initFromPrefs, setLanguage, getTrad() sur 5 modèles |
+### Couche 1 — unitaires JVM (147 tests, 13 classes)
 
-### Tests d'instrumentation (androidTest)
+`TranslationParserKtTest`, `AnswerValidatorTest`, `QuizSessionStateTest`, `LevelSystemTest`,
+`QuizPresenterTest`, `QuizzesPresenterTest`, `LanguageManagerTest`, `GetTradMultiLanguageTest`
+(fallback 6 langues × 5 modèles), `RandomAnswerGeneratorTest`, `WordStatisticsRecorderTest`,
+`CategoriesTest`, `FuriganaParsingTest`, `QuizTypePrefsTest`.
+
+### Couche 2 — instrumentation (androidTest)
 
 | Fichier | Couverture |
 |---|---|
-| `RoomMigrationTest` | Migrations 14→15, 15→16, 16→21 (consolidée), 19→20, 20→21, chemin complet 14→21 |
+| `RoomMigrationTest` | Migrations 14→15, 15→16, 16→21 (consolidée), 18→19, 19→20, 20→21, chemin complet 14→21 |
 | `OldMigrationTest` | Migration 13→14 (depuis schéma SQLite v13) |
+| `DatabaseIntegrityTest` | Asset réel `yomikataz.db` : versions, intégrité, couverture 6 langues, `0x3F`, `identity_hash`, POS |
 | `WordDaoTest`, `QuizDaoTest`, `SentenceDaoTest`, `KanjiSoloDaoTest`, `StatsDaoTest` | DAOs Room |
+
+### Couche 3 — screenshots (20 baselines)
+
+8 écrans (Home, Study, Quiz, Selections, WordList, WordDetail, AnswerReview) + composant `MasteryBar`,
+chacun en EN/DE. `MainScreensScreenshotTest`, `RemainingScreensScreenshotTest`, `MasteryBarScreenshotTest`.
 
 ---
 

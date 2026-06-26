@@ -151,6 +151,10 @@ Doit être appelé AVANT tout accès au DI ou à `getTrad()`.
 
 ## Tests
 
+> **Processus complet de test + checklist de pré-release : voir `TESTING.md` à la racine.**
+> Cette section ne garde que les règles et pièges techniques. La stratégie en 5 couches, comment
+> ajouter un test dans chaque couche et la passe de pré-production vivent dans `TESTING.md`.
+
 ### Règles
 - Tests JVM purs dans `src/test/` — pas de Robolectric, pas d'Android runtime
 - Tests d'instrumentation dans `src/androidTest/` pour Room, DAOs
