@@ -111,7 +111,7 @@ fun AnswerReviewScreen(
                     IconButton(onClick = onBack) {
                         Icon(
                             painter = painterResource(R.drawable.ic_arrow_back_orange_24dp),
-                            contentDescription = "Back",
+                            contentDescription = stringResource(R.string.action_back),
                             tint = AccentOrange,
                         )
                     }
@@ -190,7 +190,7 @@ private fun ResultSummary(
 ) {
     val total = (correct + wrong).coerceAtLeast(1)
     Column(modifier = modifier.fillMaxWidth()) {
-        SectionHeader(text = "結果 · Results")
+        SectionHeader(text = "結果 · " + stringResource(R.string.results))
         Spacer(modifier = Modifier.height(8.dp))
 
         // Proportional green/red bar

@@ -139,7 +139,7 @@ fun WordListScreen(
                     IconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Retour",
+                            contentDescription = stringResource(R.string.action_back),
                             tint = TextPrimary,
                         )
                     }
@@ -150,7 +150,7 @@ fun WordListScreen(
                             painter = painterResource(
                                 if (state.isGrid) R.drawable.ic_list else R.drawable.ic_grid
                             ),
-                            contentDescription = if (state.isGrid) "Mode liste" else "Mode grille",
+                            contentDescription = if (state.isGrid) stringResource(R.string.view_mode_list) else stringResource(R.string.view_mode_grid),
                             tint = TextPrimary,
                             modifier = Modifier.size(20.dp),
                         )
@@ -205,7 +205,7 @@ fun WordListScreen(
                 value = state.searchQuery,
                 onValueChange = onSearchQueryChanged,
                 placeholder = {
-                    Text("Rechercher…", color = TextGhost, fontSize = 13.sp)
+                    Text(stringResource(R.string.search_hint), color = TextGhost, fontSize = 13.sp)
                 },
                 leadingIcon = {
                     Icon(

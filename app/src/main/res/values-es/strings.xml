@@ -288,4 +288,36 @@
     <string name="pos_interjection">Interjección</string>
     <string name="sponsor_message">Yomikata Z está de nuevo en desarrollo activo, asistido por IA. Si la app te resulta útil, tu apoyo ayuda a financiar las herramientas que lo hacen posible.</string>
     <string name="sponsor_button">♥ Apoyar en GitHub</string>
+
+    <!-- Compose UI labels (extracted from hardcoded literals) -->
+    <string name="action_favorite">Favorito</string>
+    <string name="action_audio">Audio</string>
+    <string name="action_copy">Copiar</string>
+    <string name="action_report">Reportar</string>
+    <string name="action_back">Atrás</string>
+    <string name="action_share">Compartir</string>
+    <string name="play_sentence">Reproducir la frase</string>
+    <string name="word_demote">Bajar</string>
+    <string name="word_promote">Subir</string>
+    <string name="view_mode_list">Vista de lista</string>
+    <string name="view_mode_grid">Vista de cuadrícula</string>
+    <string name="search_hint">Buscar…</string>
+    <string name="continue_label">Continuar</string>
+    <string name="results">Resultados</string>
+    <string name="community">Comunidad</string>
+    <string name="home_stat_quiz_launched">Cuestionarios iniciados</string>
+    <string name="home_stat_words_seen">Palabras vistas</string>
+    <string name="home_stat_good_answers">Respuestas correctas</string>
+    <string name="home_stat_wrong_answers">Respuestas incorrectas</string>
+    <string name="home_continue_subtitle">Continúa donde lo dejaste</string>
+    <string name="home_continue_action">Continuar — %1$s</string>
+    <string name="home_support_title">Apoyar el proyecto</string>
+    <string name="home_support_description">Yomikata Z es gratuito y sin anuncios. Si te gusta, puedes apoyar su desarrollo.</string>
+    <string name="home_support_button">Apoyar</string>
+    <string name="fab_start">Empezar</string>
+    <string name="fab_continue">Continuar — %1$s</string>
+    <string name="fab_launch_quiz">Iniciar cuestionario</string>
+    <string name="fab_launch_all">Iniciar todos los cuestionarios</string>
+    <string name="fab_launch_selection">Iniciar selección (%1$d)</string>
+    <string name="fab_next">Siguiente →</string>
 </resources>
