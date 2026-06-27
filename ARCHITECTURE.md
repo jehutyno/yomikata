@@ -268,6 +268,8 @@ Les traductions de phrases (DE/ES/PT/ZH) ont été générées via `translate_se
 
 **Langues d'interface disponibles :** EN, FR, DE, ES, PT, ZH (strings.xml complets pour toutes les langues).
 
+**Règle i18n Compose :** aucun libellé d'UI n'est codé en dur dans les composables — toujours `stringResource(R.string.xxx)`, valeur par défaut en anglais dans `values/strings.xml`. Les en-têtes de section bilingues `JP · XX` ne localisent que la partie latine (`"構成 · " + stringResource(R.string.composition)`). Les libellés d'animation Compose (`label = "..."` des `*AsState`/`rememberInfiniteTransition`) et le contenu des `@Preview` sont exemptés (non visibles / non livrés).
+
 ---
 
 ## Injection de dépendances (Kodein)

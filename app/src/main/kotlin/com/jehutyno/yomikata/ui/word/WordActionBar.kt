@@ -21,6 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.jehutyno.yomikata.R
@@ -61,7 +62,7 @@ fun WordActionBar(
     ) {
         ActionItem(
             iconRes = R.drawable.ic_star_black_24dp,
-            label = "Favori",
+            label = stringResource(R.string.action_favorite),
             tint = if (isFavorite) AccentOrange else TextGhost,
             onClick = onFavoriteClick,
             modifier = Modifier.weight(1f),
@@ -69,7 +70,7 @@ fun WordActionBar(
         VerticalDivider()
         ActionItem(
             iconRes = R.drawable.ic_volume_up_black_24dp,
-            label = "Audio",
+            label = stringResource(R.string.action_audio),
             tint = if (isAudioPlaying) AccentOrange else TextGhost,
             onClick = onAudioClick,
             modifier = Modifier.weight(1f),
@@ -77,7 +78,7 @@ fun WordActionBar(
         VerticalDivider()
         ActionItem(
             iconRes = R.drawable.ic_copy,
-            label = "Copier",
+            label = stringResource(R.string.action_copy),
             tint = TextGhost,
             onClick = onCopyClick,
             modifier = Modifier.weight(1f),
@@ -85,7 +86,7 @@ fun WordActionBar(
         VerticalDivider()
         ActionItem(
             iconRes = R.drawable.ic_report_black_24dp,
-            label = "Signaler",
+            label = stringResource(R.string.action_report),
             tint = TextGhost,
             onClick = onReportClick,
             modifier = Modifier.weight(1f),

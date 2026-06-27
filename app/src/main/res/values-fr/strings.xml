@@ -288,4 +288,36 @@
     <string name="pos_interjection">Interjection</string>
     <string name="sponsor_message">Yomikata Z est de retour en développement actif, assisté par l\'IA. Si l\'application vous est utile, votre soutien aide à financer les outils qui le rendent possible.</string>
     <string name="sponsor_button">♥ Soutenir sur GitHub</string>
+
+    <!-- Compose UI labels (extracted from hardcoded literals) -->
+    <string name="action_favorite">Favori</string>
+    <string name="action_audio">Audio</string>
+    <string name="action_copy">Copier</string>
+    <string name="action_report">Signaler</string>
+    <string name="action_back">Retour</string>
+    <string name="action_share">Partager</string>
+    <string name="play_sentence">Lire la phrase</string>
+    <string name="word_demote">Reculer</string>
+    <string name="word_promote">Avancer</string>
+    <string name="view_mode_list">Mode liste</string>
+    <string name="view_mode_grid">Mode grille</string>
+    <string name="search_hint">Rechercher…</string>
+    <string name="continue_label">Continuer</string>
+    <string name="results">Résultats</string>
+    <string name="community">Communauté</string>
+    <string name="home_stat_quiz_launched">Quiz lancés</string>
+    <string name="home_stat_words_seen">Mots vus</string>
+    <string name="home_stat_good_answers">Bonnes réponses</string>
+    <string name="home_stat_wrong_answers">Mauvaises réponses</string>
+    <string name="home_continue_subtitle">Reprendre là où vous vous êtes arrêté</string>
+    <string name="home_continue_action">Continuer — %1$s</string>
+    <string name="home_support_title">Soutenir le projet</string>
+    <string name="home_support_description">Yomikata Z est gratuit et sans publicité. Si vous l\'appréciez, vous pouvez soutenir son développement.</string>
+    <string name="home_support_button">Soutenir</string>
+    <string name="fab_start">Commencer</string>
+    <string name="fab_continue">Continuer — %1$s</string>
+    <string name="fab_launch_quiz">Lancer le quiz</string>
+    <string name="fab_launch_all">Lancer tous les quiz</string>
+    <string name="fab_launch_selection">Lancer la sélection (%1$d)</string>
+    <string name="fab_next">Suivant →</string>
 </resources>

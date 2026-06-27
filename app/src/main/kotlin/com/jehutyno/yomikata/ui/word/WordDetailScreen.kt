@@ -32,6 +32,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -105,7 +106,7 @@ fun WordDetailScreen(
                         IconButton(onClick = onBack) {
                             Icon(
                                 painter = painterResource(R.drawable.ic_arrow_back_orange_24dp),
-                                contentDescription = "Retour",
+                                contentDescription = stringResource(R.string.action_back),
                                 tint = AccentOrange,
                             )
                         }
@@ -219,10 +220,10 @@ fun WordDetailScreen(
                             modifier = Modifier.padding(bottom = 12.dp),
                         ) {
                             TextButton(onClick = onLevelDown) {
-                                Text("▼ Reculer", color = TextMuted, fontSize = 12.sp)
+                                Text("▼ " + stringResource(R.string.word_demote), color = TextMuted, fontSize = 12.sp)
                             }
                             TextButton(onClick = onLevelUp) {
-                                Text("▲ Avancer", color = AccentOrange, fontSize = 12.sp)
+                                Text("▲ " + stringResource(R.string.word_promote), color = AccentOrange, fontSize = 12.sp)
                             }
                         }
 
@@ -242,7 +243,7 @@ fun WordDetailScreen(
                 if (kanjiComponents.isNotEmpty()) {
                     item {
                         SectionHeader(
-                            text = "構成 · Composition",
+                            text = "構成 · " + stringResource(R.string.composition),
                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
                         )
                     }
@@ -261,7 +262,7 @@ fun WordDetailScreen(
                 // ── Example section ───────────────────────────────────────
                 item {
                     SectionHeader(
-                        text = "例文 · Exemple",
+                        text = "例文 · " + stringResource(R.string.example),
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
                     )
                 }
@@ -322,7 +323,7 @@ private fun ExampleCard(
             ) {
                 Icon(
                     painter = painterResource(R.drawable.ic_volume_up_black_24dp),
-                    contentDescription = "Lire la phrase",
+                    contentDescription = stringResource(R.string.play_sentence),
                     tint = TextMuted,
                     modifier = Modifier.size(18.dp),
                 )

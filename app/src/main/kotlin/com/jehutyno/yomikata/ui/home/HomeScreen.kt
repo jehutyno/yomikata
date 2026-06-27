@@ -37,6 +37,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -91,7 +92,7 @@ fun HomeScreen(
         HomeHero()
         Spacer(modifier = Modifier.height(18.dp))
         SectionHeader(
-            text = "今日 · Today",
+            text = "今日 · " + stringResource(R.string.today),
             modifier = Modifier.padding(horizontal = 14.dp),
         )
         Spacer(modifier = Modifier.height(8.dp))
@@ -100,7 +101,7 @@ fun HomeScreen(
         if (state.lastSessionLevel != null) {
             Spacer(modifier = Modifier.height(18.dp))
             SectionHeader(
-                text = "続ける · Continue",
+                text = "続ける · " + stringResource(R.string.continue_label),
                 modifier = Modifier.padding(horizontal = 14.dp),
             )
             Spacer(modifier = Modifier.height(8.dp))
@@ -113,12 +114,12 @@ fun HomeScreen(
 
         Spacer(modifier = Modifier.height(18.dp))
         SectionHeader(
-            text = "ニュース · News",
+            text = "ニュース · " + stringResource(R.string.news),
             modifier = Modifier.padding(horizontal = 14.dp),
         )
         Spacer(modifier = Modifier.height(8.dp))
         NewsCard(
-            text = if (state.newsLoading) "Chargement…" else state.newsText,
+            text = if (state.newsLoading) stringResource(R.string.news_loading) else state.newsText,
             modifier = Modifier.padding(horizontal = 14.dp),
         )
 
@@ -222,12 +223,12 @@ private fun StatsGrid(state: HomeUiState, modifier: Modifier = Modifier) {
     ) {
         StatCard(
             value = state.quizLaunched.toString(),
-            label = "Quiz lancés",
+            label = stringResource(R.string.home_stat_quiz_launched),
             modifier = Modifier.weight(1f),
         )
         StatCard(
             value = state.wordsSeen.toString(),
-            label = "Mots vus",
+            label = stringResource(R.string.home_stat_words_seen),
             modifier = Modifier.weight(1f),
         )
     }
@@ -238,13 +239,13 @@ private fun StatsGrid(state: HomeUiState, modifier: Modifier = Modifier) {
     ) {
         StatCard(
             value = state.correctAnswers.toString(),
-            label = "Bonnes réponses",
+            label = stringResource(R.string.home_stat_good_answers),
             valueColor = Correct,
             modifier = Modifier.weight(1f),
         )
         StatCard(
             value = state.wrongAnswers.toString(),
-            label = "Mauvaises rép.",
+            label = stringResource(R.string.home_stat_wrong_answers),
             valueColor = Wrong,
             modifier = Modifier.weight(1f),
         )
@@ -298,13 +299,13 @@ private fun ContinueCard(
             )
             Spacer(modifier = Modifier.height(2.dp))
             Text(
-                text = "Reprendre là où vous vous êtes arrêté",
+                text = stringResource(R.string.home_continue_subtitle),
                 fontSize = 12.sp,
                 color = TextMuted,
             )
             Spacer(modifier = Modifier.height(12.dp))
             DiscreetActionButton(
-                text = "Continuer — $levelName",
+                text = stringResource(R.string.home_continue_action, levelName),
                 onClick = onContinueClick,
             )
         }
@@ -343,20 +344,20 @@ private fun SupportCard(
     ) {
         Column(modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp)) {
             Text(
-                text = "Soutenir le projet",
+                text = stringResource(R.string.home_support_title),
                 fontSize = 13.sp,
                 fontWeight = FontWeight.W500,
                 color = AccentOrange,
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = "Yomikata Z est gratuit et sans publicité. Si vous l'appréciez, vous pouvez soutenir son développement.",
+                text = stringResource(R.string.home_support_description),
                 fontSize = 12.sp,
                 color = TextMuted,
             )
             Spacer(modifier = Modifier.height(12.dp))
             DiscreetActionButton(
-                text = "Soutenir",
+                text = stringResource(R.string.home_support_button),
                 onClick = onSupportClick,
             )
         }

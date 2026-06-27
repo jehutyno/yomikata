@@ -18,6 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -48,7 +49,7 @@ fun SettingsScreen(
     ) {
         // Social links section header
         Text(
-            text = "コミュニティ · COMMUNITY",
+            text = "コミュニティ · " + stringResource(R.string.community).uppercase(),
             color = TextDim,
             fontSize = 10.sp,
             fontWeight = FontWeight.SemiBold,
@@ -67,7 +68,7 @@ fun SettingsScreen(
             SocialButton(iconRes = R.drawable.ic_discord, label = "Discord", onClick = onDiscord)
             SocialButton(iconRes = R.drawable.ic_facebook, label = "Facebook", onClick = onFacebook)
             SocialButton(iconRes = R.drawable.ic_google_play, label = "Play Store", onClick = onPlayStore)
-            SocialButton(iconRes = R.drawable.ic_share, label = "Partager", onClick = onShare)
+            SocialButton(iconRes = R.drawable.ic_share, label = stringResource(R.string.action_share), onClick = onShare)
         }
 
         Spacer(Modifier.height(16.dp))

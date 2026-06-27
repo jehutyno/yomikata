@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -137,7 +138,7 @@ fun WordListRow(
             IconButton(onClick = onFavoriteClick, modifier = Modifier.size(32.dp)) {
                 Icon(
                     painter = painterResource(R.drawable.ic_star_black_24dp),
-                    contentDescription = "Favori",
+                    contentDescription = stringResource(R.string.action_favorite),
                     tint = if (isFavorite) AccentOrange else TextGhost,
                     modifier = Modifier.size(13.dp),
                 )
@@ -145,7 +146,7 @@ fun WordListRow(
             IconButton(onClick = onAudioClick, modifier = Modifier.size(32.dp)) {
                 Icon(
                     painter = painterResource(R.drawable.ic_volume_up_black_24dp),
-                    contentDescription = "Audio",
+                    contentDescription = stringResource(R.string.action_audio),
                     tint = TextGhost,
                     modifier = Modifier.size(13.dp),
                 )

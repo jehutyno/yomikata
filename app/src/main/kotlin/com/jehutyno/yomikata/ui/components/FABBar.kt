@@ -10,8 +10,10 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.ui.theme.AccentOnOrange
 import com.jehutyno.yomikata.ui.theme.AccentOrange
 import com.jehutyno.yomikata.ui.theme.Correct
@@ -43,12 +45,12 @@ fun FABBar(
     modifier: Modifier = Modifier,
 ) {
     val (label, containerColor, contentColor) = when (state) {
-        is FABBarState.Start -> Triple("Commencer", AccentOrange, AccentOnOrange)
-        is FABBarState.Continue -> Triple("Continuer — ${state.levelName}", AccentOrange, AccentOnOrange)
-        is FABBarState.Launch -> Triple("Lancer le quiz", AccentOrange, AccentOnOrange)
-        is FABBarState.LaunchAll -> Triple("Lancer tous les quiz", AccentOrange, AccentOnOrange)
-        is FABBarState.LaunchSelection -> Triple("Lancer la sélection (${state.count})", AccentOrange, AccentOnOrange)
-        is FABBarState.Next -> Triple("Suivant →", Correct, CorrectOn)
+        is FABBarState.Start -> Triple(stringResource(R.string.fab_start), AccentOrange, AccentOnOrange)
+        is FABBarState.Continue -> Triple(stringResource(R.string.fab_continue, state.levelName), AccentOrange, AccentOnOrange)
+        is FABBarState.Launch -> Triple(stringResource(R.string.fab_launch_quiz), AccentOrange, AccentOnOrange)
+        is FABBarState.LaunchAll -> Triple(stringResource(R.string.fab_launch_all), AccentOrange, AccentOnOrange)
+        is FABBarState.LaunchSelection -> Triple(stringResource(R.string.fab_launch_selection, state.count), AccentOrange, AccentOnOrange)
+        is FABBarState.Next -> Triple(stringResource(R.string.fab_next), Correct, CorrectOn)
     }
 
     Button(

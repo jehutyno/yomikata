@@ -319,4 +319,36 @@
     <string name="pos_interjection">Interjection</string>
     <string name="sponsor_message">Yomikata Z is back in active development, now AI-assisted. If you find it useful, your support helps fund the tools that make it possible.</string>
     <string name="sponsor_button">♥ Support on GitHub</string>
+
+    <!-- Compose UI labels (extracted from hardcoded literals) -->
+    <string name="action_favorite">Favorite</string>
+    <string name="action_audio">Audio</string>
+    <string name="action_copy">Copy</string>
+    <string name="action_report">Report</string>
+    <string name="action_back">Back</string>
+    <string name="action_share">Share</string>
+    <string name="play_sentence">Play sentence</string>
+    <string name="word_demote">Demote</string>
+    <string name="word_promote">Promote</string>
+    <string name="view_mode_list">List view</string>
+    <string name="view_mode_grid">Grid view</string>
+    <string name="search_hint">Search…</string>
+    <string name="continue_label">Continue</string>
+    <string name="results">Results</string>
+    <string name="community">Community</string>
+    <string name="home_stat_quiz_launched">Quizzes launched</string>
+    <string name="home_stat_words_seen">Words seen</string>
+    <string name="home_stat_good_answers">Good answers</string>
+    <string name="home_stat_wrong_answers">Wrong answers</string>
+    <string name="home_continue_subtitle">Resume where you left off</string>
+    <string name="home_continue_action">Continue — %1$s</string>
+    <string name="home_support_title">Support the project</string>
+    <string name="home_support_description">Yomikata Z is free and ad-free. If you enjoy it, you can support its development.</string>
+    <string name="home_support_button">Support</string>
+    <string name="fab_start">Start</string>
+    <string name="fab_continue">Continue — %1$s</string>
+    <string name="fab_launch_quiz">Launch quiz</string>
+    <string name="fab_launch_all">Launch all quizzes</string>
+    <string name="fab_launch_selection">Launch selection (%1$d)</string>
+    <string name="fab_next">Next →</string>
 </resources>
