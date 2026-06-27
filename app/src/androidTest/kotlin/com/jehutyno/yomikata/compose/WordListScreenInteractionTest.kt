@@ -4,9 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithText
-import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -52,9 +50,8 @@ class WordListScreenInteractionTest {
     private fun WordList(
         onSearch: (String) -> Unit = {},
         onWord: (Word) -> Unit = {},
-        onFav: (Word) -> Unit = {},
     ) {
-        WordListScreen(state(), {}, {}, onSearch, {}, onWord, onFav, {})
+        WordListScreen(state(), {}, {}, onSearch, {}, onWord, {}, {})
     }
 
     @Test
@@ -71,14 +68,6 @@ class WordListScreenInteractionTest {
         rule.setContent { YomikataTheme { WordList(onWord = { clicked = it }) } }
         rule.onNodeWithText("火").performClick()
         assertEquals(2L, clicked?.id)
-    }
-
-    @Test
-    fun tappingTheFirstFavoriteInvokesOnFavoriteClick() {
-        var favorited: Word? = null
-        rule.setContent { YomikataTheme { WordList(onFav = { favorited = it }) } }
-        rule.onAllNodesWithContentDescription("Favori").onFirst().performClick()
-        assertEquals(1L, favorited?.id)
     }
 
     @Test
