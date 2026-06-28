@@ -28,8 +28,8 @@ android {
         // versionCode / versionName dérivés du tag git en CI (VERSION_CODE /
         // VERSION_NAME injectés par le workflow). Repli sur les valeurs prod
         // courantes pour les builds locaux.
-        versionCode = (System.getenv("VERSION_CODE") ?: "67").toInteger()
-        versionName = System.getenv("VERSION_NAME") ?: "2.0.0"
+        versionCode = (System.getenv("VERSION_CODE") ?: "20001").toInteger()
+        versionName = System.getenv("VERSION_NAME") ?: "2.0.1"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
