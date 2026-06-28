@@ -208,4 +208,4 @@ Le rapport stampe **version, commit/branche, arbre propre/modifié, date, device
 - Matrice screenshot limitée à **EN/DE** : étendre à FR/ES/PT/ZH (1 ligne par variante).
 - `DialogFlowController` non couvert (couplé `Fragment`/dialog) → couche 4.
 - ~~Stubs vides dans `WordDaoTest`~~ ✅ complétés (update*/add*/getRandomWords).
-- Pas de CI : les gates sont locaux. Candidats idéaux pour un `on: push` : couches 1 et 3 (JVM, sans émulateur).
+- CI de release en place (`.github/workflows/release.yml`, gate `test verifyRoborazziDebug` sur tag `v*`). Reste à automatiser : un `on: push` pour les couches 1 et 3 (JVM, sans émulateur) à chaque commit.

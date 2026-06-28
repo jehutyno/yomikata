@@ -28,7 +28,7 @@ L'interface et les traductions sont disponibles en **6 langues** : anglais (EN),
 ├─────────────────────────────────────────────────────┤
 │  DAOs  (Room — KotlinFlow / suspend)                 │
 ├─────────────────────────────────────────────────────┤
-│  YomikataDatabase  (Room, SQLite, asset DB v19)      │
+│  YomikataDatabase  (Room, SQLite, asset DB v21)      │
 └─────────────────────────────────────────────────────┘
          Injection de dépendances : Kodein DI 7.x
 ```
@@ -322,7 +322,7 @@ Les `Activity` et `Fragment` étendent `DIAware` et récupèrent leurs dépendan
 
 Deux systèmes coexistent :
 
-1. **Voix pré-enregistrées** (`ExoPlayer`) — fichiers MP3 téléchargeables par niveau depuis Firebase Storage. Chaque phrase a un fichier `s_<id>.mp3`. La disponibilité est vérifiée par `SpeechAvailability`.
+1. **Voix pré-enregistrées** (`ExoPlayer`) — fichiers MP3 téléchargeables par niveau depuis GitHub Releases (tag `voices`, via HTTPS — plus Firebase Storage). Chaque phrase a un fichier `s_<id>.mp3`. La disponibilité est vérifiée par `SpeechAvailability`.
 2. **TTS Android** (`TextToSpeech`) — fallback si les voix ne sont pas téléchargées.
 
 La logique de choix est dans `VoicesManager` ; la coordination avec l'UI est dans `QuizFragment`.
@@ -440,9 +440,9 @@ Lancer la **suite entière** (`connectedDebugAndroidTest`) — sur ce stack AGP 
 
 ## Migration UI — Jetpack Compose
 
-Le projet migre progressivement de XML/MVP vers Jetpack Compose (dark-only, Material 3). La migration suit le plan décrit dans `MIGRATION_PLAN.md`.
+L'interface a été entièrement migrée de XML/MVP vers Jetpack Compose (dark-only, Material 3), écran par écran via `ComposeView` dans les Fragments existants (les Presenters MVP et la couche données sont conservés). La migration est **terminée** ; cette section en récapitule l'état final.
 
-### Avancement (juin 2026)
+### Avancement
 
 | Phase | Sessions | Statut |
 |---|---|---|
@@ -801,10 +801,6 @@ Depuis la migration (juin 2026), toutes les versions et dépendances sont centra
 | Firebase BOM 34.0.0 | RTDB, FCM, Analytics, Crashlytics (Storage déclaré mais inutilisé) |
 | MockK 1.13.x | Mocking pour les tests unitaires |
 | androidx.arch.core:core-testing | `InstantTaskExecutorRule` pour les tests LiveData |
-
----
-
-## Tutoriels au premier lancement (`util/TutoOverlay.kt`)
 
 ---
 

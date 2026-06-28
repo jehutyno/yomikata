@@ -2,7 +2,7 @@
 
 > Refonte complète — juin 2026.
 > Basé sur l'analyse de l'existant (v1) et les maquettes produites sur les 5 écrans principaux.
-> Stack cible : migration progressive vers **Jetpack Compose** (voir section 10).
+> Stack : **Jetpack Compose** + Material 3 (dark-only). Migration achevée.
 
 ---
 
@@ -358,12 +358,12 @@ Spécifications du composant :
 
 ---
 
-## 8. Migration technique (résumé — voir section 10 pour le détail)
+## 8. Implémentation technique (résumé)
 
-- Stack cible : **Jetpack Compose** + Material 3
-- Approche : migration écran par écran (pas de réécriture globale)
-- Ordre recommandé : tokens → theme → composants partagés → écrans
-- Coexistence XML/Compose via `ComposeView` pendant la transition
+- Stack : **Jetpack Compose** + Material 3 (dark-only)
+- Tokens dans `ui/theme/` : `Color.kt`, `Type.kt`, `Shape.kt`, `Theme.kt` (`YomikataTheme`)
+- Interop avec les vues custom restantes (`FuriganaView`) via `AndroidView`
+- Détail de l'architecture par écran : voir `ARCHITECTURE.md` § Migration UI
 
 ---
 
@@ -417,12 +417,6 @@ val RadiusMd = 14.dp
 val RadiusLg = 16.dp
 val RadiusXl = 22.dp
 ```
-
----
-
-## 10. Stratégie de transposition dans Claude Code
-
-> Voir document séparé : `CLAUDE_CODE_STRATEGY.md`
 
 ---
 
