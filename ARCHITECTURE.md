@@ -382,6 +382,9 @@ Le fil d'actualité est un `String` stocké à la racine de la RTDB, avec un nœ
 | 1 | Unitaires JVM (purs) | JUnit 4 + MockK | `src/test/` |
 | 2 | Room (DAOs, migrations, intégrité asset) | Room Testing + AndroidJUnit | `src/androidTest/` |
 | 3 | Régression visuelle (screenshots) | Roborazzi + Robolectric | `src/test/screenshot/` + baselines `src/test/screenshots/` |
+| 4 | Interactions Compose (callbacks ↔ UI) | Compose UI Test (`createComposeRule`) | `src/androidTest/.../compose/` |
+
+Total : **246 tests** (167 JVM = 147 unitaires + 20 screenshots ; 79 instrumentation = couches 2 + 4).
 
 ### Couche 1 — unitaires JVM (147 tests, 13 classes)
 
@@ -403,6 +406,14 @@ Le fil d'actualité est un `String` stocké à la racine de la RTDB, avec un nœ
 
 8 écrans (Home, Study, Quiz, Selections, WordList, WordDetail, AnswerReview) + composant `MasteryBar`,
 chacun en EN/DE. `MainScreensScreenshotTest`, `RemainingScreensScreenshotTest`, `MasteryBarScreenshotTest`.
+
+### Couche 4 — interactions Compose (androidTest)
+
+5 classes sous `androidTest/.../compose/` qui vérifient le câblage callbacks ↔ UI via `createComposeRule`
++ fixtures `UiState` : `FloatingNavBarInteractionTest`, `QuizScreenInteractionTest`,
+`SelectionsScreenInteractionTest`, `StudyScreenInteractionTest`, `WordListScreenInteractionTest`.
+Lancer la **suite entière** (`connectedDebugAndroidTest`) — sur ce stack AGP 9.2, les filtres
+`class=`/`package=` ne découvrent pas de façon fiable les tests répartis en dex secondaire.
 
 ---
 
