@@ -372,6 +372,26 @@ Le fil d'actualité est un `String` stocké à la racine de la RTDB, avec un nœ
 
 ---
 
+## CI / Déploiement
+
+Pipeline de release : `.github/workflows/release.yml`, déclenché par un tag git `v*`.
+
+```
+git tag v2.0.1 → push
+   │
+   ├─ job test          ./gradlew test verifyRoborazziDebug   (gate : 147 tests JVM + Roborazzi)
+   │
+   └─ job build-publish ./gradlew bundleRelease               (AAB signé)
+                        r0adkll/upload-google-play             (track production, status: draft)
+```
+
+- **`status: draft`** : la version monte sur Play Console en « modifications prêtes à être publiées », sans rollout — la publication finale reste manuelle.
+- **Versioning dérivé du tag** (`app/build.gradle`) : `versionName` = tag sans `v` ; `versionCode = MAJ*10000 + MIN*100 + PAT` (injectés en CI via env `VERSION_NAME`/`VERSION_CODE`, repli `2.0.0`/`67` en local).
+- **Signature** : `signingConfigs.release` lit les variables d'env en CI (keystore décodé depuis `KEYSTORE_BASE64`), repli sur `keystore.properties` (gitignoré) pour un build release local. Aucun secret committé.
+- **Secrets GitHub** : `KEYSTORE_BASE64`, `KEYSTORE_PASSWORD`, `KEY_ALIAS`, `KEY_PASSWORD`, `PLAY_SERVICE_ACCOUNT_JSON`. Détails opérationnels dans `CLAUDE.md` § Build & Tests → CI / Release.
+
+---
+
 ## Tests
 
 > **Processus complet, comment ajouter un test par couche et checklist de pré-release : `TESTING.md`.**

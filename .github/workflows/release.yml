@@ -1,0 +1,92 @@
+name: Release to Play
+
+# Déclenché en poussant un tag de version, ex. : git tag v2.0.1 && git push origin v2.0.1
+# 1. Gate : tests unitaires JVM (147 tests + régression visuelle Roborazzi)
+# 2. Build de l'AAB release signé (versionName/versionCode dérivés du tag)
+# 3. Upload en BROUILLON sur Play Console (status: draft = "modifications prêtes
+#    à être publiées", aucun déploiement automatique — validation manuelle)
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Tests (gate)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Run JVM unit tests + visual regression
+        run: ./gradlew test verifyRoborazziDebug --stacktrace
+
+  build-publish:
+    name: Build AAB & upload to Play (draft)
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Derive version from tag
+        id: version
+        run: |
+          TAG="${GITHUB_REF_NAME}"          # ex. v2.0.1
+          VERSION_NAME="${TAG#v}"           # 2.0.1
+          IFS='.' read -r MAJ MIN PAT <<< "$VERSION_NAME"
+          MAJ=${MAJ:-0}; MIN=${MIN:-0}; PAT=${PAT:-0}
+          # Schéma monotone et déterministe : MAJ*10000 + MIN*100 + PAT
+          # (v2.0.0 -> 20000, toujours > l'ancien code prod 67)
+          VERSION_CODE=$((10#$MAJ * 10000 + 10#$MIN * 100 + 10#$PAT))
+          echo "name=$VERSION_NAME"   >> "$GITHUB_OUTPUT"
+          echo "code=$VERSION_CODE"   >> "$GITHUB_OUTPUT"
+          echo "Building $VERSION_NAME (code $VERSION_CODE)"
+
+      - name: Decode keystore
+        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > "$RUNNER_TEMP/release.jks"
+
+      - name: Build release bundle (AAB)
+        env:
+          VERSION_NAME:      ${{ steps.version.outputs.name }}
+          VERSION_CODE:      ${{ steps.version.outputs.code }}
+          KEYSTORE_FILE:     ${{ runner.temp }}/release.jks
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS:         ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD:      ${{ secrets.KEY_PASSWORD }}
+        run: ./gradlew bundleRelease --stacktrace
+
+      - name: Upload AAB artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release-${{ steps.version.outputs.name }}
+          path: app/build/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
+
+      - name: Upload to Google Play (draft)
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: com.jehutyno.yomikata
+          releaseFiles: app/build/outputs/bundle/release/app-release.aab
+          track: production
+          status: draft
