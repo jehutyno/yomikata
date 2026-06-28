@@ -63,7 +63,9 @@ jobs:
           echo "Building $VERSION_NAME (code $VERSION_CODE)"
 
       - name: Decode keystore
-        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > "$RUNNER_TEMP/release.jks"
+        # tr -d '\r\n' : retire les retours-ligne/CRLF que Windows peut injecter
+        # dans la valeur du secret (sinon base64 -d -> "invalid input").
+        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | tr -d '\r\n' | base64 -d > "$RUNNER_TEMP/release.jks"
 
       - name: Build release bundle (AAB)
         env:
