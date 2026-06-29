@@ -135,4 +135,18 @@ class RemainingScreensScreenshotTest {
     @Test fun wordlist_de() { RuntimeEnvironment.setQualifiers("+de"); capture("wordlist_de") { WordList() } }
     @Test fun worddetail_de() { RuntimeEnvironment.setQualifiers("+de"); capture("worddetail_de") { WordDetail() } }
     @Test fun answerreview_de() { RuntimeEnvironment.setQualifiers("+de"); capture("answerreview_de") { AnswerReview() } }
+
+    // ── Marketing locales (FR/ES/PT/ZH) — Play Store listing screenshots ──────────
+
+    private fun marketingLocale(lang: String) {
+        RuntimeEnvironment.setQualifiers("+$lang")
+        capture("selections_$lang") { Selections() }
+        capture("wordlist_$lang") { WordList() }
+        capture("worddetail_$lang") { WordDetail() }
+    }
+
+    @Test fun marketing_fr() = marketingLocale("fr")
+    @Test fun marketing_es() = marketingLocale("es")
+    @Test fun marketing_pt() = marketingLocale("pt")
+    @Test fun marketing_zh() = marketingLocale("zh")
 }

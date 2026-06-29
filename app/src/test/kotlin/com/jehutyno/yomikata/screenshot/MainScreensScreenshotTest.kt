@@ -164,4 +164,24 @@ class MainScreensScreenshotTest {
         RuntimeEnvironment.setQualifiers("+de")
         capture("quiz_qcm_before_de") { QuizFixture(quizState(revealed = false, correct = false)) }
     }
+
+    @Test
+    fun quiz_qcm_correct_de() {
+        RuntimeEnvironment.setQualifiers("+de")
+        capture("quiz_qcm_correct_de") { QuizFixture(quizState(revealed = true, correct = true)) }
+    }
+
+    // ── Marketing locales (FR/ES/PT/ZH) — Play Store listing screenshots ──────────
+
+    private fun marketingLocale(lang: String) {
+        RuntimeEnvironment.setQualifiers("+$lang")
+        capture("home_$lang") { HomeScreen(homeState(), {}, {}) }
+        capture("study_$lang") { StudyScreen(studyState(), {}, { _, _ -> }, {}, {}, {}, {}) }
+        capture("quiz_qcm_correct_$lang") { QuizFixture(quizState(revealed = true, correct = true)) }
+    }
+
+    @Test fun marketing_fr() = marketingLocale("fr")
+    @Test fun marketing_es() = marketingLocale("es")
+    @Test fun marketing_pt() = marketingLocale("pt")
+    @Test fun marketing_zh() = marketingLocale("zh")
 }
