@@ -1,5 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Identifiant publicitaire (AAID) : firebase-analytics fusionne automatiquement
+         cette permission. On ne diffuse aucune pub et l'analytics est en opt-in RGPD
+         minimal -> on retire l'AAID (Analytics bascule sur l'app-instance ID). Permet
+         de declarer "pas d'identifiant publicitaire" sur la Play Console. -->
+    <uses-permission android:name="com.google.android.gms.permission.AD_ID"
+        tools:node="remove" />
 
     <queries>
         <package android:name="com.google.android.tts" />
