@@ -157,6 +157,12 @@ class ContentActivity : AppCompatActivity(), DIAware {
      * selection is loaded (non-level selection)
      */
     private fun launchFragment(savedInstanceState: Bundle?, quizPosition: Int) {
+        if (quizzes.isEmpty()) {
+            // Aucune sélection à afficher (catégorie vide ou données obsolètes) :
+            // fermer proprement plutôt que crasher sur un accès indexé (quizzes[-1]).
+            finish()
+            return
+        }
         if (level != null) {
             title = when (level) {
                 Level.LOW -> getString(R.string.red_review)
@@ -183,12 +189,15 @@ class ContentActivity : AppCompatActivity(), DIAware {
             addOrReplaceFragment(R.id.fragment_container, requireNotNull(contentLevelFragment) { "contentLevelFragment not initialized" })
 
         } else {
+            // La position peut arriver à -1 (extra absent) ou hors bornes : la ramener
+            // dans l'intervalle valide pour éviter un accès indexé illégal.
+            val safePosition = quizPosition.coerceIn(0, quizzes.lastIndex)
             contentPagerAdapter = ContentPagerAdapter(this@ContentActivity, quizzes, di)
             binding.pagerContent.adapter = contentPagerAdapter
-            val quizTitle = quizzes[quizPosition].getName().split("%")[0]
-            quizIds = longArrayOf(quizzes[quizPosition].id)
+            val quizTitle = quizzes[safePosition].getName().split("%")[0]
+            quizIds = longArrayOf(quizzes[safePosition].id)
             title = quizTitle
-            binding.pagerContent.currentItem = quizPosition
+            binding.pagerContent.currentItem = safePosition
             binding.pagerContent.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
 
                 override fun onPageSelected(position: Int) {
