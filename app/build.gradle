@@ -52,6 +52,10 @@ android {
     buildFeatures {
         viewBinding = true
         compose true
+        // BuildConfig.DEBUG : utilisé pour n'activer le harness de test des MAJ in-app
+        // (FakeAppUpdateManager) qu'en debug. R8 élimine la branche `if (BuildConfig.DEBUG)`
+        // en release → aucun code de simulation dans l'APK de prod.
+        buildConfig true
     }
 
     buildTypes {

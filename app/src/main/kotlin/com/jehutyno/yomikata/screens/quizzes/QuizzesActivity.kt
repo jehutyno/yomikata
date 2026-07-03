@@ -18,6 +18,7 @@ import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
+import com.jehutyno.yomikata.BuildConfig
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.databinding.ActivityQuizzesBinding
 import com.jehutyno.yomikata.repository.database.YomikataDatabase
@@ -39,6 +40,7 @@ import com.jehutyno.yomikata.util.backup.getRestartDialog
 import com.jehutyno.yomikata.util.backup.getRestoreLauncher
 import com.jehutyno.yomikata.util.backup.restoreProgress
 import com.jehutyno.yomikata.util.backup.triggerRebirth
+import com.jehutyno.yomikata.util.update.DebugUpdateDriver
 import com.jehutyno.yomikata.util.update.InAppUpdateManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -126,8 +128,17 @@ class QuizzesActivity : AppCompatActivity(), DIAware {
         // Mise à jour in-app (parcours flexible, jamais bloquant) : proposée au démarrage
         // si une MAJ est disponible depuis ≥ STALENESS_DAYS jours. Snackbar ancrée au-dessus
         // de la barre de nav flottante pour l'invite de redémarrage.
-        inAppUpdateManager = InAppUpdateManager(this, binding.root, binding.bottomNavCompose)
-        inAppUpdateManager.checkForUpdate()
+        // En DEBUG, on injecte un FakeAppUpdateManager pré-configuré et on simule le parcours
+        // pour pouvoir tester sur émulateur (sans Play Store). R8 supprime cette branche en release.
+        if (BuildConfig.DEBUG) {
+            val fake = DebugUpdateDriver.createFake(this)
+            inAppUpdateManager = InAppUpdateManager(this, binding.root, binding.bottomNavCompose, fake)
+            inAppUpdateManager.checkForUpdate()
+            DebugUpdateDriver.autoDrive(fake)
+        } else {
+            inAppUpdateManager = InAppUpdateManager(this, binding.root, binding.bottomNavCompose)
+            inAppUpdateManager.checkForUpdate()
+        }
 
         fun collapseOrQuit() {
             if (currentDestination != BottomNavDestination.HOME) {

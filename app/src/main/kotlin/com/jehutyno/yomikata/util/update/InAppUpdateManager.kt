@@ -45,10 +45,11 @@ class InAppUpdateManager(
     activity: AppCompatActivity,
     private val rootView: View,
     private val anchorView: View? = null,
-) : DefaultLifecycleObserver {
-
+    // Injectable pour permettre le test sur émulateur via FakeAppUpdateManager (cf.
+    // DebugUpdateDriver). En prod, défaut = vrai gestionnaire Play.
     private val appUpdateManager: AppUpdateManager =
-        AppUpdateManagerFactory.create(activity.applicationContext)
+        AppUpdateManagerFactory.create(activity.applicationContext),
+) : DefaultLifecycleObserver {
 
     // Doit être enregistré avant que l'activité passe à STARTED : la construction depuis
     // onCreate garantit ce timing. Le résultat est volontairement ignoré — un refus ou un
