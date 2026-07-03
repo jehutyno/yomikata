@@ -351,4 +351,6 @@
     <string name="fab_launch_all">Launch all quizzes</string>
     <string name="fab_launch_selection">Launch selection (%1$d)</string>
     <string name="fab_next">Next →</string>
+    <string name="update_ready_message">Update ready to install</string>
+    <string name="update_restart_action">Restart</string>
 </resources>

@@ -320,4 +320,6 @@
     <string name="fab_launch_all">开始所有测验</string>
     <string name="fab_launch_selection">开始选集 (%1$d)</string>
     <string name="fab_next">下一个 →</string>
+    <string name="update_ready_message">更新已准备好安装</string>
+    <string name="update_restart_action">重启</string>
 </resources>

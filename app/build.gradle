@@ -136,6 +136,9 @@ dependencies {
     implementation platform(libs.firebase.bom)
     implementation libs.bundles.firebase
 
+    // Play In-App Updates (mise à jour flexible au démarrage)
+    implementation libs.play.app.update
+
     // Splash screen
     implementation libs.androidx.splashscreen
 

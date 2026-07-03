@@ -796,6 +796,7 @@ Depuis la migration (juin 2026), toutes les versions et dépendances sont centra
 | Splitties | DSL dialogs AlertDialog (legacy — restylé par le thème global ; nouveaux dialogs via `YomikataDialog`/`yomikataAlert`) |
 | KenBurnsView | Animations fond (diaporama photos dans QuizzesActivity) |
 | androidx.core:core-splashscreen | Contrôle du splash screen système (Android 12+) |
+| com.google.android.play:app-update | Mises à jour in-app Google Play (parcours flexible, `util/update/InAppUpdateManager`) |
 | HiraganaEditText | Saisie IME hiragana |
 | Compose BOM 2025.05 + Material 3 | UI Compose — migration complète (toutes les phases 0→3 terminées) |
 | Firebase BOM 34.0.0 | RTDB, FCM, Analytics, Crashlytics (Storage déclaré mais inutilisé) |

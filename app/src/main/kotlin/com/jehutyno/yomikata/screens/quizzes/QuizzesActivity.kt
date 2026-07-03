@@ -39,6 +39,7 @@ import com.jehutyno.yomikata.util.backup.getRestartDialog
 import com.jehutyno.yomikata.util.backup.getRestoreLauncher
 import com.jehutyno.yomikata.util.backup.restoreProgress
 import com.jehutyno.yomikata.util.backup.triggerRebirth
+import com.jehutyno.yomikata.util.update.InAppUpdateManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -58,6 +59,8 @@ class QuizzesActivity : AppCompatActivity(), DIAware {
     private lateinit var restoreLauncher: ActivityResultLauncher<Intent>
 
     private lateinit var binding: ActivityQuizzesBinding
+
+    private lateinit var inAppUpdateManager: InAppUpdateManager
 
     private var currentDestination by mutableStateOf(BottomNavDestination.HOME)
 
@@ -119,6 +122,12 @@ class QuizzesActivity : AppCompatActivity(), DIAware {
         }
 
         binding.anchor.postDelayed({ tutos() }, 500)
+
+        // Mise à jour in-app (parcours flexible, jamais bloquant) : proposée au démarrage
+        // si une MAJ est disponible depuis ≥ STALENESS_DAYS jours. Snackbar ancrée au-dessus
+        // de la barre de nav flottante pour l'invite de redémarrage.
+        inAppUpdateManager = InAppUpdateManager(this, binding.root, binding.bottomNavCompose)
+        inAppUpdateManager.checkForUpdate()
 
         fun collapseOrQuit() {
             if (currentDestination != BottomNavDestination.HOME) {

@@ -320,4 +320,6 @@
     <string name="fab_launch_all">Lancer tous les quiz</string>
     <string name="fab_launch_selection">Lancer la sélection (%1$d)</string>
     <string name="fab_next">Suivant →</string>
+    <string name="update_ready_message">Mise à jour prête à installer</string>
+    <string name="update_restart_action">Redémarrer</string>
 </resources>

@@ -21,6 +21,7 @@ viewpager2         = "1.1.0"
 preference-ktx     = "1.2.1"
 
 kodein             = "7.22.0"
+app-update         = "2.1.0"
 splashscreen       = "1.0.1"
 splitties          = "3.0.0"
 mockk              = "1.14.6"
@@ -86,6 +87,9 @@ firebase-database = { group = "com.google.firebase", name = "firebase-database" 
 firebase-messaging = { group = "com.google.firebase", name = "firebase-messaging" }
 firebase-analytics = { group = "com.google.firebase", name = "firebase-analytics" }
 firebase-crashlytics = { group = "com.google.firebase", name = "firebase-crashlytics" }
+
+# Play In-App Updates (parcours flexible)
+play-app-update = { group = "com.google.android.play", name = "app-update", version.ref = "app-update" }
 
 # DI
 androidx-splashscreen = { group = "androidx.core", name = "core-splashscreen", version.ref = "splashscreen" }
