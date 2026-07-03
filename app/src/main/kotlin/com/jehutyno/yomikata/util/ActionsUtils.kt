@@ -103,7 +103,17 @@ fun contactFacebook(context: Context?) {
 }
 
 fun contactPlayStore(context: Context) {
-    context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + YomikataZKApplication.APP_PNAME)).setFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+    val pname = YomikataZKApplication.APP_PNAME
+    try {
+        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=$pname")).setFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+    } catch (e: android.content.ActivityNotFoundException) {
+        // Aucune app Play Store (appareils sans Google Play, ROMs alternatives, émulateurs) → repli navigateur web
+        try {
+            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=$pname")).setFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+        } catch (e2: android.content.ActivityNotFoundException) {
+            // Ni Play Store ni navigateur : rien à faire, on évite juste le crash
+        }
+    }
 }
 
 fun contactDiscord(context: Context) {
