@@ -52,13 +52,20 @@ git push origin v2.0.1
 2. **Build** : `./gradlew bundleRelease` → AAB signé (aussi conservé en artifact GitHub).
 3. **Publication** : action `r0adkll/upload-google-play` → track `production`, `status: draft` (= « modifications prêtes à être publiées », **aucun rollout** — validation manuelle dans la console).
 
-**Versioning dérivé du tag** (`app/build.gradle`, repli `67`/`2.0.0` en local) :
+**Versioning dérivé du tag** (`app/build.gradle`, repli `20002`/`2.0.2` en local) :
 - `versionName` = tag sans le `v` (`v2.0.1` → `2.0.1`)
 - `versionCode` = `MAJ*10000 + MIN*100 + PAT` (`2.0.1` → `20001`). Monotone, déterministe, toujours `> 67` (ancien code prod). **Ne jamais régresser le semver** ; rester `< 21.x` par palier.
 
 **Signature** : `signingConfigs.release` lit les variables d'env en CI, avec repli sur `keystore.properties` (gitignoré, modèle `keystore.properties.example`) pour un release **local**. Aucun secret committé.
 
 **Secrets GitHub requis** (Settings → Secrets and variables → Actions) : `KEYSTORE_BASE64` (`base64 -w0 cle.jks`), `KEYSTORE_PASSWORD`, `KEY_ALIAS`, `KEY_PASSWORD`, `PLAY_SERVICE_ACCOUNT_JSON` (JSON brut du compte de service Play). ⚠️ Le tout premier upload d'un `applicationId` doit se faire manuellement via la console (déjà fait : prod existante).
+
+### Checklist Play Console (avertissements à connaître)
+
+Deux avertissements récurrents de la Play Console, tous deux **non bloquants**, à traiter/ignorer une fois pour toutes :
+
+- **Identifiant publicitaire (AD_ID)** : le manifeste **retire volontairement** `com.google.android.gms.permission.AD_ID` (`tools:node="remove"`, `AndroidManifest.xml` — pas de pub, Analytics opt-in RGPD sur app-instance ID). Il faut donc que la **déclaration Play Console** (Contenu de l'application → Identifiant publicitaire) soit réglée sur **« Non, mon application n'utilise pas d'identifiant publicitaire »**. ✅ Fait (juillet 2026). Si elle repasse à « Oui », l'erreur d'incohérence réapparaît. **Ne jamais ré-ajouter la permission AD_ID** sans changer cette stratégie.
+- **Symboles de débogage natifs** : `debugSymbolLevel = 'FULL'` est activé sur le build-type release (`app/build.gradle`), mais **aucun symbole n'est produit** — le seul code natif de l'AAB vient de libs AndroidX précompilées **déjà strippées** (`libandroidx.graphics.path.so`, `libdatastore_shared_counter.so`) ; il n'y a aucun code natif first-party. L'avertissement « code natif sans symboles » **persiste et est bénin** (recommandation, pas erreur ; les traces Kotlin sont déobfusquées via le `mapping.txt` Crashlytics). À **ignorer** tant qu'aucun code natif à nous n'est ajouté.
 
 ### Version Catalog
 
