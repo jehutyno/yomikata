@@ -60,10 +60,11 @@ class AnswersFragment(private val di: DI) : Fragment(), AnswersContract.View, Te
         super.onCreate(savedInstanceState)
         tts = TextToSpeech(activity, this)
 
-        val answersListRaw = LocalPersistence.readObjectFromFile(context, "answers")
-        val answersList = answersListRaw as ArrayList<*>
-        answers = answersListRaw.filterIsInstance<Answer>()
-        if (answers.size != answersList.size) {
+        // Peut être null (fichier absent : restauration après mort du process, ou jamais écrit)
+        // ou d'un type inattendu → cast sûr + repli sur liste vide pour ne pas planter.
+        val answersListRaw = LocalPersistence.readObjectFromFile(context, "answers") as? List<*>
+        answers = answersListRaw?.filterIsInstance<Answer>() ?: emptyList()
+        if (answersListRaw != null && answers.size != answersListRaw.size) {
             Log.e("Failed cast", "Some items in the read list of answers were not of the type Answer")
         }
     }
