@@ -60,6 +60,15 @@ android {
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            // Inclut les symboles de debug natifs dans l'AAB pour que la Play Console
+            // symbolise les plantages/ANR natifs (n'affecte que le poids de l'AAB, pas
+            // le téléchargement utilisateur). NB : aujourd'hui aucun symbole n'est produit
+            // — le seul code natif vient de libs AndroidX précompilées déjà strippées
+            // (graphics-path, datastore) ; directive gardée en bonne pratique / future-proof
+            // si du code natif first-party est ajouté un jour.
+            ndk {
+                debugSymbolLevel = 'FULL'
+            }
         }
         debug {
             applicationIdSuffix '.debug'
