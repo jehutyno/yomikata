@@ -14,11 +14,25 @@ import java.io.Serializable
 
 
 fun <T: Parcelable> Bundle.getParcelableArrayListHelper(key: String?, clazz: Class<out T>): ArrayList<T>? {
-    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-        this.getParcelableArrayList(key, clazz)
-    } else {
-        @Suppress("DEPRECATION")
-        this.getParcelableArrayList(key)
+    // Force the app class loader so the Parcelable's class (and its CREATOR) résout
+    // même quand le système restaure le Bundle avec le class loader de la plateforme.
+    classLoader = clazz.classLoader
+    return try {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            this.getParcelableArrayList(key, clazz)
+        } else {
+            @Suppress("DEPRECATION")
+            this.getParcelableArrayList(key)
+        }
+    } catch (e: Exception) {
+        // Certaines ROM (MIUI/Android 13…) lèvent en validant la classe Parcelable
+        // contre `clazz`. La variante non typée saute cette validation → pas de crash.
+        try {
+            @Suppress("DEPRECATION")
+            this.getParcelableArrayList(key)
+        } catch (e2: Exception) {
+            null
+        }
     }
 }
 
@@ -59,10 +73,24 @@ fun <T : Serializable?> Intent.getSerializableExtraHelper(name: String?, clazz: 
 }
 
 fun <T: Parcelable> Intent.getParcelableArrayListExtraHelper(name: String?, clazz: Class<out T>): ArrayList<T>? {
-    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-        this.getParcelableArrayListExtra(name, clazz)
-    } else {
-        @Suppress("DEPRECATION")
-        this.getParcelableArrayListExtra(name)
+    // Force the app class loader so the Parcelable's class (et son CREATOR) résout
+    // même quand le système redélivre l'Intent avec le class loader de la plateforme.
+    setExtrasClassLoader(clazz.classLoader)
+    return try {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            this.getParcelableArrayListExtra(name, clazz)
+        } else {
+            @Suppress("DEPRECATION")
+            this.getParcelableArrayListExtra(name)
+        }
+    } catch (e: Exception) {
+        // Certaines ROM (MIUI/Android 13…) lèvent en validant la classe Parcelable
+        // contre `clazz`. La variante non typée saute cette validation → pas de crash.
+        try {
+            @Suppress("DEPRECATION")
+            this.getParcelableArrayListExtra(name)
+        } catch (e2: Exception) {
+            null
+        }
     }
 }
