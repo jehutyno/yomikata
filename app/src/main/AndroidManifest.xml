@@ -2,11 +2,16 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- Identifiant publicitaire (AAID) : firebase-analytics fusionne automatiquement
-         cette permission. On ne diffuse aucune pub et l'analytics est en opt-in RGPD
-         minimal -> on retire l'AAID (Analytics bascule sur l'app-instance ID). Permet
-         de declarer "pas d'identifiant publicitaire" sur la Play Console. -->
+    <!-- Identifiant publicitaire : firebase-analytics (play-services-measurement)
+         fusionne automatiquement ces permissions. On ne diffuse aucune pub et
+         l'analytics est en opt-in RGPD minimal -> on retire l'AAID (Analytics bascule
+         sur l'app-instance ID). Permet de declarer "pas d'identifiant publicitaire" sur
+         la Play Console. Retirer les DEUX : la permission GMS historique ET la permission
+         Privacy Sandbox / AdServices (ACCESS_ADSERVICES_AD_ID), sinon la Play Console
+         signale une incoherence avec la declaration "Non". -->
     <uses-permission android:name="com.google.android.gms.permission.AD_ID"
+        tools:node="remove" />
+    <uses-permission android:name="android.permission.ACCESS_ADSERVICES_AD_ID"
         tools:node="remove" />
 
     <queries>
