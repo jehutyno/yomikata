@@ -1,0 +1,1 @@
+Corrections de stabilité : plusieurs plantages rares ont été corrigés (lancement d'un quiz, écran de révision des réponses, bouton « Noter l'application »). Merci de vos retours qui aident à améliorer l'app !

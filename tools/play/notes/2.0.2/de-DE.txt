@@ -1,0 +1,1 @@
+Stabilitätsverbesserungen: Mehrere seltene Abstürze wurden behoben (Quiz-Start, Bildschirm zur Antwortüberprüfung und Schaltfläche „App bewerten"). Danke für euer Feedback, das hilft, die App zu verbessern!

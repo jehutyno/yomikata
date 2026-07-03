@@ -1,0 +1,5 @@
+{
+  "packageName": "com.jehutyno.yomikata",
+  "defaultTrack": "production",
+  "languages": ["fr-FR", "en-GB", "de-DE", "es-ES", "pt-PT", "zh-CN"]
+}

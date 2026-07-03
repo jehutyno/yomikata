@@ -1,0 +1,16 @@
+{
+  "name": "yomikata-play",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "CLI de gestion de la fiche Play Store, des notes de version et du rollout (Google Play Developer Publishing API v3).",
+  "bin": {
+    "play": "./play.mjs"
+  },
+  "scripts": {
+    "play": "node play.mjs"
+  },
+  "dependencies": {
+    "googleapis": "^144.0.0"
+  }
+}

@@ -1,0 +1,1 @@
+Correcciones de estabilidad: hemos solucionado varios fallos poco frecuentes (al iniciar un cuestionario, en la pantalla de repaso de respuestas y en el botón «Valorar la aplicación»). ¡Gracias por tus comentarios, ayudan a mejorar la app!

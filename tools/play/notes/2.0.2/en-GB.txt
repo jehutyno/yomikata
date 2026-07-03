@@ -1,0 +1,1 @@
+Stability fixes: we've squashed several rare crashes (launching a quiz, the answer review screen, and the "Rate the app" button). Thanks for your feedback — it helps make the app better!

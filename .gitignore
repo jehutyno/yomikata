@@ -15,3 +15,7 @@ keystore.properties
 # Ne JAMAIS commiter en revanche les clés de service account ni les fichiers locaux :
 *-firebase-adminsdk-*.json
 **/google-services*.json.local
+
+# Google Play : clé de compte de service (Publishing API) + dépendances de l'outil CLI.
+tools/play/service-account.json
+tools/play/node_modules/
