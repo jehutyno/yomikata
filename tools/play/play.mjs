@@ -303,6 +303,9 @@ async function rolloutMutate(publisher, flags, action) {
     const trackData = await tracksGet(publisher, editId, track);
     const release = pickRelease(trackData, { version: flags.version });
     let summary;
+    // Par défaut on renvoie toutes les releases du track (ex. rollout : la nouvelle
+    // "inProgress" + l'ancienne "completed" qui sert le reste des utilisateurs).
+    let releasesPayload = trackData.releases;
     switch (action) {
       case 'start': {
         const frac = parseFloat(flags.fraction);
@@ -325,6 +328,9 @@ async function rolloutMutate(publisher, flags, action) {
       case 'complete': {
         release.status = 'completed';
         delete release.userFraction;   // 100% = plus de fraction partielle
+        // Play n'autorise qu'UNE release "completed" : la nouvelle remplace toute
+        // release complétée précédente (qui servait les utilisateurs restants).
+        releasesPayload = [release];
         summary = `Finalisation rollout track "${track}" → 100% (completed)`;
         break;
       }
@@ -335,7 +341,7 @@ async function rolloutMutate(publisher, flags, action) {
       }
       default: die(`Action rollout inconnue : ${action}`);
     }
-    await publisher.edits.tracks.update({ packageName, editId, track, requestBody: { track, releases: trackData.releases } });
+    await publisher.edits.tracks.update({ packageName, editId, track, requestBody: { track, releases: releasesPayload } });
     return summary + `  [versionCodes=${(release.versionCodes || []).join(', ')}]`;
   });
 }
