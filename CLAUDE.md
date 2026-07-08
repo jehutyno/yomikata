@@ -52,7 +52,7 @@ git push origin v2.0.1
 2. **Build** : `./gradlew bundleRelease` → AAB signé (aussi conservé en artifact GitHub).
 3. **Publication** : action `r0adkll/upload-google-play` → track `production`, `status: draft` (= « modifications prêtes à être publiées », **aucun rollout** — validation manuelle dans la console).
 
-**Versioning dérivé du tag** (`app/build.gradle`, repli `20002`/`2.0.2` en local) :
+**Versioning dérivé du tag** (`app/build.gradle`, repli `20100`/`2.1.0` en local) :
 - `versionName` = tag sans le `v` (`v2.0.1` → `2.0.1`)
 - `versionCode` = `MAJ*10000 + MIN*100 + PAT` (`2.0.1` → `20001`). Monotone, déterministe, toujours `> 67` (ancien code prod). **Ne jamais régresser le semver** ; rester `< 21.x` par palier.
 

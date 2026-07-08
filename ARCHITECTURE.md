@@ -386,7 +386,7 @@ git tag v2.0.1 → push
 ```
 
 - **`status: draft`** : la version monte sur Play Console en « modifications prêtes à être publiées », sans rollout — la publication finale reste manuelle.
-- **Versioning dérivé du tag** (`app/build.gradle`) : `versionName` = tag sans `v` ; `versionCode = MAJ*10000 + MIN*100 + PAT` (injectés en CI via env `VERSION_NAME`/`VERSION_CODE`, repli `2.0.2`/`20002` en local).
+- **Versioning dérivé du tag** (`app/build.gradle`) : `versionName` = tag sans `v` ; `versionCode = MAJ*10000 + MIN*100 + PAT` (injectés en CI via env `VERSION_NAME`/`VERSION_CODE`, repli `2.1.0`/`20100` en local).
 - **Signature** : `signingConfigs.release` lit les variables d'env en CI (keystore décodé depuis `KEYSTORE_BASE64`), repli sur `keystore.properties` (gitignoré) pour un build release local. Aucun secret committé.
 - **Secrets GitHub** : `KEYSTORE_BASE64`, `KEYSTORE_PASSWORD`, `KEY_ALIAS`, `KEY_PASSWORD`, `PLAY_SERVICE_ACCOUNT_JSON`. Détails opérationnels dans `CLAUDE.md` § Build & Tests → CI / Release.
 - **Minification release** : `minifyEnabled true` + `shrinkResources true` sur le build-type `release` (R8). Règles dans `app/proguard-rules.pro` (peu de règles manuelles : les libs embarquent leurs consumer rules ; Kodein 7.x est R8-friendly, le backup est une copie binaire brute du `.db` donc pas de réflexion à protéger). Le plugin `firebase-crashlytics` uploade automatiquement le `mapping.txt` (`uploadCrashlyticsMappingFileRelease`) → stack traces déobfusquées en console. APK release ≈ 11,9 Mo.
