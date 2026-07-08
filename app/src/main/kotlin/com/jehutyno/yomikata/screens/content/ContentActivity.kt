@@ -43,6 +43,7 @@ import com.jehutyno.yomikata.util.Prefs
 import com.jehutyno.yomikata.util.quiz.QuizStrategy
 import com.jehutyno.yomikata.util.quiz.QuizType
 import com.jehutyno.yomikata.util.quiz.QuizTypePrefs
+import com.jehutyno.yomikata.util.DiFragmentFactory
 import com.jehutyno.yomikata.util.addOrReplaceFragment
 import com.jehutyno.yomikata.util.getParcelableArrayListExtraHelper
 import com.jehutyno.yomikata.util.getSerializableExtraHelper
@@ -91,6 +92,10 @@ class ContentActivity : AppCompatActivity(), DIAware {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Doit être posé AVANT super.onCreate : le FragmentManager y restaure ContentFragment
+        // et WordDetailFragment (constructeurs à DI, pas de no-arg) → sans factory,
+        // NoSuchMethodException au démarrage.
+        supportFragmentManager.fragmentFactory = DiFragmentFactory(di)
         super.onCreate(savedInstanceState)
 
         binding = ActivityContentBinding.inflate(layoutInflater)

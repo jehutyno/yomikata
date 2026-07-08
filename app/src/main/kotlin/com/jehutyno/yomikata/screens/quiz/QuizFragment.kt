@@ -46,6 +46,7 @@ import com.jehutyno.yomikata.util.Prefs
 import com.jehutyno.yomikata.util.SPEECH_NOT_INITALIZED
 import com.jehutyno.yomikata.util.SpeechAvailability
 import com.jehutyno.yomikata.util.backup.LocalPersistence
+import com.jehutyno.yomikata.util.DiFragmentFactory
 import com.jehutyno.yomikata.util.checkSpeechAvailability
 import com.jehutyno.yomikata.util.showWordSelectionDialog
 import com.jehutyno.yomikata.util.hideSoftKeyboard
@@ -109,6 +110,10 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, TextToSp
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Doit être posé AVANT super.onCreate : le childFragmentManager y restaure
+        // WordDetailDialogFragment (constructeur à DI, pas de no-arg) → sans factory,
+        // NoSuchMethodException à la recréation du fragment.
+        childFragmentManager.fragmentFactory = DiFragmentFactory(di)
         super.onCreate(savedInstanceState)
     }
 

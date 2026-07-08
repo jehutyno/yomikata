@@ -12,6 +12,7 @@ import androidx.lifecycle.lifecycleScope
 import android.content.SharedPreferences
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.databinding.ActivityQuizBinding
+import com.jehutyno.yomikata.util.DiFragmentFactory
 import com.jehutyno.yomikata.util.Extras
 import com.jehutyno.yomikata.util.quiz.Level
 import com.jehutyno.yomikata.util.quiz.QuizStrategy
@@ -66,6 +67,10 @@ class QuizActivity : AppCompatActivity(), DIAware {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Doit être posé AVANT super.onCreate : c'est là que le FragmentManager restaure
+        // QuizFragment (constructeur à DI, pas de no-arg) → sans factory, NoSuchMethodException.
+        // On passe subDI (porte le binding factory du présenteur), pas le DI de base.
+        supportFragmentManager.fragmentFactory = DiFragmentFactory(subDI)
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
         binding = ActivityQuizBinding.inflate(layoutInflater)
