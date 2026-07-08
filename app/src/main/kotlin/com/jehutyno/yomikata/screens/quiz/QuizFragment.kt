@@ -3,13 +3,13 @@ package com.jehutyno.yomikata.screens.quiz
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
+import android.media.AudioManager
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
-import android.widget.Toast
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -32,6 +32,7 @@ import com.jehutyno.yomikata.ui.quiz.AnswerMode
 import com.jehutyno.yomikata.ui.quiz.QcmOption
 import com.jehutyno.yomikata.ui.quiz.QuizScreen
 import com.jehutyno.yomikata.ui.quiz.QuizUiState
+import com.jehutyno.yomikata.ui.quiz.TtsSettingsSheet
 import com.jehutyno.yomikata.ui.quiz.currentWord
 import com.jehutyno.yomikata.ui.quiz.currentQuizType
 import com.jehutyno.yomikata.ui.quiz.SegmentState
@@ -83,6 +84,13 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, TextToSp
     // Compose state
     private var uiState by mutableStateOf(QuizUiState())
 
+    // État du panneau de réglages vocaux (volume + vitesse TTS)
+    private var ttsSettingsVisible by mutableStateOf(false)
+    private var ttsVolume by mutableStateOf(0)
+    private var ttsMaxVolume by mutableStateOf(1)
+    private var ttsRate by mutableStateOf(50)
+    private var ttsShowRate by mutableStateOf(true)
+
     private lateinit var dialogFlowController: DialogFlowController
 
     // Track if answer input is busy (prevent double-submit)
@@ -91,6 +99,9 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, TextToSp
     override fun onInit(status: Int) {
         ttsSupported = onTTSinit(activity, status, tts)
         presenter.setTTSSupported(ttsSupported)
+        // Applique la vitesse de parole sauvegardée (Prefs.TTS_RATE) au moteur dès son init,
+        // sinon le réglage du panneau vocal reste sans effet pendant le quiz.
+        tts?.setSpeechRate((prefs.getInt(Prefs.TTS_RATE.pref, 50) + 50).toFloat() / 100)
         val currentWord = uiState.currentWord
         if (currentWord != null) {
             val noPlayStart = prefs.getBoolean(Prefs.PLAY_START.pref, false)
@@ -143,7 +154,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, TextToSp
                     QuizScreen(
                         uiState = uiState,
                         onClose = { showQuitDialog() },
-                        onTtsSettings = { showTtsSettingsToast() },
+                        onTtsSettings = { openTtsSettings() },
                         onDisplayAnswers = { presenter.onDisplayAnswersClick() },
                         onOptionClick = { index ->
                             if (!holdOn) {
@@ -217,6 +228,29 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, TextToSp
                             }
                         },
                     )
+
+                    if (ttsSettingsVisible) {
+                        TtsSettingsSheet(
+                            volume = ttsVolume,
+                            maxVolume = ttsMaxVolume,
+                            speechRate = ttsRate,
+                            showSpeechRate = ttsShowRate,
+                            onVolumeChange = { v ->
+                                ttsVolume = v
+                                val audioManager = requireActivity()
+                                    .getSystemService(Context.AUDIO_SERVICE) as AudioManager
+                                audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, v, 0)
+                                presenter.onSpeakSentence()
+                            },
+                            onSpeechRateChange = { r ->
+                                ttsRate = r
+                                prefs.edit().putInt(Prefs.TTS_RATE.pref, r).apply()
+                                tts?.setSpeechRate((r + 50).toFloat() / 100)
+                                presenter.onSpeakSentence()
+                            },
+                            onDismiss = { ttsSettingsVisible = false },
+                        )
+                    }
                 }
             }
         }
@@ -265,14 +299,21 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, TextToSp
         ).show()
     }
 
-    private fun showTtsSettingsToast() {
-        val word = uiState.currentWord
-        if (word != null) {
-            when (checkSpeechAvailability(requireActivity(), ttsSupported, getCategoryLevel(word.baseCategory))) {
-                SpeechAvailability.NOT_AVAILABLE ->
-                    speechNotSupportedAlert(requireActivity(), getCategoryLevel(word.baseCategory)) {}
-                else ->
-                    Toast.makeText(context, R.string.tts_settings_title, Toast.LENGTH_SHORT).show()
+    private fun openTtsSettings() {
+        val word = uiState.currentWord ?: return
+        val level = getCategoryLevel(word.baseCategory)
+        when (val availability = checkSpeechAvailability(requireActivity(), ttsSupported, level)) {
+            SpeechAvailability.NOT_AVAILABLE ->
+                speechNotSupportedAlert(requireActivity(), level) {}
+            else -> {
+                val audioManager = requireActivity()
+                    .getSystemService(Context.AUDIO_SERVICE) as AudioManager
+                ttsMaxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+                ttsVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
+                ttsRate = prefs.getInt(Prefs.TTS_RATE.pref, 50)
+                // Le débit ne s'applique qu'au repli TTS ; les voix MP3 l'ignorent.
+                ttsShowRate = availability == SpeechAvailability.TTS_AVAILABLE
+                ttsSettingsVisible = true
             }
         }
     }
