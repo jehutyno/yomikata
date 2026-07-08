@@ -39,6 +39,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -50,6 +52,10 @@ import com.jehutyno.yomikata.ui.components.MasteryBar
 import com.jehutyno.yomikata.ui.theme.AccentOrange
 import com.jehutyno.yomikata.ui.theme.BackgroundPrimary
 import com.jehutyno.yomikata.ui.theme.BorderDefault
+import com.jehutyno.yomikata.ui.theme.MasteryHigh4
+import com.jehutyno.yomikata.ui.theme.MasteryLow1
+import com.jehutyno.yomikata.ui.theme.MasteryMaster4
+import com.jehutyno.yomikata.ui.theme.MasteryMedium4
 import com.jehutyno.yomikata.ui.theme.RadiusPill
 import com.jehutyno.yomikata.ui.theme.RadiusSm
 import com.jehutyno.yomikata.ui.theme.SurfaceAccent
@@ -91,11 +97,10 @@ fun WordListScreen(
     modifier: Modifier = Modifier,
 ) {
     val filteredWords = remember(state.words, state.selectedTab, state.searchQuery) {
-        val byTab: List<Word> = when (state.selectedTab) {
-            1 -> state.words.filter { it.level == Level.LOW || it.level == Level.MEDIUM }
-            2 -> state.words.filter { it.level == Level.HIGH || it.level == Level.MASTER }
-            else -> state.words
-        }
+        val level = tabToLevel(state.selectedTab)
+        val byTab: List<Word> =
+            if (level == null) state.words
+            else state.words.filter { it.level == level }
         if (state.searchQuery.isBlank()) byTab
         else byTab.filter { w ->
             w.japanese.contains(state.searchQuery, ignoreCase = true) ||
@@ -107,7 +112,6 @@ fun WordListScreen(
     // Title: strip the "%EN" part of "JP%EN" quiz names
     val displayTitle = state.title.substringBefore("%")
 
-    val reviewCount = state.lowCount + state.mediumCount
     val masteredCount = state.highCount + state.masterCount
     val subtitle = "${state.quizCount} ${stringResource(R.string.word_count_label)}"
 
@@ -173,7 +177,8 @@ fun WordListScreen(
                 modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
             )
 
-            // Filter pills (replace the old Material tabs)
+            // Filtres : « Tous » (texte) + 4 niveaux (rond de couleur + compteur), pour retrouver
+            // le tri par couleur de réussite de l'ancienne version.
             Row(
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
                 modifier = Modifier
@@ -186,17 +191,33 @@ fun WordListScreen(
                     isSelected = state.selectedTab == 0,
                     onClick = { onTabSelected(0) },
                 )
-                MasteryFilterChip(
-                    label = stringResource(R.string.mastery_to_review),
-                    count = reviewCount,
+                LevelFilterChip(
+                    dotColor = MasteryLow1,
+                    count = state.lowCount,
                     isSelected = state.selectedTab == 1,
+                    contentDescription = stringResource(R.string.red_review),
                     onClick = { onTabSelected(1) },
                 )
-                MasteryFilterChip(
-                    label = stringResource(R.string.mastered),
-                    count = masteredCount,
+                LevelFilterChip(
+                    dotColor = MasteryMedium4,
+                    count = state.mediumCount,
                     isSelected = state.selectedTab == 2,
+                    contentDescription = stringResource(R.string.orange_review),
                     onClick = { onTabSelected(2) },
+                )
+                LevelFilterChip(
+                    dotColor = MasteryHigh4,
+                    count = state.highCount,
+                    isSelected = state.selectedTab == 3,
+                    contentDescription = stringResource(R.string.yellow_review),
+                    onClick = { onTabSelected(3) },
+                )
+                LevelFilterChip(
+                    dotColor = MasteryMaster4,
+                    count = state.masterCount,
+                    isSelected = state.selectedTab == 4,
+                    contentDescription = stringResource(R.string.green_review),
+                    onClick = { onTabSelected(4) },
                 )
             }
 
@@ -273,6 +294,58 @@ fun WordListScreen(
                 }
             }
         }
+    }
+}
+
+/**
+ * Map filter tab index → mastery [Level] (null = « Tous »).
+ * 0 = tous, 1 = LOW, 2 = MEDIUM, 3 = HIGH, 4 = MASTER.
+ */
+fun tabToLevel(tab: Int): Level? = when (tab) {
+    1 -> Level.LOW
+    2 -> Level.MEDIUM
+    3 -> Level.HIGH
+    4 -> Level.MASTER
+    else -> null
+}
+
+/** Pilule de filtre par niveau : rond de couleur du niveau + compteur (sans texte). */
+@Composable
+private fun LevelFilterChip(
+    dotColor: androidx.compose.ui.graphics.Color,
+    count: Int,
+    isSelected: Boolean,
+    contentDescription: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val bg = if (isSelected) SurfaceAccent else SurfacePrimary
+    val border = if (isSelected) AccentOrange else BorderDefault
+    val textColor = if (isSelected) AccentOrange else TextMuted
+
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        modifier = modifier
+            .clip(RoundedCornerShape(RadiusPill))
+            .background(bg)
+            .border(1.dp, border, RoundedCornerShape(RadiusPill))
+            .clickable(onClick = onClick)
+            .semantics { this.contentDescription = contentDescription }
+            .padding(horizontal = 14.dp, vertical = 7.dp),
+    ) {
+        Box(
+            modifier = Modifier
+                .size(11.dp)
+                .clip(RoundedCornerShape(RadiusPill))
+                .background(dotColor),
+        )
+        Text(
+            text = "$count",
+            fontSize = 13.sp,
+            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+            color = textColor,
+        )
     }
 }
 

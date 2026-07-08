@@ -17,6 +17,7 @@ import com.jehutyno.yomikata.model.Word
 import com.jehutyno.yomikata.screens.content.word.WordDetailFragment
 import com.jehutyno.yomikata.ui.theme.YomikataTheme
 import com.jehutyno.yomikata.ui.wordlist.WordListScreen
+import com.jehutyno.yomikata.ui.wordlist.tabToLevel
 import com.jehutyno.yomikata.ui.wordlist.WordListUiState
 import com.jehutyno.yomikata.util.onTTSinit
 import com.jehutyno.yomikata.util.Extras
@@ -71,8 +72,10 @@ class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, Te
         }
 
         val initialTab = when (level) {
-            Level.LOW, Level.MEDIUM -> 1
-            Level.HIGH, Level.MASTER -> 2
+            Level.LOW -> 1
+            Level.MEDIUM -> 2
+            Level.HIGH -> 3
+            Level.MASTER -> 4
             null -> 0
         }
         uiState = uiState.copy(title = quizTitle, selectedTab = initialTab)
@@ -87,7 +90,10 @@ class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, Te
                     WordListScreen(
                         state = uiState,
                         onBack = { requireActivity().onBackPressedDispatcher.onBackPressed() },
-                        onTabSelected = { uiState = uiState.copy(selectedTab = it) },
+                        onTabSelected = {
+                            uiState = uiState.copy(selectedTab = it)
+                            publishFilterLevel()
+                        },
                         onSearchQueryChanged = { uiState = uiState.copy(searchQuery = it) },
                         onToggleGrid = { uiState = uiState.copy(isGrid = !uiState.isGrid) },
                         onWordClick = { word -> navigateToWordDetail(word) },
@@ -124,6 +130,18 @@ class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, Te
         mpresenter.lowCount.observe(viewLifecycleOwner) { count ->
             uiState = uiState.copy(lowCount = count ?: 0)
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Cette page vient de devenir visible (ViewPager) → son filtre courant pilote le niveau
+        // sur lequel l'activité lancera le quiz.
+        publishFilterLevel()
+    }
+
+    /** Publie le niveau du filtre courant à l'activité hôte, pour lancer le quiz sur ce sous-ensemble. */
+    private fun publishFilterLevel() {
+        (activity as? ContentActivity)?.currentFilterLevel = tabToLevel(uiState.selectedTab)
     }
 
     override fun onInit(status: Int) {

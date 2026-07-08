@@ -74,6 +74,10 @@ class ContentActivity : AppCompatActivity(), DIAware {
     private var category: Int = -1
     private var level: Level? = null
 
+    /** Niveau du filtre de la liste de mots visible (publié par le [ContentFragment] courant).
+     *  null = « Tous ». Pilote le sous-ensemble sur lequel le quiz est lancé. */
+    var currentFilterLevel by mutableStateOf<Level?>(null)
+
     private var contentLevelFragment: ContentFragment? = null
 
     // kodein
@@ -128,8 +132,9 @@ class ContentActivity : AppCompatActivity(), DIAware {
                     ContentLaunchBar(
                         selectedTypes = launchTypes,
                         lastMode = lastMode,
-                        // Progressif sans objet sur un sous-ensemble par niveau (revue rouge/orange/…)
-                        showProgressive = level == null,
+                        // Progressif sans objet sur un sous-ensemble par niveau (revue rouge/orange/…) :
+                        // masqué dès qu'un niveau (revue fixe ou filtre de la liste) est actif.
+                        showProgressive = (currentFilterLevel ?: level) == null,
                         onQuizTypeToggle = { type ->
                             val prefs = PreferenceManager.getDefaultSharedPreferences(this@ContentActivity)
                             launchTypes = QuizTypePrefs.toggle(prefs, ArrayList(launchTypes), type)
@@ -234,11 +239,15 @@ class ContentActivity : AppCompatActivity(), DIAware {
         pref.edit().putString(Prefs.LAST_LAUNCH_MODE.pref, strategy.name).apply()
         lastMode = strategy
 
+        // Niveau effectif : le filtre de la liste (rouge/orange/jaune/vert) prime ; sinon le niveau
+        // de la revue par couleur (mode level fragment) ; sinon null = toute la sélection.
+        val effectiveLevel = currentFilterLevel ?: level
+
         val intent = Intent(this, QuizActivity::class.java).apply {
             putExtra(EXTRA_QUIZ_IDS, quizIds)
             putExtra(EXTRA_QUIZ_TITLE, title)
             putExtra(EXTRA_QUIZ_STRATEGY, strategy)
-            putExtra(EXTRA_LEVEL, level)
+            putExtra(EXTRA_LEVEL, effectiveLevel)
             putExtra(EXTRA_QUIZ_TYPES, ArrayList(launchTypes))
         }
         startActivity(intent)
