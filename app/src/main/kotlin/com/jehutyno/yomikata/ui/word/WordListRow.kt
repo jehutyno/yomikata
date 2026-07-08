@@ -28,7 +28,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.ui.theme.AccentOrange
-import com.jehutyno.yomikata.ui.theme.BorderDefault
 import com.jehutyno.yomikata.ui.theme.BorderSubtle
 import com.jehutyno.yomikata.ui.theme.PosChipText
 import com.jehutyno.yomikata.ui.theme.TextDim
@@ -45,8 +44,10 @@ private val masteryColors = listOf(
     Color(0xFFD2D228), Color(0xFFBBD228), Color(0xFF99D228), Color(0xFF77D228),
 )
 
+// Un mot jamais étudié (score 0) est « à apprendre » → pastille rouge (1er cran), cohérent avec
+// la pilule de filtre rouge du niveau LOW. Plus de gris.
 private fun masteryDotColor(score: Int): Color =
-    if (score > 0) masteryColors[(score - 1).coerceIn(0, 15)] else BorderDefault
+    masteryColors[(score - 1).coerceIn(0, 15)]
 
 /**
  * One row in the word list. Kanji is always TextPrimary — never red (DESIGN.md rule §7).

@@ -178,13 +178,15 @@ fun WordListScreen(
             )
 
             // Filtres : « Tous » (texte) + 4 niveaux (rond de couleur + compteur), pour retrouver
-            // le tri par couleur de réussite de l'ancienne version.
-            Row(
+            // le tri par couleur de réussite de l'ancienne version. Centrés horizontalement
+            // (défilables si trop larges pour l'écran).
+            Box(modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp)) {
+              Row(
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
                 modifier = Modifier
-                    .horizontalScroll(rememberScrollState())
-                    .padding(horizontal = 14.dp),
-            ) {
+                    .align(Alignment.Center)
+                    .horizontalScroll(rememberScrollState()),
+              ) {
                 MasteryFilterChip(
                     label = stringResource(R.string.mastery_all),
                     count = state.quizCount,
@@ -219,6 +221,7 @@ fun WordListScreen(
                     contentDescription = stringResource(R.string.green_review),
                     onClick = { onTabSelected(4) },
                 )
+              }
             }
 
             // Search field
