@@ -29,6 +29,10 @@ import androidx.compose.ui.unit.sp
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.ui.theme.AccentOrange
 import com.jehutyno.yomikata.ui.theme.BorderSubtle
+import com.jehutyno.yomikata.ui.theme.MasteryHigh4
+import com.jehutyno.yomikata.ui.theme.MasteryLow1
+import com.jehutyno.yomikata.ui.theme.MasteryMaster4
+import com.jehutyno.yomikata.ui.theme.MasteryMedium4
 import com.jehutyno.yomikata.ui.theme.PosChipText
 import com.jehutyno.yomikata.ui.theme.TextDim
 import com.jehutyno.yomikata.ui.theme.TextGhost
@@ -36,18 +40,19 @@ import com.jehutyno.yomikata.ui.theme.TextMuted
 import com.jehutyno.yomikata.ui.theme.TextPrimary
 import com.jehutyno.yomikata.ui.theme.TypeCaption
 import com.jehutyno.yomikata.ui.theme.YomikataTheme
+import com.jehutyno.yomikata.util.quiz.Level
 
-private val masteryColors = listOf(
-    Color(0xFFD22828), Color(0xFFD24328), Color(0xFFD25728), Color(0xFFD26028),
-    Color(0xFFD26728), Color(0xFFD26C28), Color(0xFFD27728), Color(0xFFD28E28),
-    Color(0xFFD2B028), Color(0xFFD2BB28), Color(0xFFD2C628), Color(0xFFD2D228),
-    Color(0xFFD2D228), Color(0xFFBBD228), Color(0xFF99D228), Color(0xFF77D228),
-)
-
-// Un mot jamais étudié (score 0) est « à apprendre » → pastille rouge (1er cran), cohérent avec
-// la pilule de filtre rouge du niveau LOW. Plus de gris.
-private fun masteryDotColor(score: Int): Color =
-    masteryColors[(score - 1).coerceIn(0, 15)]
+/**
+ * Couleur d'un niveau de maîtrise (rouge→vert), source unique partagée par la pastille devant chaque
+ * mot ET les pilules de filtre par niveau (WordListScreen) → couleurs strictement cohérentes.
+ * Un mot jamais étudié est LOW (rouge), « à apprendre ».
+ */
+fun levelColor(level: Level): Color = when (level) {
+    Level.LOW -> MasteryLow1
+    Level.MEDIUM -> MasteryMedium4
+    Level.HIGH -> MasteryHigh4
+    Level.MASTER -> MasteryMaster4
+}
 
 /**
  * One row in the word list. Kanji is always TextPrimary — never red (DESIGN.md rule §7).
@@ -55,7 +60,7 @@ private fun masteryDotColor(score: Int): Color =
  * @param japanese   kanji/kana form of the word
  * @param furigana   reading shown above the kanji (9sp, TextDim)
  * @param translation localized translation
- * @param score      mastery score 0..16
+ * @param level      mastery level (drives the colored dot, matching the filter pills)
  * @param posTokens  POS tokens from Word.getPosTokens() — first token shown as chip
  * @param isFavorite whether the ★ icon is filled (active)
  * @param onFavoriteClick callback for the star button
@@ -67,7 +72,7 @@ fun WordListRow(
     japanese: String,
     furigana: String,
     translation: String,
-    score: Int,
+    level: Level,
     posTokens: List<String>,
     isFavorite: Boolean,
     onFavoriteClick: () -> Unit,
@@ -83,12 +88,12 @@ fun WordListRow(
                 .clickable(onClick = onClick)
                 .padding(horizontal = 12.dp, vertical = 10.dp),
         ) {
-            // Mastery dot
+            // Mastery dot — même couleur que la pilule de filtre du niveau
             Box(
                 modifier = Modifier
                     .size(8.dp)
                     .clip(CircleShape)
-                    .background(masteryDotColor(score)),
+                    .background(levelColor(level)),
             )
 
             Spacer(modifier = Modifier.width(10.dp))
@@ -172,7 +177,7 @@ private fun WordListRowNotStudiedPreview() {
             japanese = "食べる",
             furigana = "たべる",
             translation = "to eat",
-            score = 0,
+            level = Level.LOW,
             posTokens = listOf("v1"),
             isFavorite = false,
             onFavoriteClick = {},
@@ -190,7 +195,7 @@ private fun WordListRowMasteredPreview() {
             japanese = "学校",
             furigana = "がっこう",
             translation = "school",
-            score = 16,
+            level = Level.MASTER,
             posTokens = listOf("n"),
             isFavorite = true,
             onFavoriteClick = {},
@@ -208,7 +213,7 @@ private fun WordListRowKanaPreview() {
             japanese = "あ",
             furigana = "",
             translation = "a (hiragana)",
-            score = 7,
+            level = Level.HIGH,
             posTokens = emptyList(),
             isFavorite = false,
             onFavoriteClick = {},

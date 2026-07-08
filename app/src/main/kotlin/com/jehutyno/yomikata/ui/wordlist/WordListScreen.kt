@@ -52,10 +52,6 @@ import com.jehutyno.yomikata.ui.components.MasteryBar
 import com.jehutyno.yomikata.ui.theme.AccentOrange
 import com.jehutyno.yomikata.ui.theme.BackgroundPrimary
 import com.jehutyno.yomikata.ui.theme.BorderDefault
-import com.jehutyno.yomikata.ui.theme.MasteryHigh4
-import com.jehutyno.yomikata.ui.theme.MasteryLow1
-import com.jehutyno.yomikata.ui.theme.MasteryMaster4
-import com.jehutyno.yomikata.ui.theme.MasteryMedium4
 import com.jehutyno.yomikata.ui.theme.RadiusPill
 import com.jehutyno.yomikata.ui.theme.RadiusSm
 import com.jehutyno.yomikata.ui.theme.SurfaceAccent
@@ -66,6 +62,7 @@ import com.jehutyno.yomikata.ui.theme.TextMuted
 import com.jehutyno.yomikata.ui.theme.TextPrimary
 import com.jehutyno.yomikata.ui.theme.YomikataTheme
 import com.jehutyno.yomikata.ui.word.WordListRow
+import com.jehutyno.yomikata.ui.word.levelColor
 import com.jehutyno.yomikata.util.quiz.Level
 
 data class WordListUiState(
@@ -194,28 +191,28 @@ fun WordListScreen(
                     onClick = { onTabSelected(0) },
                 )
                 LevelFilterChip(
-                    dotColor = MasteryLow1,
+                    dotColor = levelColor(Level.LOW),
                     count = state.lowCount,
                     isSelected = state.selectedTab == 1,
                     contentDescription = stringResource(R.string.red_review),
                     onClick = { onTabSelected(1) },
                 )
                 LevelFilterChip(
-                    dotColor = MasteryMedium4,
+                    dotColor = levelColor(Level.MEDIUM),
                     count = state.mediumCount,
                     isSelected = state.selectedTab == 2,
                     contentDescription = stringResource(R.string.orange_review),
                     onClick = { onTabSelected(2) },
                 )
                 LevelFilterChip(
-                    dotColor = MasteryHigh4,
+                    dotColor = levelColor(Level.HIGH),
                     count = state.highCount,
                     isSelected = state.selectedTab == 3,
                     contentDescription = stringResource(R.string.yellow_review),
                     onClick = { onTabSelected(3) },
                 )
                 LevelFilterChip(
-                    dotColor = MasteryMaster4,
+                    dotColor = levelColor(Level.MASTER),
                     count = state.masterCount,
                     isSelected = state.selectedTab == 4,
                     contentDescription = stringResource(R.string.green_review),
@@ -267,7 +264,7 @@ fun WordListScreen(
                             japanese = word.japanese,
                             furigana = word.reading,
                             translation = word.getTrad(),
-                            score = word.points,
+                            level = word.level,
                             posTokens = word.getPosTokens(),
                             isFavorite = word.id in state.selectedWordIds,
                             onFavoriteClick = { onFavoriteClick(word) },
@@ -286,7 +283,7 @@ fun WordListScreen(
                             japanese = word.japanese,
                             furigana = word.reading,
                             translation = word.getTrad(),
-                            score = word.points,
+                            level = word.level,
                             posTokens = word.getPosTokens(),
                             isFavorite = word.id in state.selectedWordIds,
                             onFavoriteClick = { onFavoriteClick(word) },
