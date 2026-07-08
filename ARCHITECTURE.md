@@ -379,7 +379,7 @@ Pipeline de release : `.github/workflows/release.yml`, déclenché par un tag gi
 ```
 git tag v2.0.1 → push
    │
-   ├─ job test          ./gradlew test verifyRoborazziDebug   (gate : 147 tests JVM + Roborazzi)
+   ├─ job test          ./gradlew test verifyRoborazziDebug   (gate : 152 tests JVM + Roborazzi)
    │
    └─ job build-publish ./gradlew bundleRelease               (AAB signé)
                         r0adkll/upload-google-play             (track production, status: draft)
@@ -405,9 +405,9 @@ git tag v2.0.1 → push
 | 3 | Régression visuelle (screenshots) | Roborazzi + Robolectric | `src/test/screenshot/` + baselines `src/test/screenshots/` |
 | 4 | Interactions Compose (callbacks ↔ UI) | Compose UI Test (`createComposeRule`) | `src/androidTest/.../compose/` |
 
-Total : **246 tests** (167 JVM = 147 unitaires + 20 screenshots ; 79 instrumentation = couches 2 + 4).
+Total : **260 tests** (181 JVM = 152 unitaires + 29 screenshots ; 79 instrumentation = couches 2 + 4).
 
-### Couche 1 — unitaires JVM (147 tests, 13 classes)
+### Couche 1 — unitaires JVM (152 tests, 13 classes)
 
 `TranslationParserKtTest`, `AnswerValidatorTest`, `QuizSessionStateTest`, `LevelSystemTest`,
 `QuizPresenterTest`, `QuizzesPresenterTest`, `LanguageManagerTest`, `GetTradMultiLanguageTest`
@@ -640,12 +640,12 @@ ContentPresenter → LiveData<List<Word>> + LiveData<Int> (quizCount/low/medium/
     → WordListScreen(state = uiState)    (Compose stateless)
 ```
 
-**Filtrage par pilule (in-memory) :** les anciens onglets Material (`TabRow`) ont été remplacés par 3 **filtres-pilules chiffrés** `MasteryFilterChip` (mêmes indices `selectedTab` 0/1/2 → aucune modif présenteur). Une `MasteryBar` compacte (cf. composant partagé) coiffe les pilules.
-- Tous · N → tous les mots
-- À revoir · N → `level == LOW || level == MEDIUM`
-- Maîtrisés · N → `level == HIGH || level == MASTER`
+**Filtrage par pilule (in-memory) — 4 niveaux de couleur (Session wordlist-filtre-niveaux) :** les anciens onglets Material (`TabRow`) ont été remplacés par une pilule texte **« Tous »** (`MasteryFilterChip`) + **4 pilules « rond de couleur + compteur »** `LevelFilterChip` (`selectedTab` 0..4), pour retrouver le tri par couleur de réussite de l'ancienne version. Une `MasteryBar` compacte coiffe les pilules.
+- `selectedTab` 0 → tous les mots ; 1 → `LOW` (rouge) ; 2 → `MEDIUM` (orange) ; 3 → `HIGH` (jaune) ; 4 → `MASTER` (vert). Helper `tabToLevel(tab): Level?`.
+- **Couleurs cohérentes** : source unique `levelColor(Level)` (`ui/word/WordListRow.kt`, tokens `MasteryLow1/Medium4/High4/Master4`) partagée par les pilules ET la pastille devant chaque mot (`WordListRow` prend `level: Level`) → un mot MEDIUM a l'orange du filtre orange, etc.
+- **Lancement filtré** : `ContentFragment` publie le niveau du filtre visible (`onTabSelected` + `onResume` de la page ViewPager) → `ContentActivity.currentFilterLevel` (Compose state) → `EXTRA_LEVEL` effectif au lancement du quiz. `showProgressive` masqué dès qu'un niveau est filtré (le mode PROGRESSIF ignore le niveau ; STRAIGHT/SHUFFLE le respectent via `getWordsByLevel`).
 
-Le Presenter reçoit toujours `level = null` pour charger l'intégralité des mots de la catégorie. Si un `EXTRA_LEVEL` est passé dans les extras (accès depuis les stats de ContentActivity), il initialise l'onglet actif par défaut (LOW/MEDIUM → onglet 1, HIGH/MASTER → onglet 2).
+Le Presenter reçoit toujours `level = null` pour charger l'intégralité des mots de la catégorie (le filtre est in-memory). Si un `EXTRA_LEVEL` est passé dans les extras (revue par couleur depuis les stats), il initialise l'onglet actif par défaut (LOW→1, MEDIUM→2, HIGH→3, MASTER→4).
 
 **Toolbar :** `ContentActivity` possède son propre `Toolbar`. `ContentFragment.onStart()` le masque via `supportActionBar?.hide()` et `onStop()` le restaure — seul le `TopAppBar` Compose reste visible.
 
@@ -654,7 +654,8 @@ Le Presenter reçoit toujours `level = null` pour charger l'intégralité des mo
 **Étoile favori → sélections (Session sélections) :** l'étoile de chaque ligne est **orange** (`AccentOrange`) si le mot appartient à au moins une sélection, grise sinon. Pilotée par `WordListUiState.selectedWordIds`, alimentée réactivement par `ContentPresenter.wordsInSelections` (LiveData) ← `WordRepository.getWordIdsInSelections(): Flow<List<Long>>` (requête `WordDao.getWordIdsInQuizzesOfCategory`, lecture seule, pas de migration). Le tap ouvre le sélecteur partagé `Fragment.showWordSelectionDialog(...)` (dialog `setMultiChoiceItems` : cases à cocher par liste, toggle = add/remove immédiat). Même sélecteur + indicateur dans le quiz (`QuizUiState.isCurrentWordInSelection`) et le détail mot (`WordDetailUiState.isFavorite`).
 
 **Fichiers clés :**
-- `ui/wordlist/WordListScreen.kt` — `WordListUiState`, `WordListScreen`, `MasteryFilterChip`, filtrage + recherche in-memory, toggle liste/grille
+- `ui/wordlist/WordListScreen.kt` — `WordListUiState`, `WordListScreen`, `MasteryFilterChip` (« Tous ») + `LevelFilterChip` (4 ronds couleur) + `tabToLevel`, filtrage 4 niveaux + recherche in-memory, toggle liste/grille
+- `ui/word/WordListRow.kt` — ligne de mot (pastille `levelColor(Level)` cohérente aux filtres, furigana/kanji/trad, chip POS, ★ favori, audio)
 - `util/SelectionCreation.kt` — `createNewSelectionDialog` + `showWordSelectionDialog` (sélecteur multi-choix partagé Quiz/Content/Détail)
 - `screens/content/ContentFragment.kt` — shell MVP + state Compose + TTS/VoicesManager + navigation vers `WordDetailFragment`
 
@@ -672,8 +673,9 @@ QuizPresenter → QuizContract.View callbacks
 ```
 
 **Fichiers clés :**
-- `ui/quiz/QuizScreen.kt` — composables principaux (`QuizScreen`, `QuestionZone`, `QcmAnswers`, `FuriganaAndroidView`)
+- `ui/quiz/QuizScreen.kt` — composables principaux (`QuizScreen`, `QuestionZone`, `QcmAnswers`, `EditAnswerMode` — champ mono-ligne à action Done + boutons révéler/effacer, `FuriganaAndroidView`)
 - `ui/quiz/QuizComponents.kt` — `AnswerButton`, `ProgressSegmentBar`, enums `AnswerButtonState`, `SegmentState`
+- `ui/quiz/TtsSettingsSheet.kt` — panneau réglages vocaux (`ModalBottomSheet` : sliders volume + vitesse TTS)
 - `screens/quiz/QuizFragment.kt` — shell MVP + `QuizUiState` + bindings Compose
 
 ### Layout QuestionZone (état actuel)
