@@ -756,8 +756,14 @@ private fun EditAnswerMode(
                 factory = { ctx ->
                     HiraganaEditText(ctx).apply {
                         hint = ctx.getString(R.string.quiz_input_hint)
-                        inputType = InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS or
+                        // Champ mono-ligne à action « Terminé » : sinon la touche Entrée du
+                        // clavier insère un saut de ligne et ne déclenche jamais la validation
+                        // (OnEditorActionListener). TYPE_CLASS_TEXT est requis pour un vrai champ texte.
+                        inputType = InputType.TYPE_CLASS_TEXT or
+                                InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS or
                                 InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
+                        imeOptions = EditorInfo.IME_ACTION_DONE
+                        setSingleLine(true)
                         setTextColor(textColorInt)
                         setHintTextColor(ContextCompat.getColor(ctx, R.color.gray))
                         textSize = 18f
@@ -773,9 +779,22 @@ private fun EditAnswerMode(
                             }
                         })
                         setOnEditorActionListener { _, actionId, event ->
-                            if (actionId == EditorInfo.IME_ACTION_DONE ||
-                                event?.keyCode == KeyEvent.KEYCODE_ENTER
-                            ) {
+                            val shouldValidate = if (event != null) {
+                                // Touche Entrée (physique ou logicielle envoyant un KeyEvent) :
+                                // ne réagir qu'une fois, sur ACTION_DOWN (le callback est aussi
+                                // appelé sur ACTION_UP).
+                                event.keyCode == KeyEvent.KEYCODE_ENTER &&
+                                        event.action == KeyEvent.ACTION_DOWN
+                            } else {
+                                // Bouton d'action du clavier logiciel (event null) : selon l'IME,
+                                // Done/Go/Next/Send ou Unspecified.
+                                actionId == EditorInfo.IME_ACTION_DONE ||
+                                        actionId == EditorInfo.IME_ACTION_GO ||
+                                        actionId == EditorInfo.IME_ACTION_NEXT ||
+                                        actionId == EditorInfo.IME_ACTION_SEND ||
+                                        actionId == EditorInfo.IME_ACTION_UNSPECIFIED
+                            }
+                            if (shouldValidate) {
                                 onSubmit(this.text.toString())
                                 true
                             } else false
