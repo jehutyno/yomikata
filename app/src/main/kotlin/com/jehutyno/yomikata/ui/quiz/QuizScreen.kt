@@ -48,6 +48,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -155,7 +156,8 @@ fun QuizScreen(
     onEditTextChange: (String) -> Unit,
     onEditBeforeTextChange: () -> Unit,
     onEditSubmit: (String) -> Unit,
-    onEditAction: () -> Unit,
+    onEditReveal: () -> Unit,
+    onEditClear: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val word = uiState.currentWord
@@ -293,11 +295,16 @@ fun QuizScreen(
             )
         }
 
-        // Espace souple au-dessus de la zone de réponse. En QCM, un espace identique
-        // est ajouté en dessous (voir plus bas) pour centrer verticalement le bloc de
-        // réponses entre la card et le bouton, sans réduire la taille de la card.
+        // En QCM, espace souple au-dessus de la zone de réponse (un espace identique est ajouté
+        // en dessous, voir plus bas) pour centrer verticalement le bloc de réponses.
+        // En mode édition, PAS d'espace souple : la card de question garde toute la hauteur
+        // disponible et n'est plus écrasée à l'ouverture du clavier (juste un petit écart fixe).
         val isQcm = uiState.answerMode == AnswerMode.QCM
-        Spacer(modifier = Modifier.weight(if (isQcm) 0.2f else 0.4f))
+        if (isQcm) {
+            Spacer(modifier = Modifier.weight(0.2f))
+        } else {
+            Spacer(modifier = Modifier.height(8.dp))
+        }
 
         // Instruction label for QCM
         if (!uiState.hintText.isNullOrEmpty() && uiState.answerMode == AnswerMode.QCM) {
@@ -326,12 +333,12 @@ fun QuizScreen(
                 text = uiState.editText,
                 textColorInt = uiState.editTextColorInt,
                 isEnableConversion = uiState.editIsEnableConversion,
-                showDisplayAnswer = uiState.editShowDisplayAnswer,
                 isRevealed = uiState.isRevealed,
                 onTextChange = onEditTextChange,
                 onBeforeTextChange = onEditBeforeTextChange,
                 onSubmit = onEditSubmit,
-                onAction = onEditAction,
+                onReveal = onEditReveal,
+                onClear = onEditClear,
                 modifier = Modifier.padding(horizontal = 12.dp),
             )
             AnswerMode.None -> Spacer(modifier = Modifier.height(8.dp))
@@ -725,12 +732,12 @@ private fun EditAnswerMode(
     text: String,
     textColorInt: Int,
     isEnableConversion: Boolean,
-    showDisplayAnswer: Boolean,
     isRevealed: Boolean,
     onTextChange: (String) -> Unit,
     onBeforeTextChange: () -> Unit,
     onSubmit: (String) -> Unit,
-    onAction: () -> Unit,
+    onReveal: () -> Unit,
+    onClear: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -813,14 +820,21 @@ private fun EditAnswerMode(
             )
         }
 
-        IconButton(onClick = onAction) {
+        // Révéler la réponse (« donner sa langue au chat ») : toujours disponible, même sans
+        // avoir tenté de répondre. Marque le mot comme faux puis affiche la lecture.
+        IconButton(onClick = onReveal) {
             Icon(
-                painter = painterResource(
-                    if (showDisplayAnswer) R.drawable.ic_visibility_black_24dp
-                    else R.drawable.ic_cancel_black_24dp,
-                ),
-                contentDescription = null,
-                tint = if (showDisplayAnswer) Correct else Color(0xFFBBBBBB),
+                painter = painterResource(R.drawable.ic_visibility_black_24dp),
+                contentDescription = stringResource(R.string.action_reveal_answer),
+                tint = AccentOrange,
+            )
+        }
+        // Effacer le champ de saisie.
+        IconButton(onClick = onClear) {
+            Icon(
+                painter = painterResource(R.drawable.ic_cancel_black_24dp),
+                contentDescription = stringResource(R.string.action_clear),
+                tint = Color(0xFFBBBBBB),
             )
         }
     }
@@ -908,7 +922,8 @@ private fun PreviewQuizBeforeAnswer() {
             onEditTextChange = {},
             onEditBeforeTextChange = {},
             onEditSubmit = {},
-            onEditAction = {},
+            onEditReveal = {},
+            onEditClear = {},
         )
     }
 }
@@ -955,7 +970,8 @@ private fun PreviewQuizCorrect() {
             onEditTextChange = {},
             onEditBeforeTextChange = {},
             onEditSubmit = {},
-            onEditAction = {},
+            onEditReveal = {},
+            onEditClear = {},
         )
     }
 }
@@ -1002,7 +1018,8 @@ private fun PreviewQuizWrong() {
             onEditTextChange = {},
             onEditBeforeTextChange = {},
             onEditSubmit = {},
-            onEditAction = {},
+            onEditReveal = {},
+            onEditClear = {},
         )
     }
 }

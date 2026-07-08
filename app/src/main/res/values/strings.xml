@@ -322,6 +322,8 @@
 
     <!-- Compose UI labels (extracted from hardcoded literals) -->
     <string name="action_favorite">Favorite</string>
+    <string name="action_reveal_answer">Reveal answer</string>
+    <string name="action_clear">Clear</string>
     <string name="action_audio">Audio</string>
     <string name="action_copy">Copy</string>
     <string name="action_report">Report</string>

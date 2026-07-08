@@ -291,6 +291,8 @@
 
     <!-- Compose UI labels (extracted from hardcoded literals) -->
     <string name="action_favorite">收藏</string>
+    <string name="action_reveal_answer">显示答案</string>
+    <string name="action_clear">清除</string>
     <string name="action_audio">音频</string>
     <string name="action_copy">复制</string>
     <string name="action_report">举报</string>

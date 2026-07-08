@@ -220,13 +220,16 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, TextToSp
                                 }
                             }
                         },
-                        onEditAction = {
+                        onEditReveal = {
                             if (!holdOn) {
                                 holdOn = true
-                                presenter.onEditActionClick()
-                                holdOn = false
+                                lifecycleScope.launch {
+                                    presenter.onRevealAnswerClick()
+                                    holdOn = false
+                                }
                             }
                         },
+                        onEditClear = { uiState = uiState.copy(editText = "") },
                     )
 
                     if (ttsSettingsVisible) {

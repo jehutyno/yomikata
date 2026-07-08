@@ -291,6 +291,8 @@
 
     <!-- Compose UI labels (extracted from hardcoded literals) -->
     <string name="action_favorite">Favorit</string>
+    <string name="action_reveal_answer">Antwort anzeigen</string>
+    <string name="action_clear">Löschen</string>
     <string name="action_audio">Audio</string>
     <string name="action_copy">Kopieren</string>
     <string name="action_report">Melden</string>

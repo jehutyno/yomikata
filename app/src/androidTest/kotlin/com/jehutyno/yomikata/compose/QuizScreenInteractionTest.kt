@@ -59,7 +59,8 @@ class QuizScreenInteractionTest {
             onClose = {}, onTtsSettings = {}, onDisplayAnswers = {}, onOptionClick = onOptionClick,
             onNextWord = {}, onFuriToggle = {}, onTradToggle = {}, onItemClick = {},
             onSelectionClick = {}, onReportClick = {}, onSentenceTts = {}, onSoundClick = {},
-            onEditTextChange = {}, onEditBeforeTextChange = {}, onEditSubmit = {}, onEditAction = {},
+            onEditTextChange = {}, onEditBeforeTextChange = {}, onEditSubmit = {},
+            onEditReveal = {}, onEditClear = {},
         )
     }
 

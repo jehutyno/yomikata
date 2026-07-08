@@ -558,11 +558,13 @@ class QuizPresenter(
         quizView.animateCheck(result)
     }
 
-    override fun onEditActionClick() {
-        if (previousAnswerWrong)
-            quizView.displayEditAnswer(sessionState.getCurrentWord().reading)
-        else
-            quizView.clearEdit()
+    override suspend fun onRevealAnswerClick() {
+        // Si le mot n'a pas encore été traité, révéler = abandonner → l'enregistrer comme faux
+        // (réponse vide toujours incorrecte en mode édition) pour qu'il soit programmé à revoir.
+        if (!previousAnswerWrong) {
+            onAnswerGiven("", -1)
+        }
+        quizView.displayEditAnswer(sessionState.getCurrentWord().reading)
     }
 
     /**

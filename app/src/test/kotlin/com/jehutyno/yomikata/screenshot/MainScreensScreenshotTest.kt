@@ -119,7 +119,8 @@ class MainScreensScreenshotTest {
             onClose = {}, onTtsSettings = {}, onDisplayAnswers = {}, onOptionClick = {},
             onNextWord = {}, onFuriToggle = {}, onTradToggle = {}, onItemClick = {},
             onSelectionClick = {}, onReportClick = {}, onSentenceTts = {}, onSoundClick = {},
-            onEditTextChange = {}, onEditBeforeTextChange = {}, onEditSubmit = {}, onEditAction = {},
+            onEditTextChange = {}, onEditBeforeTextChange = {}, onEditSubmit = {},
+            onEditReveal = {}, onEditClear = {},
         )
     }
 

@@ -89,7 +89,9 @@ interface QuizContract {
         suspend fun onContinueQuizAfterErrorSession()
         suspend fun onRestartQuiz(clearAnswers: Boolean)
         suspend fun onContinueAfterNonProgressiveSessionEnd()
-        fun onEditActionClick()
+        /** Révèle la réponse en mode édition (« donner sa langue au chat ») : si le mot n'a pas
+         *  encore été traité, l'enregistre comme faux (à revoir), puis affiche la lecture. */
+        suspend fun onRevealAnswerClick()
         fun onSaveInstanceState(outState: Bundle)
         fun onRestoreInstanceState(savedInstanceState: Bundle)
         suspend fun onOptionClick(choice: Int)
