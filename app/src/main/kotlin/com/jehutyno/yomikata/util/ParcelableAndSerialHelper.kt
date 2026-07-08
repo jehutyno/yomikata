@@ -55,20 +55,35 @@ fun <T> Parcel.readParcelableHelper(loader: ClassLoader?, clazz: Class<T>): T? {
 }
 
 fun <T : Serializable?> Bundle.getSerializableHelper(key: String?, clazz: Class<T>): T? {
-    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-        this.getSerializable(key, clazz)
-    } else {
-        @Suppress("DEPRECATION", "UNCHECKED_CAST")
-        this.getSerializable(key) as T?
+    // Force the app class loader so la classe applicative (enum QuizStrategy/Level…) résout
+    // même quand le système restaure le Bundle avec le class loader de la plateforme.
+    clazz.classLoader?.let { classLoader = it }
+    return try {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            this.getSerializable(key, clazz)
+        } else {
+            @Suppress("DEPRECATION", "UNCHECKED_CAST")
+            this.getSerializable(key) as T?
+        }
+    } catch (e: Exception) {
+        null
     }
 }
 
 fun <T : Serializable?> Intent.getSerializableExtraHelper(name: String?, clazz: Class<T>): T? {
-    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-        this.getSerializableExtra(name, clazz)
-    } else {
-        @Suppress("DEPRECATION", "UNCHECKED_CAST")
-        this.getSerializableExtra(name) as T?
+    // Force the app class loader so la classe applicative (enum QuizStrategy/Level…) résout
+    // même quand le système redélivre l'Intent avec le class loader de la plateforme
+    // (sinon la désérialisation renvoie null → crash sur une lecture stricte).
+    clazz.classLoader?.let { setExtrasClassLoader(it) }
+    return try {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            this.getSerializableExtra(name, clazz)
+        } else {
+            @Suppress("DEPRECATION", "UNCHECKED_CAST")
+            this.getSerializableExtra(name) as T?
+        }
+    } catch (e: Exception) {
+        null
     }
 }
 
