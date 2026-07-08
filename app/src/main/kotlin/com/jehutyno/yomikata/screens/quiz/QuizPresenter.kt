@@ -182,6 +182,15 @@ class QuizPresenter(
                 loadWords()
             }
         }
+
+        // Aucune stratégie ne peut démarrer sur une sélection vide (0 mot) : afficher l'alerte
+        // « quiz vide » puis fermer proprement, au lieu de crasher plus bas sur quizWords[0]
+        // (setUpNextQuiz → getCurrentWord). Couvre les 3 stratégies de façon centralisée.
+        if (quizWords.isEmpty()) {
+            quizView.noWords()
+            return
+        }
+
         quizView.displayWords(quizWords)
 
         // To be sure the session length is not bigger than the number of words
@@ -214,7 +223,7 @@ class QuizPresenter(
     override suspend fun loadWords(): List<Pair<Word, QuizType>> {
         val words = getWords()
         if (words.isEmpty()) {
-            quizView.noWords()
+            // La garde centralisée d'initQuiz gère l'affichage de noWords() sur liste vide.
             return listOf()
         }
 

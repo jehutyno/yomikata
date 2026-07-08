@@ -179,6 +179,30 @@ class QuizPresenterTest(private val length: Int, private val type: QuizType) {
     }
 
     @Test
+    fun empty_selection_shows_no_words_and_does_not_crash() = runBlocking {
+        // Régression crash prod 2.0.2 (QuizSessionState.getCurrentWord IndexOutOfBounds) :
+        // lancer un quiz sur une sélection vide (0 mot) ne doit pas crasher sur quizWords[0]
+        // mais afficher noWords() et couper le flux avant setUpNextQuiz.
+        every { wordRepoMock.getWordsByLevel(any(), any()) } returns flow { emit(emptyList()) }
+
+        val emptyPrefs = mockk<SharedPreferences>(relaxed = true)
+        every { emptyPrefs.getString(Prefs.QUIZ_LENGTH.pref, any()) } returns length.toString()
+
+        val emptyPresenter = QuizPresenter(
+            mockk(relaxed = true), emptyPrefs, wordRepoMock, sentenceRepoMock,
+            statsRepoMock, quizViewMock, longArrayOf(), QuizStrategy.STRAIGHT, null,
+            arrayListOf(type), object : Random() { override fun nextInt(bound: Int) = 0 },
+            selectionsMock, wordInQuizMock, scope
+        )
+
+        emptyPresenter.initQuiz()
+
+        verify(exactly = 1) { quizViewMock.noWords() }
+        // setUpNextQuiz (donc getCurrentWord) ne doit jamais être atteint
+        verify(exactly = 0) { quizViewMock.setPagerPosition(any()) }
+    }
+
+    @Test
     fun quiz_end_no_errors() = runBlocking {
         quizPresenter.initQuiz()
         words.indices.forEach { _ ->
