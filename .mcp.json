@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "firebase": {
+      "type": "stdio",
+      "command": "cmd",
+      "args": [
+        "/c",
+        "npx",
+        "-y",
+        "firebase-tools@latest",
+        "experimental:mcp"
+      ],
+      "env": {}
+    }
+  }
+}
