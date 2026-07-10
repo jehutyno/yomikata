@@ -20,9 +20,12 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.activity.compose.BackHandler
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -78,6 +81,10 @@ data class WordListUiState(
     val isGrid: Boolean = false,
     /** Ids of words present in at least one user selection (drives the orange star). */
     val selectedWordIds: Set<Long> = emptySet(),
+    /** Multi-selection mode (appui long) : ajout/retrait groupé vers une sélection. */
+    val isSelectionMode: Boolean = false,
+    /** Ids des mots cochés en mode sélection multiple. */
+    val checkedIds: Set<Long> = emptySet(),
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -92,6 +99,13 @@ fun WordListScreen(
     onFavoriteClick: (Word) -> Unit,
     onAudioClick: (Word) -> Unit,
     modifier: Modifier = Modifier,
+    onWordLongPress: (Word) -> Unit = {},
+    onWordCheckToggle: (Word) -> Unit = {},
+    onExitSelection: () -> Unit = {},
+    onCheckAll: (List<Long>) -> Unit = {},
+    onUncheckAll: () -> Unit = {},
+    onAddCheckedToSelection: () -> Unit = {},
+    onRemoveCheckedFromSelection: () -> Unit = {},
 ) {
     val filteredWords = remember(state.words, state.selectedTab, state.searchQuery) {
         val level = tabToLevel(state.selectedTab)
@@ -112,10 +126,26 @@ fun WordListScreen(
     val masteredCount = state.highCount + state.masterCount
     val subtitle = "${state.quizCount} ${stringResource(R.string.word_count_label)}"
 
+    // En mode sélection, l'appui « retour » quitte le mode plutôt que l'écran.
+    BackHandler(enabled = state.isSelectionMode) { onExitSelection() }
+
     Scaffold(
         modifier = modifier,
         containerColor = BackgroundPrimary,
         topBar = {
+            if (state.isSelectionMode) {
+                SelectionTopBar(
+                    count = state.checkedIds.size,
+                    onClose = onExitSelection,
+                    onToggleAll = {
+                        val ids = filteredWords.map { it.id }
+                        if (ids.isNotEmpty() && ids.all { it in state.checkedIds }) onUncheckAll()
+                        else onCheckAll(ids)
+                    },
+                    onAdd = onAddCheckedToSelection,
+                    onRemove = onRemoveCheckedFromSelection,
+                )
+            } else {
             TopAppBar(
                 title = {
                     Column {
@@ -159,6 +189,7 @@ fun WordListScreen(
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = BackgroundPrimary),
             )
+            }
         },
     ) { innerPadding ->
         Column(
@@ -269,7 +300,13 @@ fun WordListScreen(
                             isFavorite = word.id in state.selectedWordIds,
                             onFavoriteClick = { onFavoriteClick(word) },
                             onAudioClick = { onAudioClick(word) },
-                            onClick = { onWordClick(word) },
+                            onClick = {
+                                if (state.isSelectionMode) onWordCheckToggle(word)
+                                else onWordClick(word)
+                            },
+                            selectionMode = state.isSelectionMode,
+                            checked = word.id in state.checkedIds,
+                            onLongClick = { onWordLongPress(word) },
                         )
                     }
                 }
@@ -288,13 +325,80 @@ fun WordListScreen(
                             isFavorite = word.id in state.selectedWordIds,
                             onFavoriteClick = { onFavoriteClick(word) },
                             onAudioClick = { onAudioClick(word) },
-                            onClick = { onWordClick(word) },
+                            onClick = {
+                                if (state.isSelectionMode) onWordCheckToggle(word)
+                                else onWordClick(word)
+                            },
+                            selectionMode = state.isSelectionMode,
+                            checked = word.id in state.checkedIds,
+                            onLongClick = { onWordLongPress(word) },
                         )
                     }
                 }
             }
         }
     }
+}
+
+/**
+ * Barre contextuelle du mode sélection multiple : ✕ + compteur, puis les actions groupées
+ * (tout cocher/décocher, ajouter à une sélection, retirer d'une sélection).
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SelectionTopBar(
+    count: Int,
+    onClose: () -> Unit,
+    onToggleAll: () -> Unit,
+    onAdd: () -> Unit,
+    onRemove: () -> Unit,
+) {
+    TopAppBar(
+        title = {
+            Text(
+                text = "$count",
+                color = TextPrimary,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.W600,
+            )
+        },
+        navigationIcon = {
+            IconButton(onClick = onClose) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = stringResource(R.string.action_back),
+                    tint = TextPrimary,
+                )
+            }
+        },
+        actions = {
+            IconButton(onClick = onToggleAll) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_select_multiple),
+                    contentDescription = stringResource(R.string.select_all),
+                    tint = TextPrimary,
+                    modifier = Modifier.size(20.dp),
+                )
+            }
+            IconButton(onClick = onAdd) {
+                Icon(
+                    imageVector = Icons.Default.Star,
+                    contentDescription = stringResource(R.string.add_to_selections),
+                    tint = AccentOrange,
+                    modifier = Modifier.size(20.dp),
+                )
+            }
+            IconButton(onClick = onRemove) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_unselect),
+                    contentDescription = stringResource(R.string.remove_from_selection),
+                    tint = TextPrimary,
+                    modifier = Modifier.size(20.dp),
+                )
+            }
+        },
+        colors = TopAppBarDefaults.topAppBarColors(containerColor = BackgroundPrimary),
+    )
 }
 
 /**

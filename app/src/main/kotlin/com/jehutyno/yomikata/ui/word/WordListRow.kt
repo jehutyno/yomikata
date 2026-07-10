@@ -1,7 +1,9 @@
 package com.jehutyno.yomikata.ui.word
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.border
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -13,6 +15,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -34,6 +38,7 @@ import com.jehutyno.yomikata.ui.theme.MasteryLow1
 import com.jehutyno.yomikata.ui.theme.MasteryMaster4
 import com.jehutyno.yomikata.ui.theme.MasteryMedium4
 import com.jehutyno.yomikata.ui.theme.PosChipText
+import com.jehutyno.yomikata.ui.theme.SurfaceAccent
 import com.jehutyno.yomikata.ui.theme.TextDim
 import com.jehutyno.yomikata.ui.theme.TextGhost
 import com.jehutyno.yomikata.ui.theme.TextMuted
@@ -66,7 +71,12 @@ fun levelColor(level: Level): Color = when (level) {
  * @param onFavoriteClick callback for the star button
  * @param onAudioClick    callback for the speaker button
  * @param onClick         callback for tapping the row
+ * @param selectionMode   whether the list is in multi-selection mode (hides action icons,
+ *                        shows a leading checkbox)
+ * @param checked         whether this row is checked in multi-selection mode
+ * @param onLongClick     callback for a long press (enters selection mode)
  */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun WordListRow(
     japanese: String,
@@ -79,22 +89,45 @@ fun WordListRow(
     onAudioClick: () -> Unit,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    selectionMode: Boolean = false,
+    checked: Boolean = false,
+    onLongClick: () -> Unit = {},
 ) {
     Column(modifier = modifier) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable(onClick = onClick)
+                .background(if (checked) SurfaceAccent else Color.Transparent)
+                .combinedClickable(onClick = onClick, onLongClick = onLongClick)
                 .padding(horizontal = 12.dp, vertical = 10.dp),
         ) {
-            // Mastery dot — même couleur que la pilule de filtre du niveau
-            Box(
-                modifier = Modifier
-                    .size(8.dp)
-                    .clip(CircleShape)
-                    .background(levelColor(level)),
-            )
+            if (selectionMode) {
+                // Checkbox en mode sélection (remplace la pastille de niveau)
+                if (checked) {
+                    Icon(
+                        imageVector = Icons.Filled.CheckCircle,
+                        contentDescription = null,
+                        tint = AccentOrange,
+                        modifier = Modifier.size(20.dp),
+                    )
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .size(20.dp)
+                            .clip(CircleShape)
+                            .border(2.dp, TextGhost, CircleShape),
+                    )
+                }
+            } else {
+                // Mastery dot — même couleur que la pilule de filtre du niveau
+                Box(
+                    modifier = Modifier
+                        .size(8.dp)
+                        .clip(CircleShape)
+                        .background(levelColor(level)),
+                )
+            }
 
             Spacer(modifier = Modifier.width(10.dp))
 
@@ -140,22 +173,24 @@ fun WordListRow(
                 Spacer(modifier = Modifier.width(6.dp))
             }
 
-            // Action icons
-            IconButton(onClick = onFavoriteClick, modifier = Modifier.size(32.dp)) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_star_black_24dp),
-                    contentDescription = stringResource(R.string.action_favorite),
-                    tint = if (isFavorite) AccentOrange else TextGhost,
-                    modifier = Modifier.size(13.dp),
-                )
-            }
-            IconButton(onClick = onAudioClick, modifier = Modifier.size(32.dp)) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_volume_up_black_24dp),
-                    contentDescription = stringResource(R.string.action_audio),
-                    tint = TextGhost,
-                    modifier = Modifier.size(13.dp),
-                )
+            // Action icons — masquées en mode sélection (le tap coche/décoche le mot)
+            if (!selectionMode) {
+                IconButton(onClick = onFavoriteClick, modifier = Modifier.size(32.dp)) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_star_black_24dp),
+                        contentDescription = stringResource(R.string.action_favorite),
+                        tint = if (isFavorite) AccentOrange else TextGhost,
+                        modifier = Modifier.size(13.dp),
+                    )
+                }
+                IconButton(onClick = onAudioClick, modifier = Modifier.size(32.dp)) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_volume_up_black_24dp),
+                        contentDescription = stringResource(R.string.action_audio),
+                        tint = TextGhost,
+                        modifier = Modifier.size(13.dp),
+                    )
+                }
             }
         }
 

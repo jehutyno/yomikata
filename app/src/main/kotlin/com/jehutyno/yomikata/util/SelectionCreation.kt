@@ -158,3 +158,68 @@ fun Fragment.showWordSelectionDialog(
         }.show()
     }
 }
+
+
+/**
+ * Show words selection dialog (batch)
+ *
+ * Multi-word variant of [showWordSelectionDialog]. Lets the user pick a single target selection
+ * and adds (or removes) **every** word of [wordIds] to/from it at once. Because membership is
+ * heterogeneous across a batch, this uses a simple single-choice list of selections rather than
+ * per-selection checkboxes.
+ *
+ * @param wordIds The words to add to / remove from a selection.
+ * @param add `true` → add all words to the chosen selection ; `false` → remove them.
+ * @param selectionsInterface Source of selections + add/remove/create operations.
+ * @param wordInQuizInterface Used to skip words already in (add) / absent from (remove) the list.
+ * @param onDone Called after the batch operation completes.
+ */
+fun Fragment.showWordsSelectionDialog(
+    wordIds: List<Long>,
+    add: Boolean,
+    selectionsInterface: SelectionsInterface,
+    wordInQuizInterface: WordInQuizInterface,
+    onDone: () -> Unit = {},
+) {
+    if (wordIds.isEmpty()) return
+
+    fun createAndAdd() {
+        requireActivity().createNewSelectionDialog("", { name ->
+            lifecycleScope.launch {
+                val id = selectionsInterface.createSelection(name)
+                wordIds.forEach { selectionsInterface.addWordToSelection(it, id) }
+                onDone()
+            }
+        }, null)
+    }
+
+    lifecycleScope.launch {
+        val selections = selectionsInterface.getSelections()
+        if (selections.isEmpty()) {
+            // Rien à retirer si aucune sélection ; pour un ajout, on crée directement une liste.
+            if (add) createAndAdd()
+            return@launch
+        }
+
+        val names = selections.map { it.getName().split("%")[0] }.toTypedArray()
+
+        requireContext().alertDialog {
+            setTitle(if (add) R.string.add_to_selections else R.string.remove_from_selection)
+            setItems(names) { _, which ->
+                val target = selections[which].id
+                lifecycleScope.launch {
+                    wordIds.forEach { wordId ->
+                        val present = wordInQuizInterface.isWordInQuiz(wordId, target)
+                        if (add && !present)
+                            selectionsInterface.addWordToSelection(wordId, target)
+                        else if (!add && present)
+                            selectionsInterface.deleteWordFromSelection(wordId, target)
+                    }
+                    onDone()
+                }
+            }
+            if (add) negativeButton(R.string.new_selection) { createAndAdd() }
+            cancelButton()
+        }.show()
+    }
+}

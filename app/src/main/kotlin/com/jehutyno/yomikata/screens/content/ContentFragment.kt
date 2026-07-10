@@ -24,6 +24,7 @@ import com.jehutyno.yomikata.util.Extras
 import com.jehutyno.yomikata.util.quiz.Level
 import com.jehutyno.yomikata.util.getSerializableHelper
 import com.jehutyno.yomikata.util.showWordSelectionDialog
+import com.jehutyno.yomikata.util.showWordsSelectionDialog
 import org.kodein.di.DI
 import org.kodein.di.bind
 import org.kodein.di.instance
@@ -99,6 +100,29 @@ class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, Te
                         onWordClick = { word -> navigateToWordDetail(word) },
                         onFavoriteClick = { word -> showSelectionPicker(word) },
                         onAudioClick = { word -> voices.speakWord(word, ttsSupported, tts) },
+                        onWordLongPress = { word ->
+                            uiState = uiState.copy(
+                                isSelectionMode = true,
+                                checkedIds = uiState.checkedIds + word.id,
+                            )
+                        },
+                        onWordCheckToggle = { word ->
+                            val next = uiState.checkedIds.toMutableSet().apply {
+                                if (!add(word.id)) remove(word.id)
+                            }
+                            uiState = uiState.copy(checkedIds = next)
+                        },
+                        onExitSelection = {
+                            uiState = uiState.copy(isSelectionMode = false, checkedIds = emptySet())
+                        },
+                        onCheckAll = { ids ->
+                            uiState = uiState.copy(checkedIds = ids.toSet())
+                        },
+                        onUncheckAll = {
+                            uiState = uiState.copy(checkedIds = emptySet())
+                        },
+                        onAddCheckedToSelection = { batchToSelection(add = true) },
+                        onRemoveCheckedFromSelection = { batchToSelection(add = false) },
                     )
                 }
             }
@@ -158,6 +182,15 @@ class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, Te
     private fun showSelectionPicker(word: Word) {
         // Star color updates reactively via the wordsInSelections Flow → no onChanged needed.
         showWordSelectionDialog(word.id, mpresenter, mpresenter)
+    }
+
+    /** Ajoute/retire tous les mots cochés vers/d'une sélection cible, puis quitte le mode. */
+    private fun batchToSelection(add: Boolean) {
+        val ids = uiState.checkedIds.toList()
+        if (ids.isEmpty()) return
+        showWordsSelectionDialog(ids, add, mpresenter, mpresenter) {
+            uiState = uiState.copy(isSelectionMode = false, checkedIds = emptySet())
+        }
     }
 
     private fun navigateToWordDetail(word: Word) {
