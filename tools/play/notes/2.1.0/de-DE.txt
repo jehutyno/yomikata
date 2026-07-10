@@ -1,0 +1,6 @@
+Neu:
+• Wortlisten: Filtere deine Wörter nach Erfolgsstufe (Farbe) und starte ein Quiz mit der gefilterten Auswahl.
+• Mehrere Wörter auf einmal zu einer Auswahl hinzufügen (langes Drücken für den Mehrfachauswahl-Modus).
+• Quiz: neue Schaltfläche „Antwort anzeigen", Tastatur-Bestätigung im Aussprache-Modus wieder da und Spracheinstellungen (Lautstärke + Geschwindigkeit) zurück.
+• Stabilitätskorrekturen, u. a. der Migrationsfehler beim Start.
+Danke für euer Feedback!

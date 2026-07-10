@@ -1,0 +1,6 @@
+Nouveautés :
+• Listes de mots : filtrez par niveau de réussite (couleur) et lancez un quiz sur les mots filtrés.
+• Ajout groupé de mots à une sélection (appui long = sélection multiple).
+• Quiz : bouton « révéler la réponse », validation au clavier rétablie en mode Prononciation, réglages vocaux (volume + vitesse) de retour.
+• Corrections de stabilité, dont l'erreur de migration au démarrage.
+Merci de vos retours !

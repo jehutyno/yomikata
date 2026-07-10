@@ -1,0 +1,6 @@
+Novidades:
+• Listas de palavras: filtra por nível de acerto (cor) e inicia um questionário com a seleção.
+• Adiciona várias palavras a uma seleção de uma vez (mantém premido para o modo múltiplo).
+• Questionário: botão «revelar resposta», validação pelo teclado no modo Pronúncia e definições de voz (volume + velocidade) de volta.
+• Correções de estabilidade, incluindo o erro de migração no arranque.
+Obrigado pelo teu feedback!

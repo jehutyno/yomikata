@@ -1,0 +1,6 @@
+What's new:
+• Word lists: filter your words by mastery level (colour) and launch a quiz on the filtered set.
+• Add several words to a selection at once (long-press for multi-select mode).
+• Quiz: new "reveal answer" button, keyboard confirmation restored in Pronunciation mode, and voice settings (volume + speed) are back.
+• Stability fixes, including the startup migration error.
+Thanks for your feedback!

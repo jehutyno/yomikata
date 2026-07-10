@@ -1,0 +1,6 @@
+Novedades:
+• Listas de palabras: filtra por nivel de acierto (color) y lanza un cuestionario con la selección.
+• Añade varias palabras a una selección a la vez (mantén pulsado para el modo múltiple).
+• Cuestionario: botón «revelar respuesta», validación con el teclado en modo Pronunciación y ajustes de voz (volumen + velocidad) de vuelta.
+• Correcciones de estabilidad, incluido el error de migración al iniciar.
+¡Gracias por tus comentarios!
