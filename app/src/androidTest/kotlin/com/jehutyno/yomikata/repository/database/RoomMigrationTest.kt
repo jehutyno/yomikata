@@ -39,9 +39,16 @@ class RoomMigrationTest {
 
     // add new migrations to this list
     private val ALL_MIGRATIONS get() = arrayOf(
+        YomikataDatabase.MIGRATION_13_14,
         YomikataDatabase.MIGRATION_14_15,
         YomikataDatabase.MIGRATION_15_16,
-        YomikataDatabase.MIGRATION_16_21
+        YomikataDatabase.MIGRATION_16_21,
+        // Chaîne granulaire 17→21 : doit refléter exactement le builder de getDatabase()
+        // (sinon une base v17-20 n'a aucun chemin vers 21 → "Migration error").
+        YomikataDatabase.MIGRATION_17_18,
+        YomikataDatabase.createMigration18to19(context),
+        YomikataDatabase.MIGRATION_19_20,
+        YomikataDatabase.MIGRATION_20_21
     )
 
     @Test

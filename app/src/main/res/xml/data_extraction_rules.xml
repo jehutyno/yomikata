@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Règles Auto Backup (Android 12+ / API 31+).
+
+    On EXCLUT la base de données de la sauvegarde cloud et du transfert d'appareil.
+    Raison : Auto Backup restaure `databases/yomikataz.db` lors d'une réinstallation
+    (« fresh install »), ce qui ramène une base à une ancienne version potentiellement
+    non migrable (17-20) ou corrompue → crash « Migration error » au démarrage, que la
+    réinstallation ne corrige jamais. En excluant la base, une réinstallation repart
+    proprement de l'asset v21. La progression est déjà sauvegardable via l'export/import
+    manuel intégré à l'app.
+
+    On ne peut PAS s'appuyer sur fallbackToDestructiveMigration() (cf. CLAUDE.md) car,
+    combiné à createFromAsset, il effacerait la base de TOUS les utilisateurs.
+-->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="database" path="yomikataz.db" />
+        <exclude domain="database" path="yomikataz_backup.db" />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="database" path="yomikataz.db" />
+        <exclude domain="database" path="yomikataz_backup.db" />
+    </device-transfer>
+</data-extraction-rules>

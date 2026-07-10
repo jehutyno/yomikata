@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Règles Auto Backup pour Android 11 et antérieur (API < 31).
+    Équivalent legacy de data_extraction_rules.xml : exclut la base de données du
+    backup cloud pour éviter la restauration d'une base non migrable au fresh install.
+-->
+<full-backup-content>
+    <exclude domain="database" path="yomikataz.db" />
+    <exclude domain="database" path="yomikataz_backup.db" />
+</full-backup-content>

@@ -207,6 +207,10 @@ Un second asset `yomikataz_translations.db` contient les données de référence
 
 **Version courante : 21.** Toutes les migrations sont définies dans `YomikataDatabase`. `fallbackToDestructiveMigrationFrom(0..12)` est utilisé (PAS `fallbackToDestructiveMigration()`) pour les utilisateurs encore sur une version < 13 (reset propre sans crash).
 
+Le builder enregistre la migration directe `MIGRATION_16_21` (prod v16 → v21 en un saut) **et** la chaîne granulaire `MIGRATION_13_14`/`14_15`/`15_16`/`17_18`/`18_19`/`19_20`/`20_21` : chaque version de départ possible (13-20) doit avoir un chemin vers 21, sinon Room lève `IllegalStateException("A migration from X to 21 was required but not found")` → dialog « Migration error » au démarrage. `RoomMigrationTest.ALL_MIGRATIONS` doit refléter exactement cette liste.
+
+> **Piège Auto Backup** : `android:allowBackup` vaut `true` par défaut → une réinstallation restaure `databases/yomikataz.db` depuis le cloud Google, ce qui peut ramener une base non migrable/corrompue (un « fresh install » ne repart donc PAS de zéro). La base est **exclue du backup** (cloud + device-transfer) via `res/xml/data_extraction_rules.xml` (API 31+) et `res/xml/backup_rules.xml` (API < 31) ; `allowBackup` reste `true` pour conserver la sauvegarde des prefs. Ne PAS s'appuyer sur `fallbackToDestructiveMigration()` comme filet (cf. piège Room 2.6.1 ci-dessous).
+
 > **Piège Room 2.6.1** : `fallbackToDestructiveMigration()` seul + `createFromAsset` provoque l'effacement de la DB de TOUS les utilisateurs dont la version ≠ cible, car `isMigrationRequired` retourne toujours `false` → `SQLiteCopyOpenHelper` remplace la DB par l'asset même quand les migrations existent.
 
 > **Piège Room 2.7+** : `room_table_modification_log` est requis par `TriggerBasedInvalidationTracker` mais n'est créé par Room que lors d'un `onCreate` (installation fraîche). Pour les migrations depuis d'anciennes versions, il faut le créer explicitement — dans `MIGRATION_16_21` ET dans le callback `onOpen` (garde-fou pour les devices déjà à v21 sans la table).

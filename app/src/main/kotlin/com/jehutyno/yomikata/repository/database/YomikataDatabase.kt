@@ -53,7 +53,14 @@ abstract class YomikataDatabase : RoomDatabase() {
                             .createFromAsset(DATABASE_FILE_NAME)
                             .addMigrations(
                                 MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16,
-                                MIGRATION_16_21
+                                MIGRATION_16_21,
+                                // Chaîne granulaire pour les bases arrivées à une version
+                                // intermédiaire (17-20) via un build beta/interne : sans ces
+                                // maillons, Room ne trouve aucun chemin vers 21 et lève
+                                // "A migration from X to 21 was required but not found"
+                                // → dialog "Migration error" au démarrage.
+                                MIGRATION_17_18, createMigration18to19(context),
+                                MIGRATION_19_20, MIGRATION_20_21
                             )
                             .addCallback(object : RoomDatabase.Callback() {
                                 // onOpen runs AFTER all migrations are committed, outside any

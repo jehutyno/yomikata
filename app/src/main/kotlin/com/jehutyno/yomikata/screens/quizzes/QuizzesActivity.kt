@@ -18,6 +18,7 @@ import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.jehutyno.yomikata.BuildConfig
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.databinding.ActivityQuizzesBinding
@@ -87,7 +88,14 @@ class QuizzesActivity : AppCompatActivity(), DIAware {
         lifecycleScope.launch {
             val success = withContext(Dispatchers.IO) {
                 try { YomikataDatabase.forceLoadDatabase(this@QuizzesActivity); true }
-                catch (e: Exception) { false }
+                catch (e: Exception) {
+                    // Ne plus avaler l'échec silencieusement : le remonter à Crashlytics
+                    // (respecte le consentement RGPD — n'est envoyé que si activé) + logcat,
+                    // pour pouvoir diagnostiquer les "Migration error" du terrain.
+                    android.util.Log.e("YomikataDatabase", "forceLoadDatabase failed", e)
+                    FirebaseCrashlytics.getInstance().recordException(e)
+                    false
+                }
             }
             dbReady = true
             if (!success) handleDatabaseError(pref)
