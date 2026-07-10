@@ -394,6 +394,7 @@ git tag v2.0.1 → push
 - **Signature** : `signingConfigs.release` lit les variables d'env en CI (keystore décodé depuis `KEYSTORE_BASE64`), repli sur `keystore.properties` (gitignoré) pour un build release local. Aucun secret committé.
 - **Secrets GitHub** : `KEYSTORE_BASE64`, `KEYSTORE_PASSWORD`, `KEY_ALIAS`, `KEY_PASSWORD`, `PLAY_SERVICE_ACCOUNT_JSON`. Détails opérationnels dans `CLAUDE.md` § Build & Tests → CI / Release.
 - **Minification release** : `minifyEnabled true` + `shrinkResources true` sur le build-type `release` (R8). Règles dans `app/proguard-rules.pro` (peu de règles manuelles : les libs embarquent leurs consumer rules ; Kodein 7.x est R8-friendly, le backup est une copie binaire brute du `.db` donc pas de réflexion à protéger). Le plugin `firebase-crashlytics` uploade automatiquement le `mapping.txt` (`uploadCrashlyticsMappingFileRelease`) → stack traces déobfusquées en console. APK release ≈ 11,9 Mo.
+- **Publier une version (process complet)** : le tag CI ne produit qu'un **brouillon** sans notes ni rollout. Les notes de version (6 langues) et le déploiement se poussent ensuite via `tools/play/play.mjs` (`notes set`, `rollout start`). Enchaînement automatisé par le skill **`/release`** (`.claude/skills/release/SKILL.md`).
 
 ---
 

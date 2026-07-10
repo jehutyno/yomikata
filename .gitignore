@@ -9,6 +9,10 @@
 /app/release
 keystore.properties
 .claude/
+# … sauf les skills du projet (partagés entre clones, pas de secret)
+!.claude/
+.claude/*
+!.claude/skills/
 .kotlin/
 
 # Firebase : google-services.json est volontairement commité (config client, pas un secret).

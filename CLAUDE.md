@@ -42,6 +42,8 @@ Sans ça, `gradlew.bat` échoue avec "JAVA_HOME is set to an invalid directory".
 
 ### CI / Release (GitHub Actions → Google Play)
 
+> **Process complet automatisé** : le skill **`/release`** (`.claude/skills/release/SKILL.md`) enchaîne les 10 étapes (gate tests → notes 6 langues → bump → tag → attente CI → push notes → rollout 10 % → notification). Dire « publie une nouvelle version » le déclenche. ⚠️ Le tag CI ne produit qu'un **brouillon sans notes ni rollout** — les notes de version et le déploiement se poussent **après** via `tools/play/play.mjs` (voir § outil-play-cli). Ne pas croire que committer les notes ou pousser le tag suffit à publier.
+
 Workflow `.github/workflows/release.yml`, déclenché en poussant un tag `v*` :
 ```powershell
 # Incrémenter le semver, committer, puis tagger
