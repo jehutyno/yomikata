@@ -167,19 +167,22 @@ class QuizzesFragment(private val diArg: DI) : Fragment(), DIAware {
 
     /** Met à jour l'état de la card voix pour la catégorie donnée (pack présent ? taille ?). */
     private fun refreshVoiceState(category: Int) {
+        val ctx = context ?: return
         val level = getCategoryLevel(category)
         uiState = uiState.copy(
-            voicesDownloaded = anyVoicesDownloaded(requireContext(), level),
+            voicesDownloaded = anyVoicesDownloaded(ctx, level),
             voiceSizeMb = getLevelDownloadSize(level),
         )
     }
 
     private fun startVoiceDownload() {
+        val activity = activity ?: return
         val level = getCategoryLevel(_categoryFlow.value)
         uiState = uiState.copy(voiceDownloadProgress = 0f)
-        downloadVoices(requireActivity(), level,
-            onProgress = { uiState = uiState.copy(voiceDownloadProgress = it) },
+        downloadVoices(activity, level,
+            onProgress = { if (isAdded) uiState = uiState.copy(voiceDownloadProgress = it) },
             onComplete = { ok ->
+                if (!isAdded) return@downloadVoices
                 uiState = uiState.copy(voiceDownloadProgress = null)
                 refreshVoiceState(_categoryFlow.value)
                 Toast.makeText(
