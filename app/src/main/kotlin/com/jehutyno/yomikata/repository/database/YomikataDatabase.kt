@@ -148,14 +148,17 @@ abstract class YomikataDatabase : RoomDatabase() {
                             chinese    = (SELECT a.chinese    FROM assetdb.words a WHERE a._id = words._id)
                         WHERE german = '' OR spanish = '' OR portuguese = '' OR chinese = ''
                     """.trimIndent())
-                    // Populate quiz name translations from asset
+                    // Populate quiz name translations from asset. Guarded by EXISTS: user-created
+                    // Selections (category = CATEGORY_SELECTIONS) have an _id absent from the asset,
+                    // so the correlated subquery would return NULL and violate the NOT NULL columns.
                     rawDb.execSQL("""
                         UPDATE quiz
                         SET name_de = (SELECT a.name_de FROM assetdb.quiz a WHERE a._id = quiz._id),
                             name_es = (SELECT a.name_es FROM assetdb.quiz a WHERE a._id = quiz._id),
                             name_pt = (SELECT a.name_pt FROM assetdb.quiz a WHERE a._id = quiz._id),
                             name_zh = (SELECT a.name_zh FROM assetdb.quiz a WHERE a._id = quiz._id)
-                        WHERE name_de = '' OR name_es = '' OR name_pt = '' OR name_zh = ''
+                        WHERE (name_de = '' OR name_es = '' OR name_pt = '' OR name_zh = '')
+                          AND EXISTS (SELECT 1 FROM assetdb.quiz a WHERE a._id = quiz._id)
                     """.trimIndent())
                     rawDb.setTransactionSuccessful()
                 } finally {
@@ -503,13 +506,17 @@ abstract class YomikataDatabase : RoomDatabase() {
                         chinese    = (SELECT a.chinese    FROM transdb.words a WHERE a._id = words._id)
                     WHERE german = '' OR spanish = '' OR portuguese = '' OR chinese = ''
                 """.trimIndent())
+                // Guarded by EXISTS: user-created Selections (category = CATEGORY_SELECTIONS) have
+                // an _id absent from transdb, so the correlated subquery would return NULL and
+                // violate the NOT NULL columns (crashed prod users permanently on every onOpen).
                 db.execSQL("""
                     UPDATE quiz
                     SET name_de = (SELECT a.name_de FROM transdb.quiz a WHERE a._id = quiz._id),
                         name_es = (SELECT a.name_es FROM transdb.quiz a WHERE a._id = quiz._id),
                         name_pt = (SELECT a.name_pt FROM transdb.quiz a WHERE a._id = quiz._id),
                         name_zh = (SELECT a.name_zh FROM transdb.quiz a WHERE a._id = quiz._id)
-                    WHERE name_de = '' OR name_es = '' OR name_pt = '' OR name_zh = ''
+                    WHERE (name_de = '' OR name_es = '' OR name_pt = '' OR name_zh = '')
+                      AND EXISTS (SELECT 1 FROM transdb.quiz a WHERE a._id = quiz._id)
                 """.trimIndent())
                 db.execSQL("""
                     UPDATE sentences
