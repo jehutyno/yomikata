@@ -98,7 +98,11 @@ fun contactFacebook(context: Context?) {
         }
         context?.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("fb://page/412201938791197")).setFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
     } catch (e: Exception) {
-        context?.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://www.facebook.com/YomikataAndroid")).setFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+        try {
+            context?.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://www.facebook.com/YomikataAndroid")).setFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+        } catch (e2: android.content.ActivityNotFoundException) {
+            // Ni app Facebook ni navigateur : rien à faire, on évite juste le crash
+        }
     }
 }
 

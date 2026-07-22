@@ -38,7 +38,7 @@ interface QuizDao {
     @Query("SELECT * FROM quiz_word")
     suspend fun getAllQuizWords(): List<RoomQuizWord>
 
-    @Insert
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun addQuizWord(quiz_word: RoomQuizWord)
 
     @Query("DELETE FROM quiz_word " +

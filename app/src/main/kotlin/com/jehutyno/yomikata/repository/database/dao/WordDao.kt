@@ -114,7 +114,7 @@ interface WordDao {
     @Query("UPDATE words SET isSelected = :isSelected WHERE _id IN (:wordIds)")
     suspend fun updateWordsSelected(wordIds: LongArray, isSelected: Boolean)
 
-    @Insert
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun addQuizWord(quizWord: RoomQuizWord): Long
 
     @Insert
