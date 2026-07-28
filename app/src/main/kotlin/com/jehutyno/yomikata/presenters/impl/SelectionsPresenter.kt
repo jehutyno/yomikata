@@ -7,6 +7,7 @@ import com.jehutyno.yomikata.util.quiz.Categories
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -25,7 +26,9 @@ class SelectionsPresenter(private val quizRepository: QuizRepository,
 
     // use a StateFlow, since LiveData only collects once it is observed
     private val job: Job
-    private lateinit var selectionsStateFlow: StateFlow<List<Quiz>>
+    // nullable rather than lateinit: the initializing coroutine below may be cancelled
+    // before it gets to assign it (see getSelections)
+    @Volatile private var selectionsStateFlow: StateFlow<List<Quiz>>? = null
 
     init {
         job = coroutineScope.launch {
@@ -43,7 +46,12 @@ class SelectionsPresenter(private val quizRepository: QuizRepository,
      */
     override suspend fun getSelections(): List<Quiz> {
         job.join()
-        return selectionsStateFlow.value
+        // join() also returns normally when the initializing coroutine was cancelled before
+        // it could assign the StateFlow (host scope destroyed while stateIn was awaiting its
+        // first value). Read the repository directly in the caller's own scope rather than
+        // crashing on an uninitialized property.
+        return selectionsStateFlow?.value
+            ?: quizRepository.getQuiz(Categories.CATEGORY_SELECTIONS).first()
     }
 
     /**

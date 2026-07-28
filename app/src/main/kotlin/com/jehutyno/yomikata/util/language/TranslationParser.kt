@@ -50,11 +50,32 @@ fun String.removePartsOfSpeechInfo(): String {
 /** Unicode ranges that cover Japanese text: hiragana, katakana, kanji (Han ideographs),
  *  CJK symbols/punctuation, katakana phonetic extensions, and the halfwidth/fullwidth
  *  forms. Used to strip Japanese while preserving accented latin characters
- *  (e-acute, a-grave, n-tilde, c-cedilla...) needed by FR/DE/ES/PT translations. */
+ *  (e-acute, a-grave, n-tilde, c-cedilla...) needed by FR/DE/ES/PT translations.
+ *
+ *  Written as explicit code point ranges rather than named properties (`\p{IsHiragana}`,
+ *  `\p{InCJKSymbolsAndPunctuation}`, ...): those names are JDK-specific extensions that
+ *  the ICU-backed regex engine of some Android builds rejects at compile time with
+ *  `PatternSyntaxException: U_ILLEGAL_ARGUMENT_ERROR`. Ranges are understood by every
+ *  engine, so the patterns below can never fail to compile.
+ *
+ *  Only the BMP is covered — supplementary-plane kanji (CJK extension B and beyond) do
+ *  not appear in the bundled JMdict-derived data. */
 private const val japaneseChars =
-    """\p{IsHiragana}\p{IsKatakana}\p{IsHan}""" +
-    """\p{InCJKSymbolsAndPunctuation}\p{InKatakanaPhoneticExtensions}""" +
-    """\p{InHalfwidthAndFullwidthForms}"""
+    "\\u3000-\\u303F" +     // CJK symbols and punctuation
+    "\\u3040-\\u309F" +     // hiragana
+    "\\u30A0-\\u30FF" +     // katakana
+    "\\u31F0-\\u31FF" +     // katakana phonetic extensions
+    "\\u3400-\\u4DBF" +     // CJK unified ideographs extension A
+    "\\u4E00-\\u9FFF" +     // CJK unified ideographs (kanji)
+    "\\uF900-\\uFAFF" +     // CJK compatibility ideographs
+    "\\uFF00-\\uFFEF"       // halfwidth and fullwidth forms
+
+/** Finds any text inside of parentheses () that also contains japanese characters, and
+ *  any trailing whitespaces */
+private val regexJapaneseInParentheses = Regex("""\([^()]*[$japaneseChars][^()]*\)\s*""")
+
+/** Finds stray japanese characters that are not inside parentheses */
+private val regexJapaneseChars = Regex("""[$japaneseChars]""")
 
 /**
  * Remove any japanese
@@ -70,13 +91,10 @@ private const val japaneseChars =
  * @return New string with any japanese characters removed
  */
 fun String.removeAnyJapanese(): String {
-    /** Finds any text inside of parentheses () that also contains japanese characters, and
-     * any trailing whitespaces */
-    val regex = Regex("""\([^()]*[$japaneseChars][^()]*\)\s*""")
-    val newString = regex.replace(this, "")
+    val newString = regexJapaneseInParentheses.replace(this, "")
 
     // also remove any stray japanese that is not in brackets
-    return Regex("""[$japaneseChars]""").replace(newString, "")
+    return regexJapaneseChars.replace(newString, "")
 }
 
 /** Regex for indexes which mark different translations / meaning for words that have many */

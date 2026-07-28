@@ -76,6 +76,23 @@ class TranslationParserKtTest {
         assert ( "寿司 célèbre".removeAnyJapanese() == " célèbre" )
         // accents inside parentheses -> parentheses kept (no japanese inside)
         assert ( "(à révéler) suite".removeAnyJapanese() == "(à révéler) suite" )
+        // CJK punctuation, katakana phonetic extensions, halfwidth/fullwidth forms and
+        // rarer kanji blocks are all stripped (previously covered by \p{In...} block names,
+        // which failed to compile on some Android regex engines)
+        assert ( "test 。、「」・".removeAnyJapanese() == "test " )       // CJK punctuation
+        assert ( "test ㇰㇱ".removeAnyJapanese() == "test " )            // katakana phonetic ext.
+        assert ( "test ｱｲｳ！".removeAnyJapanese() == "test " )          // halfwidth/fullwidth
+        assert ( "test 㐀㐁".removeAnyJapanese() == "test " )            // CJK ext. A
+        assert ( "test 豈更".removeAnyJapanese() == "test " )            // CJK compatibility
+    }
+
+    /** The character class must always compile: a `PatternSyntaxException` here crashed the
+     *  quiz screen in production (issue 7845b138, v2.1.0). */
+    @Test
+    fun removeAnyJapaneseCompilesOnAllInputs() {
+        // exercises both regexes (parentheses variant + stray characters variant)
+        assert ( "(寿司 sushi) ok".removeAnyJapanese() == "ok" )
+        assert ( "plain".removeAnyJapanese() == "plain" )
     }
 
     @Test
