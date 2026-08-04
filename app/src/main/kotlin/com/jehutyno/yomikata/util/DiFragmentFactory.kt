@@ -2,6 +2,7 @@ package com.jehutyno.yomikata.util
 
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentFactory
+import com.jehutyno.yomikata.screens.answers.AnswersFragment
 import com.jehutyno.yomikata.screens.content.ContentFragment
 import com.jehutyno.yomikata.screens.content.word.WordDetailDialogFragment
 import com.jehutyno.yomikata.screens.content.word.WordDetailFragment
@@ -29,6 +30,7 @@ class DiFragmentFactory(private val di: DI) : FragmentFactory() {
             ContentFragment::class.java.name          -> ContentFragment(di)
             WordDetailFragment::class.java.name       -> WordDetailFragment(di)
             WordDetailDialogFragment::class.java.name -> WordDetailDialogFragment(di)
+            AnswersFragment::class.java.name          -> AnswersFragment(di)
             else -> super.instantiate(classLoader, className)
         }
     }

@@ -6,6 +6,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.WindowCompat
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.databinding.ActivityAnswersBinding
+import com.jehutyno.yomikata.util.DiFragmentFactory
 import com.jehutyno.yomikata.util.addOrReplaceFragment
 import mu.KLogging
 import org.kodein.di.DIAware
@@ -27,6 +28,10 @@ class AnswersActivity : AppCompatActivity(), DIAware {
     private lateinit var answersFragment: AnswersFragment
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Doit être posé AVANT super.onCreate : c'est là que le FragmentManager restaure
+        // AnswersFragment (constructeur à DI, pas de no-arg) → sans factory, NoSuchMethodException
+        // au démarrage de l'activité (crash Crashlytics 2.1.0).
+        supportFragmentManager.fragmentFactory = DiFragmentFactory(di)
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
         binding = ActivityAnswersBinding.inflate(layoutInflater)
