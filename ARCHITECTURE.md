@@ -383,7 +383,7 @@ Pipeline de release : `.github/workflows/release.yml`, déclenché par un tag gi
 ```
 git tag v2.0.1 → push
    │
-   ├─ job test          ./gradlew test verifyRoborazziDebug   (gate : 152 tests JVM + Roborazzi)
+   ├─ job test          ./gradlew test verifyRoborazziDebug   (gate : 184 tests JVM + Roborazzi)
    │
    └─ job build-publish ./gradlew bundleRelease               (AAB signé)
                         r0adkll/upload-google-play             (track production, status: draft)
@@ -410,9 +410,9 @@ git tag v2.0.1 → push
 | 3 | Régression visuelle (screenshots) | Roborazzi + Robolectric | `src/test/screenshot/` + baselines `src/test/screenshots/` |
 | 4 | Interactions Compose (callbacks ↔ UI) | Compose UI Test (`createComposeRule`) | `src/androidTest/.../compose/` |
 
-Total : **260 tests** (181 JVM = 152 unitaires + 29 screenshots ; 79 instrumentation = couches 2 + 4).
+Total : **263 tests** (184 JVM = 155 unitaires + 29 screenshots ; 79 instrumentation = couches 2 + 4).
 
-### Couche 1 — unitaires JVM (152 tests, 13 classes)
+### Couche 1 — unitaires JVM (155 tests, 13 classes)
 
 `TranslationParserKtTest`, `AnswerValidatorTest`, `QuizSessionStateTest`, `LevelSystemTest`,
 `QuizPresenterTest`, `QuizzesPresenterTest`, `LanguageManagerTest`, `GetTradMultiLanguageTest`
