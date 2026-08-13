@@ -121,13 +121,26 @@ fun contactPlayStore(context: Context) {
 }
 
 fun contactDiscord(context: Context) {
-    context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(context.getString(R.string.discord_link))).setFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+    openWebUrl(context, context.getString(R.string.discord_link))
 }
 
 /** Ouvre une URL de soutien fournie par la config Firebase (service au choix). */
 fun openSponsorUrl(context: Context, url: String) {
     if (url.isBlank()) return
-    context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)).setFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+    openWebUrl(context, url)
+}
+
+/**
+ * Ouvre une URL externe dans le navigateur.
+ * Aucune app capable de résoudre l'intent (appareil sans navigateur, profil restreint,
+ * URL malformée…) → message discret au lieu d'un crash.
+ */
+private fun openWebUrl(context: Context, url: String) {
+    try {
+        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)).setFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+    } catch (e: Exception) {
+        Toast.makeText(context, context.getString(R.string.action_not_possible), Toast.LENGTH_SHORT).show()
+    }
 }
 
 fun onTTSinit(context: Context?, status: Int, tts: TextToSpeech?): Int {
