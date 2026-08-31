@@ -87,7 +87,14 @@ fun Context.yomikataAlert(
         setViewTreeLifecycleOwner(activity)
         setViewTreeViewModelStoreOwner(activity)
         setViewTreeSavedStateRegistryOwner(activity)
-        setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+        // DisposeOnDetachedFromWindow (et NON DisposeOnViewTreeLifecycleDestroyed) : la vue
+        // vit dans un Dialog dont la durée de vie est bornée par dismiss() / destruction de
+        // la fenêtre — le détachement couvre les deux cas, sans risque de fuite.
+        // La stratégie lifecycle plantait (IllegalStateException « ... is already destroyed »
+        // dans installForLifecycle) quand un dialog était demandé depuis un callback
+        // asynchrone arrivé après onDestroy de l'activité hôte : le ComposeView s'attachait
+        // alors à un LifecycleOwner déjà DESTROYED. Crashlytics, FATAL, v2.1.0.
+        setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnDetachedFromWindow)
         setContent {
             YomikataTheme {
                 Box(
