@@ -789,10 +789,10 @@ private fun EditAnswerMode(
                         hint = ctx.getString(R.string.quiz_input_hint)
                         // Champ mono-ligne à action « Terminé » : sinon la touche Entrée du
                         // clavier insère un saut de ligne et ne déclenche jamais la validation
-                        // (OnEditorActionListener). TYPE_CLASS_TEXT est requis pour un vrai champ texte.
+                        // (OnEditorActionListener). TYPE_CLASS_TEXT avec NO_SUGGESTIONS désactive
+                        // les suggestions automatiques sans altérer le clavier japonais (tenten, etc.).
                         inputType = InputType.TYPE_CLASS_TEXT or
-                                InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS or
-                                InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
+                                InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
                         imeOptions = EditorInfo.IME_ACTION_DONE
                         setSingleLine(true)
                         setTextColor(textColorInt)
