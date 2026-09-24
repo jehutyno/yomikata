@@ -43,6 +43,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -340,7 +341,13 @@ fun QuizScreen(
                 isRevealed = uiState.isRevealed,
                 onTextChange = onEditTextChange,
                 onBeforeTextChange = onEditBeforeTextChange,
-                onSubmit = onEditSubmit,
+                onSubmit = { text ->
+                    if (uiState.isRevealed) {
+                        onNextWord()
+                    } else {
+                        onEditSubmit(text)
+                    }
+                },
                 onReveal = onEditReveal,
                 onClear = onEditClear,
                 modifier = Modifier.padding(horizontal = 12.dp),

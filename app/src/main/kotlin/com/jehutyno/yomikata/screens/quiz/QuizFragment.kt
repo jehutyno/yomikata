@@ -208,7 +208,9 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, TextToSp
                         },
                         onEditSubmit = { text ->
                             val quizType = uiState.currentQuizType
-                            if (quizType == QuizType.TYPE_PRONUNCIATION && !holdOn) {
+                            if (uiState.isRevealed) {
+                                lifecycleScope.launch { presenter.onNextWord() }
+                            } else if (quizType == QuizType.TYPE_PRONUNCIATION && !holdOn) {
                                 holdOn = true
                                 val cleaned = text
                                     .replace("n", if ((uiState.currentWord?.isKana ?: 0) >= 1) "n" else "ん")
