@@ -12,7 +12,7 @@
     <string name="selection_not_empty_name">Le nom ne peut pas être vide</string>
     <string name="action_search">Rechercher</string>
     <string name="action_errors">Erreurs</string>
-    <string name="quiz_input_hint">Écrire la prononciation du mot coloré</string>
+    <string name="quiz_input_hint">Écrire la prononciation</string>
     <string name="practice_random">Réviser tout aléatoire</string>
     <string name="practice_normal">Réviser tout</string>
     <string name="practice_progressive">Révision progressive</string>

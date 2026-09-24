@@ -12,7 +12,7 @@
     <string name="selection_not_empty_name">Der Name darf nicht leer sein</string>
     <string name="action_search">Suchen</string>
     <string name="action_errors">Fehler</string>
-    <string name="quiz_input_hint">Aussprache des markierten Zeichens eingeben</string>
+    <string name="quiz_input_hint">Aussprache des Zeichens</string>
     <string name="practice_random">Alles zufällig üben</string>
     <string name="practice_normal">Alles üben</string>
     <string name="practice_progressive">Progressiv üben</string>

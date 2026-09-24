@@ -36,7 +36,7 @@
     <string name="selection_not_empty_name">The name can\'t be empty</string>
     <string name="action_search">Search</string>
     <string name="action_errors">Errors</string>
-    <string name="quiz_input_hint">Enter colored sign pronunciation</string>
+    <string name="quiz_input_hint">Write the pronunciation</string>
     <string name="practice_random">Practice all randomly</string>
     <string name="practice_normal">Practice all</string>
     <string name="practice_progressive">Practice progressively</string>

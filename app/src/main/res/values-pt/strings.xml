@@ -12,7 +12,7 @@
     <string name="selection_not_empty_name">O nome não pode estar vazio</string>
     <string name="action_search">Buscar</string>
     <string name="action_errors">Erros</string>
-    <string name="quiz_input_hint">Digite a leitura do caractere marcado</string>
+    <string name="quiz_input_hint">Digite a leitura</string>
     <string name="practice_random">Praticar tudo aleatoriamente</string>
     <string name="practice_normal">Praticar tudo</string>
     <string name="practice_progressive">Praticar progressivamente</string>
