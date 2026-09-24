@@ -7,12 +7,12 @@
     <string name="no_selections">Aucunes sélections</string>
     <string name="new_selection">Nouvelle sélection</string>
     <string name="selection_name">Nom de la sélection</string>
-    <string name="selection_edit">Editer la sélection</string>
-    <string name="selection_delete_sure">Etes-vous sûr de vouloir effacer cette sélection ?</string>
+    <string name="selection_edit">Éditer la sélection</string>
+    <string name="selection_delete_sure">Êtes-vous sûr de vouloir effacer cette sélection ?</string>
     <string name="selection_not_empty_name">Le nom ne peut pas être vide</string>
     <string name="action_search">Rechercher</string>
     <string name="action_errors">Erreurs</string>
-    <string name="quiz_input_hint">Ecrire la prononciation du mot coloré</string>
+    <string name="quiz_input_hint">Écrire la prononciation du mot coloré</string>
     <string name="practice_random">Réviser tout aléatoire</string>
     <string name="practice_normal">Réviser tout</string>
     <string name="practice_progressive">Révision progressive</string>
@@ -98,8 +98,7 @@
     <string name="prefs_backup_progress">Sauvegarder progression</string>
     <string name="prefs_restore_progress">Importer progression</string>
     <string name="prefs_restore_progress_short">Restaurer progression</string>
-    <string name="prefs_restore_sure">Etes-vous sûr de vouloir restauration la progression avec ces données ? Cela va écraser la progression actuelle</string>
-    <string name="backup_saved_here">Vos données ont été sauvegardées à cette endroit: \n%1$s\n\nVous pouvez restaurer ces données à tout moment grace à ce fichier et l\'envoyer sur d\'autres appareils</string>
+    <string name="prefs_restore_sure">Êtes-vous sûr de vouloir restauration la progression avec ces données ? Cela va écraser la progression actuelle</string>
     <string name="backup_saved_here">Vos données ont été sauvegardées à cet endroit : \n%1$s\n\nVous pouvez restaurer ces données à tout moment grace à ce fichier et l\'envoyer sur d\'autres appareils</string>
     <string name="backup_success">Sauvegarde réussie</string>
     <string name="backup_error">Sauvegarde échouée</string>
@@ -118,7 +117,7 @@
     <string name="progress_import_message_y">Votre progression dans Yomikata est en cours d\'importation</string>
     <string name="progress_import_message_yz">Votre progression dans Yomikata Z est en cours d\'importation</string>
     <string name="backup">Sauvegarde</string>
-    <string name="backup_sure">Si vous lancez cette sauvegarde toute ancienne sauvegarde sera effacée. Etes-vous sûr de vouloir lancer la sauvegarde ?</string>
+    <string name="backup_sure">Si vous lancez cette sauvegarde toute ancienne sauvegarde sera effacée. Êtes-vous sûr de vouloir lancer la sauvegarde ?</string>
     <string name="use_yomikata_file">Vueillez utliser un fichier Yomikata (.yomikata) un un fichier Yomikata Z (.yomikataz)</string>
     <string name="prefs_tutorials">Tutoriels</string>
     <string name="prefs_reset_tutorials">Reset tutoriels</string>
@@ -140,7 +139,7 @@
     <string name="prefs_length_message">Nombre de mots dans une session</string>
     <string name="prefs_font_size">Taille de la police</string>
     <string name="prefs_font_size_message">Taille des phrases d\'exemple</string>
-    <string name="app_quit">Etes-vous sur de vouloir quitter Yomikata Z ?</string>
+    <string name="app_quit">Êtes-vous sur de vouloir quitter Yomikata Z ?</string>
     <string name="tts_settings_title">Paramètres de synthèse vocale</string>
     <string name="tts_volume">Volume d\'élocution</string>
     <string name="tts_rate">Vitesse d\'élocution</string>
@@ -149,9 +148,9 @@
     <string name="tutos_tts_settings">Synthèse vocale</string>
     <string name="tutos_tts_settings_message">Ouvrir le panneau des paramètres pour ajuster le volume et la vitesse d\'élocution</string>
     <string name="prefs_reinit">Réinitialisation</string>
-    <string name="prefs_reinit_sure">Vous allez perdre toute votre progression. Etes-vous sûr de vouloir effectuer la réinitialisation ?</string>
+    <string name="prefs_reinit_sure">Vous allez perdre toute votre progression. Êtes-vous sûr de vouloir effectuer la réinitialisation ?</string>
     <string name="prefs_reinit_done">Réinitialisation terminée</string>
-    <string name="prefs_delete_voices_sure">Etes-vous sûr de vouloir effacer les fichiers de voix ?</string>
+    <string name="prefs_delete_voices_sure">Êtes-vous sûr de vouloir effacer les fichiers de voix ?</string>
     <string name="prefs_delete_voices_done">Les voix ont été effacées</string>
     <string name="add_to_selections">Ajouter à les sélections</string>
     <string name="unselect_all">Tout déselectionner</string>
