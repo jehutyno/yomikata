@@ -1,3 +1,4 @@
+
 package com.jehutyno.yomikata.ui.quiz
 
 import android.text.Editable
@@ -5,6 +6,7 @@ import android.text.InputType
 import android.text.TextWatcher
 import android.view.KeyEvent
 import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodManager
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
@@ -39,6 +41,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -331,6 +334,7 @@ fun QuizScreen(
             )
             AnswerMode.Edit -> EditAnswerMode(
                 text = uiState.editText,
+                focusKey = uiState.title to uiState.currentIndex,
                 textColorInt = uiState.editTextColorInt,
                 isEnableConversion = uiState.editIsEnableConversion,
                 isRevealed = uiState.isRevealed,
@@ -730,6 +734,7 @@ private fun FuriAnswerButton(
 @Composable
 private fun EditAnswerMode(
     text: String,
+    focusKey: Pair<String, Int>,
     textColorInt: Int,
     isEnableConversion: Boolean,
     isRevealed: Boolean,
@@ -740,6 +745,17 @@ private fun EditAnswerMode(
     onClear: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    var inputView by remember { mutableStateOf<HiraganaEditText?>(null) }
+
+    LaunchedEffect(focusKey, inputView) {
+        inputView?.post {
+            inputView?.requestFocus()
+            inputView?.context
+                ?.getSystemService(InputMethodManager::class.java)
+                ?.showSoftInput(inputView, InputMethodManager.SHOW_IMPLICIT)
+        }
+    }
+
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -762,6 +778,7 @@ private fun EditAnswerMode(
             AndroidView(
                 factory = { ctx ->
                     HiraganaEditText(ctx).apply {
+                        inputView = this
                         hint = ctx.getString(R.string.quiz_input_hint)
                         // Champ mono-ligne à action « Terminé » : sinon la touche Entrée du
                         // clavier insère un saut de ligne et ne déclenche jamais la validation
