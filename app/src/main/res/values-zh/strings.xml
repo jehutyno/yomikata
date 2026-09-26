@@ -12,7 +12,7 @@
     <string name="selection_not_empty_name">名称不能为空</string>
     <string name="action_search">搜索</string>
     <string name="action_errors">错误</string>
-    <string name="quiz_input_hint">输入标注字符的读音</string>
+    <string name="quiz_input_hint">请在此处填写</string>
     <string name="practice_random">随机练习全部</string>
     <string name="practice_normal">练习全部</string>
     <string name="practice_progressive">渐进式练习</string>
