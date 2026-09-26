@@ -324,4 +324,8 @@
     <string name="fab_next">Próximo →</string>
     <string name="update_ready_message">Atualização pronta para instalar</string>
     <string name="update_restart_action">Reiniciar</string>
+    <string name="bottomnav_home">Início</string>
+    <string name="bottomnav_study">Estudo</string>
+    <string name="bottomnav_selections">Coleções</string>
+    <string name="bottomnav_settings">Ajustes</string>
 </resources>
