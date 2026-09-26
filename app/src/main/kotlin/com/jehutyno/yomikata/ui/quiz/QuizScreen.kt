@@ -16,6 +16,7 @@ import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.offset
@@ -162,6 +163,7 @@ fun QuizScreen(
     onEditSubmit: (String) -> Unit,
     onEditReveal: () -> Unit,
     onEditClear: () -> Unit,
+    onTapToReveal: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val word = uiState.currentWord
@@ -170,6 +172,7 @@ fun QuizScreen(
     val answered = uiState.isRevealed
     val isCorrect = answered && uiState.wordHighlightColor == Correct.toArgb()
     val isWrong = answered && !isCorrect
+    val isTapToRevealActive = uiState.answerMode == AnswerMode.QCM && uiState.tapToRevealVisible && !uiState.isRevealed
 
     val heroBg by animateColorAsState(
         targetValue = when {
@@ -196,7 +199,14 @@ fun QuizScreen(
             // À l'ouverture du clavier, la Column se réduit pour rester au-dessus de
             // l'IME (au lieu de faire défiler tout l'écran) → la card s'adapte à la
             // hauteur restante et le champ d'édition reste visible.
-            .windowInsetsPadding(WindowInsets.navigationBars.union(WindowInsets.ime)),
+            .windowInsetsPadding(WindowInsets.navigationBars.union(WindowInsets.ime))
+            .clickable(
+                enabled = isTapToRevealActive,
+                indication = null,
+                interactionSource = remember { MutableInteractionSource() },
+            ) {
+                onTapToReveal()
+            },
     ) {
         // TopAppBar
         Row(
@@ -275,7 +285,12 @@ fun QuizScreen(
                 .padding(horizontal = 12.dp, vertical = 8.dp)
                 .clip(RoundedCornerShape(RadiusXl))
                 .border(1.5.dp, heroBorder, RoundedCornerShape(RadiusXl))
-                .background(heroBg),
+                .background(heroBg)
+                .clickable(
+                    indication = null,
+                    interactionSource = remember { MutableInteractionSource() },
+                    onClick = {},
+                ),
         ) {
             QuestionZone(
                 word = word,
@@ -330,6 +345,8 @@ fun QuizScreen(
             AnswerMode.QCM -> QcmAnswers(
                 options = uiState.qcmOptions,
                 isRevealed = uiState.isRevealed,
+                tapToRevealVisible = uiState.tapToRevealVisible,
+                onTapToReveal = onTapToReveal,
                 onOptionClick = onOptionClick,
                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
             )
@@ -632,14 +649,35 @@ private fun QuestionZone(
 private fun QcmAnswers(
     options: List<QcmOption>,
     isRevealed: Boolean,
+    tapToRevealVisible: Boolean = false,
+    onTapToReveal: () -> Unit = {},
     onOptionClick: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val letters = listOf('A', 'B', 'C', 'D')
-    Column(
-        modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
+    if (tapToRevealVisible && !isRevealed) {
+        Box(
+            modifier = modifier
+                .fillMaxWidth()
+                .height(124.dp)
+                .border(1.dp, BorderDefault, RoundedCornerShape(16.dp))
+                .background(SurfacePrimary, RoundedCornerShape(16.dp))
+                .clickable(onClick = onTapToReveal),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                text = stringResource(R.string.reveal_choices),
+                color = TextPrimary,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Normal,
+                textAlign = TextAlign.Center,
+            )
+        }
+    } else {
+        val letters = listOf('A', 'B', 'C', 'D')
+        Column(
+            modifier = modifier,
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
         for (row in 0..1) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -676,6 +714,7 @@ private fun QcmAnswers(
             }
         }
     }
+}
 }
 
 // ─── FuriAnswerButton ─────────────────────────────────────────────────────────

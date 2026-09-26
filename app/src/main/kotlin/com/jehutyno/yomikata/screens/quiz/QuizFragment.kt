@@ -233,6 +233,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, TextToSp
                             }
                         },
                         onEditClear = { uiState = uiState.copy(editText = "") },
+                        onTapToReveal = { uiState = uiState.copy(tapToRevealVisible = false) },
                     )
 
                     if (ttsSettingsVisible) {
@@ -363,13 +364,20 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, TextToSp
     }
 
 
+    private val isTapToRevealEnabled: Boolean
+        get() = prefs.getBoolean(Prefs.TAP_TO_REVEAL.pref, false)
+
     override fun setPagerPosition(position: Int) {
         // P5 : marquer le segment courant en Current (orange)
         val newSegments = uiState.segments.toMutableList()
         if (position in newSegments.indices && newSegments[position] == SegmentState.Pending) {
             newSegments[position] = SegmentState.Current
         }
-        uiState = uiState.copy(currentIndex = position, segments = newSegments)
+        uiState = uiState.copy(
+            currentIndex = position,
+            segments = newSegments,
+            tapToRevealVisible = isTapToRevealEnabled,
+        )
         refreshSelectionState()
     }
 
@@ -397,6 +405,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, TextToSp
             editShowDisplayAnswer = false,
             qcmOptions = List(4) { QcmOption("") },
             answerMode = AnswerMode.None,
+            tapToRevealVisible = isTapToRevealEnabled,
         )
     }
 
@@ -406,6 +415,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, TextToSp
             answerMode = AnswerMode.QCM,
             hintText = hintText,
             isRevealed = false,
+            tapToRevealVisible = isTapToRevealEnabled,
         )
     }
 

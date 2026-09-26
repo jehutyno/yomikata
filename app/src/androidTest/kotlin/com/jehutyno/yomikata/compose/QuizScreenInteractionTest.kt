@@ -53,21 +53,25 @@ class QuizScreenInteractionTest {
     )
 
     @Composable
-    private fun Quiz(state: QuizUiState, onOptionClick: (Int) -> Unit) {
+    private fun Quiz(
+        state: QuizUiState,
+        onTapToReveal: () -> Unit = {},
+        onOptionClick: (Int) -> Unit = {},
+    ) {
         QuizScreen(
             uiState = state,
             onClose = {}, onTtsSettings = {}, onDisplayAnswers = {}, onOptionClick = onOptionClick,
             onNextWord = {}, onFuriToggle = {}, onTradToggle = {}, onItemClick = {},
             onSelectionClick = {}, onReportClick = {}, onSentenceTts = {}, onSoundClick = {},
             onEditTextChange = {}, onEditBeforeTextChange = {}, onEditSubmit = {},
-            onEditReveal = {}, onEditClear = {},
+            onEditReveal = {}, onEditClear = {}, onTapToReveal = onTapToReveal,
         )
     }
 
     @Test
     fun tappingAQcmOptionInvokesOnOptionClickWithItsIndex() {
         var clickedIndex = -1
-        rule.setContent { YomikataTheme { Quiz(qcmState()) { clickedIndex = it } } }
+        rule.setContent { YomikataTheme { Quiz(qcmState(), onOptionClick = { clickedIndex = it }) } }
 
         rule.onNodeWithText("のむ").assertIsDisplayed()
         rule.onNodeWithText("のむ").performClick()
@@ -76,9 +80,20 @@ class QuizScreenInteractionTest {
 
     @Test
     fun allFourOptionsAreDisplayed() {
-        rule.setContent { YomikataTheme { Quiz(qcmState()) {} } }
+        rule.setContent { YomikataTheme { Quiz(qcmState()) } }
         listOf("たべる", "のむ", "かく", "みる").forEach {
             rule.onNodeWithText(it).assertIsDisplayed()
         }
+    }
+
+    @Test
+    fun tapToRevealHidesOptionsUntilTapped() {
+        var tapToRevealCalled = false
+        val state = qcmState().copy(tapToRevealVisible = true)
+        rule.setContent { YomikataTheme { Quiz(state, onTapToReveal = { tapToRevealCalled = true }) } }
+
+        rule.onNodeWithText("Reveal answers").assertIsDisplayed()
+        rule.onNodeWithText("Reveal answers").performClick()
+        assertEquals(true, tapToRevealCalled)
     }
 }
