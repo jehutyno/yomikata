@@ -542,11 +542,23 @@ private fun QuestionZone(
                         verticalArrangement = Arrangement.spacedBy(16.dp),
                     ) {
                         // Mot en vedette — centré, avec spring bounce + shake
+                        val isTtsEnabledForWord = when (quizType) {
+                            QuizType.TYPE_JAP_EN -> true
+                            QuizType.TYPE_PRONUNCIATION, QuizType.TYPE_PRONUNCIATION_QCM -> isRevealed
+                            else -> false
+                        }
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .graphicsLayer { scaleX = scale; scaleY = scale }
-                                .offset { IntOffset(shakeOffset.value.roundToInt(), 0) },
+                                .offset { IntOffset(shakeOffset.value.roundToInt(), 0) }
+                                .then(
+                                    if (isTtsEnabledForWord) {
+                                        Modifier.clickable(onClick = onSoundClick)
+                                    } else {
+                                        Modifier
+                                    }
+                                ),
                             contentAlignment = Alignment.Center,
                         ) {
                             FuriganaAndroidView(
