@@ -46,7 +46,7 @@
     <string name="tts_init_failed">Sprachsynthese-Initialisierung fehlgeschlagen</string>
     <string name="set_up_tts_title">Spracheinstellungen</string>
     <string name="set_up_tts">Um die Sprachausgabe zu aktivieren, müssen Sie entweder:\n</string>
-    <string name="download_voices_action">Stimmen herunterladen (%dMB)</string>
+    <string name="download_voices_action">Stimmen\nherunterladen\n(%dMB)</string>
     <string name="get_google_tts_action">Google Text-to-Speech installieren</string>
     <string name="tuto_welcome">Bereit, Japanisch zu lernen</string>
     <string name="tuto_categories">Kategorien</string>

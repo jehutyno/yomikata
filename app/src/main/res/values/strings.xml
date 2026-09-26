@@ -72,7 +72,7 @@
     <string name="tts_init_failed">TTS Initilization Failed</string>
     <string name="set_up_tts_title">Speech Setup</string>
     <string name="set_up_tts">To enable speech you need to either:\n</string>
-    <string name="download_voices_action">Download the voices (%dMB)</string>
+    <string name="download_voices_action">Download the\nvoices (%dMB)</string>
     <string name="get_google_tts_action">Install Google Text to speech</string>
     <string name="tuto_yomikataz" translatable="false">Yomikata Z</string>
     <string name="tuto_welcome">Be ready to learn Japanese</string>

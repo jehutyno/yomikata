@@ -46,7 +46,7 @@
     <string name="tts_init_failed">Error al inicializar la síntesis de voz</string>
     <string name="set_up_tts_title">Ajustes de voz</string>
     <string name="set_up_tts">Para activar la voz, necesitas:\n</string>
-    <string name="download_voices_action">Descargar voces (%dMB)</string>
+    <string name="download_voices_action">Descargar\nvoces (%dMB)</string>
     <string name="get_google_tts_action">Instalar Google Text-to-Speech</string>
     <string name="tuto_welcome">Listo para aprender japonés</string>
     <string name="tuto_categories">Categorías</string>

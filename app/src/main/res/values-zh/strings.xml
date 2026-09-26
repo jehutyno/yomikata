@@ -46,7 +46,7 @@
     <string name="tts_init_failed">语音合成初始化失败</string>
     <string name="set_up_tts_title">语音设置</string>
     <string name="set_up_tts">要启用语音输出，您需要：\n</string>
-    <string name="download_voices_action">下载语音包（%dMB）</string>
+    <string name="download_voices_action">下载语音包\n（%dMB）</string>
     <string name="get_google_tts_action">安装 Google 文字转语音</string>
     <string name="tuto_welcome">准备好学习日语了吗</string>
     <string name="tuto_categories">分类</string>
