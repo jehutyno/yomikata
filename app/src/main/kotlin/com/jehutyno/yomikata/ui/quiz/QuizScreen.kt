@@ -348,6 +348,7 @@ fun QuizScreen(
                 tapToRevealVisible = uiState.tapToRevealVisible,
                 onTapToReveal = onTapToReveal,
                 onOptionClick = onOptionClick,
+                onNextWord = onNextWord,
                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
             )
             AnswerMode.Edit -> EditAnswerMode(
@@ -652,6 +653,7 @@ private fun QcmAnswers(
     tapToRevealVisible: Boolean = false,
     onTapToReveal: () -> Unit = {},
     onOptionClick: (Int) -> Unit,
+    onNextWord: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     if (tapToRevealVisible && !isRevealed) {
@@ -688,12 +690,22 @@ private fun QcmAnswers(
                     if (i < options.size) {
                         val option = options[i]
                         val letter = letters.getOrElse(i) { 'A' }
+                        val isCorrect = option.buttonState == AnswerButtonState.Correct
+                        val clickAction = {
+                            if (isRevealed) {
+                                if (isCorrect) {
+                                    onNextWord()
+                                }
+                            } else {
+                                onOptionClick(i)
+                            }
+                        }
                         if (option.isFuri) {
                             FuriAnswerButton(
                                 option = option,
                                 indexLetter = letter,
                                 isRevealed = isRevealed,
-                                onClick = { onOptionClick(i) },
+                                onClick = clickAction,
                                 modifier = Modifier.weight(1f),
                             )
                         } else {
@@ -703,7 +715,7 @@ private fun QcmAnswers(
                                 state = option.buttonState,
                                 isRevealed = isRevealed,
                                 isSelected = option.buttonState != AnswerButtonState.Default,
-                                onClick = { onOptionClick(i) },
+                                onClick = clickAction,
                                 modifier = Modifier.weight(1f),
                             )
                         }
@@ -728,6 +740,7 @@ private fun FuriAnswerButton(
     modifier: Modifier = Modifier,
 ) {
     val dimmed = isRevealed && option.buttonState == AnswerButtonState.Default
+    val isCorrect = option.buttonState == AnswerButtonState.Correct
     val bgColor = when (option.buttonState) {
         AnswerButtonState.Default -> SurfacePrimary
         AnswerButtonState.Correct -> BackgroundCorrect
@@ -751,7 +764,7 @@ private fun FuriAnswerButton(
             .alpha(if (dimmed) 0.4f else 1f)
             .border(1.dp, borderColor, RoundedCornerShape(16.dp))
             .background(bgColor, RoundedCornerShape(16.dp))
-            .clickable(enabled = !isRevealed, onClick = onClick)
+            .clickable(enabled = !isRevealed || isCorrect, onClick = onClick)
             .padding(horizontal = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp),
