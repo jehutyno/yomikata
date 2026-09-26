@@ -38,6 +38,10 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -90,6 +94,7 @@ import com.jehutyno.yomikata.ui.theme.TextPrimary
 import com.jehutyno.yomikata.ui.theme.TextSecondary
 import com.jehutyno.yomikata.ui.theme.Wrong
 import com.jehutyno.yomikata.ui.theme.YomikataTheme
+import com.jehutyno.yomikata.ui.word.levelColor
 import com.jehutyno.yomikata.util.getWordPositionInFuriSentence
 import kotlin.math.roundToInt
 import com.jehutyno.yomikata.util.language.cleanForQCM
@@ -154,6 +159,7 @@ fun QuizScreen(
     onFuriToggle: (Boolean) -> Unit,
     onTradToggle: () -> Unit,
     onItemClick: () -> Unit,
+    onProgressClick: (Level) -> Unit = {},
     onSelectionClick: () -> Unit,
     onReportClick: () -> Unit,
     onSentenceTts: () -> Unit,
@@ -304,6 +310,7 @@ fun QuizScreen(
                 isWrong = isWrong,
                 isInSelection = uiState.isCurrentWordInSelection,
                 onItemClick = onItemClick,
+                onProgressClick = onProgressClick,
                 onSelectionClick = onSelectionClick,
                 onReportClick = onReportClick,
                 onSentenceTts = onSentenceTts,
@@ -409,6 +416,7 @@ private fun QuestionZone(
     isWrong: Boolean,
     isInSelection: Boolean,
     onItemClick: () -> Unit,
+    onProgressClick: (Level) -> Unit,
     onSelectionClick: () -> Unit,
     onReportClick: () -> Unit,
     onSentenceTts: () -> Unit,
@@ -417,6 +425,7 @@ private fun QuestionZone(
     onTradToggle: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    var isLevelMenuExpanded by remember { mutableStateOf(false) }
     // P4: orange si non répondu, green après bonne réponse (défault si 0 → orange)
     val sentenceHighlight = if (wordHighlightColor != 0) wordHighlightColor else AccentOrange.toArgb()
 
@@ -626,6 +635,45 @@ private fun QuestionZone(
                 }
             }
             Spacer(modifier = Modifier.weight(1f))
+            Box {
+                IconButton(onClick = { isLevelMenuExpanded = true }) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_progress),
+                        contentDescription = stringResource(R.string.tuto_progress),
+                        tint = TextGhost,
+                        modifier = Modifier.size(20.dp),
+                    )
+                }
+                DropdownMenu(
+                    expanded = isLevelMenuExpanded,
+                    onDismissRequest = { isLevelMenuExpanded = false },
+                ) {
+                    Level.entries.forEach { level ->
+                        DropdownMenuItem(
+                            text = {
+                                Text(
+                                    text = stringResource(level.masteryLabelRes()),
+                                    color = TextPrimary,
+                                )
+                            },
+                            leadingIcon = {
+                                RadioButton(
+                                    selected = word?.level == level,
+                                    onClick = null,
+                                    colors = RadioButtonDefaults.colors(
+                                        selectedColor = levelColor(level),
+                                        unselectedColor = TextMuted,
+                                    ),
+                                )
+                            },
+                            onClick = {
+                                onProgressClick(level)
+                                isLevelMenuExpanded = false
+                            },
+                        )
+                    }
+                }
+            }
             IconButton(onClick = onSelectionClick) {
                 Icon(
                     painter = painterResource(R.drawable.ic_star_black_24dp),
@@ -654,6 +702,13 @@ private fun QuestionZone(
             }
         }
     }
+}
+
+private fun Level.masteryLabelRes(): Int = when (this) {
+    Level.LOW -> R.string.red_review
+    Level.MEDIUM -> R.string.orange_review
+    Level.HIGH -> R.string.yellow_review
+    Level.MASTER -> R.string.green_review
 }
 
 // ─── QCM answers (grille 2×2) ─────────────────────────────────────────────────
