@@ -552,7 +552,8 @@ class QuizPresenter(
             QuizType.TYPE_AUTO -> TODO()
         }
 
-        if (result && defaultSharedPreferences.getBoolean(Prefs.PLAY_END.pref, true))
+        // Add "result &&" to play only when answered correctly.
+        if (defaultSharedPreferences.getBoolean(Prefs.PLAY_END.pref, true))
             quizView.speakWord(sessionState.getCurrentWord())
 
         quizView.animateCheck(result)
