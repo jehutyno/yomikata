@@ -27,8 +27,8 @@
     <!-- Mastery progression (Study + word list) -->
     <string name="progress_header">習得 · 进度</string>
     <string name="mastery_all">全部</string>
-    <string name="mastery_to_review">待复习</string>
-    <string name="mastered">已掌握</string>
+    <string name="mastery_to_review">待复习：</string>
+    <string name="mastery_mastered">已掌握：</string>
     <string name="mastery_percent_label">已掌握</string>
     <string name="word_count_label">词</string>
     <string name="quit_quiz">确定要退出本次练习吗？</string>

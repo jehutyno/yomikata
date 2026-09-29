@@ -27,8 +27,8 @@
     <!-- Mastery progression (Study + word list) -->
     <string name="progress_header">習得 · Progression</string>
     <string name="mastery_all">Tous</string>
-    <string name="mastery_to_review">À revoir</string>
-    <string name="mastered">Maîtrisés</string>
+    <string name="mastery_to_review">À revoir :</string>
+    <string name="mastery_mastered">Maîtrisés :</string>
     <string name="mastery_percent_label">maîtrisé</string>
     <string name="word_count_label">mots</string>
     <string name="quit_quiz">Voulez-vous quitter cette session ?</string>
@@ -79,11 +79,11 @@
     <string name="error_no_quiz_no_word">Au moins un quiz avec au moins un mot doit exister</string>
     <string name="alert_quiz_finished">Vous avez vu tous les mots. Que voulez-vous faire ?</string>
     <string name="alert_session_finished">Vous avez terminé une session de %1d mots. Que voulez-vous faire ?</string>
-    <string name="alert_restart">relancer</string>
-    <string name="alert_continue">continuer</string>
-    <string name="alert_quit">quitter</string>
-    <string name="alert_review_session_errors">revoir erreurs de la session</string>
-    <string name="alert_review_quiz_errors">revoir toutes les erreurs du quiz</string>
+    <string name="alert_restart">Relancer</string>
+    <string name="alert_continue">Continuer</string>
+    <string name="alert_quit">Quitter</string>
+    <string name="alert_review_session_errors">Revoir les erreurs de la session</string>
+    <string name="alert_review_quiz_errors">Revoir toutes les erreurs du quiz</string>
     <string name="quit_app">Voulez-vous quitter Yomikata ?</string>
 
     <string name="prefs_others">Autres</string>
@@ -195,8 +195,8 @@
     <string name="share_message">Laisse moi te recommander cette application pour étudier le japonais :\n\nhttps://play.google.com/apps/testing/com.jehutyno.yomikata\n\n</string>
     <string name="share_choose">Partager l\'application</string>
     <string name="alert_error_review_finished">Fin de la revue des erreurs</string>
-    <string name="alert_error_review_session_message">Vous avez revu toutes les erreurs de la session</string>
-    <string name="alert_error_review_quiz_message">Vous avez revu toutes les erreurs du quiz</string>
+    <string name="alert_error_review_session_message">Vous avez revu toutes les erreurs de la session.</string>
+    <string name="alert_error_review_quiz_message">Vous avez revu toutes les erreurs du quiz.</string>
     <string name="alert_continue_quiz">Continuer le quiz</string>
     <string name="composition">Composition</string>
     <string name="example">Exemple</string>

@@ -123,7 +123,7 @@ fun MasteryBar(
         if (showLegend) {
             Spacer(modifier = Modifier.height(9.dp))
             Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
-                LegendEntry(MasteredColor, safeMastered, stringResource(R.string.mastered))
+                LegendEntry(MasteredColor, safeMastered, stringResource(R.string.mastery_mastered))
                 LegendEntry(ToReviewColor, toReview, stringResource(R.string.mastery_to_review))
             }
         }
@@ -141,7 +141,7 @@ private fun LegendEntry(color: Color, count: Int, label: String) {
         )
         Spacer(modifier = Modifier.width(5.dp))
         Text(
-            text = "$count $label",
+            text = "$label $count",
             fontSize = 11.sp,
             color = TextMuted,
         )

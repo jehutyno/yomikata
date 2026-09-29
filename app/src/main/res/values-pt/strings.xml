@@ -27,8 +27,8 @@
     <!-- Mastery progression (Study + word list) -->
     <string name="progress_header">習得 · Progresso</string>
     <string name="mastery_all">Todos</string>
-    <string name="mastery_to_review">Para revisar</string>
-    <string name="mastered">Dominados</string>
+    <string name="mastery_to_review">Para revisar:</string>
+    <string name="mastery_mastered">Dominados:</string>
     <string name="mastery_percent_label">dominado</string>
     <string name="word_count_label">palavras</string>
     <string name="quit_quiz">Deseja encerrar esta sessão de prática?</string>
@@ -79,9 +79,9 @@
     <string name="error_no_quiz_no_word">Deve haver pelo menos um questionário com uma palavra</string>
     <string name="alert_quiz_finished">Você viu todas as palavras. O que deseja fazer?</string>
     <string name="alert_session_finished">Você completou uma sessão com %1$d palavras. O que deseja fazer?</string>
-    <string name="alert_restart">reiniciar</string>
-    <string name="alert_continue">continuar</string>
-    <string name="alert_quit">sair</string>
+    <string name="alert_restart">Reiniciar</string>
+    <string name="alert_continue">Continuar</string>
+    <string name="alert_quit">Sair</string>
     <string name="alert_review_session_errors">Revisar erros da sessão</string>
     <string name="alert_review_quiz_errors">Revisar todos os erros do questionário</string>
     <string name="quit_app">Tem certeza que deseja sair do Yomikata?</string>
@@ -195,8 +195,8 @@
     <string name="share_message">Recomendo este aplicativo para aprender japonês:\n\nhttps://play.google.com/apps/testing/com.jehutyno.yomikata\n\n</string>
     <string name="share_choose">Compartilhar aplicativo</string>
     <string name="alert_error_review_finished">Revisão de erros concluída</string>
-    <string name="alert_error_review_session_message">Você revisou todos os erros da sessão</string>
-    <string name="alert_error_review_quiz_message">Você revisou todos os erros do questionário</string>
+    <string name="alert_error_review_session_message">Você revisou todos os erros da sessão.</string>
+    <string name="alert_error_review_quiz_message">Você revisou todos os erros do questionário.</string>
     <string name="alert_continue_quiz">Continuar questionário</string>
     <string name="composition">Composição</string>
     <string name="example">Exemplo</string>
