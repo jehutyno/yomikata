@@ -291,7 +291,7 @@
     <string name="sponsor_button">♥ 在 GitHub 上支持</string>
 
     <!-- Compose UI labels (extracted from hardcoded literals) -->
-    <string name="action_favorite">收藏</string>
+    <string name="action_selections">词汇集</string>
     <string name="action_reveal_answer">显示答案</string>
     <string name="action_clear">清除</string>
     <string name="action_audio">音频</string>

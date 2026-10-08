@@ -291,7 +291,7 @@
     <string name="sponsor_button">♥ Soutenir sur GitHub</string>
 
     <!-- Compose UI labels (extracted from hardcoded literals) -->
-    <string name="action_favorite">Favori</string>
+    <string name="action_selections">Sélections</string>
     <string name="action_reveal_answer">Révéler la réponse</string>
     <string name="action_clear">Effacer</string>
     <string name="action_audio">Audio</string>
