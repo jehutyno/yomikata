@@ -640,7 +640,7 @@ private fun QuestionZone(
                     Icon(
                         painter = painterResource(R.drawable.ic_progress),
                         contentDescription = stringResource(R.string.tuto_progress),
-                        tint = TextGhost,
+                        tint = if( isRevealed && word != null) levelColor(word.level) else TextGhost,
                         modifier = Modifier.size(20.dp),
                     )
                 }
