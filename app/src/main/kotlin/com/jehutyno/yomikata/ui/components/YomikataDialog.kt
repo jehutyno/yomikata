@@ -3,9 +3,12 @@ package com.jehutyno.yomikata.ui.components
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
@@ -176,16 +179,17 @@ private fun DialogButtonBar(buttons: List<DialogButton>, modifier: Modifier = Mo
 
     if (buttons.size <= 2) {
         Row(
-            modifier = modifier,
+            modifier = modifier.height(IntrinsicSize.Max),
             horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
         ) {
             others.forEach { DialogButtonView(it) }
             primary?.let { DialogButtonView(it) }
         }
     } else {
-        Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Column(modifier = modifier) {
             primary?.let { DialogButtonView(it, Modifier.fillMaxWidth()) }
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically,
+                modifier = modifier.height(IntrinsicSize.Max)) {
                 others.forEach { DialogButtonView(it, Modifier.weight(1f)) }
             }
         }
@@ -221,9 +225,12 @@ private fun DialogButtonView(button: DialogButton, modifier: Modifier = Modifier
             onClick = button.onClick,
             colors = ButtonDefaults.textButtonColors(contentColor = TextMuted),
             shape = RoundedCornerShape(RadiusMd),
-            modifier = modifier,
+            modifier = modifier
+                .fillMaxHeight(),
         ) {
-            Text(button.text, style = TypeListTitle, color = TextMuted, textAlign = TextAlign.Center)
+            Text(button.text, style = TypeListTitle, color = TextMuted, textAlign = TextAlign.Center,
+                modifier = modifier
+            )
         }
     }
 }
@@ -233,11 +240,11 @@ private fun DialogButtonView(button: DialogButton, modifier: Modifier = Modifier
 private fun YomikataDialogConfirmPreview() {
     YomikataTheme {
         YomikataDialogContent(
-            title = "Vous avez vu tous les mots",
+            title = "Vous avez vu revu toutes les erreurs du quiz",
             message = "Que voulez-vous faire ?",
             buttons = listOf(
                 DialogButton("Quitter", DialogButtonStyle.Muted) {},
-                DialogButton("Relancer", DialogButtonStyle.Primary) {},
+                DialogButton("Continuer le quiz", DialogButtonStyle.Primary) {},
             ),
             modifier = Modifier.padding(16.dp),
         )
@@ -253,7 +260,7 @@ private fun YomikataDialogThreePreview() {
             icon = DialogIcon.Success,
             buttons = listOf(
                 DialogButton("Continuer", DialogButtonStyle.Primary) {},
-                DialogButton("Revoir erreurs", DialogButtonStyle.Muted) {},
+                DialogButton("Revoir les erreurs de la session", DialogButtonStyle.Muted) {},
                 DialogButton("Quitter", DialogButtonStyle.Muted) {},
             ),
             modifier = Modifier.padding(16.dp),
