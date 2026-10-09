@@ -20,6 +20,7 @@ import com.jehutyno.yomikata.ui.wordlist.WordListScreen
 import com.jehutyno.yomikata.ui.wordlist.tabToLevel
 import com.jehutyno.yomikata.ui.wordlist.WordListUiState
 import com.jehutyno.yomikata.util.onTTSinit
+import com.jehutyno.yomikata.util.releaseAsync
 import com.jehutyno.yomikata.util.Extras
 import com.jehutyno.yomikata.util.quiz.Level
 import com.jehutyno.yomikata.util.getSerializableHelper
@@ -174,8 +175,7 @@ class ContentFragment(private val di: DI) : Fragment(), ContentContract.View, Te
 
     override fun onDestroyView() {
         super.onDestroyView()
-        tts?.stop()
-        tts?.shutdown()
+        tts?.releaseAsync()
         voices.releasePlayer()
     }
 

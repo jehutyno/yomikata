@@ -164,6 +164,29 @@ fun onTTSinit(context: Context?, status: Int, tts: TextToSpeech?): Int {
     return supported
 }
 
+/** Thread unique dédié à la libération des moteurs TTS (cf. [releaseAsync]). */
+private val ttsReleaseExecutor = java.util.concurrent.Executors.newSingleThreadExecutor()
+
+/**
+ * Arrête et libère le moteur TTS **hors du main thread**.
+ *
+ * `stop()`/`shutdown()` passent par `TextToSpeech.runAction`, qui attend le verrou de la connexion
+ * au service ; ce verrou est tenu par `SetupConnectionAsyncTask` pendant ses appels binder
+ * (`getDefaultVoiceNameFor`…). Sur un moteur lent (ex. Nokia C32), détruire un fragment pendant que
+ * sa connexion TTS s'établit encore bloquait le main thread → ANR (`ContentFragment.onDestroyView`,
+ * pages du ViewPager2 recyclées en rafale).
+ */
+fun TextToSpeech.releaseAsync() {
+    ttsReleaseExecutor.execute {
+        try {
+            stop()
+            shutdown()
+        } catch (e: Exception) {
+            Log.w("TTS", "TextToSpeech release failed", e)
+        }
+    }
+}
+
 fun checkSpeechAvailability(context: Context, ttsSupported: Int, level: Int): SpeechAvailability {
     if (anyVoicesDownloaded(context, level))
         return SpeechAvailability.VOICES_AVAILABLE

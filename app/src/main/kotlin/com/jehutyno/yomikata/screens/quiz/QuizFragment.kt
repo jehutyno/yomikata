@@ -52,6 +52,7 @@ import com.jehutyno.yomikata.util.checkSpeechAvailability
 import com.jehutyno.yomikata.util.showWordSelectionDialog
 import com.jehutyno.yomikata.util.hideSoftKeyboard
 import com.jehutyno.yomikata.util.onTTSinit
+import com.jehutyno.yomikata.util.releaseAsync
 import com.jehutyno.yomikata.util.quiz.QuizType
 import com.jehutyno.yomikata.util.quiz.getCategoryLevel
 import com.jehutyno.yomikata.util.reportError
@@ -264,7 +265,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, TextToSp
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        tts?.shutdown()
+        tts?.releaseAsync()
         tts = TextToSpeech(activity, this)
 
         uiState = uiState.copy(
@@ -281,8 +282,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, TextToSp
     }
 
     override fun onDestroy() {
-        tts?.stop()
-        tts?.shutdown()
+        tts?.releaseAsync()
         voicesManager.releasePlayer()
         super.onDestroy()
     }

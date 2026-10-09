@@ -26,6 +26,7 @@ import com.jehutyno.yomikata.ui.word.WordDetailUiState
 import com.jehutyno.yomikata.util.Extras
 import com.jehutyno.yomikata.util.getSerializableHelper
 import com.jehutyno.yomikata.util.onTTSinit
+import com.jehutyno.yomikata.util.releaseAsync
 import com.jehutyno.yomikata.util.quiz.Level
 import com.jehutyno.yomikata.util.quiz.QuizType
 import com.jehutyno.yomikata.util.quiz.getLevelFromPoints
@@ -145,8 +146,7 @@ class WordDetailFragment(private val di: DI) : Fragment(), WordContract.View, Te
     }
 
     override fun onDestroy() {
-        tts?.stop()
-        tts?.shutdown()
+        tts?.releaseAsync()
         voices.releasePlayer()
         super.onDestroy()
     }
