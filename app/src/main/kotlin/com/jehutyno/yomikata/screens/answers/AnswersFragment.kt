@@ -13,6 +13,7 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.audio.VoicesManager
 import com.jehutyno.yomikata.model.Answer
 import com.jehutyno.yomikata.ui.answers.AnswerReviewScreen
@@ -22,9 +23,9 @@ import com.jehutyno.yomikata.ui.answers.SelectionSheetState
 import com.jehutyno.yomikata.ui.theme.YomikataTheme
 import com.jehutyno.yomikata.util.*
 import com.jehutyno.yomikata.util.backup.LocalPersistence
+import com.jehutyno.yomikata.util.quiz.Level
 import kotlinx.coroutines.launch
 import org.kodein.di.*
-import java.util.*
 
 
 /**
@@ -36,7 +37,7 @@ class AnswersFragment(private val di: DI) : Fragment(), AnswersContract.View, Te
     private val subDI by DI.lazy {
         extend(di)
         bind<AnswersContract.Presenter>() with provider {
-            AnswersPresenter(instance(arg = lifecycleScope), instance(), instance())
+            AnswersPresenter(instance(arg = lifecycleScope), instance(), instance(), instance())
         }
         bind<VoicesManager>() with singleton { VoicesManager(requireActivity()) }
     }
@@ -76,8 +77,9 @@ class AnswersFragment(private val di: DI) : Fragment(), AnswersContract.View, Te
                 YomikataTheme {
                     AnswerReviewScreen(
                         state = uiState,
-                        title = getString(com.jehutyno.yomikata.R.string.answer_title),
+                        title = getString(R.string.answer_title),
                         onBack = { requireActivity().finish() },
+                        onLevelChange = { index, newLevel -> changeWordLevel(index, newLevel) },
                         onSelectionClick = { index -> openSelectionSheet(index) },
                         onReportClick = { index ->
                             val item = uiState.items.getOrNull(index) ?: return@AnswerReviewScreen
@@ -114,6 +116,20 @@ class AnswersFragment(private val di: DI) : Fragment(), AnswersContract.View, Te
 
     override fun displayAnswers() {
 
+    }
+
+    private fun changeWordLevel(index: Int, newLevel: Level) {
+        val item = uiState.items.getOrNull(index) ?: return
+        val word = item.second
+        if (word.level == newLevel) return
+        lifecycleScope.launch {
+            presenter.updateWordLevel(word.id, newLevel)
+            val updatedWord = word.copy(level = newLevel)
+            val updatedItems = uiState.items.mapIndexed { i, it ->
+                if (i == index) Triple(it.first, updatedWord, it.third) else it
+            }
+            uiState = uiState.copy(items = updatedItems)
+        }
     }
 
     /** Loads the selections + their checked state for the word at [index] and opens the sheet. */

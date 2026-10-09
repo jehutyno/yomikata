@@ -38,11 +38,8 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.RadioButton
-import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Text
+import com.jehutyno.yomikata.ui.components.LevelMenu
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -425,7 +422,6 @@ private fun QuestionZone(
     onTradToggle: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    var isLevelMenuExpanded by remember { mutableStateOf(false) }
     // P4: orange si non répondu, green après bonne réponse (défault si 0 → orange)
     val sentenceHighlight = if (wordHighlightColor != 0) wordHighlightColor else AccentOrange.toArgb()
 
@@ -635,45 +631,13 @@ private fun QuestionZone(
                 }
             }
             Spacer(modifier = Modifier.weight(1f))
-            Box {
-                IconButton(onClick = { isLevelMenuExpanded = true }) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_progress),
-                        contentDescription = stringResource(R.string.tuto_progress),
-                        tint = if( isRevealed && word != null) levelColor(word.level) else TextGhost,
-                        modifier = Modifier.size(20.dp),
-                    )
-                }
-                DropdownMenu(
-                    expanded = isLevelMenuExpanded,
-                    onDismissRequest = { isLevelMenuExpanded = false },
-                ) {
-                    Level.entries.forEach { level ->
-                        DropdownMenuItem(
-                            text = {
-                                Text(
-                                    text = stringResource(level.masteryLabelRes()),
-                                    color = TextPrimary,
-                                )
-                            },
-                            leadingIcon = {
-                                RadioButton(
-                                    selected = word?.level == level,
-                                    onClick = null,
-                                    colors = RadioButtonDefaults.colors(
-                                        selectedColor = levelColor(level),
-                                        unselectedColor = TextMuted,
-                                    ),
-                                )
-                            },
-                            onClick = {
-                                onProgressClick(level)
-                                isLevelMenuExpanded = false
-                            },
-                        )
-                    }
-                }
-            }
+            LevelMenu(
+                currentLevel = word?.level,
+                onLevelSelected = onProgressClick,
+                iconTint = if (isRevealed && word != null) levelColor(word.level) else TextGhost,
+                buttonSize = 48.dp,
+                iconSize = 20.dp,
+            )
             IconButton(onClick = onSelectionClick) {
                 Icon(
                     painter = painterResource(R.drawable.ic_star_black_24dp),
@@ -704,12 +668,7 @@ private fun QuestionZone(
     }
 }
 
-private fun Level.masteryLabelRes(): Int = when (this) {
-    Level.LOW -> R.string.red_review
-    Level.MEDIUM -> R.string.orange_review
-    Level.HIGH -> R.string.yellow_review
-    Level.MASTER -> R.string.green_review
-}
+
 
 // ─── QCM answers (grille 2×2) ─────────────────────────────────────────────────
 

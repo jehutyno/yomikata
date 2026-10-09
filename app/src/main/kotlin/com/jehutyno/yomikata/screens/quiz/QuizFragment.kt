@@ -133,6 +133,27 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, TextToSp
     override fun onResume() {
         super.onResume()
         presenter.start()
+        refreshWordLevels()
+    }
+
+    private fun refreshWordLevels() {
+        val currentWords = uiState.words
+        if (currentWords.isEmpty()) return
+        lifecycleScope.launch {
+            var changed = false
+            val updatedWords = currentWords.map { (word, quizType) ->
+                val freshWord = presenter.getWordById(word.id)
+                if (freshWord.level != word.level || freshWord.points != word.points) {
+                    changed = true
+                    Pair(freshWord, quizType)
+                } else {
+                    Pair(word, quizType)
+                }
+            }
+            if (changed) {
+                uiState = uiState.copy(words = updatedWords)
+            }
+        }
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -202,9 +223,11 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, TextToSp
                                 if (word.level == level) return@launch
                                 presenter.updateWordPoints(word.id, level.minPoints)
                                 presenter.updateWordLevel(word.id, level)
-                                word.points = level.minPoints
-                                word.level = level
-                                uiState = uiState.copy(words = uiState.words.toList())
+                                val updatedWord = word.copy(level = level, points = level.minPoints)
+                                val updatedWords = uiState.words.mapIndexed { index, pair ->
+                                    if (index == uiState.currentIndex) Pair(updatedWord, pair.second) else pair
+                                }
+                                uiState = uiState.copy(words = updatedWords)
                             }
                         },
                         onReportClick = {
