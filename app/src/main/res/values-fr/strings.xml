@@ -152,7 +152,7 @@
     <string name="prefs_reinit_done">Réinitialisation terminée</string>
     <string name="prefs_delete_voices_sure">Êtes-vous sûr de vouloir effacer les fichiers de voix ?</string>
     <string name="prefs_delete_voices_done">Les voix ont été effacées</string>
-    <string name="add_to_selections">Ajouter à les sélections</string>
+    <string name="add_to_selections">Ajouter aux sélections</string>
     <string name="unselect_all">Tout déselectionner</string>
     <string name="select_all">Tout sélectionner</string>
     <string name="remove_from_selection">Retirer des sélections</string>
