@@ -232,7 +232,9 @@ fun QuizScreen(
                 color = TextPrimary,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.W600,
-                modifier = Modifier.weight(1f).padding(horizontal = 4.dp),
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 4.dp),
             )
             IconButton(onClick = onTtsSettings) {
                 Icon(
@@ -599,7 +601,7 @@ private fun QuestionZone(
                                 fontSize = 14.sp,
                                 textAlign = TextAlign.Center,
                                 modifier = Modifier.alpha(
-                                    if (showTranslation && quizType != QuizType.TYPE_JAP_EN) 1f else 0f
+                                    if (showTranslation && (quizType != QuizType.TYPE_JAP_EN || isRevealed)) 1f else 0f
                                 ),
                             )
                         }
@@ -620,7 +622,9 @@ private fun QuestionZone(
                     Text(text = "あ", color = if (showFurigana) AccentOrange else TextGhost, fontSize = 18.sp)
                 }
             }
-            if (quizType != QuizType.TYPE_JAP_EN && quizType != QuizType.TYPE_AUDIO && quizType != QuizType.TYPE_EN_JAP) {
+            if ((quizType != QuizType.TYPE_AUDIO && quizType != QuizType.TYPE_EN_JAP && quizType != QuizType.TYPE_JAP_EN)
+                || (quizType == QuizType.TYPE_JAP_EN && isRevealed)
+            ) {
                 IconButton(onClick = onTradToggle) {
                     Icon(
                         painter = painterResource(if (showTranslation) R.drawable.ic_trad_check else R.drawable.ic_trad_uncheck),
