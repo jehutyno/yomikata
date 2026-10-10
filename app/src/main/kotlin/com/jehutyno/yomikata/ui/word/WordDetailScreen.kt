@@ -172,7 +172,7 @@ fun WordDetailScreen(
                             .padding(horizontal = 16.dp, vertical = 20.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
-                        MasteryDots(score = word.points)
+                        MasteryDots(points = word.points)
 
                         Spacer(modifier = Modifier.height(16.dp))
 
