@@ -513,6 +513,7 @@ private fun QuestionZone(
                     }
                 }
 
+                // Mise en surbrillance du mot dans la phrase d'exemple
                 val colorEntireWord = word.isKana == 2 && quizType == QuizType.TYPE_JAP_EN
                 val wordPos = if (colorEntireWord) 0 else getWordPositionInFuriSentence(sentence.jap, word)
                 val furiText = if (showFurigana) {
@@ -530,8 +531,11 @@ private fun QuestionZone(
                 // P3 : furigana masqué pour les types "donner la lecture" avant révélation
                 val hideReadingFuri = !isRevealed &&
                     (quizType == QuizType.TYPE_PRONUNCIATION || quizType == QuizType.TYPE_PRONUNCIATION_QCM)
+                // Furigana pour les mots contenant des kanji
                 val showWordFuri = showFurigana && word.isKana == 0 && !hideReadingFuri
+                // Mot en vedette
                 val largeWordText = if (showWordFuri) {
+                    // Si le mot contient des kanji, on formate : {kanji;furigana}
                     " {${word.japanese};${word.reading.split("/")[0].trim()}} "
                 } else {
                     word.japanese
@@ -568,13 +572,18 @@ private fun QuestionZone(
                                 ),
                             contentAlignment = Alignment.Center,
                         ) {
+                            // Réduction de la taille de police pour les mots trop longs
+                            var wordFontSize = 46f
+                            if (word.japanese.length > 8) wordFontSize = 30f
+                            else if (word.japanese.length > 6) wordFontSize = 36f
+                            // Mot en vedette en japonais
                             FuriganaAndroidView(
                                 text = largeWordText,
                                 markStart = 0,
                                 markEnd = 0,
                                 highlightColor = kanjiColor.toArgb(),
                                 textColor = kanjiColor.toArgb(),
-                                textSizeSp = 46f,
+                                textSizeSp = wordFontSize,
                                 modifier = Modifier.wrapContentWidth(),
                             )
                         }
@@ -585,6 +594,7 @@ private fun QuestionZone(
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.spacedBy(4.dp),
                         ) {
+                            // Phrase d'exemple japonaise avec furigana
                             FuriganaAndroidView(
                                 text = furiText,
                                 markStart = wordPos,
@@ -595,6 +605,7 @@ private fun QuestionZone(
                                     .wrapContentWidth()
                                     .clickable(onClick = onItemClick),
                             )
+                            // Traduction de la phrase d'exemple
                             Text(
                                 text = sentence.getTrad(),
                                 color = TextSecondary,
@@ -1006,10 +1017,10 @@ private fun PreviewQuizBeforeAnswer() {
                     QcmOption("かく", buttonState = AnswerButtonState.Default),
                     QcmOption("みる", buttonState = AnswerButtonState.Default),
                 ),
-                hintText = "Give hiragana reading",
+                hintText = stringResource(R.string.give_hiragana_reading_hint),
                 isRevealed = false,
                 currentIndex = 0,
-                words = listOf(Pair(previewWord, QuizType.TYPE_JAP_EN)),
+                words = listOf(Pair(previewWord, QuizType.TYPE_PRONUNCIATION_QCM)),
                 sentence = previewSentence,
                 wordHighlightColor = AccentOrange.toArgb(),
             ),
@@ -1054,10 +1065,10 @@ private fun PreviewQuizCorrect() {
                     QcmOption("かく", buttonState = AnswerButtonState.Default),
                     QcmOption("みる", buttonState = AnswerButtonState.Default),
                 ),
-                hintText = "Give hiragana reading",
+                hintText = stringResource(R.string.give_hiragana_reading_hint),
                 isRevealed = true,
                 currentIndex = 0,
-                words = listOf(Pair(previewWord, QuizType.TYPE_JAP_EN)),
+                words = listOf(Pair(previewWord, QuizType.TYPE_PRONUNCIATION_QCM)),
                 sentence = previewSentence,
                 wordHighlightColor = Correct.toArgb(),
             ),
@@ -1102,10 +1113,10 @@ private fun PreviewQuizWrong() {
                     QcmOption("からだ", buttonState = AnswerButtonState.Wrong),
                     QcmOption("みる", buttonState = AnswerButtonState.Default),
                 ),
-                hintText = "Give hiragana reading",
+                hintText = stringResource(R.string.give_hiragana_reading_hint),
                 isRevealed = true,
                 currentIndex = 0,
-                words = listOf(Pair(previewWord, QuizType.TYPE_JAP_EN)),
+                words = listOf(Pair(previewWord, QuizType.TYPE_PRONUNCIATION_QCM)),
                 sentence = previewSentence,
                 wordHighlightColor = AccentOrange.toArgb(),
             ),

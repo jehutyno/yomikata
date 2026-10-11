@@ -179,6 +179,10 @@ fun WordDetailScreen(
                         // Kanji — couleur mastery, furigana orange, centré
                         val wordText = if (word.isKana == 2) word.japanese
                         else "{${word.japanese};${word.reading}}"
+                        // Réduction de la taille de police pour les mots trop longs
+                        var wordFontSize = 52f
+                        if (word.japanese.length >= 8) wordFontSize = 36f
+                        else if (word.japanese.length > 6) wordFontSize = 42f
                         WordDetailFuriganaView(
                             text = wordText,
                             markStart = 0,
@@ -186,7 +190,7 @@ fun WordDetailScreen(
                             highlightColor = wordColor,
                             textColor = wordColor,
                             furiganaColor = wordColor,
-                            textSizeSp = 52f,
+                            textSizeSp = wordFontSize,
                             centered = true,
                             modifier = Modifier.fillMaxWidth(),
                         )
