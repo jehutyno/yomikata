@@ -65,7 +65,7 @@ class PrefsFragment : PreferenceFragmentCompat() {
                 * resources.displayMetrics.density).toInt()
         listView?.apply {
             clipToPadding = false
-            updatePadding(bottom = bottomPad)
+            updatePadding(bottom = 2*bottomPad)
         }
     }
 
