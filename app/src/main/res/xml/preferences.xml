@@ -13,11 +13,17 @@
 
         <CheckBoxPreference
             android:defaultValue="false"
+            android:icon="@drawable/ic_kanji"
+            android:key="font_serif"
+            android:summary="@string/font_serif_summary"
+            android:title="@string/font_serif_title"/>
+
+        <CheckBoxPreference
+            android:defaultValue="false"
             android:icon="@drawable/ic_keyboard"
             android:key="kana_input_fix"
             android:summary="@string/prefs_kana_input_fix_message"
             android:title="@string/kana_input_fix"/>
-
 
         <ListPreference
             android:defaultValue="2"

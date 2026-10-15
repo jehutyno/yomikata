@@ -48,14 +48,14 @@ class AnswersFragment(private val di: DI) : Fragment(), AnswersContract.View, Te
     private var tts: TextToSpeech? = null
     private var ttsSupported: Int = TextToSpeech.LANG_NOT_SUPPORTED
 
+    private var answers: List<Answer> = emptyList()
+
     // Compose state
     private var uiState by mutableStateOf(AnswerReviewUiState())
 
     override fun onInit(status: Int) {
         ttsSupported = onTTSinit(activity, status, tts)
     }
-
-    private lateinit var answers: List<Answer>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

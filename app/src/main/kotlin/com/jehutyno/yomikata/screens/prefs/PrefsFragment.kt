@@ -136,6 +136,7 @@ class PrefsFragment : PreferenceFragmentCompat() {
         when (preference.key) {
 
             Prefs.FONT_SIZE.pref,
+            Prefs.FONT_SERIF.pref,
             Prefs.KANA_INPUT_FIX.pref,
             Prefs.QUIZ_LENGTH.pref,
             Prefs.QUIZ_SPEED.pref,

@@ -1,6 +1,9 @@
 package com.jehutyno.yomikata.ui.answers
 
+import android.graphics.Typeface
 import android.widget.TextView
+import androidx.preference.PreferenceManager
+import com.jehutyno.yomikata.util.Prefs
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -508,9 +511,13 @@ private fun HtmlText(
             TextView(ctx).apply {
                 textSize = 14f
                 setTextColor(TextPrimary.toArgb())
+                val useSerif = PreferenceManager.getDefaultSharedPreferences(ctx).getBoolean(Prefs.FONT_SERIF.pref, false)
+                typeface = if (useSerif) Typeface.SERIF else Typeface.DEFAULT
             }
         },
         update = { view ->
+            val useSerif = PreferenceManager.getDefaultSharedPreferences(view.context).getBoolean(Prefs.FONT_SERIF.pref, false)
+            view.typeface = if (useSerif) Typeface.SERIF else Typeface.DEFAULT
             view.text = HtmlCompat.fromHtml(html, HtmlCompat.FROM_HTML_MODE_LEGACY)
         },
         modifier = modifier,

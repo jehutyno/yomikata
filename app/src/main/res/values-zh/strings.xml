@@ -139,6 +139,8 @@
     <string name="prefs_length_message">每次会话的单词数量</string>
     <string name="prefs_font_size">字体大小</string>
     <string name="prefs_font_size_message">例句的字体大小</string>
+    <string name="font_serif_title">衬线字体</string>
+    <string name="font_serif_summary">以衬线字体显示日语</string>
     <string name="app_quit">确定要退出 Yomikata Z 吗？</string>
     <string name="tts_settings_title">语音设置</string>
     <string name="tts_volume">语音音量</string>
@@ -332,4 +334,5 @@
     <string name="bottomnav_selections">词汇集</string>
     <string name="bottomnav_settings">设置</string>
     <string name="prefs_quiz_settings">Quiz Settings</string>
+
 </resources>

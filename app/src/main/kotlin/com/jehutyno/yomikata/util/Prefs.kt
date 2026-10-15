@@ -30,6 +30,7 @@ enum class Prefs(val pref: String) {
     APP_LANGUAGE("app_language"),
 
     FONT_SIZE("font_size"),
+    FONT_SERIF("font_serif"),
     KANA_INPUT_FIX("kana_input_fix"),
     QUIZ_LENGTH("length"),
     QUIZ_SPEED("speed"),

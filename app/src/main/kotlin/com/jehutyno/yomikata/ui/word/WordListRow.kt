@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.sp
 import com.jehutyno.yomikata.R
 import com.jehutyno.yomikata.ui.theme.AccentOrange
 import com.jehutyno.yomikata.ui.theme.BorderSubtle
+import com.jehutyno.yomikata.ui.theme.LocalJapaneseFontFamily
 import com.jehutyno.yomikata.ui.theme.MasteryHigh4
 import com.jehutyno.yomikata.ui.theme.MasteryLow1
 import com.jehutyno.yomikata.ui.theme.MasteryMaster4
@@ -132,6 +133,7 @@ fun WordListRow(
             Spacer(modifier = Modifier.width(10.dp))
 
             // Furigana + kanji + translation
+            val jpFontFamily = LocalJapaneseFontFamily.current
             Column(modifier = Modifier.weight(1f)) {
                 if (furigana.isNotEmpty()) {
                     Text(
@@ -139,6 +141,7 @@ fun WordListRow(
                         fontSize = 9.sp,
                         color = TextDim,
                         letterSpacing = 0.06.sp,
+                        fontFamily = jpFontFamily,
                     )
                 }
                 Text(
@@ -146,6 +149,7 @@ fun WordListRow(
                     fontSize = 18.sp,
                     fontWeight = androidx.compose.ui.text.font.FontWeight.W500,
                     color = TextPrimary,
+                    fontFamily = jpFontFamily,
                 )
                 Text(
                     text = translation,

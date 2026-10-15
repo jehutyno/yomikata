@@ -40,6 +40,7 @@ import com.jehutyno.yomikata.ui.theme.BorderCorrect
 import com.jehutyno.yomikata.ui.theme.BorderDefault
 import com.jehutyno.yomikata.ui.theme.BorderWrong
 import com.jehutyno.yomikata.ui.theme.Correct
+import com.jehutyno.yomikata.ui.theme.LocalJapaneseFontFamily
 import com.jehutyno.yomikata.ui.theme.RadiusLg
 import com.jehutyno.yomikata.ui.theme.SurfacePrimary
 import com.jehutyno.yomikata.ui.theme.TextDim
@@ -130,6 +131,7 @@ fun AnswerButton(
             fontSize = fontSize,
             fontWeight = FontWeight.W400,
             color = textColor,
+            fontFamily = LocalJapaneseFontFamily.current,
             maxLines = 1,
             softWrap = false,
             onTextLayout = { result ->

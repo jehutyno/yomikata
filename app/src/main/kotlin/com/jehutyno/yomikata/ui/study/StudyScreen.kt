@@ -62,6 +62,7 @@ import com.jehutyno.yomikata.ui.theme.AccentOrange
 import com.jehutyno.yomikata.ui.theme.BackgroundHero
 import com.jehutyno.yomikata.ui.theme.BackgroundPrimary
 import com.jehutyno.yomikata.ui.theme.BorderDefault
+import com.jehutyno.yomikata.ui.theme.LocalJapaneseFontFamily
 import com.jehutyno.yomikata.ui.theme.RadiusMd
 import com.jehutyno.yomikata.ui.theme.RadiusPill
 import com.jehutyno.yomikata.ui.theme.SurfaceAccent
@@ -281,6 +282,7 @@ private fun StudyQuizItem(
                     text = japanesePart,
                     fontSize = 12.sp,
                     color = TextDim,
+                    fontFamily = LocalJapaneseFontFamily.current,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )

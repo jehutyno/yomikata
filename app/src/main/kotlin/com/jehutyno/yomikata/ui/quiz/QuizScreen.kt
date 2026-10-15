@@ -1,6 +1,7 @@
 
 package com.jehutyno.yomikata.ui.quiz
 
+import android.graphics.Typeface
 import android.text.Editable
 import android.text.InputType
 import android.text.TextWatcher
@@ -83,6 +84,7 @@ import com.jehutyno.yomikata.ui.theme.RadiusXl
 import com.jehutyno.yomikata.ui.theme.BorderHeroWrong
 import com.jehutyno.yomikata.ui.theme.BorderWrong
 import com.jehutyno.yomikata.ui.theme.Correct
+import com.jehutyno.yomikata.ui.theme.LocalJapaneseFontFamily
 import com.jehutyno.yomikata.ui.theme.SurfacePrimary
 import com.jehutyno.yomikata.ui.theme.TextDim
 import com.jehutyno.yomikata.ui.theme.TextGhost
@@ -96,6 +98,8 @@ import com.jehutyno.yomikata.util.getWordPositionInFuriSentence
 import kotlin.math.roundToInt
 import com.jehutyno.yomikata.util.language.cleanForQCM
 import com.jehutyno.yomikata.util.quiz.QuizType
+import androidx.preference.PreferenceManager
+import com.jehutyno.yomikata.util.Prefs
 import com.jehutyno.yomikata.util.quiz.Level
 import com.jehutyno.yomikata.util.sentenceNoAnswerFuri
 import com.jehutyno.yomikata.util.sentenceNoFuri
@@ -630,7 +634,7 @@ private fun QuestionZone(
         ) {
             if (quizType != QuizType.TYPE_EN_JAP && quizType != QuizType.TYPE_AUDIO) {
                 IconButton(onClick = { onFuriToggle(!showFurigana) }) {
-                    Text(text = "あ", color = if (showFurigana) AccentOrange else TextGhost, fontSize = 18.sp)
+                    Text(text = "あ", color = if (showFurigana) AccentOrange else TextGhost, fontSize = 18.sp, fontFamily = LocalJapaneseFontFamily.current)
                 }
             }
             if ((quizType != QuizType.TYPE_AUDIO && quizType != QuizType.TYPE_EN_JAP && quizType != QuizType.TYPE_JAP_EN)
@@ -880,6 +884,8 @@ private fun EditAnswerMode(
                     HiraganaEditText(ctx).apply {
                         inputView = this
                         hint = ctx.getString(R.string.quiz_input_hint)
+                        val useSerif = PreferenceManager.getDefaultSharedPreferences(ctx).getBoolean(Prefs.FONT_SERIF.pref, false)
+                        typeface = if (useSerif) Typeface.SERIF else Typeface.DEFAULT
                         // Champ mono-ligne à action « Terminé » : sinon la touche Entrée du
                         // clavier insère un saut de ligne et ne déclenche jamais la validation
                         // (OnEditorActionListener). TYPE_CLASS_TEXT est requis pour un vrai champ texte.
@@ -926,6 +932,8 @@ private fun EditAnswerMode(
                     }
                 },
                 update = { view ->
+                    val useSerif = PreferenceManager.getDefaultSharedPreferences(view.context).getBoolean(Prefs.FONT_SERIF.pref, false)
+                    view.typeface = if (useSerif) Typeface.SERIF else Typeface.DEFAULT
                     view.isEnableConversion = isEnableConversion
                     view.setTextColor(textColorInt)
                     if (view.text.toString() != text) {

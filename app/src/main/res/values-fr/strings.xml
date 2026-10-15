@@ -332,4 +332,6 @@
     <string name="bottomnav_selections">Sélections</string>
     <string name="bottomnav_settings">Réglages</string>
     <string name="prefs_quiz_settings">Paramètres des quiz</string>
+    <string name="font_serif_summary">Afficher le japonais dans une police différente</string>
+    <string name="font_serif_title">Police avec empattement</string>
 </resources>
