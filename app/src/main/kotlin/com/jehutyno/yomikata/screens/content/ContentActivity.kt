@@ -115,13 +115,26 @@ class ContentActivity : AppCompatActivity(), DIAware {
         category = intent.getIntExtra(Extras.EXTRA_CATEGORY, -1)
         level = intent.getSerializableExtraHelper(EXTRA_LEVEL, Level::class.java)
 
+        val targetQuizId = intent.getLongExtra(Extras.EXTRA_QUIZ_ID, -1L)
         val quizPosition = intent.getIntExtra(EXTRA_QUIZ_POSITION, -1)
         launchTypes = intent.getParcelableArrayListExtraHelper(EXTRA_QUIZ_TYPES, QuizType::class.java) ?: arrayListOf()
         lastMode = loadLastMode()
 
         lifecycleScope.launch {
             getQuizzes()
-            launchFragment(savedInstanceState, quizPosition)
+            val quizSource = di.direct.instance<QuizRepository>()
+            if (targetQuizId != -1L && quizzes.none { it.id == targetQuizId }) {
+                val missingQuiz = quizSource.getQuiz(targetQuizId)
+                if (missingQuiz != null) {
+                    quizzes = (quizzes + missingQuiz).distinctBy { it.id }.sortedBy { it.id }
+                }
+            }
+            val effectivePosition = if (targetQuizId != -1L) {
+                quizzes.indexOfFirst { it.id == targetQuizId }.takeIf { it >= 0 } ?: 0
+            } else {
+                quizPosition.coerceIn(0, maxOf(0, quizzes.lastIndex))
+            }
+            launchFragment(savedInstanceState, effectivePosition)
         }
 
         // Launch bar Compose : bouton « Lancer le quiz » + bottom sheet d'options (comme Study)
@@ -207,7 +220,11 @@ class ContentActivity : AppCompatActivity(), DIAware {
             val quizTitle = quizzes[safePosition].getName().split("%")[0]
             quizIds = longArrayOf(quizzes[safePosition].id)
             title = quizTitle
-            binding.pagerContent.currentItem = safePosition
+            binding.pagerContent.post {
+                if (!isFinishing && !isDestroyed) {
+                    binding.pagerContent.setCurrentItem(safePosition, false)
+                }
+            }
             binding.pagerContent.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
 
                 override fun onPageSelected(position: Int) {
