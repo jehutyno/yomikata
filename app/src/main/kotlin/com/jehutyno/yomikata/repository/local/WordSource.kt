@@ -166,7 +166,7 @@ class WordSource(private val wordDao: WordDao) : WordRepository {
     }
 
     override suspend fun updateWordLevel(wordId: Long, level: Level) {
-        wordDao.updateWordLevel(wordId, level.level)
+        wordDao.updateWordLevel(wordId, level.level, level.minPoints)
     }
 
     override suspend fun updateWordRepetition(wordId: Long, repetition: Int) {

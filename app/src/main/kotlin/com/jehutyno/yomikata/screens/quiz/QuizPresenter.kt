@@ -747,12 +747,12 @@ class QuizPresenter(
     override suspend fun updateWordLevel(wordId: Long, level: Level) {
         wordStatisticsRecorder.updateWordLevel(wordId, level)
         val updatedQuizWords = sessionState.quizWords.map { (word, type) ->
-            if (word.id == wordId) Pair(word.copy(level = level), type) else Pair(word, type)
+            if (word.id == wordId) Pair(word.copy(level = level, points = level.minPoints), type) else Pair(word, type)
         }
         sessionState.quizWords = updatedQuizWords
 
         val updatedErrors = sessionState.errors.map { (word, type) ->
-            if (word.id == wordId) Pair(word.copy(level = level), type) else Pair(word, type)
+            if (word.id == wordId) Pair(word.copy(level = level, points = level.minPoints), type) else Pair(word, type)
         }
         sessionState.errors.clear()
         sessionState.errors.addAll(updatedErrors)
