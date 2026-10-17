@@ -363,6 +363,6 @@
     <string name="bottomnav_selections">Selections</string>
     <string name="bottomnav_settings">Settings</string>
     <string name="prefs_quiz_settings">Quiz Settings</string>
-    <string name="font_serif_title">Font with serif</string>
+    <string name="font_serif_title">Use serif font</string>
     <string name="font_serif_summary">Display Japanese in a different font</string>
 </resources>

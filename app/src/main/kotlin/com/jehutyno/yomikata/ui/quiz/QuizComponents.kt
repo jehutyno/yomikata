@@ -92,7 +92,7 @@ fun AnswerButton(
 
     // Réduire la taille de police pour éviter les sauts de ligne
     val isPreview = LocalInspectionMode.current
-    var fontSize by remember(label) { mutableStateOf(13.sp) }
+    var fontSize by remember(label) { mutableStateOf(15.sp) }
     var readyToDraw by remember(label) { mutableStateOf(isPreview) }
 
     Row(
