@@ -289,9 +289,9 @@ fun QuizScreen(
         // Question zone — card avec bords arrondis et marges
         Box(
             modifier = Modifier
-                .weight(1f)
+                .weight(2f)
                 .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 8.dp)
+                .padding(horizontal = 12.dp, vertical = 5.dp)
                 .clip(RoundedCornerShape(RadiusXl))
                 .border(1.5.dp, heroBorder, RoundedCornerShape(RadiusXl))
                 .background(heroBg)
@@ -387,7 +387,7 @@ fun QuizScreen(
         // En QCM, espace souple sous les réponses (symétrique de celui du dessus)
         // pour centrer le bloc de réponses entre la card et le bouton.
         if (isQcm) {
-            Spacer(modifier = Modifier.weight(0.2f))
+            Spacer(modifier = Modifier.weight(0.3f))
         }
 
         // FABBar
