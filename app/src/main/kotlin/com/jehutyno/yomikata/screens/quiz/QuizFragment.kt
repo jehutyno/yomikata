@@ -93,6 +93,8 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, TextToSp
     private var ttsRate by mutableStateOf(50)
     private var ttsShowRate by mutableStateOf(true)
 
+    private var warnIfVolumeTooLow by mutableStateOf(true)
+
     private lateinit var dialogFlowController: DialogFlowController
 
     // Track if answer input is busy (prevent double-submit)
@@ -104,6 +106,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, TextToSp
         // Applique la vitesse de parole sauvegardée (Prefs.TTS_RATE) au moteur dès son init,
         // sinon le réglage du panneau vocal reste sans effet pendant le quiz.
         tts?.setSpeechRate((prefs.getInt(Prefs.TTS_RATE.pref, 50) + 50).toFloat() / 100)
+        warnIfVolumeTooLow = prefs.getBoolean(Prefs.WARN_VOLUME_TOO_LOW.pref, true);
         val currentWord = uiState.currentWord
         if (currentWord != null) {
             val noPlayStart = prefs.getBoolean(Prefs.PLAY_START.pref, false)
@@ -276,6 +279,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, TextToSp
                             volume = ttsVolume,
                             maxVolume = ttsMaxVolume,
                             speechRate = ttsRate,
+                            warnIfVolumeTooLow = warnIfVolumeTooLow,
                             showSpeechRate = ttsShowRate,
                             onVolumeChange = { v ->
                                 ttsVolume = v
@@ -289,6 +293,10 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, TextToSp
                                 prefs.edit().putInt(Prefs.TTS_RATE.pref, r).apply()
                                 tts?.setSpeechRate((r + 50).toFloat() / 100)
                                 presenter.onSpeakSentence()
+                            },
+                            onWarnIfVolumeTooLowChange = { v ->
+                                warnIfVolumeTooLow = v
+                                prefs.edit().putBoolean(Prefs.WARN_VOLUME_TOO_LOW.pref, v).apply()
                             },
                             onDismiss = { ttsSettingsVisible = false },
                         )

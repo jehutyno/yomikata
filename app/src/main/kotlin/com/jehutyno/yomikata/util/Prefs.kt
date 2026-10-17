@@ -37,6 +37,7 @@ enum class Prefs(val pref: String) {
     PLAY_START("play_start"),
     PLAY_END("play_end"),
     TAP_TO_REVEAL("tap_to_reveal"),
+    WARN_VOLUME_TOO_LOW("warn_volume_too_low"),
 
     LAST_SELECTED_LEVEL("last_selected_level"),
 

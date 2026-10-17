@@ -143,6 +143,7 @@ class PrefsFragment : PreferenceFragmentCompat() {
             Prefs.PLAY_START.pref,
             Prefs.PLAY_END.pref,
             Prefs.TAP_TO_REVEAL.pref,
+            Prefs.WARN_VOLUME_TOO_LOW.pref,
             Prefs.ANALYTICS_CONSENT.pref -> return true
 
             "reset_tuto" -> {

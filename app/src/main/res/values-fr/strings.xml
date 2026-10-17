@@ -141,8 +141,8 @@
     <string name="prefs_font_size_message">Taille des phrases d\'exemple</string>
     <string name="app_quit">Êtes-vous sur de vouloir quitter Yomikata Z ?</string>
     <string name="tts_settings_title">Paramètres de synthèse vocale</string>
-    <string name="tts_volume">Volume d\'élocution</string>
-    <string name="tts_rate">Vitesse d\'élocution</string>
+    <string name="tts_volume">Volume global</string>
+    <string name="tts_rate">Vitesse de parole</string>
     <string name="tutos_mark_known">Marquer comme connu</string>
     <string name="tutos_mark_known_message">Utiliser les flèches haut et bas pour ajuster le niveau du mot à vos connaissances</string>
     <string name="tutos_tts_settings">Synthèse vocale</string>
@@ -160,6 +160,8 @@
     <string name="settings_play_start_summary">Écouter le mot quand il apparaît</string>
     <string name="settings_play_end_title">Jouer son à la fin</string>
     <string name="settings_play_end_summary">Écouter le mot avant de passer au suivant</string>
+    <string name="prefs_warn_volume_too_low_summary">Afficher un avertissement lorsque le volume est trop bas</string>
+    <string name="prefs_warn_volume_too_low_title">Avertissement volume faible</string>
     <string name="drawer_home">Home</string>
     <string name="quiz_launched">%1$d quizs lancés</string>
     <string name="words_seen">%1$d mots vus</string>

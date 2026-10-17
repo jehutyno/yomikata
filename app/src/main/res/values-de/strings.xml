@@ -162,6 +162,8 @@
     <string name="settings_play_start_summary">Wort beim Erscheinen abspielen</string>
     <string name="settings_play_end_title">Am Ende abspielen</string>
     <string name="settings_play_end_summary">Wort vor dem Weiterblättern abspielen</string>
+    <string name="prefs_warn_volume_too_low_summary">Warnung anzeigen, wenn die Lautstärke zu niedrig ist</string>
+    <string name="prefs_warn_volume_too_low_title">Warnung bei niedriger Lautstärke</string>
     <string name="drawer_home">Start</string>
     <string name="quiz_launched">%1$d Quiz gestartet</string>
     <string name="words_seen">%1$d Wörter gesehen</string>

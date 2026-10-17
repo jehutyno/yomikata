@@ -193,6 +193,8 @@
     <string name="settings_play_start_summary">Play word when it appears</string>
     <string name="settings_play_end_title">Play at end</string>
     <string name="settings_play_end_summary">Play word before going to next</string>
+    <string name="prefs_warn_volume_too_low_summary">Show warning when volume is too low</string>
+    <string name="prefs_warn_volume_too_low_title">Low volume warning</string>
     <string name="drawer_home">Home</string>
     <string name="quiz_launched">%1$d quizzes launched</string>
     <string name="words_seen">%1$d words seen</string>

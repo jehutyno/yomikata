@@ -162,6 +162,8 @@
     <string name="settings_play_start_summary">Reproducir la palabra al aparecer</string>
     <string name="settings_play_end_title">Reproducir al final</string>
     <string name="settings_play_end_summary">Reproducir la palabra antes de avanzar</string>
+    <string name="prefs_warn_volume_too_low_summary">Mostrar aviso cuando el volumen es demasiado bajo</string>
+    <string name="prefs_warn_volume_too_low_title">Advertencia de volumen bajo</string>
     <string name="drawer_home">Inicio</string>
     <string name="quiz_launched">%1$d cuestionario iniciado</string>
     <string name="words_seen">%1$d palabras vistas</string>

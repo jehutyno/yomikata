@@ -162,6 +162,8 @@
     <string name="settings_play_start_summary">单词出现时播放</string>
     <string name="settings_play_end_title">结束时播放</string>
     <string name="settings_play_end_summary">翻页前播放单词</string>
+    <string name="prefs_warn_volume_too_low_summary">音量过低时显示警告</string>
+    <string name="prefs_warn_volume_too_low_title">低音量警告</string>
     <string name="drawer_home">首页</string>
     <string name="quiz_launched">已启动 %1$d 个测验</string>
     <string name="words_seen">已看 %1$d 个单词</string>

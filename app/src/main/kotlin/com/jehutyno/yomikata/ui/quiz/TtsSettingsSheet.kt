@@ -1,10 +1,13 @@
 package com.jehutyno.yomikata.ui.quiz
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
@@ -12,6 +15,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -44,9 +48,11 @@ fun TtsSettingsSheet(
     volume: Int,
     maxVolume: Int,
     speechRate: Int,
+    warnIfVolumeTooLow: Boolean,
     showSpeechRate: Boolean,
     onVolumeChange: (Int) -> Unit,
     onSpeechRateChange: (Int) -> Unit,
+    onWarnIfVolumeTooLowChange: (Boolean) -> Unit,
     onDismiss: () -> Unit,
 ) {
     ModalBottomSheet(
@@ -83,6 +89,18 @@ fun TtsSettingsSheet(
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
+            Spacer(modifier = Modifier.height(12.dp))
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.End
+            ) {
+                SliderLabel(stringResource(R.string.prefs_warn_volume_too_low_title))
+                Spacer(modifier = Modifier.weight(1f))
+                Checkbox(
+                    checked = warnIfVolumeTooLow,
+                    onCheckedChange = onWarnIfVolumeTooLowChange
+                )
+            }
         }
     }
 }
@@ -117,6 +135,18 @@ private fun TtsSettingsPreview() {
             Spacer(modifier = Modifier.height(12.dp))
             SliderLabel("Speech rate")
             Slider(value = 0.4f, onValueChange = {}, colors = orangeSliderColors())
+            Spacer(modifier = Modifier.height(12.dp))
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.End
+            ) {
+                SliderLabel(stringResource(R.string.prefs_warn_volume_too_low_title))
+                Spacer(modifier = Modifier.weight(1f))
+                Checkbox(
+                    checked = true,
+                    onCheckedChange = null
+                )
+            }
         }
     }
 }

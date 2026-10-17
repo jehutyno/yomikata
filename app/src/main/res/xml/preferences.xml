@@ -19,6 +19,13 @@
             android:title="@string/font_serif_title"/>
 
         <CheckBoxPreference
+            android:defaultValue="true"
+            android:icon="@drawable/ic_volume"
+            android:key="warn_volume_too_low"
+            android:summary="@string/prefs_warn_volume_too_low_summary"
+            android:title="@string/prefs_warn_volume_too_low_title"/>
+
+        <CheckBoxPreference
             android:defaultValue="false"
             android:icon="@drawable/ic_keyboard"
             android:key="kana_input_fix"
