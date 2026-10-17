@@ -359,6 +359,7 @@ fun QuizScreen(
                 onTapToReveal = onTapToReveal,
                 onOptionClick = onOptionClick,
                 onNextWord = onNextWord,
+                quizType = quizType,
                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
             )
             AnswerMode.Edit -> EditAnswerMode(
@@ -699,6 +700,7 @@ private fun QcmAnswers(
     onTapToReveal: () -> Unit = {},
     onOptionClick: (Int) -> Unit,
     onNextWord: () -> Unit,
+    quizType: QuizType?,
     modifier: Modifier = Modifier,
 ) {
     if (tapToRevealVisible && !isRevealed) {
@@ -760,6 +762,7 @@ private fun QcmAnswers(
                                 state = option.buttonState,
                                 isRevealed = isRevealed,
                                 isSelected = option.buttonState != AnswerButtonState.Default,
+                                quizType = quizType,
                                 onClick = clickAction,
                                 modifier = Modifier.weight(1f),
                             )

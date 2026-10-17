@@ -47,6 +47,8 @@ import com.jehutyno.yomikata.ui.theme.TextDim
 import com.jehutyno.yomikata.ui.theme.TextPrimary
 import com.jehutyno.yomikata.ui.theme.Wrong
 import com.jehutyno.yomikata.ui.theme.YomikataTheme
+import com.jehutyno.yomikata.util.quiz.QuizType
+import androidx.compose.ui.text.font.FontFamily
 
 enum class AnswerButtonState { Default, Correct, Wrong }
 
@@ -57,6 +59,7 @@ fun AnswerButton(
     state: AnswerButtonState,
     isRevealed: Boolean,
     isSelected: Boolean,
+    quizType: QuizType? = null,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -131,7 +134,7 @@ fun AnswerButton(
             fontSize = fontSize,
             fontWeight = FontWeight.W400,
             color = textColor,
-            fontFamily = LocalJapaneseFontFamily.current,
+            fontFamily = if (quizType == QuizType.TYPE_JAP_EN) FontFamily.Default else LocalJapaneseFontFamily.current,
             maxLines = 1,
             softWrap = false,
             onTextLayout = { result ->
