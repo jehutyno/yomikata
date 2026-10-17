@@ -83,7 +83,7 @@ fun LaunchOptionsSheet(
 ) {
     ModalBottomSheet(
         onDismissRequest = onDismiss,
-        sheetState = rememberModalBottomSheetState(),
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         containerColor = SurfacePrimary,
     ) {
         Column(
