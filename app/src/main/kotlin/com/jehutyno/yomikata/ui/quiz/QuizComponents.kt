@@ -135,8 +135,8 @@ fun AnswerButton(
             fontWeight = FontWeight.W400,
             color = textColor,
             fontFamily = if (quizType == QuizType.TYPE_JAP_EN) FontFamily.Default else LocalJapaneseFontFamily.current,
-            maxLines = 3,
-            softWrap = true,
+            maxLines = if(quizType == QuizType.TYPE_JAP_EN) 3 else 1,
+            softWrap = quizType == QuizType.TYPE_JAP_EN,
             onTextLayout = { result ->
                 if (result.hasVisualOverflow && fontSize > 9.sp) {
                     fontSize = (fontSize.value - 1).sp

@@ -578,9 +578,11 @@ private fun QuestionZone(
                             contentAlignment = Alignment.Center,
                         ) {
                             // Réduction de la taille de police pour les mots trop longs
-                            var wordFontSize = 46f
-                            if (word.japanese.length > 8) wordFontSize = 30f
-                            else if (word.japanese.length > 6) wordFontSize = 36f
+                            val wordFontSize = when {
+                                word.japanese.length >= 9 -> 30f
+                                word.japanese.length >= 7 -> 36f
+                                else -> 46f
+                            }
                             // Mot en vedette en japonais
                             FuriganaAndroidView(
                                 text = largeWordText,
@@ -825,12 +827,23 @@ private fun FuriAnswerButton(
         ) {
             Text(text = indexLetter.toString(), fontSize = 10.sp, color = TextDim)
         }
+        // Réduction de la taille de police pour les mots trop longs
+        val labelWithFuri = option.label.removeSurrounding(" ", " ")
+        // 1. strip furigana before counting length
+        val noFuri = labelWithFuri.removeSurrounding("{", "}").substringBefore(";")
+        // 2. determine appropriate size (empirical)
+        val wordFontSize = when {
+            noFuri.length >= 9 -> 11f
+            noFuri.length >= 8 -> 12f
+            noFuri.length >= 7 -> 14f
+            else -> 16f
+        }
         FuriganaAndroidView(
-            text = option.label,
+            text = labelWithFuri,
             markStart = option.furiStart,
             markEnd = option.furiEnd,
             highlightColor = textHighlight,
-            textSizeSp = 16f,
+            textSizeSp = wordFontSize,
             modifier = Modifier.weight(1f),
         )
     }
@@ -985,11 +998,15 @@ internal fun FuriganaAndroidView(
             FuriganaView(ctx).apply {
                 setTextColor(textColor)
                 textSize = textSizeSp
+                maxLines = 1
+                setSingleLine(true)
             }
         },
         update = { view ->
             view.setTextColor(textColor)
             view.textSize = textSizeSp
+            view.maxLines = 1
+            view.setSingleLine(true)
             view.text_set(text, markStart, markEnd, highlightColor)
         },
         modifier = modifier,
