@@ -633,7 +633,7 @@ private fun QuestionZone(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            if (quizType != QuizType.TYPE_EN_JAP && quizType != QuizType.TYPE_AUDIO) {
+            if (quizType != QuizType.TYPE_AUDIO) {
                 IconButton(onClick = { onFuriToggle(!showFurigana) }) {
                     Text(text = "あ", color = if (showFurigana) AccentOrange else TextGhost, fontSize = 18.sp, fontFamily = LocalJapaneseFontFamily.current)
                 }
