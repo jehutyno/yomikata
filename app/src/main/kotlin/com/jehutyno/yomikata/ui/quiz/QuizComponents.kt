@@ -111,7 +111,7 @@ fun AnswerButton(
                 shape = RoundedCornerShape(RadiusLg)
             )
             .clickable(enabled = !isRevealed || isCorrect, onClick = onClick)
-            .padding(horizontal = 12.dp),
+            .padding(horizontal = 12.dp, vertical = 5.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
@@ -135,8 +135,8 @@ fun AnswerButton(
             fontWeight = FontWeight.W400,
             color = textColor,
             fontFamily = if (quizType == QuizType.TYPE_JAP_EN) FontFamily.Default else LocalJapaneseFontFamily.current,
-            maxLines = 1,
-            softWrap = false,
+            maxLines = 3,
+            softWrap = true,
             onTextLayout = { result ->
                 if (result.hasVisualOverflow && fontSize > 9.sp) {
                     fontSize = (fontSize.value - 1).sp
