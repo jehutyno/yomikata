@@ -13,6 +13,7 @@ keystore.properties
 !.claude/
 .claude/*
 !.claude/skills/
+!.claude/settings.json
 .kotlin/
 
 # Firebase : google-services.json est volontairement commité (config client, pas un secret).
