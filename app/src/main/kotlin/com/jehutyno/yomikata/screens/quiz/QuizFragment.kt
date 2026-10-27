@@ -283,10 +283,13 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, TextToSp
                             showSpeechRate = ttsShowRate,
                             onVolumeChange = { v ->
                                 ttsVolume = v
-                                val audioManager = requireActivity()
-                                    .getSystemService(Context.AUDIO_SERVICE) as AudioManager
-                                audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, v, 0)
-                                presenter.onSpeakSentence()
+                                prefs.edit().putInt(Prefs.TTS_VOLUME.pref, v).apply()
+                                val currentWord = uiState.currentWord
+                                if (currentWord != null) {
+                                    voicesManager.speakWord(currentWord, ttsSupported, tts)
+                                } else {
+                                    presenter.onSpeakSentence()
+                                }
                             },
                             onSpeechRateChange = { r ->
                                 ttsRate = r
@@ -355,10 +358,8 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, TextToSp
             SpeechAvailability.NOT_AVAILABLE ->
                 speechNotSupportedAlert(requireActivity(), level) {}
             else -> {
-                val audioManager = requireActivity()
-                    .getSystemService(Context.AUDIO_SERVICE) as AudioManager
-                ttsMaxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
-                ttsVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
+                ttsMaxVolume = 100
+                ttsVolume = prefs.getInt(Prefs.TTS_VOLUME.pref, 100)
                 ttsRate = prefs.getInt(Prefs.TTS_RATE.pref, 50)
                 // Le débit ne s'applique qu'au repli TTS ; les voix MP3 l'ignorent.
                 ttsShowRate = availability == SpeechAvailability.TTS_AVAILABLE

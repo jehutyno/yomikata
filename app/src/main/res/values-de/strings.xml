@@ -221,6 +221,7 @@
     <string name="update_voices_alert">Stimmen aktualisieren</string>
     <string name="update_voices_alert_message">Die Stimmen wurden auf dem Server aktualisiert. Sie können %dMB Stimmen für diese Kategorie herunterladen, um die neuesten Korrekturen zu erhalten.</string>
     <string name="message_adjuste_volume">Die Lautstärke ist zu niedrig, bitte anpassen</string>
+    <string name="message_adjuste_tts_volume">Die Sprechlautstärke ist zu niedrig, bitte anpassen</string>
     <string name="delete_voices_files">Stimmdateien löschen</string>
     <string name="dont_ask_voices">Nicht mehr fragen</string>
     <string name="voices_reinit_done">Stimmdateien wurden gelöscht</string>

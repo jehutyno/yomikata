@@ -254,6 +254,7 @@
     <string name="update_voices_alert">Voices update</string>
     <string name="update_voices_alert_message">The voices have been updated on the server. To get the latest voice fixes you can download %dMo of voices for this category.</string>
     <string name="message_adjuste_volume">The sound of the phone is too low, please adjust it</string>
+    <string name="message_adjuste_tts_volume">The speech volume is too low, please adjust it</string>
     <string name="delete_voices_files">Delete voices files</string>
     <string name="dont_ask_voices">Don\'t ask again</string>
     <string name="voices_reinit_done">Voice files have been deleted</string>

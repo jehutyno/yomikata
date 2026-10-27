@@ -144,7 +144,7 @@
     <string name="prefs_font_size_message">Taille des phrases d\'exemple</string>
     <string name="app_quit">Êtes-vous sur de vouloir quitter Yomikata Z ?</string>
     <string name="tts_settings_title">Paramètres de synthèse vocale</string>
-    <string name="tts_volume">Volume global</string>
+    <string name="tts_volume">Volume de la synthèse vocale</string>
     <string name="tts_rate">Vitesse de parole</string>
     <string name="tutos_mark_known">Marquer comme connu</string>
     <string name="tutos_mark_known_message">Utiliser les flèches haut et bas pour ajuster le niveau du mot à vos connaissances</string>
@@ -219,6 +219,7 @@
     <string name="update_voices_alert">Mise à jour des voix</string>
     <string name="update_voices_alert_message">Les voix ont été mises à jour sur le serveur. Afin d\'obtenir les dernières corrections de celles-ci vous pouvez télécharger les %dMo de cette catégorie.</string>
     <string name="message_adjuste_volume">Le son du téléphone est coupé, veuillez l\'ajuster</string>
+    <string name="message_adjuste_tts_volume">Le volume de la synthèse vocale est trop faible, veuillez l\'ajuster</string>
     <string name="delete_voices_files">Effacer les fichiers de voix</string>
     <string name="dont_ask_voices">Ne plus demander</string>
     <string name="voices_reinit_done">Fichiers de voix supprimés</string>

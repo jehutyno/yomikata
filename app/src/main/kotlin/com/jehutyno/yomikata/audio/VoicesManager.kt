@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Context
 import android.media.AudioManager
 import android.net.Uri
+import android.os.Bundle
 import android.speech.tts.TextToSpeech
 import android.widget.Toast
 import androidx.preference.PreferenceManager
@@ -30,23 +31,36 @@ class VoicesManager(val context: Activity) {
 
     fun speakSentence(sentence: Sentence, ttsSupported: Int, tts: TextToSpeech?) {
         val audio = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
-        if (audio.getStreamVolume(AudioManager.STREAM_MUSIC) == 0
-            && prefs.getBoolean(Prefs.WARN_VOLUME_TOO_LOW.pref, true)) {
-            val toast = Toast.makeText(context, R.string.message_adjuste_volume, Toast.LENGTH_LONG)
-            toast.show()
+        val volumeInt = prefs.getInt(Prefs.TTS_VOLUME.pref, 100)
+        val warnEnabled = prefs.getBoolean(Prefs.WARN_VOLUME_TOO_LOW.pref, true)
+
+        if (warnEnabled) {
+            if (audio.getStreamVolume(AudioManager.STREAM_MUSIC) == 0) {
+                Toast.makeText(context, R.string.message_adjuste_volume, Toast.LENGTH_LONG).show()
+            }
+            if (volumeInt == 0) {
+                Toast.makeText(context, R.string.message_adjuste_tts_volume, Toast.LENGTH_LONG).show()
+            }
         }
+
+        val volumeFloat = volumeInt / 100f
+
         when (checkSpeechAvailability(context, ttsSupported, sentence.level)) {
             SpeechAvailability.VOICES_AVAILABLE -> {
                 try {
                     exoPlayer.setMediaItem(exoPlayerAudio.extractorMediaSource(Uri.parse("${FileUtils.getDataDir(context, "Voices").absolutePath}/s_${sentence.id}.mp3")))
                     exoPlayer.prepare()
+                    exoPlayer.volume = volumeFloat
                     exoPlayer.playWhenReady = true
                 } catch (e: Exception) {
                     speechNotSupportedAlert(context, sentence.level) {}
                 }
             }
             SpeechAvailability.TTS_AVAILABLE -> {
-                tts?.speak(sentenceNoFuri(sentence), TextToSpeech.QUEUE_FLUSH, null, null)
+                val params = Bundle().apply {
+                    putFloat(TextToSpeech.Engine.KEY_PARAM_VOLUME, volumeFloat)
+                }
+                tts?.speak(sentenceNoFuri(sentence), TextToSpeech.QUEUE_FLUSH, params, null)
             }
             else -> speechNotSupportedAlert(context, sentence.level) {}
         }
@@ -54,11 +68,19 @@ class VoicesManager(val context: Activity) {
 
     fun speakWord(word: Word, ttsSupported: Int, tts: TextToSpeech?) {
         val audio = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
-        if (audio.getStreamVolume(AudioManager.STREAM_MUSIC) == 0
-            && prefs.getBoolean(Prefs.WARN_VOLUME_TOO_LOW.pref, true)) {
-            val toast = Toast.makeText(context, R.string.message_adjuste_volume, Toast.LENGTH_SHORT)
-            toast.show()
+        val volumeInt = prefs.getInt(Prefs.TTS_VOLUME.pref, 100)
+        val warnEnabled = prefs.getBoolean(Prefs.WARN_VOLUME_TOO_LOW.pref, true)
+
+        if (warnEnabled) {
+            if (audio.getStreamVolume(AudioManager.STREAM_MUSIC) == 0) {
+                Toast.makeText(context, R.string.message_adjuste_volume, Toast.LENGTH_SHORT).show()
+            }
+            if (volumeInt == 0) {
+                Toast.makeText(context, R.string.message_adjuste_tts_volume, Toast.LENGTH_SHORT).show()
+            }
         }
+
+        val volumeFloat = volumeInt / 100f
         val level = getCategoryLevel(word.baseCategory)
 
         when (checkSpeechAvailability(context, ttsSupported, level)) {
@@ -66,18 +88,22 @@ class VoicesManager(val context: Activity) {
                 try {
                     exoPlayer.setMediaItem(exoPlayerAudio.extractorMediaSource(Uri.parse("${FileUtils.getDataDir(context, "Voices").absolutePath}/w_${word.id}.mp3")))
                     exoPlayer.prepare()
+                    exoPlayer.volume = volumeFloat
                     exoPlayer.playWhenReady = true
                 } catch (e: Exception) {
                     speechNotSupportedAlert(context, level) {}
                 }
             }
             SpeechAvailability.TTS_AVAILABLE -> {
+                val params = Bundle().apply {
+                    putFloat(TextToSpeech.Engine.KEY_PARAM_VOLUME, volumeFloat)
+                }
                 tts?.speak(
                     if (word.isKana >= 1)
                         word.japanese.split("/")[0].split(";")[0]
                     else
                         word.reading.split("/")[0].split(";")[0],
-                    TextToSpeech.QUEUE_FLUSH, null, null
+                    TextToSpeech.QUEUE_FLUSH, params, null
                 )
             }
             else -> speechNotSupportedAlert(context, level) {}

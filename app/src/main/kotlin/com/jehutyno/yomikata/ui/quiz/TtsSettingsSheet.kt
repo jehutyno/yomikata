@@ -73,7 +73,7 @@ fun TtsSettingsSheet(
                 value = volume.toFloat(),
                 onValueChange = { onVolumeChange(it.roundToInt()) },
                 valueRange = 0f..maxVolume.coerceAtLeast(1).toFloat(),
-                steps = (maxVolume - 1).coerceAtLeast(0),
+                steps = if (maxVolume > 20) 0 else (maxVolume - 1).coerceAtLeast(0),
                 colors = orangeSliderColors(),
                 modifier = Modifier.fillMaxWidth(),
             )
@@ -130,10 +130,10 @@ private fun TtsSettingsPreview() {
         Column(modifier = Modifier.padding(20.dp)) {
             SectionHeader(text = "Speech settings")
             Spacer(modifier = Modifier.height(12.dp))
-            SliderLabel("Speech Volume")
+            SliderLabel(stringResource(R.string.tts_volume))
             Slider(value = 0.6f, onValueChange = {}, colors = orangeSliderColors())
             Spacer(modifier = Modifier.height(12.dp))
-            SliderLabel("Speech rate")
+            SliderLabel(stringResource(R.string.tts_rate))
             Slider(value = 0.4f, onValueChange = {}, colors = orangeSliderColors())
             Spacer(modifier = Modifier.height(12.dp))
             Row(

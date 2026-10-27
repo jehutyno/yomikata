@@ -222,6 +222,7 @@
     <string name="update_voices_alert">Atualizar vozes</string>
     <string name="update_voices_alert_message">As vozes foram atualizadas no servidor. Você pode baixar %dMB de vozes para obter as últimas correções.</string>
     <string name="message_adjuste_volume">O volume está muito baixo, por favor ajuste</string>
+    <string name="message_adjuste_tts_volume">O volume da voz está muito baixo, por favor ajuste</string>
     <string name="delete_voices_files">Excluir arquivos de voz</string>
     <string name="dont_ask_voices">Não perguntar novamente</string>
     <string name="voices_reinit_done">Arquivos de voz excluídos</string>

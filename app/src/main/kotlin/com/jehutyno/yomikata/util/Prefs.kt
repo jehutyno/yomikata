@@ -11,6 +11,7 @@ enum class Prefs(val pref: String) {
     SELECTED_QUIZ_TYPES("selected_quiz_types"),
     WAS_SELECTED_QUIZ_TYPES("was_selected_quiz_types"),
     TTS_RATE("tts_rate"),
+    TTS_VOLUME("tts_volume"),
     LATEST_CATEGORY_1("latest_category_1"),
     LATEST_CATEGORY_2("latest_category_2"),
     DB_UPDATE_ONGOING("db_update_ongoing"),

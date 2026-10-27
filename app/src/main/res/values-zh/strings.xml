@@ -221,6 +221,7 @@
     <string name="update_voices_alert">更新语音</string>
     <string name="update_voices_alert_message">服务器上的语音已更新。您可以下载 %dMB 语音包以获取最新修正。</string>
     <string name="message_adjuste_volume">音量太低，请调高音量</string>
+    <string name="message_adjuste_tts_volume">语音音量太低，请调高音量</string>
     <string name="delete_voices_files">删除语音文件</string>
     <string name="dont_ask_voices">不再询问</string>
     <string name="voices_reinit_done">语音文件已删除</string>
