@@ -30,7 +30,10 @@
     <string name="mastery_to_review">À revoir :</string>
     <string name="mastery_mastered">Maîtrisés :</string>
     <string name="mastery_percent_label">maîtrisé</string>
-    <string name="word_count_label">mots</string>
+    <plurals name="word_count_label">
+        <item quantity="one">%d mot</item>
+        <item quantity="other">%d mots</item>
+    </plurals>
     <string name="quit_quiz">Voulez-vous quitter cette session ?</string>
     <string name="search_title">Resultats de la recherche</string>
     <string name="mail_chooser">Me contacter par email</string>

@@ -30,7 +30,11 @@
     <string name="mastery_to_review">Para revisar:</string>
     <string name="mastery_mastered">Dominados:</string>
     <string name="mastery_percent_label">dominado</string>
-    <string name="word_count_label">palavras</string>
+    <plurals name="word_count_label">
+        <item quantity="one">%d palavra</item>
+        <item quantity="other">%d palavras</item>
+        <item quantity="many">%d palavras</item>
+    </plurals>
     <string name="quit_quiz">Deseja encerrar esta sessão de prática?</string>
     <string name="search_title">Resultados da busca</string>
     <string name="mail_chooser">Contato por e-mail</string>

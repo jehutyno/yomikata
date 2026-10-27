@@ -30,7 +30,10 @@
     <string name="mastery_to_review">Zu wiederholen:</string>
     <string name="mastery_mastered">Gemeistert:</string>
     <string name="mastery_percent_label">gemeistert</string>
-    <string name="word_count_label">Wörter</string>
+    <plurals name="word_count_label">
+        <item quantity="one">%d Wort</item>
+        <item quantity="other">%d Wörter</item>
+    </plurals>
     <string name="quit_quiz">Möchten Sie diese Übungssitzung beenden?</string>
     <string name="search_title">Suchergebnisse</string>
     <string name="mail_chooser">Per E-Mail kontaktieren</string>
