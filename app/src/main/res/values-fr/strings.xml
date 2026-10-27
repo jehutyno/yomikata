@@ -27,8 +27,8 @@
     <!-- Mastery progression (Study + word list) -->
     <string name="progress_header">習得 · Progression</string>
     <string name="mastery_all">Tous</string>
-    <string name="mastery_to_review">À revoir :</string>
-    <string name="mastery_mastered">Maîtrisés :</string>
+    <string name="mastery_to_review">À revoir :</string>
+    <string name="mastery_mastered">Maîtrisés :</string>
     <string name="mastery_percent_label">maîtrisé</string>
     <string name="word_count_label">mots</string>
     <string name="quit_quiz">Voulez-vous quitter cette session ?</string>
@@ -36,8 +36,8 @@
     <string name="mail_chooser">Me contacter par email</string>
     <string name="error_mail_chooser">Envoyer un rapport d\'erreur par email</string>
     <string name="error_mail_subject">Yomikata Z erreur de base de donnée</string>
-    <string name="error_mail_body_1">Erreur potentielle :\n</string>
-    <string name="error_mail_comments">\nCommentaires :\n</string>
+    <string name="error_mail_body_1">Erreur potentielle :\n</string>
+    <string name="error_mail_comments">\nCommentaires :\n</string>
     <string name="mail_error">Aucun client mail installé.</string>
     <string name="answer_title">Revue des réponses</string>
     <string name="adjust_volume_tts">N\'oubliez pas d\'ajuster le volume pour ce type de quiz</string>
@@ -45,7 +45,7 @@
     <string name="action_not_possible">Désolé cette action n\'est pas possible sur cet appareil</string>
     <string name="tts_init_failed">Échec de l\'initialisation de la synthèse vocale</string>
     <string name="set_up_tts_title">Paramètres des voix</string>
-    <string name="set_up_tts">Pour activer les voix, vous devez soit :\n</string>
+    <string name="set_up_tts">Pour activer les voix, vous devez soit :\n</string>
     <string name="download_voices_action">Télécharger\nles voix (%dMo)</string>
     <string name="get_google_tts_action">Installer le synthétiseur Google</string>
     <string name="tuto_welcome">Soyez prêt à réviser le japonais</string>
@@ -99,7 +99,7 @@
     <string name="prefs_restore_progress">Importer progression</string>
     <string name="prefs_restore_progress_short">Restaurer progression</string>
     <string name="prefs_restore_sure">Êtes-vous sûr de vouloir restauration la progression avec ces données ? Cela va écraser la progression actuelle</string>
-    <string name="backup_saved_here">Vos données ont été sauvegardées à cet endroit : \n%1$s\n\nVous pouvez restaurer ces données à tout moment grace à ce fichier et l\'envoyer sur d\'autres appareils</string>
+    <string name="backup_saved_here">Vos données ont été sauvegardées à cet endroit : \n%1$s\n\nVous pouvez restaurer ces données à tout moment grâce à ce fichier et l\'envoyer sur d\'autres appareils</string>
     <string name="backup_success">Sauvegarde réussie</string>
     <string name="backup_error">Sauvegarde échouée</string>
     <string name="backup_error_message">Veuillez vérifier que vous avez les permissions de stockage et assez d\'espace</string>
@@ -194,7 +194,7 @@
     <string name="update_success_title">Mise à jour réussie</string>
     <string name="update_success_message">La base de donnée est maintenant à jour !</string>
     <string name="share_subject">Essaye Yomikata Z !</string>
-    <string name="share_message">Laisse moi te recommander cette application pour étudier le japonais :\n\nhttps://play.google.com/apps/testing/com.jehutyno.yomikata\n\n</string>
+    <string name="share_message">Laisse moi te recommander cette application pour étudier le japonais :\n\nhttps://play.google.com/apps/testing/com.jehutyno.yomikata\n\n</string>
     <string name="share_choose">Partager l\'application</string>
     <string name="alert_error_review_finished">Fin de la revue des erreurs</string>
     <string name="alert_error_review_session_message">Vous avez revu toutes les erreurs de la session.</string>
