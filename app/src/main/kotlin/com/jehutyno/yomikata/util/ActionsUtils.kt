@@ -238,16 +238,24 @@ fun sentenceFuri(sentence: Sentence): String {
 }
 
 fun getWordPositionInFuriSentence(sentenceJap: String, word: Word): Int {
-    val wordWgrongPosition = sentenceJap.indexOf("{${word.japanese};${word.reading}}")
-    if (wordWgrongPosition > 0 && wordWgrongPosition < sentenceJap.length) {
-        val subSentence = sentenceJap.subSequence(0, wordWgrongPosition)
+    val reading = word.reading.split("/")[0].trim()
+    var wordWrongPosition = sentenceJap.indexOf("{${word.japanese};$reading}")
+    if (wordWrongPosition < 0) {
+        wordWrongPosition = sentenceJap.indexOf("{${word.japanese};")
+    }
+    if (wordWrongPosition < 0) {
+        wordWrongPosition = sentenceJap.indexOf(word.japanese)
+    }
+    if (wordWrongPosition >= 0 && wordWrongPosition < sentenceJap.length) {
+        val subSentence = sentenceJap.subSequence(0, wordWrongPosition)
         var overdub = 0
         """\{""".toRegex().findAll(subSentence).forEach { overdub++ }
         """;.+?\}""".toRegex().findAll(subSentence).forEach { overdub += it.value.length }
 
-        return wordWgrongPosition - overdub
-    } else
+        return wordWrongPosition - overdub
+    } else {
         return 0
+    }
 }
 
 private fun createDlButton(activity: Activity, level: Int, finishedListener: () -> Unit) : Button {
