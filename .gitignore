@@ -24,3 +24,7 @@ keystore.properties
 # Google Play : clé de compte de service (Publishing API) + dépendances de l'outil CLI.
 tools/play/service-account.json
 tools/play/node_modules/
+
+# Skills tiers installes localement, non versionnes
+.claude/skills/chrisbanes/
+.claude/skills/claude-android-ninja/
