@@ -11,7 +11,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 $SQ  = "C:\Users\valen\AppData\Local\Android\Sdk\platform-tools\sqlite3.exe"
-$DB  = "C:\Users\valen\Repos\yomikata\app\src\main\assets\yomikataz.db"
+$DB  = "C:\Users\valen\Repos\dev\yomikata\app\src\main\assets\yomikataz.db"
 $API = "https://api.anthropic.com/v1/messages"
 $MDL = "claude-haiku-4-5-20251001"
 

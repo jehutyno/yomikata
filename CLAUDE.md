@@ -78,7 +78,7 @@ Les repos sont centralisés dans `settings.gradle` via `dependencyResolutionMana
 ### SQLite3 (scripts de données)
 ```powershell
 $sq = "C:\Users\valen\AppData\Local\Android\Sdk\platform-tools\sqlite3.exe"
-$db = "C:\Users\valen\Repos\yomikata\app\src\main\assets\yomikataz.db"
+$db = "C:\Users\valen\Repos\dev\yomikata\app\src\main\assets\yomikataz.db"
 ```
 
 **Piège encodage** : ne jamais piper du texte avec des caractères non-ASCII directement vers sqlite3 depuis PowerShell. Toujours écrire le SQL dans un fichier UTF-8 sans BOM, puis utiliser `.read fichier.sql` :
