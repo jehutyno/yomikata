@@ -134,8 +134,8 @@ class PrefsFragment : PreferenceFragmentCompat() {
 
     override fun onPreferenceTreeClick(preference: Preference): Boolean {
         when (preference.key) {
-            "font_size", "input_change", "speed", "length",
-            "tap_to_reveal", "play_start", "play_end", "analytics_consent" -> return true
+            "font_size", "show_magnified_word", "input_change", "speed", "length",
+            "tap_to_reveal", "play_start", "play_end", "analytics_consent", "automatically_continue" -> return true
 
             "reset_tuto" -> {
                 resetAllTutos(PreferenceManager.getDefaultSharedPreferences(requireActivity()))

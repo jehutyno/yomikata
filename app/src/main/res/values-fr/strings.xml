@@ -139,6 +139,7 @@
     <string name="prefs_length_message">Nombre de mots dans une session</string>
     <string name="prefs_font_size">Taille de la police</string>
     <string name="prefs_font_size_message">Taille des phrases d\'exemple</string>
+    <string name="prefs_show_magnified_word">Afficher le mot agrandi</string>
     <string name="app_quit">Etes-vous sur de vouloir quitter Yomikata Z ?</string>
     <string name="tts_settings_title">Paramètres de synthèse vocale</string>
     <string name="tts_volume">Volume d\'élocution</string>
@@ -160,6 +161,9 @@
     <string name="settings_play_start_summary">Ecouter le mot quand il apparait</string>
     <string name="settings_play_end_title">Jouer son à la fin</string>
     <string name="settings_play_end_summary">Ecouter le mot avant de passer au suivant</string>
+    <string name="settings_automatically_continue_title">Continuer automatiquement</string>
+    <string name="settings_automatically_continue_summary">Continuer automatiquement en cas de bonne réponse</string>
+    <string name="settings_warn_volume_too_low">Afficher un avertissement lorsque le volume est trop bas</string>
     <string name="drawer_home">Home</string>
     <string name="quiz_launched">%1$d quizs lancés</string>
     <string name="words_seen">%1$d mots vus</string>

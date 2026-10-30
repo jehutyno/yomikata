@@ -254,10 +254,8 @@ class QuizPresenter(
                 if (convertHiragana) {
                     quizView.setHiraganaConversion(word.isKana == 0)
                 }
-                quizView.showKeyboard()
                 quizView.displayEditMode()
             } else {
-                quizView.hideKeyboard()
                 randoms = generateQCMRandoms(word, quizType, word.reading)
 
                 qcmDisplayHint.let { text ->
@@ -512,6 +510,17 @@ class QuizPresenter(
             saveAnswerResultStat(word, result)
         }
         previousAnswerWrong = !result
+
+        if (result) {
+            if (defaultSharedPreferences.getBoolean(Prefs.PLAY_END.pref, true)) {
+                quizView.speakWord(sessionState.getCurrentWord())
+            }
+            if (defaultSharedPreferences.getBoolean(Prefs.AUTOMATICALLY_CONTINUE.pref, false)) {
+                onNextWord()
+                return;
+            }
+        }
+
         val color = if (result) R.color.level_master_4 else R.color.level_low_1
         when (quizType) {
             QuizType.TYPE_PRONUNCIATION -> {
@@ -551,9 +560,6 @@ class QuizPresenter(
             }
             QuizType.TYPE_AUTO -> TODO()
         }
-
-        if (result && defaultSharedPreferences.getBoolean(Prefs.PLAY_END.pref, true))
-            quizView.speakWord(sessionState.getCurrentWord())
 
         quizView.animateCheck(result)
     }
@@ -734,10 +740,8 @@ class QuizPresenter(
     }
 
     override fun onFinishQuiz() {
-        quizView.hideKeyboard()
         quizView.finishQuiz()
     }
-
 
     override suspend fun updateWordPoints(wordId: Long, points: Int) {
         wordStatisticsRecorder.updateWordPoints(wordId, points)

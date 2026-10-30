@@ -1,10 +1,13 @@
 package com.jehutyno.yomikata.ui.quiz
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
@@ -12,6 +15,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -44,9 +48,11 @@ fun TtsSettingsSheet(
     volume: Int,
     maxVolume: Int,
     speechRate: Int,
+    warnIfVolumeTooLow: Boolean,
     showSpeechRate: Boolean,
     onVolumeChange: (Int) -> Unit,
     onSpeechRateChange: (Int) -> Unit,
+    onWarnIfVolumeTooLowChange: (Boolean) -> Unit,
     onDismiss: () -> Unit,
 ) {
     ModalBottomSheet(
@@ -54,35 +60,77 @@ fun TtsSettingsSheet(
         sheetState = rememberModalBottomSheetState(),
         containerColor = SurfacePrimary,
     ) {
-        Column(
-            modifier = Modifier
-                .padding(horizontal = 20.dp)
-                .padding(bottom = 24.dp),
-        ) {
-            SectionHeader(text = stringResource(R.string.tts_settings_title))
-            Spacer(modifier = Modifier.height(12.dp))
+        TtsSettingsSheetContent(
+            volume = volume,
+            maxVolume = maxVolume,
+            speechRate = speechRate,
+            warnIfVolumeTooLow = warnIfVolumeTooLow,
+            showSpeechRate = showSpeechRate,
+            onVolumeChange = onVolumeChange,
+            onSpeechRateChange = onSpeechRateChange,
+            onWarnIfVolumeTooLowChange = onWarnIfVolumeTooLowChange,
+        )
+    }
+}
 
-            SliderLabel(stringResource(R.string.tts_volume))
+/**
+ * Contenu du panneau de réglages vocaux, sans le [ModalBottomSheet].
+ *
+ * Séparé du wrapper pour pouvoir être prévisualisé isolément dans la preview Compose
+ * (les modal bottom sheet ne se rendent pas dans les previews isolées).
+ */
+@Composable
+private fun TtsSettingsSheetContent(
+    volume: Int,
+    maxVolume: Int,
+    speechRate: Int,
+    warnIfVolumeTooLow: Boolean,
+    showSpeechRate: Boolean,
+    onVolumeChange: (Int) -> Unit,
+    onSpeechRateChange: (Int) -> Unit,
+    onWarnIfVolumeTooLowChange: (Boolean) -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .padding(horizontal = 20.dp)
+            .padding(bottom = 24.dp),
+    ) {
+        SectionHeader(text = stringResource(R.string.tts_settings_title))
+        Spacer(modifier = Modifier.height(12.dp))
+
+        SliderLabel(stringResource(R.string.tts_volume))
+        Slider(
+            value = volume.toFloat(),
+            onValueChange = { onVolumeChange(it.roundToInt()) },
+            valueRange = 0f..maxVolume.coerceAtLeast(1).toFloat(),
+            steps = (maxVolume - 1).coerceAtLeast(0),
+            colors = orangeSliderColors(),
+            modifier = Modifier.fillMaxWidth(),
+        )
+
+        if (showSpeechRate) {
+            Spacer(modifier = Modifier.height(12.dp))
+            SliderLabel(stringResource(R.string.tts_rate))
             Slider(
-                value = volume.toFloat(),
-                onValueChange = { onVolumeChange(it.roundToInt()) },
-                valueRange = 0f..maxVolume.coerceAtLeast(1).toFloat(),
-                steps = (maxVolume - 1).coerceAtLeast(0),
+                value = speechRate.toFloat(),
+                onValueChange = { onSpeechRateChange(it.roundToInt()) },
+                valueRange = 0f..250f,
                 colors = orangeSliderColors(),
                 modifier = Modifier.fillMaxWidth(),
             )
+        }
 
-            if (showSpeechRate) {
-                Spacer(modifier = Modifier.height(12.dp))
-                SliderLabel(stringResource(R.string.tts_rate))
-                Slider(
-                    value = speechRate.toFloat(),
-                    onValueChange = { onSpeechRateChange(it.roundToInt()) },
-                    valueRange = 0f..250f,
-                    colors = orangeSliderColors(),
-                    modifier = Modifier.fillMaxWidth(),
-                )
-            }
+        Spacer(modifier = Modifier.height(12.dp))
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.End
+        ) {
+            SliderLabel(stringResource(R.string.settings_warn_volume_too_low))
+            Spacer(modifier = Modifier.weight(1f))
+            Checkbox(
+                checked = warnIfVolumeTooLow,
+                onCheckedChange = onWarnIfVolumeTooLowChange
+            )
         }
     }
 }
@@ -108,15 +156,17 @@ private fun orangeSliderColors() = SliderDefaults.colors(
 @Composable
 private fun TtsSettingsPreview() {
     YomikataTheme {
-        // ModalBottomSheet ne se rend pas en preview isolée : on prévisualise le contenu.
-        Column(modifier = Modifier.padding(20.dp)) {
-            SectionHeader(text = "Speech settings")
-            Spacer(modifier = Modifier.height(12.dp))
-            SliderLabel("Speech Volume")
-            Slider(value = 0.6f, onValueChange = {}, colors = orangeSliderColors())
-            Spacer(modifier = Modifier.height(12.dp))
-            SliderLabel("Speech rate")
-            Slider(value = 0.4f, onValueChange = {}, colors = orangeSliderColors())
-        }
+        // ModalBottomSheet ne se rend pas en preview isolée : on prévisualise le contenu,
+        // pas le wrapper ModalBottomSheet.
+        TtsSettingsSheetContent(
+            volume = 6,
+            maxVolume = 10,
+            speechRate = 4,
+            warnIfVolumeTooLow = false,
+            showSpeechRate = true,
+            onVolumeChange = {},
+            onSpeechRateChange = {},
+            onWarnIfVolumeTooLowChange = {},
+        )
     }
 }

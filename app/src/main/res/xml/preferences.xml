@@ -12,6 +12,12 @@
             android:title="@string/prefs_font_size"/>
 
         <CheckBoxPreference
+            android:defaultValue="true"
+            android:icon="@drawable/text_increase"
+            android:key="show_magnified_word"
+            android:title="@string/prefs_show_magnified_word"/>
+
+        <CheckBoxPreference
             android:defaultValue="false"
             android:icon="@drawable/ic_keyboard"
             android:key="input_change"
@@ -57,6 +63,13 @@
             android:key="play_end"
             android:summary="@string/settings_play_end_summary"
             android:title="@string/settings_play_end_title"/>
+
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:icon="@drawable/ic_keyboard_double_arrow_right"
+            android:key="automatically_continue"
+            android:title="@string/settings_automatically_continue_title"
+            android:summary="@string/settings_automatically_continue_summary"/>
 
     </PreferenceCategory>
 

@@ -139,6 +139,7 @@
     <string name="prefs_length_message">Número de palavras por sessão</string>
     <string name="prefs_font_size">Tamanho da fonte</string>
     <string name="prefs_font_size_message">Tamanho da fonte das frases de exemplo</string>
+    <string name="prefs_show_magnified_word">Mostrar a palavra ampliada</string>
     <string name="app_quit">Tem certeza que deseja sair do Yomikata Z?</string>
     <string name="tts_settings_title">Configurações de voz</string>
     <string name="tts_volume">Volume da voz</string>
@@ -160,6 +161,9 @@
     <string name="settings_play_start_summary">Reproduzir a palavra ao aparecer</string>
     <string name="settings_play_end_title">Reproduzir no final</string>
     <string name="settings_play_end_summary">Reproduzir a palavra antes de avançar</string>
+    <string name="settings_automatically_continue_title">Continuar automaticamente</string>
+    <string name="settings_automatically_continue_summary">Continuar automaticamente ao responder corretamente</string>
+    <string name="settings_warn_volume_too_low">Mostrar aviso quando o volume estiver muito baixo</string>
     <string name="drawer_home">Início</string>
     <string name="quiz_launched">%1$d questionário iniciado</string>
     <string name="words_seen">%1$d palavras vistas</string>

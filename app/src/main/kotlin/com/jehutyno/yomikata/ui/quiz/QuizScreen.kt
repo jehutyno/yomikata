@@ -1,10 +1,12 @@
 package com.jehutyno.yomikata.ui.quiz
 
+import android.content.Context
 import android.text.Editable
 import android.text.InputType
 import android.text.TextWatcher
 import android.view.KeyEvent
 import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodManager
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
@@ -44,9 +46,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -102,6 +107,7 @@ data class QuizUiState(
     val currentIndex: Int = 0,
     val sentence: Sentence = Sentence(),
     val answerMode: AnswerMode = AnswerMode.None,
+    val showKeyboard: Boolean = false,
     val qcmOptions: List<QcmOption> = List(4) { QcmOption("") },
     val qcmShowFuri: Boolean = false,
     val hintText: String? = null,
@@ -116,6 +122,8 @@ data class QuizUiState(
     val showTranslation: Boolean = true,
     // Orange for unanswered, green after correct, stays orange after wrong (AccentOrange if 0)
     val wordHighlightColor: Int = 0,
+    val fontSizeSp: Float = 23f,
+    val showMagnifiedWord: Boolean = true,
     val infiniteCount: Int? = null,
     /** True when the current word belongs to at least one user selection (orange star). */
     val isCurrentWordInSelection: Boolean = false,
@@ -183,6 +191,13 @@ fun QuizScreen(
         },
         label = "heroBorder",
     )
+
+    val keyboard = LocalSoftwareKeyboardController.current
+    LaunchedEffect(uiState.showKeyboard) {
+        if (!uiState.showKeyboard) {
+            keyboard?.hide()
+        }
+    }
 
     Column(
         modifier = modifier
@@ -280,6 +295,8 @@ fun QuizScreen(
                 showFurigana = uiState.showFurigana,
                 showTranslation = uiState.showTranslation,
                 wordHighlightColor = uiState.wordHighlightColor,
+                fontSizeSp = uiState.fontSizeSp,
+                showMagnifiedWord = uiState.showMagnifiedWord,
                 isRevealed = uiState.isRevealed,
                 isCorrect = isCorrect,
                 isWrong = isWrong,
@@ -375,6 +392,8 @@ private fun QuestionZone(
     showFurigana: Boolean,
     showTranslation: Boolean,
     wordHighlightColor: Int,
+    fontSizeSp: Float,
+    showMagnifiedWord: Boolean,
     isRevealed: Boolean,
     isCorrect: Boolean,
     isWrong: Boolean,
@@ -390,6 +409,11 @@ private fun QuestionZone(
 ) {
     // P4: orange si non répondu, green après bonne réponse (défault si 0 → orange)
     val sentenceHighlight = if (wordHighlightColor != 0) wordHighlightColor else AccentOrange.toArgb()
+
+    // La phrase d'exemple sert de taille de base ; les autres textes de la question en dérivent.
+    val sentenceFontSp = fontSizeSp
+    val bigWordFontSp = fontSizeSp * 2.2f
+    val translationFontSp = fontSizeSp * 0.78f
 
     Column(
         modifier = modifier.padding(horizontal = 16.dp, vertical = 12.dp),
@@ -430,8 +454,8 @@ private fun QuestionZone(
                     Text(
                         text = word.getTrad().cleanForQCM(false),
                         color = AccentOrange,
-                        fontSize = 22.sp,
-                        lineHeight = 30.sp,
+                        fontSize = bigWordFontSp.sp,
+                        lineHeight = (bigWordFontSp * 1.36f).sp,
                         textAlign = TextAlign.Center,
                     )
                 }
@@ -513,22 +537,24 @@ private fun QuestionZone(
                         verticalArrangement = Arrangement.spacedBy(16.dp),
                     ) {
                         // Mot en vedette — centré, avec spring bounce + shake
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .graphicsLayer { scaleX = scale; scaleY = scale }
-                                .offset { IntOffset(shakeOffset.value.roundToInt(), 0) },
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            FuriganaAndroidView(
-                                text = largeWordText,
-                                markStart = 0,
-                                markEnd = 0,
-                                highlightColor = kanjiColor.toArgb(),
-                                textColor = kanjiColor.toArgb(),
-                                textSizeSp = 46f,
-                                modifier = Modifier.wrapContentWidth(),
-                            )
+                        if (showMagnifiedWord) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .graphicsLayer { scaleX = scale; scaleY = scale }
+                                    .offset { IntOffset(shakeOffset.value.roundToInt(), 0) },
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                FuriganaAndroidView(
+                                    text = largeWordText,
+                                    markStart = 0,
+                                    markEnd = 0,
+                                    highlightColor = kanjiColor.toArgb(),
+                                    textColor = kanjiColor.toArgb(),
+                                    textSizeSp = bigWordFontSp,
+                                    modifier = Modifier.wrapContentWidth(),
+                                )
+                            }
                         }
 
                         // Phrase d'exemple + traduction — centrées horizontalement
@@ -542,7 +568,7 @@ private fun QuestionZone(
                                 markStart = wordPos,
                                 markEnd = markEnd,
                                 highlightColor = sentenceHighlight,
-                                textSizeSp = 18f,
+                                textSizeSp = sentenceFontSp,
                                 modifier = Modifier
                                     .wrapContentWidth()
                                     .clickable(onClick = onItemClick),
@@ -550,7 +576,7 @@ private fun QuestionZone(
                             Text(
                                 text = sentence.getTrad(),
                                 color = TextSecondary,
-                                fontSize = 14.sp,
+                                fontSize = translationFontSp.sp,
                                 textAlign = TextAlign.Center,
                                 modifier = Modifier.alpha(
                                     if (showTranslation && quizType != QuizType.TYPE_JAP_EN) 1f else 0f
@@ -740,6 +766,7 @@ private fun EditAnswerMode(
     onClear: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val textInputFocusRequester = remember { FocusRequester() }
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -767,8 +794,7 @@ private fun EditAnswerMode(
                         // clavier insère un saut de ligne et ne déclenche jamais la validation
                         // (OnEditorActionListener). TYPE_CLASS_TEXT est requis pour un vrai champ texte.
                         inputType = InputType.TYPE_CLASS_TEXT or
-                                InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS or
-                                InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
+                                InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
                         imeOptions = EditorInfo.IME_ACTION_DONE
                         setSingleLine(true)
                         setTextColor(textColorInt)
@@ -806,6 +832,14 @@ private fun EditAnswerMode(
                                 true
                             } else false
                         }
+                        setOnFocusChangeListener { v, hasFocus ->
+                            if (hasFocus) {
+                                val imm = v.context.getSystemService(
+                                    Context.INPUT_METHOD_SERVICE
+                                ) as InputMethodManager
+                                imm.showSoftInput(v, 0)
+                            }
+                        }
                     }
                 },
                 update = { view ->
@@ -816,8 +850,12 @@ private fun EditAnswerMode(
                         if (text.isNotEmpty()) view.setSelection(text.length)
                     }
                 },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().focusRequester(textInputFocusRequester),
             )
+
+            LaunchedEffect(textInputFocusRequester) {
+                textInputFocusRequester.requestFocus()
+            }
         }
 
         // Révéler la réponse (« donner sa langue au chat ») : toujours disponible, même sans

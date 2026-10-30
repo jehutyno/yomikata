@@ -139,6 +139,7 @@
     <string name="prefs_length_message">Anzahl der Wörter pro Sitzung</string>
     <string name="prefs_font_size">Schriftgröße</string>
     <string name="prefs_font_size_message">Schriftgröße der Beispielsätze</string>
+    <string name="prefs_show_magnified_word">Vergrößertes Wort anzeigen</string>
     <string name="app_quit">Möchten Sie Yomikata Z wirklich beenden?</string>
     <string name="tts_settings_title">Spracheinstellungen</string>
     <string name="tts_volume">Sprechlautstärke</string>
@@ -160,6 +161,9 @@
     <string name="settings_play_start_summary">Wort beim Erscheinen abspielen</string>
     <string name="settings_play_end_title">Am Ende abspielen</string>
     <string name="settings_play_end_summary">Wort vor dem Weiterblättern abspielen</string>
+    <string name="settings_automatically_continue_title">Automatisch fortfahren</string>
+    <string name="settings_automatically_continue_summary">Bei richtiger Antwort automatisch fortfahren</string>
+    <string name="settings_warn_volume_too_low">Warnung anzeigen, wenn die Lautstärke zu niedrig ist</string>
     <string name="drawer_home">Start</string>
     <string name="quiz_launched">%1$d Quiz gestartet</string>
     <string name="words_seen">%1$d Wörter gesehen</string>

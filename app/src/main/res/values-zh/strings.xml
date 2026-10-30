@@ -139,6 +139,7 @@
     <string name="prefs_length_message">每次会话的单词数量</string>
     <string name="prefs_font_size">字体大小</string>
     <string name="prefs_font_size_message">例句的字体大小</string>
+    <string name="prefs_show_magnified_word">显示放大后的单词</string>
     <string name="app_quit">确定要退出 Yomikata Z 吗？</string>
     <string name="tts_settings_title">语音设置</string>
     <string name="tts_volume">语音音量</string>
@@ -160,6 +161,9 @@
     <string name="settings_play_start_summary">单词出现时播放</string>
     <string name="settings_play_end_title">结束时播放</string>
     <string name="settings_play_end_summary">翻页前播放单词</string>
+    <string name="settings_automatically_continue_title">自动继续</string>
+    <string name="settings_automatically_continue_summary">答对后自动继续</string>
+    <string name="settings_warn_volume_too_low">音量过低时显示警告</string>
     <string name="drawer_home">首页</string>
     <string name="quiz_launched">已启动 %1$d 个测验</string>
     <string name="words_seen">已看 %1$d 个单词</string>

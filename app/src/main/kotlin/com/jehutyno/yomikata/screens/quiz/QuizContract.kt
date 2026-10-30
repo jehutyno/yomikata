@@ -43,8 +43,6 @@ interface QuizContract {
         fun displayQCMTv(options: List<String>, colorIds: List<Int>)
         fun displayQCMFuri(furiNum: Int, optionFuri: String, start: Int, end: Int, colorId: Int)
         fun displayQCMFuri(options: List<String>, starts: List<Int>, ends: List<Int>, colorIds: List<Int>)
-        fun showKeyboard()
-        fun hideKeyboard()
         fun animateColor(position: Int, word: Word, sentence: Sentence, quizType: QuizType, fromPoints: Int, toPoints: Int)
         fun setEditTextColor(color: Int)
         fun animateCheck(result: Boolean)

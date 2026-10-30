@@ -169,6 +169,7 @@
     <string name="prefs_speed_message">How many correct answers to level up</string>
     <string name="prefs_font_size">Font size</string>
     <string name="prefs_font_size_message">Size of example sentences</string>
+    <string name="prefs_show_magnified_word">Show magnified word</string>
     <string name="prefs_length_title">Sessions length</string>
     <string name="prefs_length_message">Number of words in a session</string>
     <string name="app_quit">Are you sure you want to quit Yomikata Z?</string>
@@ -193,6 +194,9 @@
     <string name="settings_play_start_summary">Play word when it appears</string>
     <string name="settings_play_end_title">Play at end</string>
     <string name="settings_play_end_summary">Play word before going to next</string>
+    <string name="settings_automatically_continue_title">Automatically continue</string>
+    <string name="settings_automatically_continue_summary">Automatically continue on correct answer</string>
+    <string name="settings_warn_volume_too_low">Show warning when volume is too low</string>
     <string name="drawer_home">Home</string>
     <string name="quiz_launched">%1$d quizzes launched</string>
     <string name="words_seen">%1$d words seen</string>
