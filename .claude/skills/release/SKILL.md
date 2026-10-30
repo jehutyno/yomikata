@@ -36,7 +36,8 @@ Dans `app/build.gradle`, mettre `versionCode`/`versionName` (les valeurs de repl
 
 ### 4. Documentation
 - `ARCHITECTURE.md` : § CI/version → repli à jour.
-- `CLAUDE.md` : nouvelle entrée « Session release-X.Y.Z » dans le Plan en cours (résumé des changements embarqués).
+- `JOURNAL.md` : nouvelle entrée `## AAAA-MM-JJ : release X.Y.Z` en haut du fichier (résumé des changements embarqués).
+- `ETAT.md` : version en cours et date de mise à jour. Ne rien ajouter à `CLAUDE.md`, sauf si une convention ou une commande change.
 
 ### 5. Commit
 Tout d'un bloc, message `build: passe la version à X.Y.Z (...)` ou `chore(release): X.Y.Z`. Committer sur `main`.
