@@ -12,7 +12,7 @@
     <string name="selection_not_empty_name">名称不能为空</string>
     <string name="action_search">搜索</string>
     <string name="action_errors">错误</string>
-    <string name="quiz_input_hint">输入标注字符的读音</string>
+    <string name="quiz_input_hint">请在此处填写</string>
     <string name="practice_random">随机练习全部</string>
     <string name="practice_normal">练习全部</string>
     <string name="practice_progressive">渐进式练习</string>
@@ -27,10 +27,13 @@
     <!-- Mastery progression (Study + word list) -->
     <string name="progress_header">習得 · 进度</string>
     <string name="mastery_all">全部</string>
-    <string name="mastery_to_review">待复习</string>
-    <string name="mastered">已掌握</string>
+    <string name="mastery_to_review">待复习：</string>
+    <string name="mastery_mastered">已掌握：</string>
     <string name="mastery_percent_label">已掌握</string>
-    <string name="word_count_label">词</string>
+    <plurals name="word_count_label">
+        <item quantity="one">%d 词</item>
+        <item quantity="other">%d 词</item>
+    </plurals>
     <string name="quit_quiz">确定要退出本次练习吗？</string>
     <string name="search_title">搜索结果</string>
     <string name="mail_chooser">发送电子邮件联系</string>
@@ -46,7 +49,7 @@
     <string name="tts_init_failed">语音合成初始化失败</string>
     <string name="set_up_tts_title">语音设置</string>
     <string name="set_up_tts">要启用语音输出，您需要：\n</string>
-    <string name="download_voices_action">下载语音包（%dMB）</string>
+    <string name="download_voices_action">下载语音包\n（%dMB）</string>
     <string name="get_google_tts_action">安装 Google 文字转语音</string>
     <string name="tuto_welcome">准备好学习日语了吗</string>
     <string name="tuto_categories">分类</string>
@@ -139,6 +142,8 @@
     <string name="prefs_length_message">每次会话的单词数量</string>
     <string name="prefs_font_size">字体大小</string>
     <string name="prefs_font_size_message">例句的字体大小</string>
+    <string name="font_serif_title">衬线字体</string>
+    <string name="font_serif_summary">以衬线字体显示日语</string>
     <string name="app_quit">确定要退出 Yomikata Z 吗？</string>
     <string name="tts_settings_title">语音设置</string>
     <string name="tts_volume">语音音量</string>
@@ -160,6 +165,8 @@
     <string name="settings_play_start_summary">单词出现时播放</string>
     <string name="settings_play_end_title">结束时播放</string>
     <string name="settings_play_end_summary">翻页前播放单词</string>
+    <string name="prefs_warn_volume_too_low_summary">音量过低时显示警告</string>
+    <string name="prefs_warn_volume_too_low_title">低音量警告</string>
     <string name="drawer_home">首页</string>
     <string name="quiz_launched">已启动 %1$d 个测验</string>
     <string name="words_seen">已看 %1$d 个单词</string>
@@ -214,6 +221,7 @@
     <string name="update_voices_alert">更新语音</string>
     <string name="update_voices_alert_message">服务器上的语音已更新。您可以下载 %dMB 语音包以获取最新修正。</string>
     <string name="message_adjuste_volume">音量太低，请调高音量</string>
+    <string name="message_adjuste_tts_volume">语音音量太低，请调高音量</string>
     <string name="delete_voices_files">删除语音文件</string>
     <string name="dont_ask_voices">不再询问</string>
     <string name="voices_reinit_done">语音文件已删除</string>
@@ -244,6 +252,7 @@
     <string name="app_closed_data_recovered">应用在恢复过程中被关闭，已恢复您之前的数据</string>
     <string name="tap_to_reveal_choices">点击显示答案</string>
     <string name="tap_to_reveal_choices_summary">触摸屏幕前答案将被隐藏</string>
+    <string name="reveal_choices">显示答案</string>
     <string name="give_hiragana_reading_hint">输入平假名读音</string>
     <string name="give_romaji_hint">输入罗马字读音</string>
     <string name="give_word_or_kanji_hint">输入单词或汉字</string>
@@ -290,7 +299,7 @@
     <string name="sponsor_button">♥ 在 GitHub 上支持</string>
 
     <!-- Compose UI labels (extracted from hardcoded literals) -->
-    <string name="action_favorite">收藏</string>
+    <string name="action_selections">词汇集</string>
     <string name="action_reveal_answer">显示答案</string>
     <string name="action_clear">清除</string>
     <string name="action_audio">音频</string>
@@ -324,4 +333,12 @@
     <string name="fab_next">下一个 →</string>
     <string name="update_ready_message">更新已准备好安装</string>
     <string name="update_restart_action">重启</string>
+    <string name="prefs_kana_input_fix_message">如果您在使用日语键盘时遇到问题，请勾选此项</string>
+    <string name="kana_input_fix">假名输入问题</string>
+    <string name="bottomnav_home">首页</string>
+    <string name="bottomnav_study">学习</string>
+    <string name="bottomnav_selections">词汇集</string>
+    <string name="bottomnav_settings">设置</string>
+    <string name="prefs_quiz_settings">Quiz Settings</string>
+
 </resources>

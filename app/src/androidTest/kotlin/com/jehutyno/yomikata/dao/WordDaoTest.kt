@@ -246,8 +246,10 @@ class WordDaoTest {
     @Test
     fun updateWordLevel() = runBlocking {
         val id = wordDao.addWord(sampleRoomWords[0])
-        wordDao.updateWordLevel(id, 3)
-        assert(wordDao.getWordById(id)!!.level == 3)
+        wordDao.updateWordLevel(id, 3, 600)
+        val word = wordDao.getWordById(id)!!
+        assert(word.level == 3)
+        assert(word.points == 600)
     }
 
     @Test

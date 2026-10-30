@@ -11,14 +11,17 @@ package com.jehutyno.yomikata.view.furigana;
 
 import android.content.Context;
 import android.graphics.Canvas;
+import android.graphics.Typeface;
 import android.preference.PreferenceManager;
 import android.text.TextPaint;
 import android.util.AttributeSet;
 
+import androidx.appcompat.widget.AppCompatTextView;
+
 import java.util.Vector;
 
 // Text view with furigana display
-public class FuriganaView extends androidx.appcompat.widget.AppCompatTextView {
+public class FuriganaView extends AppCompatTextView {
     private class TextFurigana {
         // Info
         private String m_text;
@@ -377,19 +380,27 @@ public class FuriganaView extends androidx.appcompat.widget.AppCompatTextView {
     private Vector<LineNormal> m_line_n = new Vector<LineNormal>();
     private Vector<LineFurigana> m_line_f = new Vector<LineFurigana>();
 
+    private void applyFontPreference(Context context) {
+        boolean useSerif = PreferenceManager.getDefaultSharedPreferences(context).getBoolean("font_serif", false);
+        this.setTypeface(useSerif ? Typeface.SERIF : Typeface.DEFAULT);
+    }
+
     // Constructors
     public FuriganaView(Context context) {
         super(context);
+        applyFontPreference(context);
         this.setTextSize(Float.parseFloat(PreferenceManager.getDefaultSharedPreferences(context).getString("font_size", "23")));
     }
 
     public FuriganaView(Context context, AttributeSet attrs) {
         super(context, attrs);
+        applyFontPreference(context);
         this.setTextSize(Float.parseFloat(PreferenceManager.getDefaultSharedPreferences(context).getString("font_size", "23")));
     }
 
     public FuriganaView(Context context, AttributeSet attrs, int style) {
         super(context, attrs, style);
+        applyFontPreference(context);
         this.setTextSize(Float.parseFloat(PreferenceManager.getDefaultSharedPreferences(context).getString("font_size", "23")));
     }
 
@@ -415,6 +426,7 @@ public class FuriganaView extends androidx.appcompat.widget.AppCompatTextView {
 
     // Text functions
     public void text_set(String text, int mark_s, int mark_e, int color) {
+        applyFontPreference(getContext());
         text = text.replace("{は;わ}", "は");
         text = text.replace("{へ;え}", "へ");
         // Text

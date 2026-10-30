@@ -118,7 +118,7 @@ class RemainingScreensScreenshotTest {
     @Composable private fun WordDetail() =
         WordDetailScreen(wordDetailState(), "食べる", {}, {}, {}, {}, {}, {}, {}, {}, {}, {})
     @Composable private fun AnswerReview() =
-        AnswerReviewScreen(answerReviewState(), "結果 · Results", {}, {}, {}, {}, {}, { _, _ -> }, {}, {})
+        AnswerReviewScreen(answerReviewState(), "結果 · Results", {}, { _, _ -> }, { _ -> }, { _ -> }, { _ -> }, { _ -> }, { _, _ -> }, {}, {})
 
     // ── EN ──────────────────────────────────────────────────────────────────────
 

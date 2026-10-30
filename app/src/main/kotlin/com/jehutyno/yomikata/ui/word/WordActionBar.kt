@@ -62,7 +62,7 @@ fun WordActionBar(
     ) {
         ActionItem(
             iconRes = R.drawable.ic_star_black_24dp,
-            label = stringResource(R.string.action_favorite),
+            label = stringResource(R.string.action_selections),
             tint = if (isFavorite) AccentOrange else TextGhost,
             onClick = onFavoriteClick,
             modifier = Modifier.weight(1f),

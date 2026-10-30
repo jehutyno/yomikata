@@ -50,6 +50,7 @@ On maximise la logique testée sur la JVM (rapide, déterministe), on réserve l
 - **Couvre** : `QuizPresenter`, `AnswerValidator`, `QuizSessionState`, `LevelSystem`, `LanguageManager`, `QuizTypePrefs`, `TranslationParser`, fallback `getTrad()`/`getName()` 6 langues, `RandomAnswerGenerator`, `WordStatisticsRecorder`, furigana (`ActionsUtils`), `Categories`.
 
 ### Ajouter un test (couche 1)
+
 1. La cible doit être de la **logique pure** (pas de `Context`/`View`/Compose). Si c'est couplé Android, ça relève de la couche 2 ou 4.
 2. Mocker les repos / `SharedPreferences` avec **MockK** ; `InstantTaskExecutorRule` pour tout `LiveData` ; `runBlocking`/`UnconfinedTestDispatcher` pour les `suspend`.
 3. Mocker `Random` via `object : Random() { override fun nextInt(bound: Int) = … }` (pas `mockk<Random>()`).
@@ -65,6 +66,7 @@ On maximise la logique testée sur la JVM (rapide, déterministe), on réserve l
 - **Couvre** : 5 DAOs (DB in-memory), `RoomMigrationTest` (14→21, chemin prod 16→21), `OldMigrationTest` (13→14), et **`DatabaseIntegrityTest`** qui ouvre l'**asset réel** `yomikataz.db` et vérifie versions, `integrity_check`, couverture 6 langues (0 colonne vide), absence de `0x3F`, `identity_hash` == `schemas/21.json`, colonne `pos`.
 
 ### Ajouter une migration → tests obligatoires
+
 À chaque nouvelle migration (voir `CLAUDE.md` § Règles migration) :
 1. Ajouter `MIGRATION_X_Y` à `ALL_MIGRATIONS` dans `RoomMigrationTest`.
 2. Ajouter un test `migrateXtoY()` (données synthétiques en v X → assertions en v Y).
@@ -84,6 +86,7 @@ On maximise la logique testée sur la JVM (rapide, déterministe), on réserve l
 - **Couvre** : Home, Study, Quiz (QCM avant/bonne réponse), Selections, WordList, WordDetail, AnswerReview, + composant `MasteryBar` — chacun en **EN et DE**.
 
 ### Ajouter un écran/état (couche 3)
+
 Patron : voir `MainScreensScreenshotTest` / `RemainingScreensScreenshotTest`.
 1. Construire une **fixture `UiState`** (pas de BDD/réseau) et appeler le composable d'écran.
 2. Utiliser le helper `capture(name) { … }` : il enveloppe dans `CompositionLocalProvider(LocalInspectionMode provides true)` + `YomikataTheme` + `Box(Modifier.size(411.dp, 891.dp))`.
@@ -115,6 +118,7 @@ Patron : voir `MainScreensScreenshotTest` / `RemainingScreensScreenshotTest`.
 - **Reste** (backlog) : saisie édition + IME (champ `HiraganaEditText` via `AndroidView` → Espresso), barre de progression conservée après revue d'erreurs, création/renommage/suppression de sélection, changement de langue piloté depuis Settings, `DialogFlowController` (auto-skip), E2E complet Study → quiz → Answers.
 
 ### Ajouter un test d'interaction (couche 4)
+
 1. `@get:Rule val rule = createComposeRule()` ; `rule.setContent { YomikataTheme { … } }` avec une fixture `UiState` + des callbacks-espions.
 2. Sélecteurs **stables et indépendants de la locale** : préférer les libellés non localisés (kana des options QCM, libellés nav « Home/Study/… »). Éviter les chaînes `stringResource` (varient selon la langue de l'émulateur).
 3. `rule.onNodeWithText("…").performClick()` puis asserter l'effet (callback reçu, état affiché). Compose fusionne le texte descendant dans le nœud cliquable parent → cliquer le texte déclenche le `onClick`.
@@ -133,12 +137,14 @@ Ce qui dépend de réseau réel, audio audible, services Google ou pickers syst�
 > **À dérouler intégralement avant chaque publication.** Cocher au fur et à mesure.
 
 ### A. Gates automatisés (s'arrêter au premier rouge)
+
 - [ ] `.\gradlew.bat test` — unitaires JVM verts
 - [ ] `.\gradlew.bat verifyRoborazziDebug` — aucune dérive visuelle (sinon : régression, ou `record` + revue si le changement est voulu)
 - [ ] `.\gradlew.bat connectedDebugAndroidTest` — DAOs, migrations **et `DatabaseIntegrityTest`** verts (émulateur)
 - [ ] `.\gradlew.bat assembleRelease` — build R8/ProGuard réussit
 
 ### B. Cohérence données & config (en partie couvert par `DatabaseIntegrityTest`)
+
 - [ ] `DATABASE_VERSION` (`YomikataDatabase.kt`) == `PRAGMA user_version` de l'asset == dernier `app/schemas/*.json`
 - [ ] `versionCode` / `versionName` incrémentés (`app/build.gradle`)
 - [ ] `res/xml/locale_config.xml` liste EN/FR/DE/ES/PT/ZH
@@ -147,6 +153,7 @@ Ce qui dépend de réseau réel, audio audible, services Google ou pickers syst�
 - [ ] Page de confidentialité servie (GitHub Pages) à l'URL `url_privacy_policy`
 
 ### C. Manuel sur device réel (couche 5)
+
 - [ ] **1er lancement** : splash sombre (pas de disque blanc) → tutos welcome+catégories → dialog consentement analytics (1×)
 - [ ] **Voix — téléchargement** : card Study par niveau → DL réel → barre de progression → check vert
 - [ ] **Voix — lecture** : audio **audible** (mot et phrase) ; **TTS** parle en l'absence de pack
@@ -175,6 +182,7 @@ Ce qui dépend de réseau réel, audio audible, services Google ou pickers syst�
 ## Baselines screenshot & rapports versionnés
 
 ### Cycle de vie d'une baseline screenshot
+
 Les PNG de `app/src/test/screenshots/` sont la **référence « golden »**, committée dans git. Deux niveaux d'analyse, à ne pas confondre :
 - **Diff pixel — automatique, à chaque run** : `verifyRoborazziDebug` rend chaque écran et le compare au baseline → build **rouge à la moindre dérive**. C'est le gate de régression.
 - **Revue visuelle — ponctuelle, à l'enregistrement** : valider que la baseline est *correcte* (pas de troncature, bonnes couleurs). Fait une fois au `record`, et en **revue du diff d'image** quand une baseline change. ⚠️ Une baseline buggée passerait `verify` : la revue à l'enregistrement est le garde-fou.
@@ -187,6 +195,7 @@ Les PNG de `app/src/test/screenshots/` sont la **référence « golden »**, com
 **Ne PAS committer** : `app/build/outputs/roborazzi/` (images `actual`/`compare`/diff d'un run) — artefacts, déjà gitignored. **Retrouver la version d'une baseline** : `git log -1 --format="%h %ci" -- app/src/test/screenshots/home_en.png`.
 
 ### Rapports de test ancrés à une version
+
 Ce qui est versionné (baselines, code des tests, `schemas/*.json`) est ancré par commit, gratuitement. Les **résultats d'exécution** sont des artefacts à **estampiller**. Le script `scripts/test-report.ps1` produit un rapport Markdown daté, ancré à `commit + versionName/code + device`, à partir des résultats déjà générés :
 
 ```powershell

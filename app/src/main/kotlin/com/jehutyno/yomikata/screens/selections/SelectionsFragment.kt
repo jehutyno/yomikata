@@ -161,6 +161,7 @@ class SelectionsFragment(private val diArg: DI) : Fragment(), DIAware {
         val position = uiState.selections.indexOfFirst { it.id == quiz.id }.takeIf { it >= 0 } ?: return
         val intent = Intent(context, ContentActivity::class.java).apply {
             putExtra(Extras.EXTRA_CATEGORY, Categories.CATEGORY_SELECTIONS)
+            putExtra(Extras.EXTRA_QUIZ_ID, quiz.id)
             putExtra(Extras.EXTRA_QUIZ_POSITION, position)
             putExtra(Extras.EXTRA_QUIZ_TYPES, ArrayList(uiState.selectedTypes))
             putExtra(Extras.EXTRA_LEVEL, null as java.io.Serializable?)

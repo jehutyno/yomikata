@@ -48,4 +48,27 @@ class FuriganaParsingTest {
             sentenceNoAnswerFuri(sentence("{今日;きょう}は{暑;あつ}い"), word)
         )
     }
+
+    @Test
+    fun `getWordPositionInFuriSentence handles multi-reading and unbracketed words`() {
+        val sent = sentence("テーブルの{上;うえ}に{茶碗;ちゃわん}があります。")
+
+        val wordChawan = Word(
+            1, "茶碗", "teacup", "bol", "ちゃわん",
+            getLevelFromPoints(0), 0, 0, 0, 0, -1, 0, 3, 0, null
+        )
+        assertEquals(7, getWordPositionInFuriSentence(sent.jap, wordChawan))
+
+        val wordChawanMultiReadings = Word(
+            1, "茶碗", "teacup", "bol", "ちゃわん/ちゃわんみ",
+            getLevelFromPoints(0), 0, 0, 0, 0, -1, 0, 3, 0, null
+        )
+        assertEquals(7, getWordPositionInFuriSentence(sent.jap, wordChawanMultiReadings))
+
+        val wordTable = Word(
+            2, "テーブル", "table", "table", "てーぶる",
+            getLevelFromPoints(0), 0, 0, 0, 0, -1, 0, 3, 0, null
+        )
+        assertEquals(0, getWordPositionInFuriSentence(sent.jap, wordTable))
+    }
 }

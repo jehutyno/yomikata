@@ -12,7 +12,7 @@
     <string name="selection_not_empty_name">O nome não pode estar vazio</string>
     <string name="action_search">Buscar</string>
     <string name="action_errors">Erros</string>
-    <string name="quiz_input_hint">Digite a leitura do caractere marcado</string>
+    <string name="quiz_input_hint">Escreva aqui</string>
     <string name="practice_random">Praticar tudo aleatoriamente</string>
     <string name="practice_normal">Praticar tudo</string>
     <string name="practice_progressive">Praticar progressivamente</string>
@@ -27,10 +27,14 @@
     <!-- Mastery progression (Study + word list) -->
     <string name="progress_header">習得 · Progresso</string>
     <string name="mastery_all">Todos</string>
-    <string name="mastery_to_review">Para revisar</string>
-    <string name="mastered">Dominados</string>
+    <string name="mastery_to_review">Para revisar:</string>
+    <string name="mastery_mastered">Dominados:</string>
     <string name="mastery_percent_label">dominado</string>
-    <string name="word_count_label">palavras</string>
+    <plurals name="word_count_label">
+        <item quantity="one">%d palavra</item>
+        <item quantity="other">%d palavras</item>
+        <item quantity="many">%d palavras</item>
+    </plurals>
     <string name="quit_quiz">Deseja encerrar esta sessão de prática?</string>
     <string name="search_title">Resultados da busca</string>
     <string name="mail_chooser">Contato por e-mail</string>
@@ -46,7 +50,7 @@
     <string name="tts_init_failed">Falha ao inicializar a síntese de voz</string>
     <string name="set_up_tts_title">Configurações de voz</string>
     <string name="set_up_tts">Para ativar a voz, você precisa:\n</string>
-    <string name="download_voices_action">Baixar vozes (%dMB)</string>
+    <string name="download_voices_action">Baixar vozes\n(%dMB)</string>
     <string name="get_google_tts_action">Instalar Google Text-to-Speech</string>
     <string name="tuto_welcome">Pronto para aprender japonês</string>
     <string name="tuto_categories">Categorias</string>
@@ -79,9 +83,9 @@
     <string name="error_no_quiz_no_word">Deve haver pelo menos um questionário com uma palavra</string>
     <string name="alert_quiz_finished">Você viu todas as palavras. O que deseja fazer?</string>
     <string name="alert_session_finished">Você completou uma sessão com %1$d palavras. O que deseja fazer?</string>
-    <string name="alert_restart">reiniciar</string>
-    <string name="alert_continue">continuar</string>
-    <string name="alert_quit">sair</string>
+    <string name="alert_restart">Reiniciar</string>
+    <string name="alert_continue">Continuar</string>
+    <string name="alert_quit">Sair</string>
     <string name="alert_review_session_errors">Revisar erros da sessão</string>
     <string name="alert_review_quiz_errors">Revisar todos os erros do questionário</string>
     <string name="quit_app">Tem certeza que deseja sair do Yomikata?</string>
@@ -139,6 +143,8 @@
     <string name="prefs_length_message">Número de palavras por sessão</string>
     <string name="prefs_font_size">Tamanho da fonte</string>
     <string name="prefs_font_size_message">Tamanho da fonte das frases de exemplo</string>
+    <string name="font_serif_title">Fonte com serifa</string>
+    <string name="font_serif_summary">Exibir japonês em uma fonte diferente</string>
     <string name="app_quit">Tem certeza que deseja sair do Yomikata Z?</string>
     <string name="tts_settings_title">Configurações de voz</string>
     <string name="tts_volume">Volume da voz</string>
@@ -160,6 +166,8 @@
     <string name="settings_play_start_summary">Reproduzir a palavra ao aparecer</string>
     <string name="settings_play_end_title">Reproduzir no final</string>
     <string name="settings_play_end_summary">Reproduzir a palavra antes de avançar</string>
+    <string name="prefs_warn_volume_too_low_summary">Mostrar aviso quando o volume estiver muito baixo</string>
+    <string name="prefs_warn_volume_too_low_title">Aviso de volume baixo</string>
     <string name="drawer_home">Início</string>
     <string name="quiz_launched">%1$d questionário iniciado</string>
     <string name="words_seen">%1$d palavras vistas</string>
@@ -195,8 +203,8 @@
     <string name="share_message">Recomendo este aplicativo para aprender japonês:\n\nhttps://play.google.com/apps/testing/com.jehutyno.yomikata\n\n</string>
     <string name="share_choose">Compartilhar aplicativo</string>
     <string name="alert_error_review_finished">Revisão de erros concluída</string>
-    <string name="alert_error_review_session_message">Você revisou todos os erros da sessão</string>
-    <string name="alert_error_review_quiz_message">Você revisou todos os erros do questionário</string>
+    <string name="alert_error_review_session_message">Você revisou todos os erros da sessão.</string>
+    <string name="alert_error_review_quiz_message">Você revisou todos os erros do questionário.</string>
     <string name="alert_continue_quiz">Continuar questionário</string>
     <string name="composition">Composição</string>
     <string name="example">Exemplo</string>
@@ -214,6 +222,7 @@
     <string name="update_voices_alert">Atualizar vozes</string>
     <string name="update_voices_alert_message">As vozes foram atualizadas no servidor. Você pode baixar %dMB de vozes para obter as últimas correções.</string>
     <string name="message_adjuste_volume">O volume está muito baixo, por favor ajuste</string>
+    <string name="message_adjuste_tts_volume">O volume da voz está muito baixo, por favor ajuste</string>
     <string name="delete_voices_files">Excluir arquivos de voz</string>
     <string name="dont_ask_voices">Não perguntar novamente</string>
     <string name="voices_reinit_done">Arquivos de voz excluídos</string>
@@ -242,8 +251,9 @@
     <string name="undo_to_restore">Desfaça para restaurar os dados anteriores</string>
     <string name="changes_undone">As alterações foram desfeitas com sucesso</string>
     <string name="app_closed_data_recovered">O aplicativo foi fechado durante a restauração, seus dados anteriores foram recuperados</string>
-    <string name="tap_to_reveal_choices">Toque para ver as opções</string>
+    <string name="tap_to_reveal_choices">Ocultar respostas</string>
     <string name="tap_to_reveal_choices_summary">As respostas ficam ocultas até você tocar na tela</string>
+    <string name="reveal_choices">Mostrar opções</string>
     <string name="give_hiragana_reading_hint">Digite a leitura em hiragana</string>
     <string name="give_romaji_hint">Digite a leitura em rōmaji</string>
     <string name="give_word_or_kanji_hint">Digite a palavra ou kanji</string>
@@ -290,7 +300,7 @@
     <string name="sponsor_button">♥ Apoiar no GitHub</string>
 
     <!-- Compose UI labels (extracted from hardcoded literals) -->
-    <string name="action_favorite">Favorito</string>
+    <string name="action_selections">Coleções</string>
     <string name="action_reveal_answer">Revelar resposta</string>
     <string name="action_clear">Limpar</string>
     <string name="action_audio">Áudio</string>
@@ -324,4 +334,12 @@
     <string name="fab_next">Próximo →</string>
     <string name="update_ready_message">Atualização pronta para instalar</string>
     <string name="update_restart_action">Reiniciar</string>
+    <string name="prefs_kana_input_fix_message">Marque esta caixa se estiver a ter problemas com o teclado japonês</string>
+    <string name="kana_input_fix">Problema com a entrada de kana</string>
+    <string name="bottomnav_home">Início</string>
+    <string name="bottomnav_study">Estudo</string>
+    <string name="bottomnav_selections">Coleções</string>
+    <string name="bottomnav_settings">Ajustes</string>
+    <string name="prefs_quiz_settings">Configurações dos questionários</string>
+
 </resources>

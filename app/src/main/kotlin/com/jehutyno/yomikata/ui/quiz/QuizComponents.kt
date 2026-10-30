@@ -19,11 +19,16 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -35,12 +40,15 @@ import com.jehutyno.yomikata.ui.theme.BorderCorrect
 import com.jehutyno.yomikata.ui.theme.BorderDefault
 import com.jehutyno.yomikata.ui.theme.BorderWrong
 import com.jehutyno.yomikata.ui.theme.Correct
+import com.jehutyno.yomikata.ui.theme.LocalJapaneseFontFamily
 import com.jehutyno.yomikata.ui.theme.RadiusLg
 import com.jehutyno.yomikata.ui.theme.SurfacePrimary
 import com.jehutyno.yomikata.ui.theme.TextDim
 import com.jehutyno.yomikata.ui.theme.TextPrimary
 import com.jehutyno.yomikata.ui.theme.Wrong
 import com.jehutyno.yomikata.ui.theme.YomikataTheme
+import com.jehutyno.yomikata.util.quiz.QuizType
+import androidx.compose.ui.text.font.FontFamily
 
 enum class AnswerButtonState { Default, Correct, Wrong }
 
@@ -51,6 +59,7 @@ fun AnswerButton(
     state: AnswerButtonState,
     isRevealed: Boolean,
     isSelected: Boolean,
+    quizType: QuizType? = null,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -82,6 +91,13 @@ fun AnswerButton(
         else -> TextDim
     }
 
+    val isCorrect = state == AnswerButtonState.Correct
+
+    // Réduire la taille de police pour éviter les sauts de ligne
+    val isPreview = LocalInspectionMode.current
+    var fontSize by remember(label) { mutableStateOf(15.sp) }
+    var readyToDraw by remember(label) { mutableStateOf(isPreview) }
+
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -94,8 +110,8 @@ fun AnswerButton(
                 color = borderColor,
                 shape = RoundedCornerShape(RadiusLg)
             )
-            .clickable(enabled = !isRevealed, onClick = onClick)
-            .padding(horizontal = 12.dp),
+            .clickable(enabled = !isRevealed || isCorrect, onClick = onClick)
+            .padding(horizontal = 12.dp, vertical = 5.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
@@ -115,10 +131,22 @@ fun AnswerButton(
         }
         Text(
             text = label,
-            fontSize = 13.sp,
+            fontSize = fontSize,
             fontWeight = FontWeight.W400,
             color = textColor,
-            modifier = Modifier.weight(1f)
+            fontFamily = if (quizType == QuizType.TYPE_JAP_EN) FontFamily.Default else LocalJapaneseFontFamily.current,
+            maxLines = if(quizType == QuizType.TYPE_JAP_EN) 3 else 1,
+            softWrap = quizType == QuizType.TYPE_JAP_EN,
+            onTextLayout = { result ->
+                if (result.hasVisualOverflow && fontSize > 9.sp) {
+                    fontSize = (fontSize.value - 1).sp
+                } else {
+                    readyToDraw = true
+                }
+            },
+            modifier = Modifier
+                .weight(1f)
+                .alpha(if (readyToDraw) 1f else 0f)
         )
         if (state == AnswerButtonState.Correct) {
             Text(text = "✓", fontSize = 14.sp, color = Correct)

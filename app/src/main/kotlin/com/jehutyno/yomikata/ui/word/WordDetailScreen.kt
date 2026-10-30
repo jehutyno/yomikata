@@ -172,21 +172,25 @@ fun WordDetailScreen(
                             .padding(horizontal = 16.dp, vertical = 20.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
-                        MasteryDots(score = word.points)
+                        MasteryDots(points = word.points)
 
                         Spacer(modifier = Modifier.height(16.dp))
 
                         // Kanji — couleur mastery, furigana orange, centré
                         val wordText = if (word.isKana == 2) word.japanese
                         else "{${word.japanese};${word.reading}}"
+                        // Réduction de la taille de police pour les mots trop longs
+                        var wordFontSize = 52f
+                        if (word.japanese.length >= 8) wordFontSize = 36f
+                        else if (word.japanese.length > 6) wordFontSize = 42f
                         WordDetailFuriganaView(
                             text = wordText,
                             markStart = 0,
                             markEnd = 0,
                             highlightColor = wordColor,
                             textColor = wordColor,
-                            furiganaColor = AccentOrange.toArgb(),
-                            textSizeSp = 52f,
+                            furiganaColor = wordColor,
+                            textSizeSp = wordFontSize,
                             centered = true,
                             modifier = Modifier.fillMaxWidth(),
                         )
@@ -211,19 +215,26 @@ fun WordDetailScreen(
                             text = word.getTrad(),
                             fontSize = 16.sp,
                             color = TextSecondary,
-                            modifier = Modifier.padding(bottom = 16.dp),
+                            modifier = Modifier.padding(bottom = 10.dp),
                         )
 
                         // Level up / down buttons
                         Row(
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
-                            modifier = Modifier.padding(bottom = 12.dp),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                            modifier = Modifier.padding(bottom = 10.dp),
                         ) {
-                            TextButton(onClick = onLevelDown) {
-                                Text("▼ " + stringResource(R.string.word_demote), color = TextMuted, fontSize = 12.sp)
+                            TextButton(onClick = onLevelDown, modifier = Modifier
+                                .border(1.dp, BorderDefault, RoundedCornerShape(RadiusMd))
+                                .padding(horizontal = 15.dp)
+                            ) {
+                                Text("▼  " + stringResource(R.string.word_demote),
+                                    color = TextMuted, fontSize = 12.sp)
                             }
-                            TextButton(onClick = onLevelUp) {
-                                Text("▲ " + stringResource(R.string.word_promote), color = AccentOrange, fontSize = 12.sp)
+                            TextButton(onClick = onLevelUp, modifier = Modifier
+                                .border(1.dp, BorderDefault, RoundedCornerShape(RadiusMd))
+                                .padding(horizontal = 15.dp)) {
+                                Text("▲  " + stringResource(R.string.word_promote),
+                                    color = AccentOrange, fontSize = 12.sp)
                             }
                         }
 
@@ -430,10 +441,11 @@ private fun WordDetailScreenPreview() {
         baseCategory = 0, isSelected = 0, sentenceId = null,
         pos = "v1,vt",
     )
-    val kanji = KanjiSolo(
+    val kanji = KanjiSoloRadical(
         kanji = "食", strokes = 9, en = "eat, food", fr = "manger",
         kunyomi = "た.べる", onyomi = "ショク",
-        radical = "食",
+        radical = "食", radStroke = 3, radReading = "しょくへん",
+        radEn = "eat", radFr = "manger",
     )
     val sentence = Sentence(
         id = 1, jap = "{毎日;まいにち}、{食;た}べます。",
@@ -445,7 +457,7 @@ private fun WordDetailScreenPreview() {
     )
     WordDetailScreen(
         state = state,
-        title = "食べ物 · N5",
+        title = "食べる · N5",
         onBack = {}, onPrev = {}, onNext = {},
         onWordTtsClick = {}, onSentenceTtsClick = {},
         onFavoriteClick = {}, onCopyClick = {}, onReportClick = {},

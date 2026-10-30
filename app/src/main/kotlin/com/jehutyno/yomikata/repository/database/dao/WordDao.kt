@@ -9,23 +9,26 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface WordDao {
-    @Query("SELECT * FROM words")
+    @Query("SELECT * FROM words ORDER BY _id ASC")
     suspend fun getAllWords(): List<RoomWords>
 
     @Query("SELECT words.* FROM words JOIN quiz_word " +
            "ON quiz_word.word_id = words._id " +
-           "AND quiz_word.quiz_id = :quizId")
+           "AND quiz_word.quiz_id = :quizId " +
+           "ORDER BY words._id ASC")
     fun getWords(quizId: Long): Flow<List<RoomWords>>
 
     @Query("SELECT words.* FROM words JOIN quiz_word " +
             "ON quiz_word.word_id = words._id " +
-            "AND quiz_word.quiz_id IN (:quizIds)")
+            "AND quiz_word.quiz_id IN (:quizIds) " +
+            "ORDER BY words._id ASC")
     fun getWords(quizIds: LongArray): Flow<List<RoomWords>>
 
     @Query("SELECT words.* FROM words JOIN quiz_word " +
            "ON quiz_word.word_id = words._id " +
            "AND quiz_word.quiz_id IN (:quizIds) " +
-           "AND words.level IN (:levels)")
+           "AND words.level IN (:levels) " +
+           "ORDER BY words._id ASC")
     fun getWordsByLevels(quizIds: LongArray, levels: IntArray): Flow<List<RoomWords>>
 
     @Query("SELECT words.* FROM words JOIN quiz_word " +
@@ -101,9 +104,8 @@ interface WordDao {
     @Query("UPDATE words SET points = :points WHERE _id = :wordId")
     suspend fun updateWordPoints(wordId: Long, points: Int)
 
-    @Query("UPDATE words SET level = :level " +
-           "WHERE _id = :wordId")
-    suspend fun updateWordLevel(wordId: Long, level: Int)
+    @Query("UPDATE words SET level = :level, points = :points WHERE _id = :wordId")
+    suspend fun updateWordLevel(wordId: Long, level: Int, points: Int)
 
     @Query("UPDATE words SET repetition = :repetition WHERE _id = :wordId")
     suspend fun updateWordRepetition(wordId: Long, repetition: Int)

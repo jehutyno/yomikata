@@ -11,6 +11,7 @@ enum class Prefs(val pref: String) {
     SELECTED_QUIZ_TYPES("selected_quiz_types"),
     WAS_SELECTED_QUIZ_TYPES("was_selected_quiz_types"),
     TTS_RATE("tts_rate"),
+    TTS_VOLUME("tts_volume"),
     LATEST_CATEGORY_1("latest_category_1"),
     LATEST_CATEGORY_2("latest_category_2"),
     DB_UPDATE_ONGOING("db_update_ongoing"),
@@ -29,11 +30,15 @@ enum class Prefs(val pref: String) {
 
     APP_LANGUAGE("app_language"),
 
+    FONT_SIZE("font_size"),
+    FONT_SERIF("font_serif"),
+    KANA_INPUT_FIX("kana_input_fix"),
     QUIZ_LENGTH("length"),
     QUIZ_SPEED("speed"),
     PLAY_START("play_start"),
     PLAY_END("play_end"),
-    FONT_SIZE("font_size"),
+    TAP_TO_REVEAL("tap_to_reveal"),
+    WARN_VOLUME_TOO_LOW("warn_volume_too_low"),
 
     LAST_SELECTED_LEVEL("last_selected_level"),
 

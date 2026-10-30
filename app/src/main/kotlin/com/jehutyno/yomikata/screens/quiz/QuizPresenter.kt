@@ -552,7 +552,8 @@ class QuizPresenter(
             QuizType.TYPE_AUTO -> TODO()
         }
 
-        if (result && defaultSharedPreferences.getBoolean(Prefs.PLAY_END.pref, true))
+        // Add "result &&" to play only when answered correctly.
+        if (defaultSharedPreferences.getBoolean(Prefs.PLAY_END.pref, true))
             quizView.speakWord(sessionState.getCurrentWord())
 
         quizView.animateCheck(result)
@@ -745,6 +746,16 @@ class QuizPresenter(
 
     override suspend fun updateWordLevel(wordId: Long, level: Level) {
         wordStatisticsRecorder.updateWordLevel(wordId, level)
+        val updatedQuizWords = sessionState.quizWords.map { (word, type) ->
+            if (word.id == wordId) Pair(word.copy(level = level, points = level.minPoints), type) else Pair(word, type)
+        }
+        sessionState.quizWords = updatedQuizWords
+
+        val updatedErrors = sessionState.errors.map { (word, type) ->
+            if (word.id == wordId) Pair(word.copy(level = level, points = level.minPoints), type) else Pair(word, type)
+        }
+        sessionState.errors.clear()
+        sessionState.errors.addAll(updatedErrors)
     }
 
     override suspend fun getRandomWords(wordId: Long, answer: String, wordSize: Int, limit: Int, quizType: QuizType): ArrayList<Word> {

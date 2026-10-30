@@ -65,7 +65,7 @@ class PrefsFragment : PreferenceFragmentCompat() {
                 * resources.displayMetrics.density).toInt()
         listView?.apply {
             clipToPadding = false
-            updatePadding(bottom = bottomPad)
+            updatePadding(bottom = 2*bottomPad)
         }
     }
 
@@ -134,8 +134,17 @@ class PrefsFragment : PreferenceFragmentCompat() {
 
     override fun onPreferenceTreeClick(preference: Preference): Boolean {
         when (preference.key) {
-            "font_size", "input_change", "speed", "length",
-            "tap_to_reveal", "play_start", "play_end", "analytics_consent" -> return true
+
+            Prefs.FONT_SIZE.pref,
+            Prefs.FONT_SERIF.pref,
+            Prefs.KANA_INPUT_FIX.pref,
+            Prefs.QUIZ_LENGTH.pref,
+            Prefs.QUIZ_SPEED.pref,
+            Prefs.PLAY_START.pref,
+            Prefs.PLAY_END.pref,
+            Prefs.TAP_TO_REVEAL.pref,
+            Prefs.WARN_VOLUME_TOO_LOW.pref,
+            Prefs.ANALYTICS_CONSENT.pref -> return true
 
             "reset_tuto" -> {
                 resetAllTutos(PreferenceManager.getDefaultSharedPreferences(requireActivity()))

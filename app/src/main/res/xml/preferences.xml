@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <PreferenceCategory android:title="Quiz Settings">
+    <PreferenceCategory android:title="@string/prefs_quiz_settings">
         <ListPreference
             android:defaultValue="23"
             android:entries="@array/fontSizeArray"
@@ -13,11 +13,24 @@
 
         <CheckBoxPreference
             android:defaultValue="false"
-            android:icon="@drawable/ic_keyboard"
-            android:key="input_change"
-            android:summary="Use if you have issues with Japanese keyboard"
-            android:title="Kana Input fix"/>
+            android:icon="@drawable/ic_kanji"
+            android:key="font_serif"
+            android:summary="@string/font_serif_summary"
+            android:title="@string/font_serif_title"/>
 
+        <CheckBoxPreference
+            android:defaultValue="true"
+            android:icon="@drawable/ic_volume"
+            android:key="warn_volume_too_low"
+            android:summary="@string/prefs_warn_volume_too_low_summary"
+            android:title="@string/prefs_warn_volume_too_low_title"/>
+
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:icon="@drawable/ic_keyboard"
+            android:key="kana_input_fix"
+            android:summary="@string/prefs_kana_input_fix_message"
+            android:title="@string/kana_input_fix"/>
 
         <ListPreference
             android:defaultValue="2"

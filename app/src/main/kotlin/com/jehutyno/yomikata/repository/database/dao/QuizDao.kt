@@ -8,13 +8,13 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface QuizDao {
-    @Query("SELECT * FROM quiz WHERE category = :category")
+    @Query("SELECT * FROM quiz WHERE category = :category ORDER BY _id ASC")
     fun getQuizzesOfCategory(category: Int): Flow<List<RoomQuiz>>
 
     @Query("SELECT * FROM quiz WHERE _id = :quizId LIMIT 1")
     suspend fun getQuizById(quizId: Long): RoomQuiz?
 
-    @Query("SELECT * FROM quiz")
+    @Query("SELECT * FROM quiz ORDER BY _id ASC")
     suspend fun getAllQuizzes(): List<RoomQuiz>
 
     @Insert

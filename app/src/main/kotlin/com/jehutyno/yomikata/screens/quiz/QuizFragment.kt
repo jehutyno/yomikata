@@ -53,6 +53,7 @@ import com.jehutyno.yomikata.util.showWordSelectionDialog
 import com.jehutyno.yomikata.util.hideSoftKeyboard
 import com.jehutyno.yomikata.util.onTTSinit
 import com.jehutyno.yomikata.util.releaseAsync
+import com.jehutyno.yomikata.util.quiz.Level
 import com.jehutyno.yomikata.util.quiz.QuizType
 import com.jehutyno.yomikata.util.quiz.getCategoryLevel
 import com.jehutyno.yomikata.util.reportError
@@ -92,6 +93,8 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, TextToSp
     private var ttsRate by mutableStateOf(50)
     private var ttsShowRate by mutableStateOf(true)
 
+    private var warnIfVolumeTooLow by mutableStateOf(true)
+
     private lateinit var dialogFlowController: DialogFlowController
 
     // Track if answer input is busy (prevent double-submit)
@@ -103,6 +106,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, TextToSp
         // Applique la vitesse de parole sauvegardée (Prefs.TTS_RATE) au moteur dès son init,
         // sinon le réglage du panneau vocal reste sans effet pendant le quiz.
         tts?.setSpeechRate((prefs.getInt(Prefs.TTS_RATE.pref, 50) + 50).toFloat() / 100)
+        warnIfVolumeTooLow = prefs.getBoolean(Prefs.WARN_VOLUME_TOO_LOW.pref, true);
         val currentWord = uiState.currentWord
         if (currentWord != null) {
             val noPlayStart = prefs.getBoolean(Prefs.PLAY_START.pref, false)
@@ -132,6 +136,27 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, TextToSp
     override fun onResume() {
         super.onResume()
         presenter.start()
+        refreshWordLevels()
+    }
+
+    private fun refreshWordLevels() {
+        val currentWords = uiState.words
+        if (currentWords.isEmpty()) return
+        lifecycleScope.launch {
+            var changed = false
+            val updatedWords = currentWords.map { (word, quizType) ->
+                val freshWord = presenter.getWordById(word.id)
+                if (freshWord.level != word.level || freshWord.points != word.points) {
+                    changed = true
+                    Pair(freshWord, quizType)
+                } else {
+                    Pair(word, quizType)
+                }
+            }
+            if (changed) {
+                uiState = uiState.copy(words = updatedWords)
+            }
+        }
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -195,6 +220,19 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, TextToSp
                             dialog.show(childFragmentManager, "")
                         },
                         onSelectionClick = { showSelectionMenu() },
+                        onProgressClick = { level ->
+                            val word = uiState.currentWord ?: return@QuizScreen
+                            lifecycleScope.launch {
+                                if (word.level == level) return@launch
+                                presenter.updateWordPoints(word.id, level.minPoints)
+                                presenter.updateWordLevel(word.id, level)
+                                val updatedWord = word.copy(level = level, points = level.minPoints)
+                                val updatedWords = uiState.words.mapIndexed { index, pair ->
+                                    if (index == uiState.currentIndex) Pair(updatedWord, pair.second) else pair
+                                }
+                                uiState = uiState.copy(words = updatedWords)
+                            }
+                        },
                         onReportClick = {
                             presenter.onReportClick(uiState.currentIndex)
                         },
@@ -208,7 +246,9 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, TextToSp
                         },
                         onEditSubmit = { text ->
                             val quizType = uiState.currentQuizType
-                            if (quizType == QuizType.TYPE_PRONUNCIATION && !holdOn) {
+                            if (uiState.isRevealed) {
+                                lifecycleScope.launch { presenter.onNextWord() }
+                            } else if (quizType == QuizType.TYPE_PRONUNCIATION && !holdOn) {
                                 holdOn = true
                                 val cleaned = text
                                     .replace("n", if ((uiState.currentWord?.isKana ?: 0) >= 1) "n" else "ん")
@@ -231,6 +271,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, TextToSp
                             }
                         },
                         onEditClear = { uiState = uiState.copy(editText = "") },
+                        onTapToReveal = { uiState = uiState.copy(tapToRevealVisible = false) },
                     )
 
                     if (ttsSettingsVisible) {
@@ -238,19 +279,27 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, TextToSp
                             volume = ttsVolume,
                             maxVolume = ttsMaxVolume,
                             speechRate = ttsRate,
+                            warnIfVolumeTooLow = warnIfVolumeTooLow,
                             showSpeechRate = ttsShowRate,
                             onVolumeChange = { v ->
                                 ttsVolume = v
-                                val audioManager = requireActivity()
-                                    .getSystemService(Context.AUDIO_SERVICE) as AudioManager
-                                audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, v, 0)
-                                presenter.onSpeakSentence()
+                                prefs.edit().putInt(Prefs.TTS_VOLUME.pref, v).apply()
+                                val currentWord = uiState.currentWord
+                                if (currentWord != null) {
+                                    voicesManager.speakWord(currentWord, ttsSupported, tts)
+                                } else {
+                                    presenter.onSpeakSentence()
+                                }
                             },
                             onSpeechRateChange = { r ->
                                 ttsRate = r
                                 prefs.edit().putInt(Prefs.TTS_RATE.pref, r).apply()
                                 tts?.setSpeechRate((r + 50).toFloat() / 100)
                                 presenter.onSpeakSentence()
+                            },
+                            onWarnIfVolumeTooLowChange = { v ->
+                                warnIfVolumeTooLow = v
+                                prefs.edit().putBoolean(Prefs.WARN_VOLUME_TOO_LOW.pref, v).apply()
                             },
                             onDismiss = { ttsSettingsVisible = false },
                         )
@@ -309,10 +358,8 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, TextToSp
             SpeechAvailability.NOT_AVAILABLE ->
                 speechNotSupportedAlert(requireActivity(), level) {}
             else -> {
-                val audioManager = requireActivity()
-                    .getSystemService(Context.AUDIO_SERVICE) as AudioManager
-                ttsMaxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
-                ttsVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
+                ttsMaxVolume = 100
+                ttsVolume = prefs.getInt(Prefs.TTS_VOLUME.pref, 100)
                 ttsRate = prefs.getInt(Prefs.TTS_RATE.pref, 50)
                 // Le débit ne s'applique qu'au repli TTS ; les voix MP3 l'ignorent.
                 ttsShowRate = availability == SpeechAvailability.TTS_AVAILABLE
@@ -361,13 +408,20 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, TextToSp
     }
 
 
+    private val isTapToRevealEnabled: Boolean
+        get() = prefs.getBoolean(Prefs.TAP_TO_REVEAL.pref, false)
+
     override fun setPagerPosition(position: Int) {
         // P5 : marquer le segment courant en Current (orange)
         val newSegments = uiState.segments.toMutableList()
         if (position in newSegments.indices && newSegments[position] == SegmentState.Pending) {
             newSegments[position] = SegmentState.Current
         }
-        uiState = uiState.copy(currentIndex = position, segments = newSegments)
+        uiState = uiState.copy(
+            currentIndex = position,
+            segments = newSegments,
+            tapToRevealVisible = isTapToRevealEnabled,
+        )
         refreshSelectionState()
     }
 
@@ -395,6 +449,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, TextToSp
             editShowDisplayAnswer = false,
             qcmOptions = List(4) { QcmOption("") },
             answerMode = AnswerMode.None,
+            tapToRevealVisible = isTapToRevealEnabled,
         )
     }
 
@@ -404,6 +459,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, TextToSp
             answerMode = AnswerMode.QCM,
             hintText = hintText,
             isRevealed = false,
+            tapToRevealVisible = isTapToRevealEnabled,
         )
     }
 

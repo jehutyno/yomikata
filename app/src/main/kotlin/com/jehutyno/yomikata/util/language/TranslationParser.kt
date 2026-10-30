@@ -4,7 +4,7 @@ package com.jehutyno.yomikata.util.language
 /**
  * Used to parse English/French translation strings.
  * e.g. In order to remove info such as (v5t) that can give away the answer, or to remove
- * any japanese words that may be referred to in the translation.
+ * any Japanese words that may be referred to in the translation.
  */
 
 
@@ -70,30 +70,30 @@ private const val japaneseChars =
     "\\uF900-\\uFAFF" +     // CJK compatibility ideographs
     "\\uFF00-\\uFFEF"       // halfwidth and fullwidth forms
 
-/** Finds any text inside of parentheses () that also contains japanese characters, and
+/** Finds any text inside of parentheses () that also contains Japanese characters, and
  *  any trailing whitespaces */
 private val regexJapaneseInParentheses = Regex("""\([^()]*[$japaneseChars][^()]*\)\s*""")
 
-/** Finds stray japanese characters that are not inside parentheses */
+/** Finds stray Japanese characters that are not inside parentheses */
 private val regexJapaneseChars = Regex("""[$japaneseChars]""")
 
 /**
- * Remove any japanese
+ * Remove any Japanese
  *
  * Removes hiragana, katakana, and kanji from a string. Also removes any other characters
- * within the same parentheses () as the removed japanese text. e.g. `(hello 先輩)` will be
+ * within the same parentheses () as the removed Japanese text. e.g. `(hello 先輩)` will be
  * removed completely since the hello is also in the brackets.
  * Also removes any trailing whitespaces.
  *
  * Accented latin characters (é, è, à, ä, ö, ñ, ã, ç…) are preserved, so this is safe to
  * use on non-English translations.
  *
- * @return New string with any japanese characters removed
+ * @return New string with any Japanese characters removed
  */
 fun String.removeAnyJapanese(): String {
     val newString = regexJapaneseInParentheses.replace(this, "")
 
-    // also remove any stray japanese that is not in brackets
+    // also remove any stray Japanese that is not in brackets
     return regexJapaneseChars.replace(newString, "")
 }
 
@@ -151,7 +151,7 @@ private fun String.ensureSingleSpace(): String {
  */
 fun String.cleanForQCM(isJapanese: Boolean): String {
     var cleanString = this.removePartsOfSpeechInfo()
-    if (!isJapanese)
+    if (!isJapanese && LanguageManager.current != AppLanguage.CHINESE)
         cleanString = cleanString.removeAnyJapanese()
     return cleanString.trim().ensureSingleSpace()
 }

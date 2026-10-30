@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.jehutyno.yomikata.model.KanjiSolo
 import com.jehutyno.yomikata.ui.theme.BorderDefault
+import com.jehutyno.yomikata.ui.theme.LocalJapaneseFontFamily
 import com.jehutyno.yomikata.ui.theme.RadiusMd
 import com.jehutyno.yomikata.ui.theme.SurfacePrimary
 import com.jehutyno.yomikata.ui.theme.TextDim
@@ -41,6 +42,8 @@ fun KanjiComponentCard(
     meaning: String,
     modifier: Modifier = Modifier,
 ) {
+    val jpFontFamily = LocalJapaneseFontFamily.current
+
     Row(
         modifier = modifier
             .clip(RoundedCornerShape(RadiusMd))
@@ -60,11 +63,13 @@ fun KanjiComponentCard(
                 fontSize = 32.sp,
                 fontWeight = FontWeight.W300,
                 color = TextPrimary,
+                fontFamily = jpFontFamily,
             )
             Text(
                 text = "${kanji.strokes}画",
                 fontSize = 8.sp,
                 color = TextGhost,
+                fontFamily = jpFontFamily,
                 modifier = Modifier.padding(top = 3.dp),
             )
         }
@@ -98,6 +103,7 @@ fun KanjiComponentCard(
                     text = "radical: ${kanji.radical}",
                     fontSize = 9.sp,
                     color = TextGhost,
+                    fontFamily = jpFontFamily,
                     modifier = Modifier.padding(top = 4.dp),
                 )
             }
@@ -107,17 +113,20 @@ fun KanjiComponentCard(
 
 @Composable
 private fun ReadingRow(label: String, value: String) {
+    val jpFontFamily = LocalJapaneseFontFamily.current
     Row(verticalAlignment = Alignment.CenterVertically) {
         Text(
             text = label,
             fontSize = 9.sp,
             color = TextDim,
+            fontFamily = jpFontFamily,
             modifier = Modifier.width(20.dp),
         )
         Text(
             text = value,
             fontSize = 10.sp,
             color = TextMuted,
+            fontFamily = jpFontFamily,
         )
     }
 }

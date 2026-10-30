@@ -20,6 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -81,7 +82,7 @@ fun MasteryBar(
             )
             Spacer(modifier = Modifier.weight(1f))
             Text(
-                text = "$total ${stringResource(R.string.word_count_label)}",
+                text = pluralStringResource(R.plurals.word_count_label, total, total),
                 fontSize = 12.sp,
                 color = TextMuted,
                 modifier = Modifier.padding(bottom = 3.dp),
@@ -122,8 +123,8 @@ fun MasteryBar(
 
         if (showLegend) {
             Spacer(modifier = Modifier.height(9.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                LegendEntry(MasteredColor, safeMastered, stringResource(R.string.mastered))
+            Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+                LegendEntry(MasteredColor, safeMastered, stringResource(R.string.mastery_mastered))
                 LegendEntry(ToReviewColor, toReview, stringResource(R.string.mastery_to_review))
             }
         }
@@ -141,7 +142,7 @@ private fun LegendEntry(color: Color, count: Int, label: String) {
         )
         Spacer(modifier = Modifier.width(5.dp))
         Text(
-            text = "$count $label",
+            text = "$label $count",
             fontSize = 11.sp,
             color = TextMuted,
         )

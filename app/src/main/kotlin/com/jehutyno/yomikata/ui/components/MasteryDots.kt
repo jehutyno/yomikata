@@ -18,32 +18,28 @@ import com.jehutyno.yomikata.ui.theme.BorderDefault
 import com.jehutyno.yomikata.ui.theme.TextGhost
 import com.jehutyno.yomikata.ui.theme.TypeMicro
 import com.jehutyno.yomikata.ui.theme.YomikataTheme
+import com.jehutyno.yomikata.util.quiz.Level
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import com.jehutyno.yomikata.model.getWordColor
 
-// Ordered from lowest (index 0) to highest (index 15) mastery
-private val masteryColors = listOf(
-    Color(0xFFD22828), Color(0xFFD24328), Color(0xFFD25728), Color(0xFFD26028), // Low 1-4
-    Color(0xFFD26728), Color(0xFFD26C28), Color(0xFFD27728), Color(0xFFD28E28), // Medium 1-4
-    Color(0xFFD2B028), Color(0xFFD2BB28), Color(0xFFD2C628), Color(0xFFD2D228), // High 1-4
-    Color(0xFFD2D228), Color(0xFFBBD228), Color(0xFF99D228), Color(0xFF77D228), // Master 1-4
-)
-
-// Dot i lights up when score >= threshold[i]
-private val dotThresholds = listOf(1, 4, 7, 10, 13)
+// Dot i lights up when points >= threshold[i]
+private val dotThresholds = listOf(Level.LOW.minPoints, Level.MEDIUM.minPoints, Level.HIGH.minPoints, Level.MASTER.minPoints)
 
 /**
  * 5 mastery dots (7×7dp pill) for a word card or detail view.
  *
- * @param score mastery level 0..16 (0 = not studied, 1-16 = mastery scale)
+ * @param points mastery level 0..16 (0 = not studied, 1-16 = mastery scale)
  * @param label optional text shown to the right of the dots
  */
 @Composable
 fun MasteryDots(
-    score: Int,
+    points: Int,
     modifier: Modifier = Modifier,
     label: String? = null,
 ) {
-    val dotColor = if (score > 0) masteryColors[(score - 1).coerceIn(0, 15)] else BorderDefault
+    val context = LocalContext.current
+    val dotColor = Color(getWordColor(context, points))
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -55,7 +51,7 @@ fun MasteryDots(
                 modifier = Modifier
                     .size(7.dp)
                     .clip(CircleShape)
-                    .background(if (score >= threshold) dotColor else BorderDefault),
+                    .background(if (points >= threshold) dotColor else BorderDefault),
             )
         }
         if (label != null) {
@@ -73,22 +69,46 @@ fun MasteryDots(
 @Composable
 private fun MasteryDotsNotStudiedPreview() {
     YomikataTheme {
-        MasteryDots(score = 0, label = "Non étudié", modifier = Modifier.padding(14.dp))
+        MasteryDots(points = 0, label = "Not studied", modifier = Modifier.padding(14.dp))
     }
 }
 
-@Preview(name = "MasteryDots — low (score 2)", showBackground = true, backgroundColor = 0xFF0A0E17)
+@Preview(name = "MasteryDots — Low", showBackground = true, backgroundColor = 0xFF0A0E17)
 @Composable
 private fun MasteryDotsLowPreview() {
     YomikataTheme {
-        MasteryDots(score = 2, label = "Débutant", modifier = Modifier.padding(14.dp))
+        MasteryDots(points = Level.LOW.minPoints, label = "Low", modifier = Modifier.padding(14.dp))
     }
 }
 
-@Preview(name = "MasteryDots — master (score 16)", showBackground = true, backgroundColor = 0xFF0A0E17)
+@Preview(name = "MasteryDots — Medium", showBackground = true, backgroundColor = 0xFF0A0E17)
+@Composable
+private fun MasteryDotsMediumPreview() {
+    YomikataTheme {
+        MasteryDots(points = Level.MEDIUM.minPoints, label = "Medium", modifier = Modifier.padding(14.dp))
+    }
+}
+
+@Preview(name = "MasteryDots — High", showBackground = true, backgroundColor = 0xFF0A0E17)
+@Composable
+private fun MasteryDotsHighPreview() {
+    YomikataTheme {
+        MasteryDots(points = Level.HIGH.minPoints, label = "High", modifier = Modifier.padding(14.dp))
+    }
+}
+
+@Preview(name = "MasteryDots — Master", showBackground = true, backgroundColor = 0xFF0A0E17)
 @Composable
 private fun MasteryDotsMasterPreview() {
     YomikataTheme {
-        MasteryDots(score = 16, label = "Maîtrisé", modifier = Modifier.padding(14.dp))
+        MasteryDots(points = Level.MASTER.minPoints, label = "Master", modifier = Modifier.padding(14.dp))
+    }
+}
+
+@Preview(name = "MasteryDots — Master MAX_POINTS", showBackground = true, backgroundColor = 0xFF0A0E17)
+@Composable
+private fun MasteryDotsMasterMaxPreview() {
+    YomikataTheme {
+        MasteryDots(points = 850, label = "Master", modifier = Modifier.padding(14.dp))
     }
 }
