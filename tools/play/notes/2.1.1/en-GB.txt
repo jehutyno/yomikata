@@ -1,0 +1,6 @@
+Stability fixes:
+• Quiz: several crashes fixed, both at launch and on the answers screen.
+• Selections: crashes fixed when adding words.
+• External links: the app no longer crashes when no application can open a link.
+• Fewer freezes when moving from one page to another.
+Thanks for your feedback!

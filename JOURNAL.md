@@ -2,6 +2,17 @@
 
 Le plus récent en haut. Ajout seul : une entrée n'est jamais modifiée après coup.
 
+## 2026-10-30 : release 2.1.1
+
+- **Sujet** : publier les correctifs de plantages accumulés sur `main` depuis `v2.1.0`, avant d'intégrer les PR 33 à 35 prévues en 2.2.0
+- **Embarqué** : plantages du quiz (QCM sans distracteur, regex ICU, `AnswersFragment` non restaurable), des sélections (`UNIQUE quiz_word`, `NOT NULL` sur les noms localisés, `lateinit` du presenter), de `refreshVoiceState`, des liens externes (`ActivityNotFoundException`), des dialogs (`ComposeView` sur un lifecycle détruit), ANR à la libération du `TextToSpeech`
+- **Décidé** :
+  - Version 2.1.1, `versionCode` 20101, sur `main` tel quel, sans aucune PR
+  - Gate locale verte : 184 tests JVM, screenshots Roborazzi compris
+  - Le déploiement (étape 9 de la skill `release`) se décide à part ; ce commit s'arrête au brouillon Play
+  - Étape 4 de la skill `release` corrigée : la documentation de release va dans `JOURNAL.md` et `ETAT.md`
+- **À suivre** : déploiement progressif à 10 %, puis confirmer la non-récidive dans Crashlytics avant de fermer les issues
+
 ## 2026-10-28 : journal des sessions sorti de CLAUDE.md
 
 - **Sujet** : `CLAUDE.md` portait le journal des sessions (« Plan en cours », environ 60 % du fichier), entretenu par sa « Règle systématique »

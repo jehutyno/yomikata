@@ -1,0 +1,6 @@
+Stabilitätskorrekturen:
+• Quiz: mehrere Abstürze behoben, beim Start und auf dem Antwortbildschirm.
+• Auswahlen: Abstürze beim Hinzufügen von Wörtern behoben.
+• Externe Links: Die App stürzt nicht mehr ab, wenn keine Anwendung einen Link öffnen kann.
+• Weniger Hänger beim Wechseln zwischen den Seiten.
+Danke für euer Feedback!

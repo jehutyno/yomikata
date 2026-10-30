@@ -1,0 +1,6 @@
+Corrections de stabilité :
+• Quiz : plusieurs plantages corrigés, au lancement comme sur l'écran des réponses.
+• Sélections : plantages corrigés à l'ajout de mots.
+• Liens externes : l'app ne plante plus si aucune application ne peut ouvrir un lien.
+• Moins de blocages en passant d'une page à l'autre.
+Merci de vos retours !

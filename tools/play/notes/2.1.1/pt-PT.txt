@@ -1,0 +1,6 @@
+Correções de estabilidade:
+• Questionário: vários encerramentos inesperados corrigidos, ao iniciar e no ecrã de respostas.
+• Seleções: encerramentos inesperados corrigidos ao adicionar palavras.
+• Ligações externas: a app já não encerra quando nenhuma aplicação consegue abrir uma ligação.
+• Menos bloqueios ao passar de uma página para outra.
+Obrigado pelo vosso feedback!

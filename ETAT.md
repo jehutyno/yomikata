@@ -1,13 +1,15 @@
 # État
 
-Dernière mise à jour : 2026-10-28
+Dernière mise à jour : 2026-10-30
 
 Ce fichier décrit où on en est, jamais l'historique (voir `JOURNAL.md`). Il se réécrit à chaque fin de session. Première version reprise de l'ancien `CLAUDE.md`, à confirmer à la prochaine reprise.
 
 ## En cours
 
 - Audit BDD multi-langues : phases 1 à 4 faites ; phase 5 (tests d'intégrité, `DatabaseIntegrityTest`) présente côté instrumentation, statut à confirmer
-- Version en production : 2.1.0 (corrections de plantages remontés par Crashlytics, voir `JOURNAL.md`)
+- Version en production : 2.1.0
+- Version 2.1.1 (`versionCode` 20101) en préparation : correctifs de plantages remontés par Crashlytics, voir `JOURNAL.md`. Elle part en brouillon sur Play ; le déploiement progressif à 10 % reste à décider
+- PR 33 à 35 prévues en 2.2.0, après la 2.1.1
 
 ## Points ouverts
 
