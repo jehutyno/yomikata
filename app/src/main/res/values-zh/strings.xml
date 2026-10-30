@@ -12,7 +12,7 @@
     <string name="selection_not_empty_name">名称不能为空</string>
     <string name="action_search">搜索</string>
     <string name="action_errors">错误</string>
-    <string name="quiz_input_hint">输入标注字符的读音</string>
+    <string name="quiz_input_hint">请在此处填写</string>
     <string name="practice_random">随机练习全部</string>
     <string name="practice_normal">练习全部</string>
     <string name="practice_progressive">渐进式练习</string>
@@ -46,7 +46,7 @@
     <string name="tts_init_failed">语音合成初始化失败</string>
     <string name="set_up_tts_title">语音设置</string>
     <string name="set_up_tts">要启用语音输出，您需要：\n</string>
-    <string name="download_voices_action">下载语音包（%dMB）</string>
+    <string name="download_voices_action">下载语音包\n（%dMB）</string>
     <string name="get_google_tts_action">安装 Google 文字转语音</string>
     <string name="tuto_welcome">准备好学习日语了吗</string>
     <string name="tuto_categories">分类</string>
@@ -244,6 +244,7 @@
     <string name="app_closed_data_recovered">应用在恢复过程中被关闭，已恢复您之前的数据</string>
     <string name="tap_to_reveal_choices">点击显示答案</string>
     <string name="tap_to_reveal_choices_summary">触摸屏幕前答案将被隐藏</string>
+    <string name="reveal_choices">显示答案</string>
     <string name="give_hiragana_reading_hint">输入平假名读音</string>
     <string name="give_romaji_hint">输入罗马字读音</string>
     <string name="give_word_or_kanji_hint">输入单词或汉字</string>
@@ -324,4 +325,11 @@
     <string name="fab_next">下一个 →</string>
     <string name="update_ready_message">更新已准备好安装</string>
     <string name="update_restart_action">重启</string>
+    <string name="prefs_kana_input_fix_message">如果您在使用日语键盘时遇到问题，请勾选此项</string>
+    <string name="kana_input_fix">假名输入问题</string>
+    <string name="bottomnav_home">首页</string>
+    <string name="bottomnav_study">学习</string>
+    <string name="bottomnav_selections">词汇集</string>
+    <string name="bottomnav_settings">设置</string>
+    <string name="prefs_quiz_settings">Quiz Settings</string>
 </resources>

@@ -12,7 +12,7 @@
     <string name="selection_not_empty_name">El nombre no puede estar vacío</string>
     <string name="action_search">Buscar</string>
     <string name="action_errors">Errores</string>
-    <string name="quiz_input_hint">Introduce la lectura del carácter marcado</string>
+    <string name="quiz_input_hint">Escribe aquí</string>
     <string name="practice_random">Practicar todo aleatoriamente</string>
     <string name="practice_normal">Practicar todo</string>
     <string name="practice_progressive">Practicar progresivamente</string>
@@ -46,7 +46,7 @@
     <string name="tts_init_failed">Error al inicializar la síntesis de voz</string>
     <string name="set_up_tts_title">Ajustes de voz</string>
     <string name="set_up_tts">Para activar la voz, necesitas:\n</string>
-    <string name="download_voices_action">Descargar voces (%dMB)</string>
+    <string name="download_voices_action">Descargar\nvoces (%dMB)</string>
     <string name="get_google_tts_action">Instalar Google Text-to-Speech</string>
     <string name="tuto_welcome">Listo para aprender japonés</string>
     <string name="tuto_categories">Categorías</string>
@@ -242,8 +242,9 @@
     <string name="undo_to_restore">Deshaz para restaurar los datos anteriores</string>
     <string name="changes_undone">Los cambios se deshicieron correctamente</string>
     <string name="app_closed_data_recovered">La app se cerró durante la restauración, tus datos anteriores fueron recuperados</string>
-    <string name="tap_to_reveal_choices">Toca para ver las opciones</string>
+    <string name="tap_to_reveal_choices">Ocultar respuestas</string>
     <string name="tap_to_reveal_choices_summary">Las respuestas se ocultan hasta que tocas la pantalla</string>
+    <string name="reveal_choices">Mostrar opciones</string>
     <string name="give_hiragana_reading_hint">Introduce la lectura en hiragana</string>
     <string name="give_romaji_hint">Introduce la lectura en rōmaji</string>
     <string name="give_word_or_kanji_hint">Introduce la palabra o kanji</string>
@@ -324,4 +325,11 @@
     <string name="fab_next">Siguiente →</string>
     <string name="update_ready_message">Actualización lista para instalar</string>
     <string name="update_restart_action">Reiniciar</string>
+    <string name="prefs_kana_input_fix_message">Marque esta casilla si tiene problemas con el teclado japonés</string>
+    <string name="kana_input_fix">Problema con la entrada de kana</string>
+    <string name="bottomnav_home">Inicio</string>
+    <string name="bottomnav_study">Estudio</string>
+    <string name="bottomnav_selections">Colecciones</string>
+    <string name="bottomnav_settings">Ajustes</string>
+    <string name="prefs_quiz_settings">Configuración de los cuestionarios</string>
 </resources>

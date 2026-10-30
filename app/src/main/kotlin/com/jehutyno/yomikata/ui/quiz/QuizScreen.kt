@@ -1,3 +1,4 @@
+
 package com.jehutyno.yomikata.ui.quiz
 
 import android.text.Editable
@@ -5,6 +6,7 @@ import android.text.InputType
 import android.text.TextWatcher
 import android.view.KeyEvent
 import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodManager
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
@@ -14,6 +16,7 @@ import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.offset
@@ -39,7 +42,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -158,6 +163,7 @@ fun QuizScreen(
     onEditSubmit: (String) -> Unit,
     onEditReveal: () -> Unit,
     onEditClear: () -> Unit,
+    onTapToReveal: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val word = uiState.currentWord
@@ -166,6 +172,7 @@ fun QuizScreen(
     val answered = uiState.isRevealed
     val isCorrect = answered && uiState.wordHighlightColor == Correct.toArgb()
     val isWrong = answered && !isCorrect
+    val isTapToRevealActive = uiState.answerMode == AnswerMode.QCM && uiState.tapToRevealVisible && !uiState.isRevealed
 
     val heroBg by animateColorAsState(
         targetValue = when {
@@ -192,7 +199,14 @@ fun QuizScreen(
             // À l'ouverture du clavier, la Column se réduit pour rester au-dessus de
             // l'IME (au lieu de faire défiler tout l'écran) → la card s'adapte à la
             // hauteur restante et le champ d'édition reste visible.
-            .windowInsetsPadding(WindowInsets.navigationBars.union(WindowInsets.ime)),
+            .windowInsetsPadding(WindowInsets.navigationBars.union(WindowInsets.ime))
+            .clickable(
+                enabled = isTapToRevealActive,
+                indication = null,
+                interactionSource = remember { MutableInteractionSource() },
+            ) {
+                onTapToReveal()
+            },
     ) {
         // TopAppBar
         Row(
@@ -271,7 +285,12 @@ fun QuizScreen(
                 .padding(horizontal = 12.dp, vertical = 8.dp)
                 .clip(RoundedCornerShape(RadiusXl))
                 .border(1.5.dp, heroBorder, RoundedCornerShape(RadiusXl))
-                .background(heroBg),
+                .background(heroBg)
+                .clickable(
+                    indication = null,
+                    interactionSource = remember { MutableInteractionSource() },
+                    onClick = {},
+                ),
         ) {
             QuestionZone(
                 word = word,
@@ -326,17 +345,27 @@ fun QuizScreen(
             AnswerMode.QCM -> QcmAnswers(
                 options = uiState.qcmOptions,
                 isRevealed = uiState.isRevealed,
+                tapToRevealVisible = uiState.tapToRevealVisible,
+                onTapToReveal = onTapToReveal,
                 onOptionClick = onOptionClick,
+                onNextWord = onNextWord,
                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
             )
             AnswerMode.Edit -> EditAnswerMode(
                 text = uiState.editText,
+                focusKey = uiState.title to uiState.currentIndex,
                 textColorInt = uiState.editTextColorInt,
                 isEnableConversion = uiState.editIsEnableConversion,
                 isRevealed = uiState.isRevealed,
                 onTextChange = onEditTextChange,
                 onBeforeTextChange = onEditBeforeTextChange,
-                onSubmit = onEditSubmit,
+                onSubmit = { text ->
+                    if (uiState.isRevealed) {
+                        onNextWord()
+                    } else {
+                        onEditSubmit(text)
+                    }
+                },
                 onReveal = onEditReveal,
                 onClear = onEditClear,
                 modifier = Modifier.padding(horizontal = 12.dp),
@@ -621,14 +650,36 @@ private fun QuestionZone(
 private fun QcmAnswers(
     options: List<QcmOption>,
     isRevealed: Boolean,
+    tapToRevealVisible: Boolean = false,
+    onTapToReveal: () -> Unit = {},
     onOptionClick: (Int) -> Unit,
+    onNextWord: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val letters = listOf('A', 'B', 'C', 'D')
-    Column(
-        modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
+    if (tapToRevealVisible && !isRevealed) {
+        Box(
+            modifier = modifier
+                .fillMaxWidth()
+                .height(124.dp)
+                .border(1.dp, BorderDefault, RoundedCornerShape(16.dp))
+                .background(SurfacePrimary, RoundedCornerShape(16.dp))
+                .clickable(onClick = onTapToReveal),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                text = stringResource(R.string.reveal_choices),
+                color = TextPrimary,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Normal,
+                textAlign = TextAlign.Center,
+            )
+        }
+    } else {
+        val letters = listOf('A', 'B', 'C', 'D')
+        Column(
+            modifier = modifier,
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
         for (row in 0..1) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -639,12 +690,22 @@ private fun QcmAnswers(
                     if (i < options.size) {
                         val option = options[i]
                         val letter = letters.getOrElse(i) { 'A' }
+                        val isCorrect = option.buttonState == AnswerButtonState.Correct
+                        val clickAction = {
+                            if (isRevealed) {
+                                if (isCorrect) {
+                                    onNextWord()
+                                }
+                            } else {
+                                onOptionClick(i)
+                            }
+                        }
                         if (option.isFuri) {
                             FuriAnswerButton(
                                 option = option,
                                 indexLetter = letter,
                                 isRevealed = isRevealed,
-                                onClick = { onOptionClick(i) },
+                                onClick = clickAction,
                                 modifier = Modifier.weight(1f),
                             )
                         } else {
@@ -654,7 +715,7 @@ private fun QcmAnswers(
                                 state = option.buttonState,
                                 isRevealed = isRevealed,
                                 isSelected = option.buttonState != AnswerButtonState.Default,
-                                onClick = { onOptionClick(i) },
+                                onClick = clickAction,
                                 modifier = Modifier.weight(1f),
                             )
                         }
@@ -665,6 +726,7 @@ private fun QcmAnswers(
             }
         }
     }
+}
 }
 
 // ─── FuriAnswerButton ─────────────────────────────────────────────────────────
@@ -678,6 +740,7 @@ private fun FuriAnswerButton(
     modifier: Modifier = Modifier,
 ) {
     val dimmed = isRevealed && option.buttonState == AnswerButtonState.Default
+    val isCorrect = option.buttonState == AnswerButtonState.Correct
     val bgColor = when (option.buttonState) {
         AnswerButtonState.Default -> SurfacePrimary
         AnswerButtonState.Correct -> BackgroundCorrect
@@ -701,7 +764,7 @@ private fun FuriAnswerButton(
             .alpha(if (dimmed) 0.4f else 1f)
             .border(1.dp, borderColor, RoundedCornerShape(16.dp))
             .background(bgColor, RoundedCornerShape(16.dp))
-            .clickable(enabled = !isRevealed, onClick = onClick)
+            .clickable(enabled = !isRevealed || isCorrect, onClick = onClick)
             .padding(horizontal = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp),
@@ -730,6 +793,7 @@ private fun FuriAnswerButton(
 @Composable
 private fun EditAnswerMode(
     text: String,
+    focusKey: Pair<String, Int>,
     textColorInt: Int,
     isEnableConversion: Boolean,
     isRevealed: Boolean,
@@ -740,6 +804,17 @@ private fun EditAnswerMode(
     onClear: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    var inputView by remember { mutableStateOf<HiraganaEditText?>(null) }
+
+    LaunchedEffect(focusKey, inputView) {
+        inputView?.post {
+            inputView?.requestFocus()
+            inputView?.context
+                ?.getSystemService(InputMethodManager::class.java)
+                ?.showSoftInput(inputView, InputMethodManager.SHOW_IMPLICIT)
+        }
+    }
+
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -762,6 +837,7 @@ private fun EditAnswerMode(
             AndroidView(
                 factory = { ctx ->
                     HiraganaEditText(ctx).apply {
+                        inputView = this
                         hint = ctx.getString(R.string.quiz_input_hint)
                         // Champ mono-ligne à action « Terminé » : sinon la touche Entrée du
                         // clavier insère un saut de ligne et ne déclenche jamais la validation

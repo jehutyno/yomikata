@@ -36,7 +36,7 @@
     <string name="selection_not_empty_name">The name can\'t be empty</string>
     <string name="action_search">Search</string>
     <string name="action_errors">Errors</string>
-    <string name="quiz_input_hint">Enter colored sign pronunciation</string>
+    <string name="quiz_input_hint">Write here</string>
     <string name="practice_random">Practice all randomly</string>
     <string name="practice_normal">Practice all</string>
     <string name="practice_progressive">Practice progressively</string>
@@ -72,7 +72,7 @@
     <string name="tts_init_failed">TTS Initilization Failed</string>
     <string name="set_up_tts_title">Speech Setup</string>
     <string name="set_up_tts">To enable speech you need to either:\n</string>
-    <string name="download_voices_action">Download the voices (%dMB)</string>
+    <string name="download_voices_action">Download the\nvoices (%dMB)</string>
     <string name="get_google_tts_action">Install Google Text to speech</string>
     <string name="tuto_yomikataz" translatable="false">Yomikata Z</string>
     <string name="tuto_welcome">Be ready to learn Japanese</string>
@@ -226,8 +226,8 @@
     <string name="progress_bdd_update_message">The database is being updated</string>
     <string name="update_success_title">Update success</string>
     <string name="update_success_message">The database is now up to date!</string>
-    <string name="share_subject">Try out Yomikata Z !</string>
-    <string name="share_message">Let me recommend you this application to study Japanese\n\nhttps://play.google.com/apps/testing/com.jehutyno.yomikata \n\n</string>
+    <string name="share_subject">Try out Yomikata Z!</string>
+    <string name="share_message">"Let me recommend you this application to study Japanese:  https://play.google.com/apps/testing/com.jehutyno.yomikata   "</string>
     <string name="share_choose">Share the app</string>
     <string name="alert_error_review_finished">Error review finished</string>
     <string name="alert_error_review_session_message">You reviewed all the errors of the session</string>
@@ -275,6 +275,7 @@
     <string name="app_closed_data_recovered">The app was closed during the restore process and an error occurred, your previous data was recovered</string>
     <string name="tap_to_reveal_choices">Tap to reveal choices</string>
     <string name="tap_to_reveal_choices_summary">Hide multiple choice options until you tap the screen</string>
+    <string name="reveal_choices">Reveal choices</string>
     <string name="prefs_language_section">Language</string>
     <string name="prefs_language_title">Translation language</string>
     <string name="language_changed_title">Language changed</string>
@@ -355,4 +356,11 @@
     <string name="fab_next">Next →</string>
     <string name="update_ready_message">Update ready to install</string>
     <string name="update_restart_action">Restart</string>
+    <string name="prefs_kana_input_fix_message">Use if you have issues with Japanese keyboard</string>
+    <string name="kana_input_fix">Kana input fix</string>
+    <string name="bottomnav_home">Home</string>
+    <string name="bottomnav_study">Study</string>
+    <string name="bottomnav_selections">Selections</string>
+    <string name="bottomnav_settings">Settings</string>
+    <string name="prefs_quiz_settings">Quiz Settings</string>
 </resources>

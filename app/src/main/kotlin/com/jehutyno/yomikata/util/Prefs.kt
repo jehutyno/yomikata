@@ -29,11 +29,13 @@ enum class Prefs(val pref: String) {
 
     APP_LANGUAGE("app_language"),
 
+    FONT_SIZE("font_size"),
+    KANA_INPUT_FIX("kana_input_fix"),
     QUIZ_LENGTH("length"),
     QUIZ_SPEED("speed"),
     PLAY_START("play_start"),
     PLAY_END("play_end"),
-    FONT_SIZE("font_size"),
+    TAP_TO_REVEAL("tap_to_reveal"),
 
     LAST_SELECTED_LEVEL("last_selected_level"),
 

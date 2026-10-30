@@ -82,6 +82,8 @@ fun AnswerButton(
         else -> TextDim
     }
 
+    val isCorrect = state == AnswerButtonState.Correct
+
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -94,7 +96,7 @@ fun AnswerButton(
                 color = borderColor,
                 shape = RoundedCornerShape(RadiusLg)
             )
-            .clickable(enabled = !isRevealed, onClick = onClick)
+            .clickable(enabled = !isRevealed || isCorrect, onClick = onClick)
             .padding(horizontal = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp)

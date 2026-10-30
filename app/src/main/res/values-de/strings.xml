@@ -12,7 +12,7 @@
     <string name="selection_not_empty_name">Der Name darf nicht leer sein</string>
     <string name="action_search">Suchen</string>
     <string name="action_errors">Fehler</string>
-    <string name="quiz_input_hint">Aussprache des markierten Zeichens eingeben</string>
+    <string name="quiz_input_hint">Hier schreiben</string>
     <string name="practice_random">Alles zufällig üben</string>
     <string name="practice_normal">Alles üben</string>
     <string name="practice_progressive">Progressiv üben</string>
@@ -46,7 +46,7 @@
     <string name="tts_init_failed">Sprachsynthese-Initialisierung fehlgeschlagen</string>
     <string name="set_up_tts_title">Spracheinstellungen</string>
     <string name="set_up_tts">Um die Sprachausgabe zu aktivieren, müssen Sie entweder:\n</string>
-    <string name="download_voices_action">Stimmen herunterladen (%dMB)</string>
+    <string name="download_voices_action">Stimmen\nherunterladen\n(%dMB)</string>
     <string name="get_google_tts_action">Google Text-to-Speech installieren</string>
     <string name="tuto_welcome">Bereit, Japanisch zu lernen</string>
     <string name="tuto_categories">Kategorien</string>
@@ -242,8 +242,9 @@
     <string name="undo_to_restore">Rückgängig machen, um frühere Daten wiederherzustellen</string>
     <string name="changes_undone">Änderungen wurden erfolgreich rückgängig gemacht</string>
     <string name="app_closed_data_recovered">Die App wurde während der Wiederherstellung geschlossen, Ihre früheren Daten wurden wiederhergestellt</string>
-    <string name="tap_to_reveal_choices">Tippen zum Anzeigen der Antworten</string>
+    <string name="tap_to_reveal_choices">Antworten ausblenden</string>
     <string name="tap_to_reveal_choices_summary">Antworten werden ausgeblendet, bis Sie den Bildschirm berühren</string>
+    <string name="reveal_choices">Antworten anzeigen</string>
     <string name="give_hiragana_reading_hint">Hiragana-Lesung eingeben</string>
     <string name="give_romaji_hint">Rōmaji-Lesung eingeben</string>
     <string name="give_word_or_kanji_hint">Wort oder Kanji eingeben</string>
@@ -324,4 +325,11 @@
     <string name="fab_next">Weiter →</string>
     <string name="update_ready_message">Update installationsbereit</string>
     <string name="update_restart_action">Neu starten</string>
+    <string name="prefs_kana_input_fix_message">Kreuzen Sie an, wenn Sie Probleme mit der japanischen Tastatur haben</string>
+    <string name="kana_input_fix">Problem mit der Kana-Eingabe</string>
+    <string name="bottomnav_home">Startseite</string>
+    <string name="bottomnav_study">Lernen</string>
+    <string name="bottomnav_selections">Auswahl</string>
+    <string name="bottomnav_settings">Optionen</string>
+    <string name="prefs_quiz_settings">Quiz-Einstellungen</string>
 </resources>
