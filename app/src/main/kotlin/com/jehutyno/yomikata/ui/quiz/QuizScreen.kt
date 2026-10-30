@@ -1,3 +1,4 @@
+
 package com.jehutyno.yomikata.ui.quiz
 
 import android.text.Editable
@@ -5,6 +6,7 @@ import android.text.InputType
 import android.text.TextWatcher
 import android.view.KeyEvent
 import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodManager
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
@@ -14,6 +16,7 @@ import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.offset
@@ -36,10 +39,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
+import com.jehutyno.yomikata.ui.components.LevelMenu
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -85,6 +91,7 @@ import com.jehutyno.yomikata.ui.theme.TextPrimary
 import com.jehutyno.yomikata.ui.theme.TextSecondary
 import com.jehutyno.yomikata.ui.theme.Wrong
 import com.jehutyno.yomikata.ui.theme.YomikataTheme
+import com.jehutyno.yomikata.ui.word.levelColor
 import com.jehutyno.yomikata.util.getWordPositionInFuriSentence
 import kotlin.math.roundToInt
 import com.jehutyno.yomikata.util.language.cleanForQCM
@@ -149,6 +156,7 @@ fun QuizScreen(
     onFuriToggle: (Boolean) -> Unit,
     onTradToggle: () -> Unit,
     onItemClick: () -> Unit,
+    onProgressClick: (Level) -> Unit = {},
     onSelectionClick: () -> Unit,
     onReportClick: () -> Unit,
     onSentenceTts: () -> Unit,
@@ -158,6 +166,7 @@ fun QuizScreen(
     onEditSubmit: (String) -> Unit,
     onEditReveal: () -> Unit,
     onEditClear: () -> Unit,
+    onTapToReveal: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val word = uiState.currentWord
@@ -166,6 +175,7 @@ fun QuizScreen(
     val answered = uiState.isRevealed
     val isCorrect = answered && uiState.wordHighlightColor == Correct.toArgb()
     val isWrong = answered && !isCorrect
+    val isTapToRevealActive = uiState.answerMode == AnswerMode.QCM && uiState.tapToRevealVisible && !uiState.isRevealed
 
     val heroBg by animateColorAsState(
         targetValue = when {
@@ -192,7 +202,14 @@ fun QuizScreen(
             // À l'ouverture du clavier, la Column se réduit pour rester au-dessus de
             // l'IME (au lieu de faire défiler tout l'écran) → la card s'adapte à la
             // hauteur restante et le champ d'édition reste visible.
-            .windowInsetsPadding(WindowInsets.navigationBars.union(WindowInsets.ime)),
+            .windowInsetsPadding(WindowInsets.navigationBars.union(WindowInsets.ime))
+            .clickable(
+                enabled = isTapToRevealActive,
+                indication = null,
+                interactionSource = remember { MutableInteractionSource() },
+            ) {
+                onTapToReveal()
+            },
     ) {
         // TopAppBar
         Row(
@@ -215,7 +232,9 @@ fun QuizScreen(
                 color = TextPrimary,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.W600,
-                modifier = Modifier.weight(1f).padding(horizontal = 4.dp),
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 4.dp),
             )
             IconButton(onClick = onTtsSettings) {
                 Icon(
@@ -271,7 +290,12 @@ fun QuizScreen(
                 .padding(horizontal = 12.dp, vertical = 8.dp)
                 .clip(RoundedCornerShape(RadiusXl))
                 .border(1.5.dp, heroBorder, RoundedCornerShape(RadiusXl))
-                .background(heroBg),
+                .background(heroBg)
+                .clickable(
+                    indication = null,
+                    interactionSource = remember { MutableInteractionSource() },
+                    onClick = {},
+                ),
         ) {
             QuestionZone(
                 word = word,
@@ -285,6 +309,7 @@ fun QuizScreen(
                 isWrong = isWrong,
                 isInSelection = uiState.isCurrentWordInSelection,
                 onItemClick = onItemClick,
+                onProgressClick = onProgressClick,
                 onSelectionClick = onSelectionClick,
                 onReportClick = onReportClick,
                 onSentenceTts = onSentenceTts,
@@ -326,17 +351,27 @@ fun QuizScreen(
             AnswerMode.QCM -> QcmAnswers(
                 options = uiState.qcmOptions,
                 isRevealed = uiState.isRevealed,
+                tapToRevealVisible = uiState.tapToRevealVisible,
+                onTapToReveal = onTapToReveal,
                 onOptionClick = onOptionClick,
+                onNextWord = onNextWord,
                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
             )
             AnswerMode.Edit -> EditAnswerMode(
                 text = uiState.editText,
+                focusKey = uiState.title to uiState.currentIndex,
                 textColorInt = uiState.editTextColorInt,
                 isEnableConversion = uiState.editIsEnableConversion,
                 isRevealed = uiState.isRevealed,
                 onTextChange = onEditTextChange,
                 onBeforeTextChange = onEditBeforeTextChange,
-                onSubmit = onEditSubmit,
+                onSubmit = { text ->
+                    if (uiState.isRevealed) {
+                        onNextWord()
+                    } else {
+                        onEditSubmit(text)
+                    }
+                },
                 onReveal = onEditReveal,
                 onClear = onEditClear,
                 modifier = Modifier.padding(horizontal = 12.dp),
@@ -380,6 +415,7 @@ private fun QuestionZone(
     isWrong: Boolean,
     isInSelection: Boolean,
     onItemClick: () -> Unit,
+    onProgressClick: (Level) -> Unit,
     onSelectionClick: () -> Unit,
     onReportClick: () -> Unit,
     onSentenceTts: () -> Unit,
@@ -477,6 +513,7 @@ private fun QuestionZone(
                     }
                 }
 
+                // Mise en surbrillance du mot dans la phrase d'exemple
                 val colorEntireWord = word.isKana == 2 && quizType == QuizType.TYPE_JAP_EN
                 val wordPos = if (colorEntireWord) 0 else getWordPositionInFuriSentence(sentence.jap, word)
                 val furiText = if (showFurigana) {
@@ -494,8 +531,11 @@ private fun QuestionZone(
                 // P3 : furigana masqué pour les types "donner la lecture" avant révélation
                 val hideReadingFuri = !isRevealed &&
                     (quizType == QuizType.TYPE_PRONUNCIATION || quizType == QuizType.TYPE_PRONUNCIATION_QCM)
+                // Furigana pour les mots contenant des kanji
                 val showWordFuri = showFurigana && word.isKana == 0 && !hideReadingFuri
+                // Mot en vedette
                 val largeWordText = if (showWordFuri) {
+                    // Si le mot contient des kanji, on formate : {kanji;furigana}
                     " {${word.japanese};${word.reading.split("/")[0].trim()}} "
                 } else {
                     word.japanese
@@ -513,20 +553,37 @@ private fun QuestionZone(
                         verticalArrangement = Arrangement.spacedBy(16.dp),
                     ) {
                         // Mot en vedette — centré, avec spring bounce + shake
+                        val isTtsEnabledForWord = when (quizType) {
+                            QuizType.TYPE_JAP_EN -> true
+                            QuizType.TYPE_PRONUNCIATION, QuizType.TYPE_PRONUNCIATION_QCM -> isRevealed
+                            else -> false
+                        }
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .graphicsLayer { scaleX = scale; scaleY = scale }
-                                .offset { IntOffset(shakeOffset.value.roundToInt(), 0) },
+                                .offset { IntOffset(shakeOffset.value.roundToInt(), 0) }
+                                .then(
+                                    if (isTtsEnabledForWord) {
+                                        Modifier.clickable(onClick = onSoundClick)
+                                    } else {
+                                        Modifier
+                                    }
+                                ),
                             contentAlignment = Alignment.Center,
                         ) {
+                            // Réduction de la taille de police pour les mots trop longs
+                            var wordFontSize = 46f
+                            if (word.japanese.length > 8) wordFontSize = 30f
+                            else if (word.japanese.length > 6) wordFontSize = 36f
+                            // Mot en vedette en japonais
                             FuriganaAndroidView(
                                 text = largeWordText,
                                 markStart = 0,
                                 markEnd = 0,
                                 highlightColor = kanjiColor.toArgb(),
                                 textColor = kanjiColor.toArgb(),
-                                textSizeSp = 46f,
+                                textSizeSp = wordFontSize,
                                 modifier = Modifier.wrapContentWidth(),
                             )
                         }
@@ -537,6 +594,7 @@ private fun QuestionZone(
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.spacedBy(4.dp),
                         ) {
+                            // Phrase d'exemple japonaise avec furigana
                             FuriganaAndroidView(
                                 text = furiText,
                                 markStart = wordPos,
@@ -547,13 +605,14 @@ private fun QuestionZone(
                                     .wrapContentWidth()
                                     .clickable(onClick = onItemClick),
                             )
+                            // Traduction de la phrase d'exemple
                             Text(
                                 text = sentence.getTrad(),
                                 color = TextSecondary,
                                 fontSize = 14.sp,
                                 textAlign = TextAlign.Center,
                                 modifier = Modifier.alpha(
-                                    if (showTranslation && quizType != QuizType.TYPE_JAP_EN) 1f else 0f
+                                    if (showTranslation && (quizType != QuizType.TYPE_JAP_EN || isRevealed)) 1f else 0f
                                 ),
                             )
                         }
@@ -574,7 +633,9 @@ private fun QuestionZone(
                     Text(text = "あ", color = if (showFurigana) AccentOrange else TextGhost, fontSize = 18.sp)
                 }
             }
-            if (quizType != QuizType.TYPE_JAP_EN && quizType != QuizType.TYPE_AUDIO && quizType != QuizType.TYPE_EN_JAP) {
+            if ((quizType != QuizType.TYPE_AUDIO && quizType != QuizType.TYPE_EN_JAP && quizType != QuizType.TYPE_JAP_EN)
+                || (quizType == QuizType.TYPE_JAP_EN && isRevealed)
+            ) {
                 IconButton(onClick = onTradToggle) {
                     Icon(
                         painter = painterResource(if (showTranslation) R.drawable.ic_trad_check else R.drawable.ic_trad_uncheck),
@@ -585,6 +646,13 @@ private fun QuestionZone(
                 }
             }
             Spacer(modifier = Modifier.weight(1f))
+            LevelMenu(
+                currentLevel = word?.level,
+                onLevelSelected = onProgressClick,
+                iconTint = if (isRevealed && word != null) levelColor(word.level) else TextGhost,
+                buttonSize = 48.dp,
+                iconSize = 20.dp,
+            )
             IconButton(onClick = onSelectionClick) {
                 Icon(
                     painter = painterResource(R.drawable.ic_star_black_24dp),
@@ -615,20 +683,44 @@ private fun QuestionZone(
     }
 }
 
+
+
 // ─── QCM answers (grille 2×2) ─────────────────────────────────────────────────
 
 @Composable
 private fun QcmAnswers(
     options: List<QcmOption>,
     isRevealed: Boolean,
+    tapToRevealVisible: Boolean = false,
+    onTapToReveal: () -> Unit = {},
     onOptionClick: (Int) -> Unit,
+    onNextWord: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val letters = listOf('A', 'B', 'C', 'D')
-    Column(
-        modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
+    if (tapToRevealVisible && !isRevealed) {
+        Box(
+            modifier = modifier
+                .fillMaxWidth()
+                .height(124.dp)
+                .border(1.dp, BorderDefault, RoundedCornerShape(16.dp))
+                .background(SurfacePrimary, RoundedCornerShape(16.dp))
+                .clickable(onClick = onTapToReveal),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                text = stringResource(R.string.reveal_choices),
+                color = TextPrimary,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Normal,
+                textAlign = TextAlign.Center,
+            )
+        }
+    } else {
+        val letters = listOf('A', 'B', 'C', 'D')
+        Column(
+            modifier = modifier,
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
         for (row in 0..1) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -639,12 +731,22 @@ private fun QcmAnswers(
                     if (i < options.size) {
                         val option = options[i]
                         val letter = letters.getOrElse(i) { 'A' }
+                        val isCorrect = option.buttonState == AnswerButtonState.Correct
+                        val clickAction = {
+                            if (isRevealed) {
+                                if (isCorrect) {
+                                    onNextWord()
+                                }
+                            } else {
+                                onOptionClick(i)
+                            }
+                        }
                         if (option.isFuri) {
                             FuriAnswerButton(
                                 option = option,
                                 indexLetter = letter,
                                 isRevealed = isRevealed,
-                                onClick = { onOptionClick(i) },
+                                onClick = clickAction,
                                 modifier = Modifier.weight(1f),
                             )
                         } else {
@@ -654,7 +756,7 @@ private fun QcmAnswers(
                                 state = option.buttonState,
                                 isRevealed = isRevealed,
                                 isSelected = option.buttonState != AnswerButtonState.Default,
-                                onClick = { onOptionClick(i) },
+                                onClick = clickAction,
                                 modifier = Modifier.weight(1f),
                             )
                         }
@@ -665,6 +767,7 @@ private fun QcmAnswers(
             }
         }
     }
+}
 }
 
 // ─── FuriAnswerButton ─────────────────────────────────────────────────────────
@@ -678,6 +781,7 @@ private fun FuriAnswerButton(
     modifier: Modifier = Modifier,
 ) {
     val dimmed = isRevealed && option.buttonState == AnswerButtonState.Default
+    val isCorrect = option.buttonState == AnswerButtonState.Correct
     val bgColor = when (option.buttonState) {
         AnswerButtonState.Default -> SurfacePrimary
         AnswerButtonState.Correct -> BackgroundCorrect
@@ -701,7 +805,7 @@ private fun FuriAnswerButton(
             .alpha(if (dimmed) 0.4f else 1f)
             .border(1.dp, borderColor, RoundedCornerShape(16.dp))
             .background(bgColor, RoundedCornerShape(16.dp))
-            .clickable(enabled = !isRevealed, onClick = onClick)
+            .clickable(enabled = !isRevealed || isCorrect, onClick = onClick)
             .padding(horizontal = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp),
@@ -730,6 +834,7 @@ private fun FuriAnswerButton(
 @Composable
 private fun EditAnswerMode(
     text: String,
+    focusKey: Pair<String, Int>,
     textColorInt: Int,
     isEnableConversion: Boolean,
     isRevealed: Boolean,
@@ -740,6 +845,17 @@ private fun EditAnswerMode(
     onClear: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    var inputView by remember { mutableStateOf<HiraganaEditText?>(null) }
+
+    LaunchedEffect(focusKey, inputView) {
+        inputView?.post {
+            inputView?.requestFocus()
+            inputView?.context
+                ?.getSystemService(InputMethodManager::class.java)
+                ?.showSoftInput(inputView, InputMethodManager.SHOW_IMPLICIT)
+        }
+    }
+
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -762,6 +878,7 @@ private fun EditAnswerMode(
             AndroidView(
                 factory = { ctx ->
                     HiraganaEditText(ctx).apply {
+                        inputView = this
                         hint = ctx.getString(R.string.quiz_input_hint)
                         // Champ mono-ligne à action « Terminé » : sinon la touche Entrée du
                         // clavier insère un saut de ligne et ne déclenche jamais la validation
@@ -900,10 +1017,10 @@ private fun PreviewQuizBeforeAnswer() {
                     QcmOption("かく", buttonState = AnswerButtonState.Default),
                     QcmOption("みる", buttonState = AnswerButtonState.Default),
                 ),
-                hintText = "Give hiragana reading",
+                hintText = stringResource(R.string.give_hiragana_reading_hint),
                 isRevealed = false,
                 currentIndex = 0,
-                words = listOf(Pair(previewWord, QuizType.TYPE_JAP_EN)),
+                words = listOf(Pair(previewWord, QuizType.TYPE_PRONUNCIATION_QCM)),
                 sentence = previewSentence,
                 wordHighlightColor = AccentOrange.toArgb(),
             ),
@@ -948,10 +1065,10 @@ private fun PreviewQuizCorrect() {
                     QcmOption("かく", buttonState = AnswerButtonState.Default),
                     QcmOption("みる", buttonState = AnswerButtonState.Default),
                 ),
-                hintText = "Give hiragana reading",
+                hintText = stringResource(R.string.give_hiragana_reading_hint),
                 isRevealed = true,
                 currentIndex = 0,
-                words = listOf(Pair(previewWord, QuizType.TYPE_JAP_EN)),
+                words = listOf(Pair(previewWord, QuizType.TYPE_PRONUNCIATION_QCM)),
                 sentence = previewSentence,
                 wordHighlightColor = Correct.toArgb(),
             ),
@@ -996,10 +1113,10 @@ private fun PreviewQuizWrong() {
                     QcmOption("からだ", buttonState = AnswerButtonState.Wrong),
                     QcmOption("みる", buttonState = AnswerButtonState.Default),
                 ),
-                hintText = "Give hiragana reading",
+                hintText = stringResource(R.string.give_hiragana_reading_hint),
                 isRevealed = true,
                 currentIndex = 0,
-                words = listOf(Pair(previewWord, QuizType.TYPE_JAP_EN)),
+                words = listOf(Pair(previewWord, QuizType.TYPE_PRONUNCIATION_QCM)),
                 sentence = previewSentence,
                 wordHighlightColor = AccentOrange.toArgb(),
             ),

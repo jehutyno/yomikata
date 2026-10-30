@@ -178,7 +178,7 @@ fun WordListRow(
                 IconButton(onClick = onFavoriteClick, modifier = Modifier.size(32.dp)) {
                     Icon(
                         painter = painterResource(R.drawable.ic_star_black_24dp),
-                        contentDescription = stringResource(R.string.action_favorite),
+                        contentDescription = stringResource(R.string.action_selections),
                         tint = if (isFavorite) AccentOrange else TextGhost,
                         modifier = Modifier.size(13.dp),
                     )

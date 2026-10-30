@@ -7,6 +7,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -45,6 +46,7 @@ import com.jehutyno.yomikata.model.Quiz
 import com.jehutyno.yomikata.model.Sentence
 import com.jehutyno.yomikata.model.Word
 import com.jehutyno.yomikata.model.getCategoryIcon
+import com.jehutyno.yomikata.ui.components.LevelMenu
 import com.jehutyno.yomikata.ui.components.SectionHeader
 import com.jehutyno.yomikata.ui.theme.AccentOrange
 import com.jehutyno.yomikata.ui.theme.BackgroundCorrect
@@ -64,6 +66,7 @@ import com.jehutyno.yomikata.ui.theme.TextSecondary
 import com.jehutyno.yomikata.ui.theme.TypeWordTranslation
 import com.jehutyno.yomikata.ui.theme.Wrong
 import com.jehutyno.yomikata.ui.theme.YomikataTheme
+import com.jehutyno.yomikata.ui.word.levelColor
 import com.jehutyno.yomikata.util.getWordPositionInFuriSentence
 import com.jehutyno.yomikata.util.quiz.Level
 import com.jehutyno.yomikata.util.quiz.QuizType
@@ -96,6 +99,7 @@ fun AnswerReviewScreen(
     state: AnswerReviewUiState,
     title: String,
     onBack: () -> Unit,
+    onLevelChange: (index: Int, newLevel: Level) -> Unit,
     onSelectionClick: (index: Int) -> Unit,
     onReportClick: (index: Int) -> Unit,
     onWordTtsClick: (index: Int) -> Unit,
@@ -136,7 +140,7 @@ fun AnswerReviewScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding),
-            contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 24.dp),
+            contentPadding = PaddingValues(bottom = 24.dp),
         ) {
             // ── Summary header ───────────────────────────────────────────
             item {
@@ -153,6 +157,7 @@ fun AnswerReviewScreen(
                     answer = item.first,
                     word = item.second,
                     sentence = item.third,
+                    onLevelChange = { newLevel -> onLevelChange(index, newLevel) },
                     onSelectionClick = { onSelectionClick(index) },
                     onReportClick = { onReportClick(index) },
                     onWordTtsClick = { onWordTtsClick(index) },
@@ -246,6 +251,7 @@ private fun AnswerReviewCard(
     answer: Answer,
     word: Word,
     sentence: Sentence,
+    onLevelChange: (Level) -> Unit,
     onSelectionClick: () -> Unit,
     onReportClick: () -> Unit,
     onWordTtsClick: () -> Unit,
@@ -375,6 +381,13 @@ private fun AnswerReviewCard(
             horizontalArrangement = Arrangement.End,
             verticalAlignment = Alignment.CenterVertically,
         ) {
+            LevelMenu(
+                currentLevel = word.level,
+                onLevelSelected = onLevelChange,
+                iconTint = levelColor(word.level),
+                buttonSize = 36.dp,
+                iconSize = 18.dp,
+            )
             FooterIcon(R.drawable.ic_star_black_24dp, onSelectionClick)
             FooterIcon(R.drawable.ic_report_black_24dp, onReportClick)
             FooterIcon(R.drawable.ic_volume_up_black_24dp, onWordTtsClick)
@@ -510,13 +523,15 @@ private fun HtmlText(
 @Composable
 private fun AnswerReviewScreenPreview() {
     val wordOk = Word(
-        id = 1, japanese = "下", english = "below", french = "en dessous",
+        id = 1, japanese = "下", english = "below", french = "en-dessous",
+        german = "unten", spanish = "abajo", portuguese = "abaixo", chinese = "下面",
         reading = "した", level = Level.LOW, countTry = 3, countSuccess = 2,
         countFail = 1, isKana = 0, repetition = 0, points = 8,
         baseCategory = 0, isSelected = 0, sentenceId = null, pos = "n",
     )
     val wordKo = Word(
         id = 2, japanese = "男", english = "man", french = "homme",
+        german = "Mann", spanish = "hombre honorable", portuguese = "homem", chinese = "男人",
         reading = "おとこ", level = Level.LOW, countTry = 3, countSuccess = 1,
         countFail = 2, isKana = 0, repetition = 0, points = 2,
         baseCategory = 0, isSelected = 0, sentenceId = null, pos = "n",
@@ -541,9 +556,14 @@ private fun AnswerReviewScreenPreview() {
         AnswerReviewScreen(
             state = state,
             title = "Review of answers",
-            onBack = {}, onSelectionClick = {}, onReportClick = {},
-            onWordTtsClick = {}, onSentenceTtsClick = {},
-            onSelectionToggle = { _, _ -> }, onCreateSelection = {},
+            onBack = {},
+            onLevelChange = { _, _ -> },
+            onSelectionClick = {},
+            onReportClick = {},
+            onWordTtsClick = {},
+            onSentenceTtsClick = {},
+            onSelectionToggle = { _, _ -> },
+            onCreateSelection = {},
             onDismissSelectionSheet = {},
         )
     }

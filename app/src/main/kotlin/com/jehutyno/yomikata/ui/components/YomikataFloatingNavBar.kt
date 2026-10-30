@@ -1,6 +1,7 @@
 package com.jehutyno.yomikata.ui.components
 
 import androidx.annotation.DrawableRes
+import androidx.annotation.StringRes
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.BorderStroke
@@ -34,6 +35,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -51,13 +53,13 @@ import com.jehutyno.yomikata.ui.theme.YomikataTheme
 
 /** Destinations de la barre de navigation principale (Home / Study / Sélections / Réglages). */
 enum class BottomNavDestination(
-    val labelRes: String,
+    @param:StringRes val labelRes: Int,
     @param:DrawableRes val iconRes: Int
 ) {
-    HOME("Home", R.drawable.ic_home),
-    STUDY("Study", R.drawable.ic_list),
-    SELECTIONS("Selections", R.drawable.ic_star_black_24dp),
-    SETTINGS("Settings", R.drawable.ic_settings)
+    HOME(R.string.bottomnav_home, R.drawable.ic_home),
+    STUDY(R.string.bottomnav_study, R.drawable.ic_list),
+    SELECTIONS(R.string.bottomnav_selections, R.drawable.ic_star_black_24dp),
+    SETTINGS(R.string.bottomnav_settings, R.drawable.ic_settings)
 }
 
 /**
@@ -175,12 +177,12 @@ private fun RowScope.NavItem(
     ) {
         Icon(
             painter = painterResource(destination.iconRes),
-            contentDescription = destination.labelRes,
+            contentDescription = stringResource(destination.labelRes),
             tint = contentColor,
             modifier = Modifier.size(22.dp)
         )
         Text(
-            text = destination.labelRes,
+            text = stringResource(destination.labelRes),
             fontSize = 10.sp,
             color = labelColor
         )

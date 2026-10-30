@@ -53,6 +53,7 @@ import com.jehutyno.yomikata.util.showWordSelectionDialog
 import com.jehutyno.yomikata.util.hideSoftKeyboard
 import com.jehutyno.yomikata.util.onTTSinit
 import com.jehutyno.yomikata.util.releaseAsync
+import com.jehutyno.yomikata.util.quiz.Level
 import com.jehutyno.yomikata.util.quiz.QuizType
 import com.jehutyno.yomikata.util.quiz.getCategoryLevel
 import com.jehutyno.yomikata.util.reportError
@@ -132,6 +133,27 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, TextToSp
     override fun onResume() {
         super.onResume()
         presenter.start()
+        refreshWordLevels()
+    }
+
+    private fun refreshWordLevels() {
+        val currentWords = uiState.words
+        if (currentWords.isEmpty()) return
+        lifecycleScope.launch {
+            var changed = false
+            val updatedWords = currentWords.map { (word, quizType) ->
+                val freshWord = presenter.getWordById(word.id)
+                if (freshWord.level != word.level || freshWord.points != word.points) {
+                    changed = true
+                    Pair(freshWord, quizType)
+                } else {
+                    Pair(word, quizType)
+                }
+            }
+            if (changed) {
+                uiState = uiState.copy(words = updatedWords)
+            }
+        }
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -195,6 +217,19 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, TextToSp
                             dialog.show(childFragmentManager, "")
                         },
                         onSelectionClick = { showSelectionMenu() },
+                        onProgressClick = { level ->
+                            val word = uiState.currentWord ?: return@QuizScreen
+                            lifecycleScope.launch {
+                                if (word.level == level) return@launch
+                                presenter.updateWordPoints(word.id, level.minPoints)
+                                presenter.updateWordLevel(word.id, level)
+                                val updatedWord = word.copy(level = level, points = level.minPoints)
+                                val updatedWords = uiState.words.mapIndexed { index, pair ->
+                                    if (index == uiState.currentIndex) Pair(updatedWord, pair.second) else pair
+                                }
+                                uiState = uiState.copy(words = updatedWords)
+                            }
+                        },
                         onReportClick = {
                             presenter.onReportClick(uiState.currentIndex)
                         },
@@ -208,7 +243,9 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, TextToSp
                         },
                         onEditSubmit = { text ->
                             val quizType = uiState.currentQuizType
-                            if (quizType == QuizType.TYPE_PRONUNCIATION && !holdOn) {
+                            if (uiState.isRevealed) {
+                                lifecycleScope.launch { presenter.onNextWord() }
+                            } else if (quizType == QuizType.TYPE_PRONUNCIATION && !holdOn) {
                                 holdOn = true
                                 val cleaned = text
                                     .replace("n", if ((uiState.currentWord?.isKana ?: 0) >= 1) "n" else "ん")
@@ -231,6 +268,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, TextToSp
                             }
                         },
                         onEditClear = { uiState = uiState.copy(editText = "") },
+                        onTapToReveal = { uiState = uiState.copy(tapToRevealVisible = false) },
                     )
 
                     if (ttsSettingsVisible) {
@@ -361,13 +399,20 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, TextToSp
     }
 
 
+    private val isTapToRevealEnabled: Boolean
+        get() = prefs.getBoolean(Prefs.TAP_TO_REVEAL.pref, false)
+
     override fun setPagerPosition(position: Int) {
         // P5 : marquer le segment courant en Current (orange)
         val newSegments = uiState.segments.toMutableList()
         if (position in newSegments.indices && newSegments[position] == SegmentState.Pending) {
             newSegments[position] = SegmentState.Current
         }
-        uiState = uiState.copy(currentIndex = position, segments = newSegments)
+        uiState = uiState.copy(
+            currentIndex = position,
+            segments = newSegments,
+            tapToRevealVisible = isTapToRevealEnabled,
+        )
         refreshSelectionState()
     }
 
@@ -395,6 +440,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, TextToSp
             editShowDisplayAnswer = false,
             qcmOptions = List(4) { QcmOption("") },
             answerMode = AnswerMode.None,
+            tapToRevealVisible = isTapToRevealEnabled,
         )
     }
 
@@ -404,6 +450,7 @@ class QuizFragment(private val di: DI) : Fragment(), QuizContract.View, TextToSp
             answerMode = AnswerMode.QCM,
             hintText = hintText,
             isRevealed = false,
+            tapToRevealVisible = isTapToRevealEnabled,
         )
     }
 

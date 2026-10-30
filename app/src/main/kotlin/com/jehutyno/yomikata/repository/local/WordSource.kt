@@ -78,13 +78,9 @@ class WordSource(private val wordDao: WordDao) : WordRepository {
         limit: Int,
         quizType: QuizType
     ): ArrayList<Word> {
-        val wordsTableName = "words" // CHANGE THIS IF WORDS TABLE NAME IS CHANGED
+        val wordsTableName = "words"
         val column = when (quizType) {
-            QuizType.TYPE_PRONUNCIATION -> "${wordsTableName}.reading"
-            QuizType.TYPE_PRONUNCIATION_QCM -> "${wordsTableName}.reading"
-            QuizType.TYPE_AUDIO -> "${wordsTableName}.japanese"
-            QuizType.TYPE_EN_JAP -> "${wordsTableName}.japanese"
-            QuizType.TYPE_JAP_EN -> "${wordsTableName}.japanese"
+            QuizType.TYPE_PRONUNCIATION, QuizType.TYPE_PRONUNCIATION_QCM -> "${wordsTableName}.reading"
             else -> "${wordsTableName}.japanese"
         }
 
@@ -92,26 +88,35 @@ class WordSource(private val wordDao: WordDao) : WordRepository {
         var tryWordSize = wordSize
         while (wordIds.size <= 1 && tryWordSize > 0) {
             wordIds += wordDao.getWordsOfSizeRelatedTo(wordId, tryWordSize)
-            tryWordSize--   // get smaller sizes in case there are no other words of the same size
+            tryWordSize--
         }
 
-        // use @RawQuery since column names cannot be inserted in @Query by Room
-        val rawQuery = "SELECT * FROM words " +
-                       "WHERE _id IN (${wordIds.joinToString(",")}) " +
-                       "AND $column != (?) " +
-                       "GROUP BY $column ORDER BY RANDOM() LIMIT ?"
-        var supportSQLiteQuery = SimpleSQLiteQuery(rawQuery, arrayOf<Any>(answer, limit))
+        val roomWordsList = mutableListOf<RoomWords>()
 
-        val roomWordsList = wordDao.getRandomWords(supportSQLiteQuery).toMutableList()
+        // Expression to extract the primary display string (before ';' or '/') for clean length comparison and grouping
+        val cleanCol = "SUBSTR($column, 1, INSTR(REPLACE($column, '/', ';') || ';', ';') - 1)"
 
-        // try two more times to make sure size is at least 3
-        for (i in 1..2) {
-            if (roomWordsList.size < limit) {
-                supportSQLiteQuery = SimpleSQLiteQuery(rawQuery, arrayOf<Any>(answer, limit - roomWordsList.size))
-                val extraRoomWordsList = wordDao.getRandomWords(supportSQLiteQuery)
-                roomWordsList += extraRoomWordsList
-            }
+        suspend fun fetch(whereExtra: String, queryLimit: Int = limit - roomWordsList.size) {
+            if (roomWordsList.size >= limit || queryLimit <= 0) return
+            val excludeIds = (roomWordsList.map { it._id } + wordId).joinToString(",")
+            val raw = "SELECT * FROM words WHERE _id NOT IN ($excludeIds) $whereExtra AND $cleanCol != (?) GROUP BY $cleanCol ORDER BY RANDOM() LIMIT ?"
+            roomWordsList += wordDao.getRandomWords(SimpleSQLiteQuery(raw, arrayOf<Any>(answer, queryLimit)))
         }
+
+        if (wordIds.isNotEmpty()) {
+            fetch("AND _id IN (${wordIds.joinToString(",")})")
+        }
+
+        val targetLength = maxOf(1, wordSize)
+        val sameCat = "AND base_category = (SELECT base_category FROM words WHERE _id = $wordId)"
+        val sameCatGroup = "AND (CASE WHEN (SELECT base_category FROM words WHERE _id = $wordId) = 1 THEN base_category = 1 ELSE base_category != 1 END)"
+
+        // Fallbacks: prefer same base_category & length, then same cat group & length, then adjacent lengths
+        fetch("$sameCat AND LENGTH($cleanCol) = $targetLength")
+        fetch("$sameCatGroup AND LENGTH($cleanCol) = $targetLength")
+        fetch("$sameCatGroup AND LENGTH($cleanCol) BETWEEN ${maxOf(1, targetLength - 1)} AND ${targetLength + 1}")
+        fetch(sameCatGroup)
+        fetch("")
 
         return roomWordsList.map { it.toWord() } as ArrayList<Word>
     }
@@ -161,7 +166,7 @@ class WordSource(private val wordDao: WordDao) : WordRepository {
     }
 
     override suspend fun updateWordLevel(wordId: Long, level: Level) {
-        wordDao.updateWordLevel(wordId, level.level)
+        wordDao.updateWordLevel(wordId, level.level, level.minPoints)
     }
 
     override suspend fun updateWordRepetition(wordId: Long, repetition: Int) {

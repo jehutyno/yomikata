@@ -1,10 +1,12 @@
 package com.jehutyno.yomikata.compose
 
+import android.content.Context
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.jehutyno.yomikata.ui.components.BottomNavDestination
 import com.jehutyno.yomikata.ui.components.YomikataFloatingNavBar
@@ -39,13 +41,15 @@ class FloatingNavBarInteractionTest {
             }
         }
 
-        rule.onNodeWithText("Study").performClick()
+        val context = ApplicationProvider.getApplicationContext<Context>()
+
+        rule.onNodeWithText(context.getString(BottomNavDestination.STUDY.labelRes)).performClick()
         assertEquals(BottomNavDestination.STUDY, clicked)
 
-        rule.onNodeWithText("Settings").performClick()
+        rule.onNodeWithText(context.getString(BottomNavDestination.SETTINGS.labelRes)).performClick()
         assertEquals(BottomNavDestination.SETTINGS, clicked)
 
-        rule.onNodeWithText("Selections").performClick()
+        rule.onNodeWithText(context.getString(BottomNavDestination.SELECTIONS.labelRes)).performClick()
         assertEquals(BottomNavDestination.SELECTIONS, clicked)
     }
 
@@ -56,7 +60,9 @@ class FloatingNavBarInteractionTest {
                 YomikataFloatingNavBar(selected = BottomNavDestination.HOME, onDestinationSelected = {})
             }
         }
-        listOf("Home", "Study", "Selections", "Settings").forEach { label ->
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        BottomNavDestination.entries.forEach { destination ->
+            val label = context.getString(destination.labelRes)
             // Each label appears once (merged node carries both the text and the icon description).
             rule.onAllNodesWithText(label).assertCountEquals(1)
         }

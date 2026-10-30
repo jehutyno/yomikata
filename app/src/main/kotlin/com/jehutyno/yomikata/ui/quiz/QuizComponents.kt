@@ -19,11 +19,16 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -82,6 +87,13 @@ fun AnswerButton(
         else -> TextDim
     }
 
+    val isCorrect = state == AnswerButtonState.Correct
+
+    // Réduire la taille de police pour éviter les sauts de ligne
+    val isPreview = LocalInspectionMode.current
+    var fontSize by remember(label) { mutableStateOf(13.sp) }
+    var readyToDraw by remember(label) { mutableStateOf(isPreview) }
+
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -94,7 +106,7 @@ fun AnswerButton(
                 color = borderColor,
                 shape = RoundedCornerShape(RadiusLg)
             )
-            .clickable(enabled = !isRevealed, onClick = onClick)
+            .clickable(enabled = !isRevealed || isCorrect, onClick = onClick)
             .padding(horizontal = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -115,10 +127,21 @@ fun AnswerButton(
         }
         Text(
             text = label,
-            fontSize = 13.sp,
+            fontSize = fontSize,
             fontWeight = FontWeight.W400,
             color = textColor,
-            modifier = Modifier.weight(1f)
+            maxLines = 1,
+            softWrap = false,
+            onTextLayout = { result ->
+                if (result.hasVisualOverflow && fontSize > 9.sp) {
+                    fontSize = (fontSize.value - 1).sp
+                } else {
+                    readyToDraw = true
+                }
+            },
+            modifier = Modifier
+                .weight(1f)
+                .alpha(if (readyToDraw) 1f else 0f)
         )
         if (state == AnswerButtonState.Correct) {
             Text(text = "✓", fontSize = 14.sp, color = Correct)

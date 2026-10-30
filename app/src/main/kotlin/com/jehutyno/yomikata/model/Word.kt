@@ -92,6 +92,33 @@ open class Word(var id: Long, var japanese: String, var english: String, var fre
         return if (pos.isBlank()) emptyList()
         else pos.split(",").map { it.trim() }.filter { it.isNotEmpty() }
     }
+
+    fun copy(
+        id: Long = this.id,
+        japanese: String = this.japanese,
+        english: String = this.english,
+        french: String = this.french,
+        reading: String = this.reading,
+        level: Level = this.level,
+        countTry: Int = this.countTry,
+        countSuccess: Int = this.countSuccess,
+        countFail: Int = this.countFail,
+        isKana: Int = this.isKana,
+        repetition: Int = this.repetition,
+        points: Int = this.points,
+        baseCategory: Int = this.baseCategory,
+        isSelected: Int = this.isSelected,
+        sentenceId: Long? = this.sentenceId,
+        german: String = this.german,
+        spanish: String = this.spanish,
+        portuguese: String = this.portuguese,
+        chinese: String = this.chinese,
+        pos: String = this.pos,
+    ): Word = Word(
+        id, japanese, english, french, reading, level, countTry, countSuccess,
+        countFail, isKana, repetition, points, baseCategory, isSelected, sentenceId,
+        german, spanish, portuguese, chinese, pos
+    )
 }
 
 fun getCategoryIcon(category: Int): Int {

@@ -17,7 +17,7 @@ import kotlin.math.pow
 enum class Level(val level: Int, val minPoints: Int) {
     // level ints must be declared as array indices (see Int.toLevel)
     // make sure the declaration order is from lowest to highest
-    LOW(0, 0),
+    LOW(0, 1),
     MEDIUM(1, 200),         // rep = 6
     HIGH(2, 400),           // rep = 28
     MASTER(3, 600)          // rep = 149

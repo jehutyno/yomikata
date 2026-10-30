@@ -6,6 +6,8 @@ import com.jehutyno.yomikata.model.Word
 import com.jehutyno.yomikata.presenters.SelectionsInterface
 import com.jehutyno.yomikata.presenters.WordInQuizInterface
 import com.jehutyno.yomikata.repository.SentenceRepository
+import com.jehutyno.yomikata.repository.WordRepository
+import com.jehutyno.yomikata.util.quiz.Level
 
 
 /**
@@ -14,9 +16,10 @@ import com.jehutyno.yomikata.repository.SentenceRepository
 class AnswersPresenter(
     selectionsInterface: SelectionsInterface,
     wordInQuizInterface: WordInQuizInterface,
-    private val sentenceRepository: SentenceRepository)
-                : AnswersContract.Presenter, SelectionsInterface by selectionsInterface,
-                                             WordInQuizInterface by wordInQuizInterface{
+    private val sentenceRepository: SentenceRepository,
+    private val wordRepository: WordRepository
+) : AnswersContract.Presenter, SelectionsInterface by selectionsInterface,
+                             WordInQuizInterface by wordInQuizInterface{
 
     override fun start() {
     }
@@ -24,6 +27,10 @@ class AnswersPresenter(
 
     override suspend fun getSentenceById(id: Long): Sentence {
         return sentenceRepository.getSentenceById(id)
+    }
+
+    override suspend fun updateWordLevel(wordId: Long, level: Level) {
+        wordRepository.updateWordLevel(wordId, level)
     }
 
     override suspend fun getAnswersWordsSentences(answers: List<Answer>): List<Triple<Answer, Word, Sentence>> {
